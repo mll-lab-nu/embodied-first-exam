@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | MyoSuite |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `myosuite-obj-hold-i00-privileged` |
 | Simulator / robot | `myosuite` / `myohand` |
 | Family / instance | `obj_hold` / seed 0 |
@@ -13,7 +13,7 @@
 
 ## Task
 MyoSuite `myoHandObjHoldFixed-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-obj-hold-i00-privileged`: Grip the object in your palm and hold it at the goal spot right above it for a second.
-A small object rests in the palm of the upturned hand; the goal site is right above it. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
+A small object rests in the palm of the upturned hand; the goal site is right above it. Standard mode (eai-standard/3.0): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty
 Same instance and success rule as `myosuite-obj-hold-i00-privileged` (first-pass rating: medium). In standard mode the agent loses free resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in actuator-command chunks, and gets 10 resets, so it has to close the loop on what it sees and learn the body from a few real attempts.

@@ -3,7 +3,7 @@
  "kind": "rcb",
  "suite": "bigym2",
  "task": "bigym2-reach-target-dual-i00-realtime",
- "protocol": "eai-standard/2.3",
+ "protocol": "eai-standard/3.0",
  "realtime": true,
  "tools": [
   "spec",

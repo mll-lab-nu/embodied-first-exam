@@ -3,7 +3,7 @@
  "kind": "rcb",
  "suite": "vlabench",
  "task": "vlabench-hammer-nail-and-hang-picture-i00-standard",
- "protocol": "eai-standard/2.1",
+ "protocol": "eai-standard/3.0",
  "realtime": false,
  "tools": [
   "spec",

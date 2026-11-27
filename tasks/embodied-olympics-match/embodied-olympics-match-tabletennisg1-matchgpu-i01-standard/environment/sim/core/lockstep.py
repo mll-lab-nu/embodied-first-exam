@@ -1,8 +1,8 @@
-"""Embodied First Exam: protocol eai-standard-lockstep/1.0, the standard mode of Embodied Olympics' real-time matches,
+"""Embodied First Exam: the lockstep service, the standard mode of Embodied Olympics' real-time matches,
 on core 0.5 (the table tennis of two Unitree G1s, tabletennis_g1).
 
 The match, the world, the referee, the opponent, the observation, the reviews, the record and the grading are those of
-eai-standard-realtime/1.0 (core/realtime.py, unchanged); only the clock differs. The world does not run on the wall
+the realtime service (core/realtime.py, unchanged); only the clock differs. The world does not run on the wall
 clock: it advances one control step at a time, and only while the seat lets it:
 
   - the seat lets it advance while one of its `wait {dt}` calls is open (up to that call's target step) or while one of
@@ -16,7 +16,7 @@ clock: it advances one control step at a time, and only while the seat lets it:
     and the in-process screens): after each step the world waits for its program's reply to that step's observation and
     receives it at that step, so its own computing time costs no game time either.
 
-Everything else is eai-standard-realtime/1.0's: acts lowered at a step boundary, the frozen review after every unit
+Everything else is the realtime service's: acts lowered at a step boundary, the frozen review after every unit
 with its time limit (READY_TIMEOUT_S of real time; a missed review is recorded, the world resumes), the start window,
 the collect rules of the task (RO_COLLECT_ENDS_MATCH), live grading. /spec timing says `clock = "lockstep"`;
 `period_s` is null (no wall time per step). The episode is a realtime episode (header protocol "realtime"): its
@@ -41,7 +41,7 @@ from . import serve, taskspec
 from .realtime import RealtimeService, referee_events, jsonable
 from .sport import FINISHED, UNIT_OVER
 
-PROTOCOL_ID = "eai-standard-lockstep/1.0"
+PROTOCOL_ID = "eai-standard/3.0"
 RULE = ("the world advances only while you let it: during an open `wait {dt}` (up to dt game seconds) and, for an "
         "accepted act, up to the step at which it takes effect; between your calls it stands still, and computing an "
         "act or an observation takes no game time. The platform's opponent is held to the same rule (the world waits "

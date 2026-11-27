@@ -15,8 +15,8 @@ harbor run -d embodied-first-exam@all -p tasks/pandadyn -a codex -m openai/gpt-6
 Every image is public: Harbor pulls it.
 
 One frozen instance per task (i00), each a privileged task `pandadyn-<code>-<name>-i00-privileged` and its standard twin
-`pandadyn-<code>-<name>-i00-standard` (`eai-standard/2.1`): 50 task directories; the 19 dynamic families (all but D05, D08,
-D11, D12, D13, S06) also have a realtime twin `pandadyn-<code>-<name>-i00-realtime` (`eai-standard/2.3`): 69
+`pandadyn-<code>-<name>-i00-standard` (`eai-standard/3.0`): 50 task directories; the 19 dynamic families (all but D05, D08,
+D11, D12, D13, S06) also have a realtime twin `pandadyn-<code>-<name>-i00-realtime` (`eai-standard/3.0`): 69
 task directories.
 
 | Code | Task | Arms | Phases | Seed (i00) | Oracle |
@@ -203,7 +203,7 @@ with the same state hash.
 3600 s for every task of both modes (each task's `[agent] timeout_sec`; the benchmark's own text names no number). A scene
 builds in 5-15 s and runs ~40-150 control steps per second, so the budget is the agent's own work, not the simulator's.
 
-## Standard mode (eai-standard/2.1)
+## Standard mode (eai-standard/3.0)
 Standard and realtime differ only in the clock. Both run
 the same adapter (each twin's `environment/sim/server.py`: the same code, each copy with its own docstring) on the same
 shared service layer (`rcb_service.py`, with `grade.py` and the 2.1 client: the same files as HumanoidBench's, BiGym
@@ -224,7 +224,7 @@ only the standard twin and get the same rules.
   (`episode`), both instructions and the README; resets as in
   the realtime twin; only the last episode is graded.
 
-## Realtime (eai-standard/2.3)
+## Realtime (eai-standard/3.0)
 The dynamic families (`[metadata] dynamics`, declared by each task; D05, D08, D11, D12, D13 and S06 are static: nothing in
 them moves by itself) get a `-realtime` twin, sharing the standard twin's adapter, service layer and reset budget
 ("Standard mode" above).
@@ -330,7 +330,7 @@ The Panda Dynamic Scenes environment package: MLL Lab, released with this reposi
 
 ## Standard-mode service details
 
-Serves `eai-standard/2.1` with the optional reset capability (3 resets). Resume by journal replay to the logged state hash (ManiSkill / SAPIEN, CPU PhysX with enhanced determinism, one thread; every reset rebuilds the scene; ten physics steps per control step).
+Serves `eai-standard/3.0` with the optional reset capability (3 resets). Resume by journal replay to the logged state hash (ManiSkill / SAPIEN, CPU PhysX with enhanced determinism, one thread; every reset rebuilds the scene; ten physics steps per control step).
 
 ## Screening
 

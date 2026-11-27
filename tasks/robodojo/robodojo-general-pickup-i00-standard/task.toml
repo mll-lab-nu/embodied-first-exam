@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robodojo-general-pickup-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo general_pickup (Open) on the same frozen layout as the privileged task (arx_x5/0/general_pickup_0.json). Task: Lift the mint green scissors about a hand's length off the table. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): RoboDojo general_pickup (Open) on the same frozen layout as the privileged task (arx_x5/0/general_pickup_0.json). Task: Lift the mint green scissors about a hand's length off the table. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "standard-mode", "trajectory"]
 
 [metadata]
@@ -23,7 +23,7 @@ simulator = "robodojo"
 robot = "arx-x5-bimanual"
 family = "general_pickup"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 oracle = "none"
 oracle_evidence = "positive example: a model trial solved this task within its 200-step limit (Codex + GPT-6 Astra, effort high, 2026-11-02; 106 steps, graded live by this task's service); no reference solution (RoboDojo releases no expert); human review in PR #142"
 instance_seed = 0

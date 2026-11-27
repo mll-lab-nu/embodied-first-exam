@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | iSpatialGym |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `ispatialgym-configuration-matching-articulation-open-small-scale-i00-privileged` |
 | Simulator / robot | `ispatialgym` / `r1pro` |
 | Family / instance | `configuration_matching_articulation_open_small_scale` / seed 0 |
@@ -54,7 +54,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 | | |
 |---|---|
-| Protocol | `eai-standard/2.2`: RGB + proprioception through the client; no reset, no object poses, no success predicate |
+| Protocol | `eai-standard/3.0`: RGB + proprioception through the client; no reset, no object poses, no success predicate |
 | Action space | `submit` chunks of `joint_position` (23: base velocity command, trunk, both arms, one command per gripper; iSpatialGym's JoyLo action) streamed at the 30 Hz control rate; `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); stateless `/kinematics` |
 | Goal | `/app/goal.png` (from the files-only image `ispatialgym-goals-files`): upstream's goal image of this instance, the head camera at 1080×1080 |
 | Instance | `environment/sim/instance.json`, byte-identical to the privileged twin's: the start only (scene, template keys the loader reads, start-only TRO, objects without upstream's role names); `environment/sim/goal.json` (sidecar only) restores upstream's targets onto it, checked by sha256; start-state hash a7c52d92e0e71d0a |

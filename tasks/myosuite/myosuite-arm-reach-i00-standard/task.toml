@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/myosuite-arm-reach-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite arm_reach (MyoArm, 34 muscles) on the same frozen instance as myosuite-arm-reach-i00-privileged: Bring the index fingertip to the target point in space: its distance below 0.0125 m for 50 consecutive control steps (1.0 s). Task: Touch the small sphere in front of you with your index fingertip and hold it there for a second. The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): MyoSuite arm_reach (MyoArm, 34 muscles) on the same frozen instance as myosuite-arm-reach-i00-privileged: Bring the index fingertip to the target point in space: its distance below 0.0125 m for 50 consecutive control steps (1.0 s). Task: Touch the small sphere in front of you with your index fingertip and hold it there for a second. The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myoarm", "code-as-policy", "trajectory", "arm_reach", "standard-mode"]
 
 [metadata]
@@ -22,7 +22,7 @@ simulator = "myosuite"            # MyoSuite 2.12.2 on MuJoCo 3.6.0 (CPU)
 robot = "myoarm"
 family = "arm_reach"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 0                 # myoArmReachFixed-v0: seed(0), then reset(seed=0)
 expert_time_estimate_hours = 2.5

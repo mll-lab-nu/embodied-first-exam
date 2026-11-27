@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | DexToolBench |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `dextoolbench_screwdriver_short_screwdriver_spin_vertical-privileged` |
 | Simulator / robot | `mujoco` / `kuka-iiwa14-sharpa-ha4` |
 | Family / instance | `dextoolbench/screwdriver/short_screwdriver/spin_vertical` / seed 0 |
@@ -14,7 +14,7 @@
 ## Task
 Pick up the screwdriver and spin it around a vertical axis, following the green ghost screwdriver through its poses in order.
 
-Standard-mode twin of `dextoolbench_screwdriver_short_screwdriver_spin_vertical-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py`, protocol eai-standard/2.1, tooling `rcb_dtb`). The agent sees camera RGB-D and proprioception only.
+Standard-mode twin of `dextoolbench_screwdriver_short_screwdriver_spin_vertical-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py`, protocol eai-standard/3.0, tooling `rcb_dtb`). The agent sees camera RGB-D and proprioception only.
 
 ## Difficulty
 Same scene, instance and success rule as `dextoolbench_screwdriver_short_screwdriver_spin_vertical-privileged` (see its Difficulty). In standard mode the agent loses privileged state and planning primitives, and has 20 resets instead of unlimited ones: it sees camera images and proprioception only, acts through the client, and every try is a real episode from the same start, of which only the last is graded.

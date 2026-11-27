@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-fun-goalkeeper-save-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
 | Family / instance | `goalkeeper_save` / seed 0 |
@@ -44,7 +44,7 @@ Caps per container (PROTOCOL §6).
 | Category | football-and-volleyball |
 | Rule book | IFAB Laws of the Game 2025/26: Law 1 (the goal 7.32 m x 2.44 m with posts and crossbar 12 cm wide on the goal line, the penalty mark 11 m from the goal line, the goal area 5.5 m x 18.32 m), Law 2 (a size-5 ball: 68-70 cm round, 410-450 g), Law 10 (a goal: the whole ball over the goal line between the posts and under the crossbar), Law 12 (a goalkeeper may handle the ball in their own penalty area) and Law 14 (the penalty kick: the goalkeeper remains on the goal line, facing the kicker, between the goalposts, without touching the goalposts, crossbar or goal net, until the ball has been kicked; when the ball is kicked the goalkeeper must have at least part of one foot touching, or in line with, the goal line); deviations: Law 14 (the kicker): each penalty is shot by a two-wheel ball machine instead of a kicker: three machines, one ball each (a machine holds one ball per load), their exits 0.6 m above the ground on the penalty mark's line, 0.6 m apart across it (the middle one over the mark; the Law puts the ball on the mark). Each is aimed before the attempt at a point of the goal's plane that the rules state, and throws at 20.0 m/s, no spin: a real keeper reads a kicker; here the aim is stated instead. The elevation is computed for the ball's drag in air and trimmed by 0.45 degrees (measured in this venue: untrimmed, the shots crossed the line about 0.1 m low); a machine's own scatter (about 2 percent in speed and 2 degrees in direction, its maker's measurement) stays. · Law 10 (kicks from the penalty mark): three penalties against the same goalkeeper, 9.0 s apart, in one attempt; every one must be saved. · Law 14 (the goalkeeper between kicks): between the penalties the goalkeeper stays inside the goal area (only the moment of each kick is regulated by the Law). · Law 1: only the goal end of the field is there (the penalty area, the goal area and the mark are painted); the goal's net is a rigid cage 2.0 m deep. |
 | Stages | save 1 → save 2 → save 3 |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 2700 control steps (27 s at 100 Hz); 5 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

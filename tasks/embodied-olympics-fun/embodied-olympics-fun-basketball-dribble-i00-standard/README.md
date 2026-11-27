@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-fun-basketball-dribble-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
 | Family / instance | `basketball_dribble` / seed 0 |
@@ -44,7 +44,7 @@ Caps per container (PROTOCOL §6).
 | Category | basketball-and-rackets |
 | Rule book | FIBA Official Basketball Rules 2024: Art. 2 (court), Art. 3 and the Basketball Equipment appendix (size-7 ball), Art. 13 (how the ball is played), Art. 14 (control: a player holds a live ball), Art. 23 (out of bounds), Art. 24 (dribbling), Art. 25 (travelling), Art. 28.1.3 (when a dribbled ball is in the frontcourt); deviations: the player's hands: the H1-2's own Inspire five-finger hands (six drives each: four fingers, the thumb's flexion and rotation; fingertip forces 20 N, the thumb 30 N), each closed by one command; the ball is held in the two hands by contact and friction alone (nothing is welded) and can slip or drop; it has left your hands when no hand has been on it for 0.03 s. The fingers' rubber pads absorb the ball (critically damped), so a dribbling hand gives the ball its speed by its own motion; the floor keeps the ball's rule-book rebound. · Art. 24.1.3 (carrying the ball, a hand under it): judged by where a hand touches the ball: a touch from below (the hand's lowest contact point on the ball lower than the ball's centre by more than 0.3 of its radius) that lasts longer than 0.1 s carries the ball; a hand on top of it or on its side pushes it. · Art. 24.1.2 (the ball 'comes to rest' in a hand) is read as: a hand's touch of the ball that lasts longer than 0.3 s. A dribble that has ended cannot legally be started again (Art. 24.2), so a ball that comes to rest in a hand, or is touched by both hands at once, ends the attempt. · Art. 13: every touch of the ball by a part of you other than a hand is a violation, also while the ball is held at the start (no ball held against the chest or between the forearms); intent (an accidental touch of a leg is legal in the rule book) cannot be judged. · Art. 14 / 24 give no distance for 'control' of a dribbled ball: here the ball's centre must stay within 2.0 m (horizontally) of your pelvis, so that a ball thrown ahead and walked after is not a dribble. · Art. 28 (eight seconds to reach the frontcourt) is not applied: the attempt lasts at most 60 s of robot time. |
 | Stages | dribble → past the free-throw line → in the frontcourt |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 6000 control steps (60 s at 100 Hz); 5 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

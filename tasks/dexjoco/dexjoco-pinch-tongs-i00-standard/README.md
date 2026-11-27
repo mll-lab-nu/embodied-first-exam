@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | DexJoCo |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `dexjoco-pinch-tongs-i00-privileged` |
 | Simulator / robot | `dexjoco` / `franka-allegro` |
 | Family / instance | `pinch_tongs` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 DexJoCo `pinch_tongs` (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-pinch-tongs-i00-privileged`: Pick up the tongs, open them wide and squeeze them shut three times, then hold them up, a hand's width or more above the table.
-Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with the robot's own
+Standard mode (eai-standard/3.0): the agent drives the robot through a client in one episode, with the robot's own
 sensors, calibrated cameras (RGB, optional depth) and the robot's kinematics.
 
 ## Difficulty

@@ -33,7 +33,7 @@ Read [Before you run](#before-you-run) first: the first run builds the simulator
 - **Nothing to download or accept by hand** beyond the licence above: the first run builds everything.
 
 5 frozen instances per family (10), each a privileged task `yamlab-<family>-iNN-privileged` and its standard twin
-`yamlab-<family>-iNN-standard` (`eai-standard/2.2`): 20 task directories. Each instance is a different pair of YAMLab's
+`yamlab-<family>-iNN-standard` (`eai-standard/3.0`): 20 task directories. Each instance is a different pair of YAMLab's
 object assets (pot_k + cooktop_k, mug_k + mug_tree_k) placed as in one of YAMLab's human teleoperation demonstrations.
 The instances keep the ids they were frozen with: `put_pot_on_cooktop` i00, i03, i04, i07, i08; `hang_mug_on_tree` i10,
 i13, i15, i20, i21.
@@ -186,7 +186,7 @@ The tooling's runaway guard ends an episode after 100,000 control steps (`step_g
 is stated in `/spec` (`max_control_steps`, `episode`), in both instructions and in the README (a technical cap, not a
 step budget); a privileged trajectory may hold at most that many rows.
 
-## Standard mode (eai-standard/2.2)
+## Standard mode (eai-standard/3.0)
 `joint_position` (14: YAMLab's action, rows `dt` apart, a multiple of 1/30 s; `linear` interpolates the gripper targets too)
 and `ee_pose` (16: both tool frames + both gripper targets per row, closed-loop differential IK, at most 0.25 m/s); cameras
 `top`, `left_wrist`, `right_wrist` (640×480, z-depth); `/kinematics` from numpy models of both arms (`q` = left joint1..6,
@@ -233,7 +233,7 @@ YAMLab, its USDs and its dataset (objects, demonstrations): MIT. Isaac Lab: BSD-
 
 ## Standard-mode service details
 
-Serves `eai-standard/2.2`. Resume class `exact` (Isaac Lab, CPU PhysX, a fixed env seed: the resumed service is a fresh process, whose first run is bit-exact). One call returns at most 5412 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+Serves `eai-standard/3.0`. Resume class `exact` (Isaac Lab, CPU PhysX, a fixed env seed: the resumed service is a fresh process, whose first run is bit-exact). One call returns at most 5412 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
 
 ## Screening
 

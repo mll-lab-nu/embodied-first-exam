@@ -3,7 +3,7 @@
  "kind": "rcb",
  "suite": "robocasa365",
  "task": "robocasa365-deliver-brewed-coffee-i00-standard",
- "protocol": "eai-standard/2.1",
+ "protocol": "eai-standard/3.0",
  "realtime": false,
  "tools": [
   "spec",

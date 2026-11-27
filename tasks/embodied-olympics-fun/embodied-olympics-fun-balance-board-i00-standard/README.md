@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-fun-balance-board-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `balance_board` / seed 0 |
@@ -44,7 +44,7 @@ Caps per container (PROTOCOL §6).
 | Category | parkour-apparatus-balance |
 | Rule book | No federation rule book: the roller balance board (Indo Board style rocker-roller trainer): a rigid deck 0.76 m x 0.38 m lying loose on a free roller of 0.085 m radius, with a stop under each end of the deck; the standard is the balance trainer's: time on the board with neither end of the deck nor the rider touching the floor; deviations: the board: deck and roller are rigid bodies (a 2.7 kg box and a 1.8 kg hollow cylinder) with a friction coefficient of 1.0 between deck, roller and floor, without grip tape or a rubber-lined roller, because the simulator has rigid bodies only · the mount: a rider steps onto a deck that rests on one end and rolls it up to level; the robot does not step on: it starts standing square on the deck just after that mount, the deck 3.0 degrees from level with its left end low, resting on the roller under its middle, the robot tilted with it (feet flat on the deck), its centre of mass about 4 cm left of the roller's line of contact and everything at rest; it has to bring the board level itself. The start is the same in every trial (no random perturbation), because a trial is one frozen instance |
 | Stages | 10 s → 20 s → 30 s |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 3050 control steps (30.5 s at 100 Hz); 5 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

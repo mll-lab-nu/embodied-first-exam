@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Fun |
-| Mode | realtime (`eai-standard/2.3`) |
+| Mode | realtime (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-fun-goalkeeper-save-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
 | Family / instance | `goalkeeper_save` / seed 0 |
@@ -22,7 +22,7 @@ Each ball arrives about 0.55 s after it leaves the machine at 20 m/s and 0.43 kg
 `solution/oracle_plan.py` plans the privileged twin's reference rows (`solution/rows.npz`) into the attempt at the control steps where they ran there (`submit(..., at=step)`; the first, at step 0, starts the clock); it uses no privileged information at run time. Reference: the H1-2 walks along the goal line into each shot's line (walking policy, closed loop on the pelvis), feet on the line at each kick; three 20 m/s machine shots hit the body and stay out. It learns each machine's real crossing (scatter up to 0.4 m) and side offsets over privileged resets (2-6 attempts); 10 of 10 perturbations (aims, speeds 19 and 21 m/s, kick time) succeed.
 
 ## Verification
-The sim sidecar (`rcb_realtime.py` + `rcb_service.py`, the shared eai-standard/2.3 layer, with the standard twin's
+The sim sidecar (`rcb_realtime.py` + `rcb_service.py`, the realtime layer, with the standard twin's
 `server.py`) runs the attempt on its clock and its referee judges it live; every control step the simulator applied is
 recorded, and the live referee's call on the last attempt is the verdict (`final.json`: `graded_by` live, `replays` 0; no
 grading replay, owner 2026-10-17); the video is rendered from the recorded attempt afterwards.
@@ -49,7 +49,7 @@ Caps per container (PROTOCOL §6).
 | Category | football-and-volleyball |
 | Rule book | IFAB Laws of the Game 2025/26: Law 1 (the goal 7.32 m x 2.44 m with posts and crossbar 12 cm wide on the goal line, the penalty mark 11 m from the goal line, the goal area 5.5 m x 18.32 m), Law 2 (a size-5 ball: 68-70 cm round, 410-450 g), Law 10 (a goal: the whole ball over the goal line between the posts and under the crossbar), Law 12 (a goalkeeper may handle the ball in their own penalty area) and Law 14 (the penalty kick: the goalkeeper remains on the goal line, facing the kicker, between the goalposts, without touching the goalposts, crossbar or goal net, until the ball has been kicked; when the ball is kicked the goalkeeper must have at least part of one foot touching, or in line with, the goal line); deviations: Law 14 (the kicker): each penalty is shot by a two-wheel ball machine instead of a kicker: three machines, one ball each (a machine holds one ball per load), their exits 0.6 m above the ground on the penalty mark's line, 0.6 m apart across it (the middle one over the mark; the Law puts the ball on the mark). Each is aimed before the attempt at a point of the goal's plane that the rules state, and throws at 20.0 m/s, no spin: a real keeper reads a kicker; here the aim is stated instead. The elevation is computed for the ball's drag in air and trimmed by 0.45 degrees (measured in this venue: untrimmed, the shots crossed the line about 0.1 m low); a machine's own scatter (about 2 percent in speed and 2 degrees in direction, its maker's measurement) stays. · Law 10 (kicks from the penalty mark): three penalties against the same goalkeeper, 9.0 s apart, in one attempt; every one must be saved. · Law 14 (the goalkeeper between kicks): between the penalties the goalkeeper stays inside the goal area (only the moment of each kick is regulated by the Law). · Law 1: only the goal end of the field is there (the penalty area, the goal area and the mark are painted); the goal's net is a rigid cage 2.0 m deep. |
 | Stages | save 1 → save 2 → save 3 |
-| Service | `environment/sim/rcb_realtime.py` (the shared realtime layer, eai-standard/2.3) with the standard twin's `server.py` on `rcb_service.py`, `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's); EGL rendering on the GPU |
+| Service | `environment/sim/rcb_realtime.py` (the shared realtime layer, eai-standard/3.0) with the standard twin's `server.py` on `rcb_service.py`, `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's); EGL rendering on the GPU |
 | Slowdown | S = 1 (`RCB_SLOWDOWN`'s default): RTF 1.1 with the clock flat out (physics only, the start command held, 4 attempts) on the slowest evaluation host kind (AMD EPYC 7763, one thread; estimated from Xeon Gold 6338 measurements); S = 1 in every family: Embodied Olympics runs the venue in real time (PROTOCOL §2's default would slow these hosts down; a slower host may fall behind, which the clock's record reports) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 2700 control steps (27 s at 100 Hz); 5 resets, the last attempt graded |

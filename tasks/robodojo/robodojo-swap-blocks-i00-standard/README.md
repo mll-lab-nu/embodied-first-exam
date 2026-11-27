@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | RoboDojo |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `robodojo-swap-blocks-i00-privileged` |
 | Simulator / robot | `robodojo` / `arx-x5-bimanual` |
 | Family / instance | `swap_blocks` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `robodojo-swap-blocks-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/swap_blocks_0.json`). Swap the two cubes in three moves, lifting each cube and using the empty mat as a parking spot. After each move, pull the button's cap up and press it once. Finish with the cap pulled up while both arms are back where they started. (RoboDojo's `swap_blocks`). The agent drives the
-robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
+robot only through the eai-standard/3.0 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 
 ## Difficulty

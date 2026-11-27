@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | HumanoidBench |
-| Mode | realtime (`eai-standard/2.3`) |
+| Mode | realtime (`eai-standard/3.0`) |
 | Twin | `humanoidbench-manip-room-i00-privileged` |
 | Simulator / robot | `humanoidbench` / `unitree-h1hand` |
 | Family / instance | `room` / seed 0 |
@@ -15,7 +15,7 @@
 ## Task
 Gather the six loose things in the room (the chair, the trophy, the headphones, the two packages and the snow globe) close together, anywhere you like.
 
-Realtime mode (robot as a service on a clock that does not stop, `eai-standard/2.3`, PROTOCOL §3) of
+Realtime mode (robot as a service on a clock that does not stop, `eai-standard/3.0`, PROTOCOL §3) of
 `humanoidbench-manip-room-i00-privileged`: the same frozen instance and the same success rule as it and as
 `humanoidbench-manip-room-i00-standard`, but time does not stop. Once an episode's clock starts (its first
 `submit`), the robot runs at 50 Hz in real time and holds its last servo targets while the agent thinks, so

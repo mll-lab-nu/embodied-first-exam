@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | MyoSuite |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `myosuite-die-reorient-i00-privileged` |
 | Simulator / robot | `myosuite` / `myohand` |
 | Family / instance | `die_reorient` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 MyoSuite `myoChallengeDieReorientP1-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-die-reorient-i00-privileged`: Turn the die in your palm until it matches the see-through target die, and hold it there for a second.
-A die rests in the palm of the upturned hand; a translucent target die shows the goal orientation. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
+A die rests in the palm of the upturned hand; a translucent target die shows the goal orientation. Standard mode (eai-standard/3.0): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty
 Same instance and success rule as `myosuite-die-reorient-i00-privileged` (first-pass rating: hard). In standard mode the agent loses free resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in actuator-command chunks, and gets 10 resets, so it has to close the loop on what it sees and learn the body from a few real attempts.

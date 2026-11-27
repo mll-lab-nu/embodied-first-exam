@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Match |
-| Mode | realtime (`eai-standard-realtime/1.0`) |
+| Mode | realtime (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-match-tabletennis-matchlow-i01-privileged` |
 | Simulator / robot | `mujoco` / `franka-panda` |
 | Family / instance | `tabletennis_matchlow` / seed 22 (allowed seeds: [22, 101, 111]; PROTOCOL §2) |

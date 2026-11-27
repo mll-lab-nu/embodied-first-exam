@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | RoboDojo |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `robodojo-sort-nesting-dolls-by-size-i00-privileged` |
 | Simulator / robot | `robodojo` / `arx-x5-bimanual` |
 | Family / instance | `sort_nesting_dolls_by_size` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `robodojo-sort-nesting-dolls-by-size-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/sort_nesting_dolls_by_size_0.json`). Stand the five yellow rubber ducks upright in a straight left-to-right row, smallest on the left to largest on the right, a little apart. Then move both arms back to where they started. (RoboDojo's `sort_nesting_dolls_by_size`). The agent drives the
-robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
+robot only through the eai-standard/3.0 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 
 ## Difficulty

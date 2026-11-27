@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | LabUtopia |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `labutopia-place-i00-privileged` |
 | Simulator / robot | `labutopia` / `franka-panda` |
 | Family / instance | `place` / seed 0 |
@@ -13,7 +13,7 @@
 
 ## Task
 LabUtopia's `place` (Place (LabUtopia's level-2 TransportBeaker is the same task)) on the same frozen instance as `labutopia-place-i00-privileged`: Pick up the beaker, lifting it more than a hand's width, and set it down in the middle of the white square plate; then let go and move the hand away.
-On the bench in front of the arm: a glass beaker, about 11 cm across and 9 cm tall, and a white square plate, 10 cm x 10 cm, lying flat on the bench. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
+On the bench in front of the arm: a glass beaker, about 11 cm across and 9 cm tall, and a white square plate, 10 cm x 10 cm, lying flat on the bench. Standard mode (eai-standard/3.0): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty
 Same instance and success rule as `labutopia-place-i00-privileged` (LabUtopia's level 1). The beaker has to be lifted at least 10 cm, carried about half a metre and released upright within 5 cm of the centre of a 10 cm plate. In standard mode the agent loses resets, the simulator and the state of the objects: it sees camera images (glassware is nearly transparent in them and absent from the depth maps) and the robot's proprioception, acts in joint target chunks, and gets one episode, so it has to find the things it handles in the images and recover from its own mistakes without starting over.

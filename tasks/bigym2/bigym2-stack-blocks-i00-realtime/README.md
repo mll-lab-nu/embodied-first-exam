@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | BiGym 2.0 |
-| Mode | realtime (`eai-standard/2.3`) |
+| Mode | realtime (`eai-standard/3.0`) |
 | Twin | `bigym2-stack-blocks-i00-privileged` |
 | Simulator / robot | `bigym2` / `unitree-g1-dex1` |
 | Family / instance | `stack-blocks` / seed 0 (allowed seeds: [0, 620100, 620101]; PROTOCOL §2) |
@@ -48,6 +48,6 @@ Caps per container (PROTOCOL §6).
 ## Details
 | | |
 |---|---|
-| Service | `environment/sim/rcb_realtime.py` (eai-standard/2.3) with the BiGym 2.0 adapter `server.py`, `rcb_bigym2.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/rcb_realtime.py` (eai-standard/3.0) with the BiGym 2.0 adapter `server.py`, `rcb_bigym2.py`, `instance.json` (= the privileged twin's) |
 | Clock | real time (`RCB_SLOWDOWN`, default 1) from the first `submit` |
 | Horizon | 8750 control steps (175 s at 50 Hz) |

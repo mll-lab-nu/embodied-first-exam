@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | BEHAVIOR-1K |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `behavior-stacking-wood-i00-privileged` |
 | Simulator / robot | `behavior` / `r1pro` |
 | Family / instance | `stacking_wood` / seed 301 |
@@ -48,7 +48,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 | | |
 |---|---|
-| Protocol | `eai-standard/2.2`: RGB-D + proprioception through the client; no reset, no object poses, no success predicate |
+| Protocol | `eai-standard/3.0`: RGB-D + proprioception through the client; no reset, no object poses, no success predicate |
 | Action space | `submit` chunks of `joint_position` (25, streamed at the 30 Hz control rate with the agent's `dt`; base entries are per-step targets) or of `ee_pose` (16, both end effectors, cuRobo IK per row); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); binary RCB1 responses |
 | Crash recovery | `restart: on-failure:6`; the service journals every control step (`journal.f64`) and resumes the same episode after a crash (resume class `approx`, docs/protocol/standard_mode.md §13.1); startup watchdog `RCB_STARTUP_TIMEOUT_S` = 1800 s |
 | Dataset | the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition) |
@@ -56,7 +56,7 @@ Caps per container (PROTOCOL §6).
 | Collect hook time | 23400 s: the episode end (up to 2 h through a resume, with the 5 s settle window) + a video-only render after the verdict, only when the live video is missing (up to 4 h) + 30 min |
 
 ### Sidecar and grading
-The agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
+The agent gets only the `eai-standard/3.0` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`: GPU on the sidecar, the licensed dataset mounted read-only at `/data`, the service's own
 record in `/out`), which owns the scene, judges the episode and records it as a (T, 25) trajectory and a video. The
 collect hook (`environment/sim/finalize.sh`) ends the episode (the settle window on the live simulator when it was still

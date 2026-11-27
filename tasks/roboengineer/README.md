@@ -71,7 +71,7 @@ package name in #329.
 
 - **Standard mode with the benchmark's own runtime** (PROTOCOL §3): `eai-policy/1.0` (Neural Landing) and
   `eai-policy/1.1` (the others), listed in `ci_checks/benchmarks/roboengineer/exported.toml`; results are reported apart from the
-  `eai-standard/2.x` tasks. Appendix H applies unchanged. The private evaluator runs in the `sim` sidecar (port 8000
+  `eai-standard/3.0` tasks. Appendix H applies unchanged. The private evaluator runs in the `sim` sidecar (port 8000
   on localhost, no published port); the agent's container holds the public nominal model and the controller ABI only
   (environment/public/, an explicit allowlist checked by `ci_checks/benchmarks/roboengineer/invariant-boundary.py`, plus AnyCar's two track data files from the files-only image).
 - **Its own interface only**: no MCP tools (docs/protocol/standard_mode.md "MCP tools"). The agent hands in a

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | AutoBio |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `autobio-screw-loose-i00-privileged` |
 | Simulator / robot | `autobio` / `aloha-2` |
 | Family / instance | `screw_loose` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 AutoBio's `screw_loose` (Unscrew centrifuge tube cap) on the same frozen instance as `autobio-screw-loose-i00-privileged`: Unscrew the cap of the 50 mL tube and lift it off, holding the cap with `arm1`.
-On the bench: a rack with a 50 mL tube standing in it, its cap screwed on. The thread is a real one: the cap comes off only by turning it. AutoBio's prompt for this task: "one stabilizes tube while the other twists cap". Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
+On the bench: a rack with a 50 mL tube standing in it, its cap screwed on. The thread is a real one: the cap comes off only by turning it. AutoBio's prompt for this task: "one stabilizes tube while the other twists cap". Standard mode (eai-standard/3.0): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty
 Same instance and success rule as `autobio-screw-loose-i00-privileged` (AutoBio's level: medium). A real thread: the cap separates from the tube only after it has been turned off, and the check needs it held more than 3.03 cm up by the first arm. In standard mode the agent loses resets, the simulator and the state of the tubes and instruments: it sees camera images and the robot's proprioception, acts in joint-position chunks, and gets one episode, so it has to find the things it handles in the images and recover from its own mistakes without starting over.

@@ -110,7 +110,7 @@ Differences from EmbodiedSWE's own grading, on purpose:
 - A malformed submissions directory (an entry that is not a checkpoint, more than 64 checkpoints) leaves those entries
   ungraded with score 0 instead of failing the whole evaluation.
 
-## Standard mode (eai-standard/2.2)
+## Standard mode (eai-standard/3.0)
 
 `<task>-standard` is the privileged task's twin: the same frozen instance (`environment/sim/instance.json`, byte for
 byte), grader and time limit. The simulator runs in the `sim` sidecar (`embodied_first_exam/benchmarks/embodiedswe/sim/`:

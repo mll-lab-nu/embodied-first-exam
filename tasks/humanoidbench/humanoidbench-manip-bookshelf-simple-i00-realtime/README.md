@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | HumanoidBench |
-| Mode | realtime (`eai-standard/2.3`) |
+| Mode | realtime (`eai-standard/3.0`) |
 | Twin | `humanoidbench-manip-bookshelf-simple-i00-privileged` |
 | Simulator / robot | `humanoidbench` / `unitree-h1hand` |
 | Family / instance | `bookshelf_simple` / seed 0 |
@@ -15,7 +15,7 @@
 ## Task
 Put the five red objects on the bookshelf one at a time, palest first and darkest last, each on the see-through copy of itself.
 
-Realtime mode (robot as a service on a clock that does not stop, `eai-standard/2.3`, PROTOCOL §3) of
+Realtime mode (robot as a service on a clock that does not stop, `eai-standard/3.0`, PROTOCOL §3) of
 `humanoidbench-manip-bookshelf-simple-i00-privileged`: the same frozen instance and the same success rule as
 it and as `humanoidbench-manip-bookshelf-simple-i00-standard`, but time does not stop. Once an episode's clock
 starts (its first `submit`), the robot runs at 50 Hz in real time and holds its last servo targets while the

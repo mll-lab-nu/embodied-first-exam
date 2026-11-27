@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | RoboDojo |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `robodojo-stack-bowls-random-i00-privileged` |
 | Simulator / robot | `robodojo` / `arx-x5-bimanual` |
 | Family / instance | `stack_bowls_random` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `robodojo-stack-bowls-random-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/stack_bowls_random_0.json`). Stack the three bowls one inside another, all upright. Then move both arms back to where they started. (RoboDojo's `stack_bowls_random`). The agent drives the
-robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
+robot only through the eai-standard/3.0 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 
 ## Difficulty

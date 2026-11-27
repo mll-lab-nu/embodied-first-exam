@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | HumanoidBench |
-| Mode | realtime (`eai-standard/2.3`) |
+| Mode | realtime (`eai-standard/3.0`) |
 | Twin | `humanoidbench-loco-sit-simple-i00-privileged` |
 | Simulator / robot | `humanoidbench` / `unitree-h1` |
 | Family / instance | `sit_simple` / seed 0 |
@@ -15,7 +15,7 @@
 ## Task
 Sit down on the chair right behind you and stay seated, upright and still.
 
-Realtime mode (robot as a service on a clock that does not stop, `eai-standard/2.3`, PROTOCOL §3) of
+Realtime mode (robot as a service on a clock that does not stop, `eai-standard/3.0`, PROTOCOL §3) of
 `humanoidbench-loco-sit-simple-i00-privileged`: the same frozen instance and the same success rule as it and
 as `humanoidbench-loco-sit-simple-i00-standard`, but time does not stop. Once an episode's clock starts (its
 first `submit`), the robot runs at 50 Hz in real time and holds its last servo targets while the agent thinks,

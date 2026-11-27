@@ -3,7 +3,7 @@
 DexHand is a benchmark of dexterous-hand manipulation in MuJoCo 3.4.0 (CPU physics, software rendering). It has thirty
 task families (the ten of the first release and twenty household scene families of wave 2), each with one
 frozen scene, in privileged and standard mode (60 task directories,
-`dexhand-<family>-i00-{privileged,standard}`, standard mode on `eai-standard/2.2`):
+`dexhand-<family>-i00-{privileged,standard}`, standard mode on `eai-standard/3.0`):
 
 ## Quick start
 ```bash
@@ -880,7 +880,7 @@ larger stride, recorded as `video_stride` and `recording.playback_speed`) and ma
 slow ones), measured on an archive that holds the first oracle row for the family's whole row limit; `video_sec`,
 `verifier_privileged_sec` and `collect_sec` cover that longest archive with a 1.5x margin.
 
-**Standard** (`eai-standard/2.2`, docs/protocol/standard_mode.md Part 2). The agent gets the shared client (`rcb_client`) and no
+**Standard** (`eai-standard/3.0`, docs/protocol/standard_mode.md Part 2). The agent gets the shared client (`rcb_client`) and no
 simulator code. The `sim` sidecar (each standard task's `environment/sim/server.py` on the unmodified shared layer
 `embodied_first_exam/standard/`) serves calibrated RGB and depth, the robot's own joints, efforts and link poses and
 robot-link forward kinematics; object poses, contact forces, checker stages and scene bodies are not served. The
@@ -1009,7 +1009,7 @@ observation an agent can retry, which is what the reset budget is for.
 
 The task directories are the deliverable; the tooling that built them is kept outside this repository. Every task
 carries the same copies (`ci_checks/check-tooling-identity.sh`) of `rcb_dexhand.py`, `hands.py`, the privileged and
-standard graders, the standard service, its collect hook and the `eai-standard/2.2` layer.
+standard graders, the standard service, its collect hook and the `eai-standard/3.0` layer.
 
 ```bash
 python3 images/dexhand/prepare_assets.py                       # the pinned hand and arm assets (image build only)
@@ -1026,4 +1026,4 @@ rigid. In the wave-2 families coffee, batter, air, the liquid in a glass are not
 
 ## Standard-mode service details
 
-Serves `eai-standard/2.2`. Resume class `exact` (MuJoCo 3.4.0, CPU physics, one thread; a frozen scene rebuilt from its pinned model files; one control row is one or more fixed physics steps). Its service implements the optional reset capability (docs/protocol/standard_mode.md Part 1); the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`.
+Serves `eai-standard/3.0`. Resume class `exact` (MuJoCo 3.4.0, CPU physics, one thread; a frozen scene rebuilt from its pinned model files; one control row is one or more fixed physics steps). Its service implements the optional reset capability (docs/protocol/standard_mode.md Part 1); the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`.

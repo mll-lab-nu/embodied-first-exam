@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | EmbodiedSWE |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodiedswe-assembly-ikea-table-bimanual-franka-osc-i00-privileged` |
 | Simulator / robot | `embodiedswe` / `franka-panda-bimanual` |
 | Family / instance | `assembly.ikea_table.bimanual_franka.osc` / seed 0 |

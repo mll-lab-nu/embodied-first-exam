@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/behavior-cook-a-brisket-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): BEHAVIOR-1K v3.9.2 cook_a_brisket on the same frozen instance as the privileged task (2026 challenge public_test instance 301). Cook the brisket and put it on the chopping board, and leave the frying pan on the countertop. The agent only gets a client: get_obs (RGB-D + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory, resumes it after a crash, and grades the episode it ran (no replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): BEHAVIOR-1K v3.9.2 cook_a_brisket on the same frozen instance as the privileged task (2026 challenge public_test instance 301). Cook the brisket and put it on the chopping board, and leave the frying pan on the countertop. The agent only gets a client: get_obs (RGB-D + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory, resumes it after a crash, and grades the episode it ran (no replay)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "standard-mode", "trajectory", "cook_a_brisket"]
 
 [metadata]
@@ -24,7 +24,7 @@ simulator = "behavior"
 robot = "r1pro"
 family = "cook_a_brisket"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 oracle = "none"
 oracle_evidence = "No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (244 s on average); demonstration video (251 s): https://www.youtube.com/embed/RCSy8B0_s5Y (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-07); human review in PR #71 (protocol §4)."
 instance_seed = 301

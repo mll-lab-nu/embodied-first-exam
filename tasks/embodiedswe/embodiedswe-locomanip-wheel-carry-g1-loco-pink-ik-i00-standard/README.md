@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | EmbodiedSWE |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodiedswe-locomanip-wheel-carry-g1-loco-pink-ik-i00-privileged` |
 | Simulator / robot | `embodiedswe` / `unitree-g1-dex3` |
 | Family / instance | `locomanip.wheel_carry.g1.loco_pink_ik` / seed 0 |

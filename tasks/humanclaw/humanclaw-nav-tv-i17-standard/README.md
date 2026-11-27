@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | HumanCLAW |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `humanclaw-nav-tv-i17-privileged` |
 | Simulator / robot | `humanclaw` / `smplx-human` |
 | Family / instance | `nav-tv` / seed 0 |

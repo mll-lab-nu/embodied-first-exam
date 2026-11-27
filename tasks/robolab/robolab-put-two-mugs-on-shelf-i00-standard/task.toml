@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robolab-put-two-mugs-on-shelf-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): NVIDIA RoboLab put_two_mugs_on_shelf on the same frozen instance as the privileged task (the state after RoboLab's canonical seed-0 reset). Put 2 of the mugs on the wire shelf. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): NVIDIA RoboLab put_two_mugs_on_shelf on the same frozen instance as the privileged task (the state after RoboLab's canonical seed-0 reset). Put 2 of the mugs on the wire shelf. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 keywords = ["robotics", "robolab", "isaac-lab", "isaac-sim", "franka", "standard-mode", "trajectory", "put_two_mugs_on_shelf"]
 
 [metadata]
@@ -23,7 +23,7 @@ simulator = "robolab"
 robot = "franka-robotiq-2f85"
 family = "put_two_mugs_on_shelf"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 oracle = "none"
 oracle_evidence = "No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-put-two-mugs-on-shelf-i0__AMuARWT (robolab-put-two-mugs-on-shelf-i00-privileged, an earlier version of the task, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038). The positives were graded under an earlier success term (one-finger gripper contact, no settle hold); not re-graded under the current term (both-finger contact, settle hold) unless stated here. Human review per family (PROTOCOL §4)."
 instance_seed = 0

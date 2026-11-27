@@ -1,10 +1,10 @@
-"""eai-standard/2.3 sim service for MuJoCo Playground's quadruped realtime tasks -- the adapter behind the shared
+"""eai-standard/3.0 sim service for MuJoCo Playground's quadruped realtime tasks -- the adapter behind the shared
 realtime layer (`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/README.md §3,
 tasks/mujoco-playground/README.md "Realtime").
 
 The simulator-specific half only: `Quadruped` implements rcb_service.Sim (the contract documented in rcb_service.py) for
 one frozen instance, on the benchmark's own tooling module rcb_quadruped.Session -- the same scene, command schedule,
-pushes, termination rule and success check as the standard twin's eai-standard/2.2 service
+pushes, termination rule and success check as the standard twin's eai-standard/3.0 service
 (environment/sim/server.py of `-standard`). The protocol, the clock, the plan, the episode, crash recovery and the
 finalize are rcb_realtime.py's and rcb_service.py's, unchanged copies of the HumanoidBench sources
 (ci_checks/check-tooling-identity.sh).

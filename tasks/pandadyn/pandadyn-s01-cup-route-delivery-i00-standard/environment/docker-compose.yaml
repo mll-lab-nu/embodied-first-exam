@@ -1,6 +1,6 @@
 # Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); between the agent's calls the world is
 # frozen (sim/server.py, this benchmark's adapter -- the code of its realtime twins' -- served by
-# sim/rcb_service.py, the shared eai-standard/2.1 layer); the agent only reaches port 8000. No `expose`/`ports` on sim:
+# sim/rcb_service.py, the sidecar layer); the agent only reaches port 8000. No `expose`/`ports` on sim:
 # under Harbor's egress control it shares main's network namespace (localhost:8000).
 # SAPIEN needs a Vulkan device (the NVIDIA GPU) to build the scene and render the cameras; physics is CPU PhysX. The
 # sidecar is TRUSTED: ./sim (the frozen instance, the service, the tooling) is mounted only here, never where agent code runs.

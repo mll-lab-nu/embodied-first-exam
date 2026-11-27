@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, { source
 
 [task]
 name = "embodied-first-exam/abc-sim-inhand-transfer-i00-standard"
-description = "ABC Sim in-hand transfer (two I2RT YAM arms, MuJoCo): Move the cream cheese stick to the left arm's side of the table, at least a hand's width past the middle, and set it down there. The robot as a service (eai-standard/2.2); graded by the live episode."
+description = "ABC Sim in-hand transfer (two I2RT YAM arms, MuJoCo): Move the cream cheese stick to the left arm's side of the table, at least a hand's width past the middle, and set it down there. The robot as a service (eai-standard/3.0); graded by the live episode."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "inhand_transfer", "standard"]
 
 [metadata]
@@ -12,7 +12,7 @@ simulator = "mujoco"                # ABC Sim (abc_sim, amazon-far/abc @ d0832d1
 robot = "i2rt-yam-bimanual"
 family = "inhand_transfer"
 dynamics = "static"
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 3.8

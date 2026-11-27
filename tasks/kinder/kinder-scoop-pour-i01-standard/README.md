@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | KinDER |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `kinder-scoop-pour-i01-privileged` |
 | Simulator / robot | `kinder` / `tidybot-plus-plus` |
 | Family / instance | `scoop-pour` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:kinder-0.1.6` |
 
 ## Task
-Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-scoop-pour-i01-privileged`: the same KinDER instance (`kinder/ScoopPour3D-o50-v0`, seed
+Standard mode (robot as a service, `eai-standard/3.0`) of `kinder-scoop-pour-i01-privileged`: the same KinDER instance (`kinder/ScoopPour3D-o50-v0`, seed
 0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
 cameras, joint encoders, the base's odometry -- and
 never the scene's state or the goal check. No reset: one episode, which is graded.

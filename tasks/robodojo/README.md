@@ -39,7 +39,7 @@ The first task builds the simulator image from public sources (below); later tas
 ## Tasks
 One frozen default instance per task, RoboDojo's own evaluation layout `Assets/Eval_Layout/RoboDojo/arx_x5/0/<task>_0.json`
 (seed 0; seeds 1 and 2, below), each a privileged task `robodojo-<task>-i00-privileged` and its standard twin `robodojo-<task>-i00-standard`
-(`eai-standard/2.2`), the six tasks whose physics does not replay bit for bit (Determinism, below) included: their
+(`eai-standard/3.0`), the six tasks whose physics does not replay bit for bit (Determinism, below) included: their
 privileged twins are graded as every privileged task, on up to 3 fresh replays, any success counting (PROTOCOL §4).
 54 privileged + 54 standard = 108 task directories. `oracle = "none"` for every task (below).
 
@@ -214,7 +214,7 @@ before the time limit is up and every `Session` start counts; standard, the task
 wait for the service counts. Nothing else is derived from the agent's limit: the verifier and collect-hook limits above
 come from the 15,000-action cap and the replay speed, `RCB_STARTUP_TIMEOUT_S` from the scene build.
 
-## Standard mode (eai-standard/2.2)
+## Standard mode (eai-standard/3.0)
 `joint_position` (14: RoboDojo's action, rows `dt` apart, a multiple of 1/25 s) and `ee_pose` (16: both arms' link6 targets
 + gripper commands, solved by the arms' kinematic model and executed as a joint move at most 0.25 m/s); cameras `cam_head`,
 `cam_left_wrist`, `cam_right_wrist` (640×480, z-depth); `/kinematics` (FK/IK of both arms from the X5 URDF; matches the
@@ -276,7 +276,7 @@ fork: NVIDIA's cuRobo licence. Isaac Sim 5.1 and its wheels: NVIDIA proprietary 
 
 ## Standard-mode service details
 
-Serves `eai-standard/2.2`. Resume class `exact` (Isaac Lab, GPU PhysX: the resumed service is a fresh process, whose first run is bit-exact, measured on 48 of its 54 tasks; `make_toast` with PhysX enhanced determinism); `approx` for its six tasks whose physics does not replay bit for bit (`make_toast_random`, the three liquid tasks and the two cloth tasks: GPU PhysX particles and cloth do not replay bit for bit). For those six the verdict after a resume is the live state the resumed service continued from; `reward.json` reports `resumes` and `resume_state_mismatch`, at most two resumes are allowed as everywhere, and a success with `resumes > 0` is reported with those fields. `max_frames_per_call` = 3000.
+Serves `eai-standard/3.0`. Resume class `exact` (Isaac Lab, GPU PhysX: the resumed service is a fresh process, whose first run is bit-exact, measured on 48 of its 54 tasks; `make_toast` with PhysX enhanced determinism); `approx` for its six tasks whose physics does not replay bit for bit (`make_toast_random`, the three liquid tasks and the two cloth tasks: GPU PhysX particles and cloth do not replay bit for bit). For those six the verdict after a resume is the live state the resumed service continued from; `reward.json` reports `resumes` and `resume_state_mismatch`, at most two resumes are allowed as everywhere, and a success with `resumes > 0` is reported with those fields. `max_frames_per_call` = 3000.
 
 ## Screening
 

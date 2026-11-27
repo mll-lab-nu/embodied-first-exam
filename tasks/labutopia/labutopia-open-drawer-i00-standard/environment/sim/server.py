@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for the LabUtopia tasks (docs/protocol/standard_mode.md): the adapter of the shared layer
+"""eai-standard/3.0 sim service for the LabUtopia tasks (docs/protocol/standard_mode.md): the adapter of the shared layer
 rcb_limited.py; the simulator is rcb_labutopia.Session (LabUtopia on Isaac Sim, PhysX on the CPU, RTX cameras). HTTP
 surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to
 /data/episode.jsonl.
@@ -138,7 +138,6 @@ CAP = f"{M.MAX_STEPS} control steps ({M.MAX_STEPS * M.CONTROL_DT:g} s of simulat
 PERIOD = "1/60 s"
 SPEC = {
     "protocol": L.PROTOCOL,
-    "protocol_compat": list(L.COMPAT),
     "simulator": "LabUtopia on NVIDIA Isaac Sim (PhysX on the CPU, RTX cameras)",
     "robot": ROBOT_SPEC["name"],
     "task_text": TASK_TEXT,

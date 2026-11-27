@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | AM-Bench |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `ambench-press-button-fahexa-i00-privileged` |
 | Simulator / robot | `ambench` / `ambench-fahexa` |
 | Family / instance | `press_button_fahexa` / seed 0 |
@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `ambench-press-button-fahexa-i00-privileged` (the same frozen instance: AM-Bench environment `PressButton-Am-FAHexa-Abs-PID-Direct-v0`, its seeded reset with seed
-0): Press the red button on the wall in, nearly halfway or more. The agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in
+0): Press the red button on the wall in, nearly halfway or more. The agent gets only the `eai-standard/3.0` client (docs/protocol/standard_mode.md); the simulator runs in
 the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the scene and records the episode as a
 (T, 8) trajectory of AM-Bench's own end-effector pose actions. The collect hook (`environment/sim/finalize.sh`) ends the
 episode, lets the service exit, writes `final.json` from the live episode's record (no replay) and then films the

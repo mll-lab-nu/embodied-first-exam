@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-fun-sled-push-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
 | Family / instance | `sled_push` / seed 0 |
@@ -44,7 +44,7 @@ Caps per container (PROTOCOL §6).
 | Category | parkour-apparatus-balance |
 | Rule book | HYROX Rulebook 2026/27 (the Sled Push station: the sled pushed 50 m in four 12.5 m lengths on the competition turf, each length counted when the whole sled is over the line; the athlete stays in the lane; the loads, the sled included: 102 kg Women Open, 152 kg Men Open and Women Pro, 202 kg Men Pro). There is no rule book for a sled push alone; HYROX's station is the closest official event; deviations: HYROX Sled Push (load): a light sled frame of 5.0 kg with the dimensions and the two 1.04 m push poles of a real weight sled (a 57 lb sled, the lightest with upright poles found: 25.9 kg, 114 N to start on this turf), so that the start takes about 22 N, within what this robot's walking pushes. 5.0 kg in all (0.0 kg of plates) is 7 % of the robot's 67.0 kg. HYROX's lightest official load, 102 kg (Women Open), takes about 450 N to start on the turf: far beyond a 67 kg robot pushing at hip height. · HYROX Sled Push (distance): one 12.5 m length, not four: one action, not the station. · HYROX Sled Push (technique): the sled is pushed with the palms only, on the two upright handles; hands cannot grip (the H1-2's hands are its fixed hands, which do not close), and no other part of the body may touch the sled. · Turf friction: MuJoCo has one friction coefficient per contact: the runners slide on the turf at mu 0.45, the measured push-sled-on-AstroTurf static range (0.37-0.53, Hoffmann 2014) mid value, above the measured kinetic range (0.28-0.35): starting is as hard as on real turf, keeping it moving harder. |
 | Stages | moved → line |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 6000 control steps (60 s at 100 Hz); 5 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

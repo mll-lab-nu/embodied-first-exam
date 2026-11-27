@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | RoboDojo |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `robodojo-build-tower-i00-privileged` |
 | Simulator / robot | `robodojo` / `arx-x5-bimanual` |
 | Family / instance | `build_tower` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `robodojo-build-tower-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/build_tower_0.json`). Build a three-level tower: the long board across two pillars, one from each side; the other two pillars on it, under the short board; then the thin plank along the short board and the roof piece on the middle of the plank, ridge across it. Keep every piece the way up it is now. Then move both arms back to where they started. (RoboDojo's `build_tower`). The agent drives the
-robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
+robot only through the eai-standard/3.0 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 
 ## Difficulty

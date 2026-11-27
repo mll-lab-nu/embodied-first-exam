@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | DexJoCo |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `dexjoco-hammer-nail-i00-privileged` |
 | Simulator / robot | `dexjoco` / `franka-allegro` |
 | Family / instance | `hammer_nail` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 DexJoCo `hammer_nail` (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-hammer-nail-i00-privileged`: Pick up the hammer and hammer the nail about 4 cm into the wooden block.
-Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with the robot's own
+Standard mode (eai-standard/3.0): the agent drives the robot through a client in one episode, with the robot's own
 sensors, calibrated cameras (RGB, optional depth) and the robot's kinematics.
 
 ## Difficulty

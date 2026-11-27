@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-fun-first-time-shot-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `first_time_shot` / seed 0 |
@@ -44,7 +44,7 @@ Caps per container (PROTOCOL §6).
 | Category | football-and-volleyball |
 | Rule book | IFAB Laws of the Game 2025/26: Law 1 (the goal 7.32 m x 2.44 m with posts and crossbar 12 cm wide, the penalty mark 11 m from the goal line, the penalty area, the goal area), Law 2 (a size-5 ball: 68-70 cm round, 410-450 g), Law 10 (a goal: the whole ball over the goal line between the posts and under the bar), Law 12 (handball) and the glossary (a kick is a contact with the foot or the ankle). The drill itself, a square pass struck first time (one touch) at goal from the penalty mark, is a coaching exercise, not a rule-book event: the pass and the one-touch standard are the benchmark's; deviations: The pass comes from a ball ramp instead of a team-mate: the ball rests against a gate 1.2 m up a 20.0 degree wooden ramp whose foot is 4.0 m to your left on the pass line; at 2.0 s a servo (stall torque 4.1 N m) swings the gate open and gravity rolls the ball down and across, along the line through the penalty mark parallel to the goal line. The same pass in every attempt; the pitch is level and uniform (the official ball's rolling resistance, no bobble), no wind. · Law 3: no goalkeeper and no defender: a finishing drill on an open goal, not a match situation. · The Laws allow any number of touches and any part but the arms; the task is narrower than the Laws: one touch, with a foot or an ankle only, while the ball is between the lines of the two posts (the shot is taken from in front of the goal). · A shot is judged by numbers instead of a referee's eye: every contact within 0.15 s of the first is the one touch, and a shot is a ball that leaves the foot at least 1.0 times as fast as it arrived (a ball that only rebounds from a foot held in its path leaves slower: it is not a shot). · Law 1: only the goal end of the field is there (the penalty area, the goal area and the mark are painted); the goal's net is a rigid cage 2.0 m deep. |
 | Stages | shot → goal |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 1500 control steps (15 s at 100 Hz); 5 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

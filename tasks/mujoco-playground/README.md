@@ -2,7 +2,7 @@
 
 GPU-scale RL environments from Google DeepMind, here in plain MuJoCo on the CPU. This page covers the quadruped
 locomotion tasks; the four manipulation tasks (`mujoco_playground_{aloha,panda}_*`,
-ALOHA and Franka Panda, scripted IK references, `eai-standard/2.1`) predate it and are made by hand.
+ALOHA and Franka Panda, scripted IK references, `eai-standard/3.0`) predate it and are made by hand.
 
 ## Quick start
 ```bash
@@ -16,7 +16,7 @@ Every image is public: Harbor pulls it.
 | simulator | MuJoCo 3.3.7, CPU physics (bit-exact replay); EGL rendering on a GPU, else OSMesa |
 | robots | `unitree-go1` (Unitree Go1), `boston-dynamics-spot` (Boston Dynamics Spot), `google-barkour-vb` (Google Barkour vB); 12 joint position actuators each |
 | score | binary, defined here from Playground's termination rules and reward targets (Playground has shaped RL rewards only) |
-| tasks | Playground's 9 quadruped environments × 2 modes: `tasks/mujoco-playground/mujoco_playground_<env>-privileged` and `-standard` (`eai-standard/2.2`); BarkourJoystick, the one dynamic environment, also `-realtime` (`eai-standard/2.3`) |
+| tasks | Playground's 9 quadruped environments × 2 modes: `tasks/mujoco-playground/mujoco_playground_<env>-privileged` and `-standard` (`eai-standard/3.0`); BarkourJoystick, the one dynamic environment, also `-realtime` (`eai-standard/3.0`) |
 | image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` (`images/mujoco/`: 0.1.2 plus Playground's `locomotion/{go1,spot}` scenes and Menagerie's Go1, Spot and Barkour; every 0.1.2 file is unchanged; the four manipulation tasks build on `efe:mujoco-0.1.2`) |
 | oracle | full, both modes |
 
@@ -188,7 +188,7 @@ passes only at the end of its schedule). The termination rule (a fall, a joint o
 `end_judgement`, `hidden_success_seen`, `hidden_success_first_step`, `trial_hidden_success_seen`, `finish_time_s`).
 Without `RCB_AGENT_END` the service behaves as described above.
 
-## Realtime (`eai-standard/2.3`)
+## Realtime (`eai-standard/3.0`)
 The dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-realtime` twin. Among the quadrupeds that is **BarkourJoystick** (its torso is pushed 12 times at
 frozen moments: an external force that is neither the robot's nor gravity).
 - **Service.** The shared realtime layer, unchanged (`rcb_realtime.py` and `rcb_client.py` from
@@ -218,7 +218,7 @@ The task directories are the deliverable; the tooling that built them is kept ou
 
 ## Standard-mode service details
 
-**MuJoCo service (DexToolBench, MuJoCo Playground manipulation; `eai-standard/2.1`).** Same endpoints and RCB1 frames,
+**MuJoCo service (DexToolBench, MuJoCo Playground manipulation; `eai-standard/3.0`).** Same endpoints and RCB1 frames,
 served by `embodied_first_exam/benchmarks/mujoco-playground/sim/server_mj.py`. Differences: one action type, `joint_position` with the task's own
 actuator layout (DexToolBench 29, ALOHA 14, Panda 8), rows `dt` apart where `dt` is a multiple of `control_dt` (1/60 s
 DexToolBench, 1/50 s Playground), hold or linear interpolation per control step. Actions are sent as **float64** (MuJoCo
@@ -239,4 +239,4 @@ run to the end of the agent phase and the final state is graded. The service jou
 layer (journal `record.f64`; startup watchdog `RCB_STARTUP_TIMEOUT_S`, default 300 s) and grades the live episode
 (Grading, above). It implements the optional reset capability.
 
-**Quadrupeds (`eai-standard/2.2`).** MuJoCo Playground's quadruped tasks serve the shared 2.2 layer. Their service implements the optional reset capability; the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`. One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call"), in the realtime twin too.
+**Quadrupeds (`eai-standard/3.0`).** MuJoCo Playground's quadruped tasks serve the shared 2.2 layer. Their service implements the optional reset capability; the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`. One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call"), in the realtime twin too.

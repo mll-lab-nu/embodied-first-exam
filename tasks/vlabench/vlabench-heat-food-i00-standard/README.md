@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | VLABench |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `vlabench-heat-food-i00-privileged` |
 | Simulator / robot | `vlabench` / `franka-panda` |
 | Family / instance | `vlabench/heat_food` / seed 0 |

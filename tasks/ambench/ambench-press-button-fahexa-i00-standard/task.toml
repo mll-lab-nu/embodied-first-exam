@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/ambench-press-button-fahexa-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): AM-Bench PressButton-Am-FAHexa-Abs-PID-Direct-v0 (a fully actuated hexarotor with a 4-joint arm and a two-finger gripper, Isaac Lab / Isaac Sim 5.1) on the same frozen instance as the privileged task. Task: Press the red button on the wall in, nearly halfway or more. The agent only gets a client: get_obs (RGB, depth + proprioception of the airframe and the arm), submit (AM-Bench's end-effector pose rows). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): AM-Bench PressButton-Am-FAHexa-Abs-PID-Direct-v0 (a fully actuated hexarotor with a 4-joint arm and a two-finger gripper, Isaac Lab / Isaac Sim 5.1) on the same frozen instance as the privileged task. Task: Press the red button on the wall in, nearly halfway or more. The agent only gets a client: get_obs (RGB, depth + proprioception of the airframe and the arm), submit (AM-Bench's end-effector pose rows). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 keywords = ["robotics", "ambench", "aerial-manipulation", "isaac-lab", "isaac-sim", "hexarotor", "standard-mode", "trajectory"]
 
 [metadata]
@@ -23,7 +23,7 @@ simulator = "ambench"             # AM-Bench @ 60bf5b7 on Isaac Lab @ f4aa17f / 
 robot = "ambench-fahexa"
 family = "press_button_fahexa"
 dynamics = "static"               # scene dynamics (PROTOCOL §2): nothing but the robot does work on the scene
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 3.0

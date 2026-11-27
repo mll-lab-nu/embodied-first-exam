@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | MyoSuite |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `myosuite-dex-apple-lift-i00-privileged` |
 | Simulator / robot | `myosuite` / `myohand` |
 | Family / instance | `dex_apple_lift` / seed 0 |
@@ -13,7 +13,7 @@
 
 ## Task
 MyoSuite `MyoHandAppleLift-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-dex-apple-lift-i00-privileged`: Lift the apple, following the recorded reference motion.
-An apple lies on the table; the MyoHand (with a 6-DoF positioned wrist) is at its pre-grasp pose next to it. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
+An apple lies on the table; the MyoHand (with a 6-DoF positioned wrist) is at its pre-grasp pose next to it. Standard mode (eai-standard/3.0): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty
 Same instance and success rule as `myosuite-dex-apple-lift-i00-privileged` (first-pass rating: hard). In standard mode the agent loses free resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in actuator-command chunks, and gets 10 resets, so it has to close the loop on what it sees and learn the body from a few real attempts.

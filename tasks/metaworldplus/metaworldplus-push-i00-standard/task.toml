@@ -11,7 +11,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/metaworldplus-push-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): MetaWorld+ (Meta-World v3 push, Sawyer arm): Push the object to the target. The agent only gets a client: camera RGB-D, the robot's own state and the target point, and Meta-World's native actions in chunks; no reset, no object poses; the sim service records the episode and grades the live episode's final state."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): MetaWorld+ (Meta-World v3 push, Sawyer arm): Push the object to the target. The agent only gets a client: camera RGB-D, the robot's own state and the target point, and Meta-World's native actions in chunks; no reset, no object poses; the sim service records the episode and grades the live episode's final state."
 keywords = ["robotics", "mujoco", "metaworld", "sawyer", "code-as-policy", "trajectory", "standard-mode"]
 
 [metadata]
@@ -20,7 +20,7 @@ simulator = "mujoco"
 robot = "sawyer"
 family = "metaworld/push"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 1.0

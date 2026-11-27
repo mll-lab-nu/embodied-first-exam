@@ -22,7 +22,7 @@ COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-match-files-0.3.0@sha256:0c
      /privileged/environment/fullsim/bodies/selfcollision.py \
      /srv/bodies/
 COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-match-files-0.3.0@sha256:0c6710ec1d7682bc4bf1b828a71d4c8b6c21193a279f13ad7e39d683307a95af \
-     /sim/variants/1952a67dfc/core/README.md \
+     /sim/variants/3025daf70a/core/README.md \
      /sim/core/__init__.py \
      /privileged/environment/fullsim/core/channel.py \
      /sim/core/client.py \

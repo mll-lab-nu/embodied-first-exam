@@ -20,7 +20,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/roboarc-interlocked-claws-07-i01-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboARC interlocked_claws on the same frozen instance as the privileged task. Take the brown key out of the teal lock and put all of it inside the green dashed goal square. Leave the teal lock behind, no closer to the goal than it was at the start. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): RoboARC interlocked_claws on the same frozen instance as the privileged task. Take the brown key out of the teal lock and put all of it inside the green dashed goal square. Leave the teal lock behind, no closer to the goal than it was at the start. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 keywords = ["robotics", "roboarc", "mujoco", "aloha", "standard-mode", "trajectory", "interlocked_claws"]
 
 [metadata]
@@ -29,7 +29,7 @@ simulator = "roboarc"
 robot = "aloha-2"
 family = "interlocked_claws"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.4"
+protocol = "eai-standard/3.0"
 oracle = "full"
 difficulty = "easier"
 grasp = "assisted (the contact_weld_v1 pre-weld: the grippers start closed on piece_0, piece_1)"

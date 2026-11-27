@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | RoboARC |
-| Mode | standard (`eai-standard/2.4`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `roboarc-ikea-stegesund-i00-privileged` |
 | Simulator / robot | `mujoco` / `franka-panda-bimanual` |
 | Family / instance | `ikea_stegesund` / seed 0 |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:ikea-mujoco-sim-0.4.0` |
 
 ## Task
-IKEA STEGESUND toilet roll stand (AA-2652783-1), manual steps 1-3 in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled), through the robot service (eai-standard/2.4; 2.1 / 2.2
+IKEA STEGESUND toilet roll stand (AA-2652783-1), manual steps 1-3 in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled), through the robot service (eai-standard/3.0; 2.1 / 2.2
 requests are served unchanged): RGB from four ALOHA-style cameras (optional depth), proprioception, `joint_position`
 chunks, stateless kinematics, every pose in the robot's frame; no reset and no privileged state. Build the STEGESUND roll stand: press half B onto half A at the two leg crossings, push the shelf in from the foot end, drive the four bolts through the legs into the shelf's rail ends with the hex key, stand the frame up and drop the top rod into the two crotches. Then let go of everything and move both arms clear.
 

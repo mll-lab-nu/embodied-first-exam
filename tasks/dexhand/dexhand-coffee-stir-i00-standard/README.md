@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | DexHand |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `dexhand-coffee-stir-i00-privileged` |
 | Simulator / robot | `mujoco` / `marvin-bimanual-sharpa-wave` |
 | Family / instance | `coffee_stir` / seed 0 |

@@ -1,10 +1,10 @@
-"""eai-standard/2.3 sim service for MyoSuite's realtime tasks -- the adapter behind the shared realtime layer
+"""eai-standard/3.0 sim service for MyoSuite's realtime tasks -- the adapter behind the shared realtime layer
 (`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/README.md §3,
 tasks/myosuite/README.md).
 
 The simulator-specific half only: `MyoSuite` implements rcb_service.Sim (the contract documented in rcb_service.py) for
 one frozen instance, on the benchmark's own tooling module rcb_myosuite.Session -- the same scene, action and success
-rule as the standard twin's eai-standard/2.2 service (environment/sim/server.py of `-standard`). The protocol, the
+rule as the standard twin's eai-standard/3.0 service (environment/sim/server.py of `-standard`). The protocol, the
 clock, the plan, the episode, crash recovery and the finalize are rcb_realtime.py's and rcb_service.py's, unchanged
 copies of the HumanoidBench sources (ci_checks/check-tooling-identity.sh).
 

@@ -17,7 +17,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/pandadyn-d13-supported-cube-flip-relay-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): Panda Dynamic Scenes D13 Supported cube flip relay (two Franka Pandas) on the same frozen instance as the privileged task. Task: Bring the tray with the cube to the presentation point and, while the tray keeps moving, tip the cube over with a short push of the pusher, so that the face toward the right arm ends up on top. Move it on the tray to a new place, tip it once more the same way so that its original bottom face ends up on top, and bring it to the output point. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position chunks at 100 Hz) and reset; between calls the world is frozen. 3 resets (the benchmark's budget in both standard modes), only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): Panda Dynamic Scenes D13 Supported cube flip relay (two Franka Pandas) on the same frozen instance as the privileged task. Task: Bring the tray with the cube to the presentation point and, while the tray keeps moving, tip the cube over with a short push of the pusher, so that the face toward the right arm ends up on top. Move it on the tray to a new place, tip it once more the same way so that its original bottom face ends up on top, and bring it to the output point. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position chunks at 100 Hz) and reset; between calls the world is frozen. 3 resets (the benchmark's budget in both standard modes), only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
 keywords = ["robotics", "pandadyn", "maniskill", "sapien", "franka-panda", "bimanual", "dynamic-manipulation", "standard-mode", "trajectory"]
 
 [metadata]
@@ -26,7 +26,7 @@ simulator = "maniskill"
 robot = "franka-panda-bimanual"
 family = "d13_supported_cube_flip_relay"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 6.0

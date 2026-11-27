@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/dexjoco-water-plant-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): DexJoCo water_plant (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as dexjoco-water-plant-i00-privileged. Spray the potted plant: pick up the spray bottle, hold its nozzle close to the plant and aimed at it, and keep the trigger squeezed for a moment. The agent only gets a client: calibrated cameras (RGB, optional depth), the robot's joints and tcp poses, tcp-target + hand-joint chunks at 50 Hz, the robot's kinematics; one episode, no reset, no object state; the sim service records the episode and grades it live (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): DexJoCo water_plant (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as dexjoco-water-plant-i00-privileged. Spray the potted plant: pick up the spray bottle, hold its nozzle close to the plant and aimed at it, and keep the trigger squeezed for a moment. The agent only gets a client: calibrated cameras (RGB, optional depth), the robot's joints and tcp poses, tcp-target + hand-joint chunks at 50 Hz, the robot's kinematics; one episode, no reset, no object state; the sim service records the episode and grades it live (no grading replay)."
 keywords = ["robotics", "dexjoco", "mujoco", "allegro", "dexterous-manipulation", "standard-mode", "robot-as-a-service", "water_plant"]
 
 [metadata]
@@ -22,7 +22,7 @@ simulator = "dexjoco"
 robot = "franka-allegro"
 family = "water_plant"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 1.5

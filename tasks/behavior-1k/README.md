@@ -305,7 +305,7 @@ on the same step stands.
   (all in agreement): a recorded topple ended the episode exactly 300 control steps after it began; the reference rows
   never come near the threshold (at most 21.7°); the rule costs 0.06 ms of a 47-60 ms control step.
 
-## Standard mode (eai-standard/2.2)
+## Standard mode (eai-standard/3.0)
 `joint_position` (25: base per-step targets in the robot frame, trunk, arms, grippers; base and grippers switch at the
 row) and `ee_pose` (16, left first, xyzw, cuRobo IK for both end effectors per row, base still); the head camera and two
 wrist cameras (link-mounted, 224×224); OmniGibson `depth_linear`; `/kinematics` on a numpy model of the articulation

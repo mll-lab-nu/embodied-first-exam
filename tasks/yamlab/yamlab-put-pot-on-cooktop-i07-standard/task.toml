@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/yamlab-put-pot-on-cooktop-i07-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): YAMLab PutPotOnCooktop-v0 on the same frozen instance as the privileged task (`pot` = `Pot/pot_007` and `cooktop` = `Cooktop/cooktop_007`). Task: Lift the pot with both grippers and set it down on the cooktop. Task: lift the pot with both arms (both grippers holding it), put it down upright on the cooktop and let go. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): YAMLab PutPotOnCooktop-v0 on the same frozen instance as the privileged task (`pot` = `Pot/pot_007` and `cooktop` = `Cooktop/cooktop_007`). Task: Lift the pot with both grippers and set it down on the cooktop. Task: lift the pot with both arms (both grippers holding it), put it down upright on the cooktop and let go. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 keywords = ["robotics", "yamlab", "isaac-lab", "isaac-sim", "bimanual", "i2rt-yam", "standard-mode", "trajectory"]
 
 [metadata]
@@ -23,7 +23,7 @@ simulator = "yamlab"
 robot = "i2rt-yam-bimanual"
 family = "put_pot_on_cooktop"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 3.0

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Panda Dynamic Scenes |
-| Mode | realtime (`eai-standard/2.3`) |
+| Mode | realtime (`eai-standard/3.0`) |
 | Twin | `pandadyn-s04-impact-release-relay-i00-privileged` |
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `s04_impact_release_relay` / seed 0 |
@@ -14,7 +14,7 @@
 
 ## Task
 Realtime twin of `pandadyn-s04-impact-release-relay-i00-privileged` (same frozen instance and success check as it and as `pandadyn-s04-impact-release-relay-i00-standard`): the agent gets only
-the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
+the realtime client (`eai-standard/3.0`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 2** (one 10 ms control step every 20 ms of wall-clock time), with
 3 resets (only the last episode is graded). Strike the sliding block with the paddle so that it hits the gate's latch and releases the ball on the chute. Once the ball has left the chute, hit it through the passage between the two walls, then touch it again and stop it in the target zone beyond the passage.
 
@@ -32,7 +32,7 @@ time. Checked at S = 2: live success, fresh-process replay success, the
 same final state.
 
 ## Verification
-The sim service (`environment/sim/rcb_realtime.py` + `rcb_service.py`, the shared eai-standard/2.3 layer, with
+The sim service (`environment/sim/rcb_realtime.py` + `rcb_service.py`, the realtime layer, with
 `environment/sim/server.py`, this benchmark's adapter on `rcb_pandadyn.Session`) judges the episode live and records
 every control step it ran (`trajectory_live.f64`); after the agent's time the collect hook stops the agent's programs and
 signals the service, which writes the live episode's verdict into `final.json` (`graded_by` = `live`, `replays` = 0;

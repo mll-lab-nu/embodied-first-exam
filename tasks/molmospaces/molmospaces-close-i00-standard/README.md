@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | MolmoSpaces |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `molmospaces-close-i00-privileged` |
 | Simulator / robot | `molmospaces` / `franka-robotiq-2f85` |
 | Family / instance | `close` / seed 0 |
@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `molmospaces-close-i00-privileged` (the same frozen MolmoSpaces episode): Close the open cabinet door. The agent gets only the
-`eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
+`eai-standard/3.0` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`), which owns the episode, serves cameras, proprioception and upstream's kinematic
 model, and records every executed row. The collect hook (`environment/sim/finalize.sh`) ends the episode, lets the
 service exit and writes `final.json` from the live episode's result (nothing is replayed to grade it), then renders

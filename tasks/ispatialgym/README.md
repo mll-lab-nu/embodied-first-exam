@@ -48,7 +48,7 @@ itself.
 | simulator | OmniGibson (the fork: 3.9 + the vector-env merge + iSpatialGym's object states) on Isaac Sim 5.1, CPU PhysX at 120 Hz |
 | robot | R1Pro: holonomic base, 4-joint trunk, two 7-joint arms with parallel grippers; iSpatialGym's 23-D JoyLo action at 30 Hz; head and wrist cameras, 1080×1080 RGB |
 | score | upstream's geometric success with its settle-eval on: the BDDL goal and every measured target within the `isg-v2` tolerances × 3 (`run_isg --mode policy`) at every one of the last 45 control steps, the measured objects and the robot at rest over them (`pose_settled`); within max(300, 2 × the demo's length) control steps |
-| tasks | 12 in both modes: `tasks/ispatialgym/ispatialgym-<task>-i00-privileged` and `-standard` (`eai-standard/2.2`), one frozen instance per pair |
+| tasks | 12 in both modes: `tasks/ispatialgym/ispatialgym-<task>-i00-privileged` and `-standard` (`eai-standard/3.0`), one frozen instance per pair |
 | image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.2` (`images/ispatialgym/`: Isaac Sim inside, so private; the tasks build the same recipe from public sources when they cannot pull it, both upstream repositories fetched by commit) |
 | oracle | none |
 
@@ -97,7 +97,7 @@ variant), lifted against the real removal, copied only to the scoring side (`env
 `tests/`), restored there and checked against upstream's TRO by sha256 (a failed restore is a grader error). One success
 rule: upstream's BDDL problem from the image (sha256 in `upstream.json`) and the policy tolerances × 3, in both.
 
-| | standard (`eai-standard/2.2`) | privileged |
+| | standard (`eai-standard/3.0`) | privileged |
 |---|---|---|
 | agent gets | `/app/goal.png`; three RGB cameras with calibration; proprioception in the odometry frame; `robot_spec`; stateless FK / IK | the simulator in its container from the frozen start: every object's state, unlimited resets, the robot's cameras, `robot_spec`, stateless FK / IK; `/app/goal.png` |
 | not given | object poses, the world frame, resets, the goal check | the goal, any target, any success check; motion primitives or planners |

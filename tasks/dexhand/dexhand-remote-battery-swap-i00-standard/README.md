@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | DexHand |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `dexhand-remote-battery-swap-i00-privileged` |
 | Simulator / robot | `mujoco` / `marvin-bimanual-sharpa-wave` |
 | Family / instance | `remote_battery_swap` / seed 0 |

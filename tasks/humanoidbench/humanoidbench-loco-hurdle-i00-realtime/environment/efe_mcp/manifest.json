@@ -3,7 +3,7 @@
  "kind": "rcb",
  "suite": "humanoidbench",
  "task": "humanoidbench-loco-hurdle-i00-realtime",
- "protocol": "eai-standard/2.3",
+ "protocol": "eai-standard/3.0",
  "realtime": true,
  "tools": [
   "spec",

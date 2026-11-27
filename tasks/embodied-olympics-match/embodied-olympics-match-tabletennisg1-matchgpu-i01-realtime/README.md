@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Match |
-| Mode | realtime (`eai-standard-realtime/1.0`) |
+| Mode | realtime (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-match-tabletennisg1-matchgpu-i01-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `tabletennisg1_match` / seed 4 (allowed seeds: [4, 1, 2]; PROTOCOL §2) |

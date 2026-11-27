@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | LIBERO-MAX |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `libero-max-long-white-yellow-mug-in-desk-caddy-back-illumination-switch-i00-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda` |
 | Family / instance | `libero-max/libero_10/illumination_switch` / seed 195 (allowed seeds: [195, 1, 2]; PROTOCOL §2) |

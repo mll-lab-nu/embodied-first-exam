@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | LabUtopia |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `labutopia-open-door-i00-privileged` |
 | Simulator / robot | `labutopia` / `franka-panda` |
 | Family / instance | `open_door` / seed 4 |
@@ -13,7 +13,7 @@
 
 ## Task
 LabUtopia's `open_door` (Open Door) on the same frozen instance as `labutopia-open-door-i00-privileged`: Open the drying oven's door, then let go of it and move the hand away.
-On the bench in front of the arm: a drying oven, a grey metal box about 58 cm deep, 74 cm wide and 63 cm high, with a blue door that has a window and a handle and is hinged on one side; a small control panel sits next to the door. The door is closed. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
+On the bench in front of the arm: a drying oven, a grey metal box about 58 cm deep, 74 cm wide and 63 cm high, with a blue door that has a window and a handle and is hinged on one side; a small control panel sits next to the door. The door is closed. Standard mode (eai-standard/3.0): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty
 Same instance and success rule as `labutopia-open-door-i00-privileged` (LabUtopia's level 1). A hinged door: the handle moves on an arc around the hinge, so the hand has to follow it, and the rule wants the door left open with the handle released. In standard mode the agent loses resets, the simulator and the state of the objects: it sees camera images (glassware is nearly transparent in them and absent from the depth maps) and the robot's proprioception, acts in joint target chunks, and gets one episode, so it has to find the things it handles in the images and recover from its own mistakes without starting over.

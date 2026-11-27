@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | VLABench |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `vlabench-magnetism-qa-i00-privileged` |
 | Simulator / robot | `vlabench` / `franka-panda` |
 | Family / instance | `vlabench/magnetism_qa` / seed 0 |

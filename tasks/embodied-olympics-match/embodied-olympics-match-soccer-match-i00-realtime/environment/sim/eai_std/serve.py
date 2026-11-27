@@ -1,4 +1,4 @@
-"""The sim service's entry point with the match extension of eai-standard/2.x (docs/protocol/standard_mode.md Part 5):
+"""The sim service's entry point with the match extension of eai-standard/3.0 (docs/protocol/standard_mode.md Part 5):
 
     python3 -m eai_std.serve            (cwd = the directory holding core/ and eai_std/; core/serve.py's environment)
 
@@ -9,7 +9,7 @@ The match service is built and run by the core's own entry point (core/serve.py 
 this module only wraps the HTTP server that entry point makes: one port, two APIs.
 
   /<SEAT>/<call>       the core's seat API (the `game` command), untouched
-  /spec /status /observe /submit, /start /ready /say /team    eai-standard/2.x + the match extension (eai_std/adapter.py)
+  /spec /status /observe /submit, /start /ready /say /team    eai-standard/3.0 + the match extension (eai_std/adapter.py)
 
 Every seat must be unmetered (PLAYER_MODE_<seat> = unmetered) or built-in (RO_BUILTIN_SEATS), as core/lockstep.py requires:
 this entry starts no metering proxy (core/launch.py would start one only for a metered seat)."""

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-fun-skateboard-ollie-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `skateboard_ollie` / seed 0 |
@@ -44,7 +44,7 @@ Caps per container (PROTOCOL §6).
 | Category | parkour-apparatus-balance |
 | Rule book | World Skate, Skateboarding Technical Commission, Street & Park Competition Rules (update of April 2025): Technical Specifications of Materials, Skateboard (a deck with four wheels attached by trucks; it cannot be physically attached to the skater's feet); the Runs + Tricks format (single tricks, one attempt each); Makes versus Bails (the Head Judge decides whether a trick is landed); deviations: Runs + Tricks format: one trick, a stationary ollie on flat ground (the board at rest at the start, no obstacle), the whole board rising at least 0.05 m above the ground, instead of an ollie at speed onto or over a street course's obstacle: 0.05 m is this benchmark's round number (the robot's measured pops lift the board higher), and the stationary form is the one this robot can attempt without a push-off on one leg, which it has no balance for · Makes versus Bails: the Head Judge's call is replaced by fixed criteria (a make: the board leaves the ground with a foot on it and rises clear by 0.05 m, all four wheels come down with both feet on the deck, and the robot stands still on the board for 1.0 s; World Skate judges an ollie made when the rider lands on the board); the judges' score (difficulty, execution, style) is not given · the skateboard is rigid bodies: the deck is three boxes (no concave, no flex), the wheels cylinders, the truck a hinge about its pivot axis with a linear torsion spring for the bushings and a hard stop at 12.0 degrees of deck tilt (the bushings' progressive stiffening is not modelled) · the robot is the size of a child (1.32 m), so the deck is a 7.5 in board, the width skate shops give for that height, instead of an adult's 8 to 8.5 in |
 | Stages | pop → clear → landed → stand |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 800 control steps (8 s at 100 Hz); 5 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

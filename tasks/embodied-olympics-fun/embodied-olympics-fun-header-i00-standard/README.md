@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-fun-header-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
 | Family / instance | `header` / seed 0 |
@@ -44,7 +44,7 @@ Caps per container (PROTOCOL §6).
 | Category | football-and-volleyball |
 | Rule book | IFAB Laws of the Game 2025/26: Law 1 (the goal 7.32 m x 2.44 m with posts and crossbar 12 cm wide, the goal area 5.5 m deep, the penalty area, the penalty mark), Law 2 (a size-5 ball: 68-70 cm round, 410-450 g), Law 10 (a goal: the whole ball over the goal line between the posts and under the bar), Law 12 (handball) and Law 13 (9.15 m from the ball until it is in play); deviations: The cross is played by a two-wheel football machine standing on the left wing 20.0 m away instead of a team-mate, the same in every attempt: its wheels drive the ball out 0.5 m above the grass at about 15 m/s with backspin (a lofted cross). Until the ball has left it, neither the ball nor the machine may be touched. · The goalkeeper is a dummy: a rigid 80.0 kg board 1.9 m high and 0.6 m wide on a carriage that runs on a rail along the goal line, held at the centre of the goal by a force-limited linear servo (at most 800.0 N): a ball that hits it pushes it aside a little and the servo brings it back. It does not dive or step towards the ball, where a goalkeeper would: an opponent's decisions cannot be simulated. · The head: the Unitree H1-2's trunk and head are one rigid shell, so the head is judged by where the ball touches that shell: at or above its neck, 0.53 m above the waist joint along the trunk (about 1.56 m above the ground when the robot stands upright; the top of the head is 0.76 m above the waist joint). A contact lower on the shell is the shoulders or the chest. · A header is judged by numbers instead of a referee's eye: every contact within 0.15 s of the first is the one header, and a header is a ball that leaves the head at least 1.0 times as fast as it arrived (a ball that only rebounds from a head held in its path leaves slower). · Law 13's distance is applied to the robot itself: until the cross is played it stays 9.15 m from the ball machine, so that the cross is played, not met at the machine. · The Laws allow any number of touches and any part but the arms; the task is narrower than the Laws: one touch, with the head only, before the cross touches the ground (the task is a header, not open play). · Law 1: only the goal end of the field is there; the goal's net is a rigid cage 2.0 m deep; no wind, no other player. |
 | Stages | header → goal |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 1000 control steps (10 s at 100 Hz); 5 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

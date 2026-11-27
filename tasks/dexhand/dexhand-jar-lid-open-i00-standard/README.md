@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | DexHand |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `dexhand-jar-lid-open-i00-privileged` |
 | Simulator / robot | `mujoco` / `marvin-bimanual-sharpa-wave` |
 | Family / instance | `jar_lid_open` / seed 0 |

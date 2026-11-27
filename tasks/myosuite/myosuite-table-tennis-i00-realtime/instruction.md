@@ -29,7 +29,7 @@ clock that does not stop while you think.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, realtime mode, its docstring the full reference
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`, realtime mode, its docstring the full reference
 (`python -c "import rcb_client; help(rcb_client)"`):
 
 | call | endpoint | what it does |

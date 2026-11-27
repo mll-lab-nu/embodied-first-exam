@@ -11,7 +11,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/embodied-olympics-match-fencing-bout-i02-standard"
-description = "STANDARD (Embodied Olympics / Embodied Agent Olympics, our own service): robot epee fencing, one bout against the scripted opponent at level 2, program play (eai-standard/2.1+match/1.0: the world waits for the player whose turn it is; the player's chess clock of 60 minutes of real time runs on its own turns, reviews included, and a player whose clock runs out loses). Task: Win an epee bout to 15 touches against the scripted fencer. Camera images and the player's own state only. Frozen development instance (seed and level fixed, not an official seed). two Unitree G1 humanoids (the robot library's, NVIDIA's SONIC whole-body policy on the legs, waist and free arm, the point skill on the sword arm) holding real epees fence one FIE direct-elimination bout (15 touches or 9 minutes of fencing time, no draws; unwillingness to fight, FIE t.124) phrase by phrase: every phrase starts on guard 1.95 m apart, both fencers choose one of nine tactical intentions (lunge, low lunge, point in line, reactive line, stop-hit, counter-attack, delayed lunge, retreat, draw), each starts after a random 0-50 ms, and the phrase is played out as it was measured in MuJoCo (2916 phrases: every pair of intentions and delays); format bout: you against a scripted fencer that reads your choices (levels 1-2, `game spec` opponent), format duel: two players choosing at the same time. Exported from Embodied Olympics task fencing-bout-wallclock-program-standard."
+description = "STANDARD (Embodied Olympics / Embodied Agent Olympics, our own service): robot epee fencing, one bout against the scripted opponent at level 2, program play (eai-standard/3.0: the world waits for the player whose turn it is; the player's chess clock of 60 minutes of real time runs on its own turns, reviews included, and a player whose clock runs out loses). Task: Win an epee bout to 15 touches against the scripted fencer. Camera images and the player's own state only. Frozen development instance (seed and level fixed, not an official seed). two Unitree G1 humanoids (the robot library's, NVIDIA's SONIC whole-body policy on the legs, waist and free arm, the point skill on the sword arm) holding real epees fence one FIE direct-elimination bout (15 touches or 9 minutes of fencing time, no draws; unwillingness to fight, FIE t.124) phrase by phrase: every phrase starts on guard 1.95 m apart, both fencers choose one of nine tactical intentions (lunge, low lunge, point in line, reactive line, stop-hit, counter-attack, delayed lunge, retreat, draw), each starts after a random 0-50 ms, and the phrase is played out as it was measured in MuJoCo (2916 phrases: every pair of intentions and delays); format bout: you against a scripted fencer that reads your choices (levels 1-2, `game spec` opponent), format duel: two players choosing at the same time. Exported from Embodied Olympics task fencing-bout-wallclock-program-standard."
 keywords = ["robotics", "embodied-olympics", "sports", "fencing", "mujoco", "standard-mode", "vision", "turn-based"]
 
 [metadata]
@@ -20,7 +20,7 @@ simulator = "mujoco"
 robot = "unitree-g1"
 family = "fencing_bout"
 dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1+match/1.0"
+protocol = "eai-standard/3.0"
 instance_seed = 35
 opponent_level = 2
 chess_clock_s = 3600

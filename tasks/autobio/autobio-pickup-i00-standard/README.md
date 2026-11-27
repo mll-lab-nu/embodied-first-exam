@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | AutoBio |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `autobio-pickup-i00-privileged` |
 | Simulator / robot | `autobio` / `aloha-2-arm` |
 | Family / instance | `pickup` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 AutoBio's `pickup` (Pick up centrifuge tube) on the same frozen instance as `autobio-pickup-i00-privileged`: Pick up the 50 mL tube from the rack by its cap and lift it more than a hand's width.
-On the bench: a 10-slot tube rack (2 rows of 5) with one capped 50 mL tube standing in it. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
+On the bench: a 10-slot tube rack (2 rows of 5) with one capped 50 mL tube standing in it. Standard mode (eai-standard/3.0): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty
 Same instance and success rule as `autobio-pickup-i00-privileged` (AutoBio's level: easy). The tube is lifted out of its rack slot by its screw cap; the check needs the cap between the fingers while the tube is 9.5 cm up. In standard mode the agent loses resets, the simulator and the state of the tubes and instruments: it sees camera images and the robot's proprioception, acts in joint-position chunks, and gets one episode, so it has to find the things it handles in the images and recover from its own mistakes without starting over.

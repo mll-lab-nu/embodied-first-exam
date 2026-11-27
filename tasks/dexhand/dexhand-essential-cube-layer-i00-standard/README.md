@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | DexHand |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `dexhand-essential-cube-layer-i00-privileged` |
 | Simulator / robot | `mujoco` / `sharpa-wave-floating` |
 | Family / instance | `essential_cube_layer` / seed 0 |

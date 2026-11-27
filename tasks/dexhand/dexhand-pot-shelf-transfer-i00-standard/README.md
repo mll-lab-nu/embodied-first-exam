@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | DexHand |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `dexhand-pot-shelf-transfer-i00-privileged` |
 | Simulator / robot | `mujoco` / `marvin-bimanual-sharpa-wave` |
 | Family / instance | `pot_shelf_transfer` / seed 0 |

@@ -18,7 +18,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/kinder-sweep-into-drawer-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): KinDER SweepIntoDrawer3D-o5 on the same frozen instance as kinder-sweep-into-drawer-i00-privileged. Task: Get the five small cubes on top of the kitchen island into the middle drawer of the island's top row. There is a wiper you can use. The agent only gets a client: /observe and /submit (the robot's camera RGB-D + joint encoders + base odometry; delta actions in chunks). No reset: one episode, which is graded. No privileged state, no goal check; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): KinDER SweepIntoDrawer3D-o5 on the same frozen instance as kinder-sweep-into-drawer-i00-privileged. Task: Get the five small cubes on top of the kitchen island into the middle drawer of the island's top row. There is a wiper you can use. The agent only gets a client: /observe and /submit (the robot's camera RGB-D + joint encoders + base odometry; delta actions in chunks). No reset: one episode, which is graded. No privileged state, no goal check; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
 keywords = ["robotics", "kinder", "mujoco", "tidybot", "mobile-manipulation", "physical-reasoning", "standard-mode", "trajectory", "sweep-into-drawer"]
 
 [metadata]
@@ -27,7 +27,7 @@ simulator = "kinder"
 robot = "tidybot-plus-plus"
 family = "sweep-into-drawer"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+protocol = "eai-standard/3.0"
 instance_seed = 0
 expert_time_estimate_hours = 8.0
 oracle = "none"

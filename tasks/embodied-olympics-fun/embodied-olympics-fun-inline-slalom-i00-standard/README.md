@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-fun-inline-slalom-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `inline_slalom` / seed 0 |
@@ -44,7 +44,7 @@ Caps per container (PROTOCOL §6).
 | Category | parkour-apparatus-balance |
 | Rule book | World Skate Inline Freestyle Regulation (update of October 2025): 3.10 official cones (7.6-8.0 cm high, base 7.2-7.5 cm, top 2.4-2.7 cm); 4.2 the cone lines and their marking stickers (7.7 cm, a 0.7 cm centre point); 7 Speed Slalom (on one foot, as fast as possible): 7.1.1 20 cones 80 cm apart, 7.1.3 the start box (two start lines 40 cm apart), 7.1.5 the first cone 12 m from the start line and the end line 80 cm beyond the last cone, 7.3.1.1 the free start of the time trials (time starts when any part of the body crosses the gate beam, 40 cm above the ground), 7.3.2 the cone line entered on one foot, 7.3.3 the end line crossed by the supporting foot with a wheel on the ground, 7.4.2 first-cone penalties, 7.4.3 the free foot and changing foot, 7.4.4 end-line penalties, 7.4.5 +0.2 s per kicked cone or missed interval, more than 4 cone penalties void the run; deviations: 7.3.1.1 the start: "Ready" is t = 0 with the robot standing in the start box on both skates; it has 5.0 s to break the gate beam; a false start's warning and restart are not modelled (one run) · 7.1.1-7.1.4 one cone line, without the second line and the divider (one skater, one time-trial run) · 7.4.5.2 a kicked cone (its marking centre revealed) is judged at the finish: the cone's base centre more than 0.0335 m (the base's radius less the centre point's) from its mark, or the cone tilted more than 30.0 degrees · the missed interval and the side of each cone are judged on the supporting skate's centre: the side of the cone line it is on when it passes each cone; two consecutive cones on the same side are one missed interval · the finish gate (20 cm above the ground) is the supporting skate's front wheel reaching the end line · the skates are rigid bodies held to the feet by a rigid boot (no ankle flex in the boot); the wheels are ellipsoids (their rounded profile) on frictionless axles · success is a valid run within 60 s, the family's own round number for this robot: the rule book only ranks times |
 | Stages | start → cone line → cone 5 → cone 10 → cone 15 → cone 20 → finish |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 6000 control steps (60 s at 100 Hz); 5 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

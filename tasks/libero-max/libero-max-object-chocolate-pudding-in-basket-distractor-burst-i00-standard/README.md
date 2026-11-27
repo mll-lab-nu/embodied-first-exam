@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | LIBERO-MAX |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `libero-max-object-chocolate-pudding-in-basket-distractor-burst-i00-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda` |
 | Family / instance | `libero-max/libero_object/distractor_burst` / seed 195 (allowed seeds: [195, 0, 1]; PROTOCOL §2) |

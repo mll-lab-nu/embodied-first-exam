@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-fun-rugby-conversion-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `rugby_conversion` / seed 0 |
@@ -44,7 +44,7 @@ Caps per container (PROTOCOL §6).
 | Category | football-and-volleyball |
 | Rule book | World Rugby Laws of the Game (2025): Law 1 (the goal posts 5.6 m apart, the crossbar's top edge 3.0 m above the ground, the posts at least 3.4 m high, padding on the posts; the 5-metre line), Law 2 (the ball: oval, 280-300 mm long, 740-770 mm round end to end, 580-620 mm round across, 410-460 g), Law 8 (8.4: a goal is scored when the ball is kicked over the crossbar and between the goal posts without first touching a team-mate or the ground; 8.7: a conversion is a place-kick or a drop-kick; 8.8: the kick is taken on a line through the place where the try was awarded, parallel to the touchlines, the ball on the ground or on a kicking tee, within 60 seconds); deviations: Law 8.8 (where): the try is taken as awarded under the posts, and the conversion is kicked from the 5-metre line (5.0 m from the goal line) on that line: a choice the law allows, made for this robot, whose measured hard kicks leave the foot at 7 to 11 m/s (a professional's at 25 m/s from 20-40 m). A ball over the bar from there must still rise more than 3 m within 5 m. · Law 2 (the ball's behaviour): a rigid prolate spheroid (a thin shell's mass distribution); its drag in air from wind-tunnel measurements (side-on), its bounce a stand-in (no published rebound test for a rugby ball: a size-5 football's, at the same inflation pressure). It does not deform. · Law 8.8 (the tee): a low plastic kicking tee (0.06 m to the cup), a free body standing on the grass; the ball stands upright in its cup. No placer. · Law 8.4 (between the posts): judged as the ball's centre passing the goal line's vertical plane above the crossbar's top and between the posts' inner faces extended upwards; a ball that hits the bar and goes on over counts, one that comes back does not. A touch judge's flag is replaced by this geometry. · Law 1: only the goal end of the field is there; the posts are 8.0 m high; no wind, no opponents (a conversion is not charged down after the kicker's first movement in this setting). |
 | Stages | kick → goal |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 6000 control steps (60 s at 100 Hz); 5 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

@@ -1,4 +1,4 @@
-# Realtime mode (eai-standard/2.3): the simulator runs in the `sim` sidecar (the agent cannot open it) on a clock
+# Realtime mode (eai-standard/3.0): the simulator runs in the `sim` sidecar (the agent cannot open it) on a clock
 # that does not stop once the episode has started; the agent only reaches port 8000.
 # No `expose`/`ports` on sim. CPU only: MuJoCo physics and OSMesa rendering; no GPU reservation.
 # Crash recovery (docs/protocol/standard_mode.md): compose restarts a crashed service (same container, same /data) and the

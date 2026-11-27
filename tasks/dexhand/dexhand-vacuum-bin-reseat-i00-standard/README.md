@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | DexHand |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `dexhand-vacuum-bin-reseat-i00-privileged` |
 | Simulator / robot | `mujoco` / `sharpa-wave-floating-bimanual` |
 | Family / instance | `vacuum_bin_reseat` / seed 0 |

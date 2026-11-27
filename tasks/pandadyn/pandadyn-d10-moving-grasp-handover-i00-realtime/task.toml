@@ -19,7 +19,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/pandadyn-d10-moving-grasp-handover-i00-realtime"
-description = "REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = 6): Panda Dynamic Scenes D10 Moving grasp handover (two Franka Pandas) on the same frozen instance as the privileged task. Task: Grasp the part with the left gripper while it rides the conveyor, lift it about a hand's length and carry it, still moving, through the presentation point. Hand it to the right gripper while it keeps moving, then lay it into the sliding slot and let go while the slot is moving. Once an episode starts the scene and the robot move whatever the agent does (at 1/S of real speed), so the agent plans or streams joint_position targets from a program of its own through the realtime client (RGB, depth + proprioception). 3 resets, only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
+description = "REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/3.0, slowdown S = 6): Panda Dynamic Scenes D10 Moving grasp handover (two Franka Pandas) on the same frozen instance as the privileged task. Task: Grasp the part with the left gripper while it rides the conveyor, lift it about a hand's length and carry it, still moving, through the presentation point. Hand it to the right gripper while it keeps moving, then lay it into the sliding slot and let go while the slot is moving. Once an episode starts the scene and the robot move whatever the agent does (at 1/S of real speed), so the agent plans or streams joint_position targets from a program of its own through the realtime client (RGB, depth + proprioception). 3 resets, only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
 keywords = ["robotics", "pandadyn", "maniskill", "sapien", "franka-panda", "bimanual", "dynamic-manipulation", "realtime-mode", "trajectory"]
 
 [metadata]
@@ -28,7 +28,7 @@ simulator = "maniskill"
 robot = "franka-panda-bimanual"
 family = "d10_moving_grasp_handover"
 dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.3"
+protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 8.0

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | DexHand |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `dexhand-assemble-hamburger-i00-privileged` |
 | Simulator / robot | `mujoco` / `sharpa-wave-floating` |
 | Family / instance | `assemble_hamburger` / seed 0 |

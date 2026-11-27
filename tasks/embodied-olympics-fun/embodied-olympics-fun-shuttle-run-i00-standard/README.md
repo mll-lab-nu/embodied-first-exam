@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-fun-shuttle-run-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `shuttle_run` / seed 0 |
@@ -44,7 +44,7 @@ Caps per container (PROTOCOL §6).
 | Category | track-and-jumps |
 | Rule book | The 4 x 10 m shuttle run of school fitness test batteries (the speed-agility test of the ALPHA-Fitness battery): two parallel lines 10 m apart, four legs, the line crossed at every turn, the time taken when the runner crosses the start line at the end of the fourth leg; deviations: the sponges the ALPHA version has the runner carry between the lines are left out (the robot has no fingers), and a turn needs one foot on the ground beyond the line where ALPHA asks for both · the start: no starter and no reaction time; the clock runs from t = 0 with the robot standing behind the start line · the finish is timed as in athletics (World Athletics TR 19): the leading point of the torso link's collision mesh on the plane of the start line, interpolated between 1 ms physics steps · a fallen runner: a robot whose pelvis is below 0.4 m is down; it may get up and go on, but 10.0 s down in a row end the attempt · the lane: ALPHA runs the test on a marked course between the two lines; here the turns and the finish count only between the cones at the lines' ends (/y/ <= 3.0 m), and the pelvis may not leave the court (4.0 m to either side of the centre line): a loop round the far line instead of a reversal, or a finish past the cones, is not the shuttle · the qualifying time, 30 s, is this benchmark's own round number: school norms for this test are 10 to 14 s |
 | Stages | turn 1 → turn 2 → turn 3 → finish |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 3000 control steps (30 s at 100 Hz); 5 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

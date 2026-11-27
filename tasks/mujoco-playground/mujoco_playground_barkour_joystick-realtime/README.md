@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | MuJoCo Playground |
-| Mode | realtime (`eai-standard/2.3`) |
+| Mode | realtime (`eai-standard/3.0`) |
 | Twin | `mujoco_playground_barkour_joystick-privileged` |
 | Simulator / robot | `mujoco` / `google-barkour-vb` |
 | Family / instance | `mujoco_playground/BarkourJoystick` / seed 2 |
@@ -14,7 +14,7 @@
 
 ## Task
 MuJoCo Playground `BarkourJoystick` (Google Barkour vB) on the same frozen instance as `mujoco_playground_barkour_joystick-privileged`: Make the robot follow the joystick's commands for the whole schedule without falling over, even when it gets pushed.
-For 10 s the robot gets a joystick command schedule (2 segments: planar velocity and yaw rate in its own frame) and must track it without falling over. Its torso is pushed 12 times. Realtime mode (eai-standard/2.3, slowdown S = 1): once an episode's clock starts the
+For 10 s the robot gets a joystick command schedule (2 segments: planar velocity and yaw rate in its own frame) and must track it without falling over. Its torso is pushed 12 times. Realtime mode (eai-standard/3.0, slowdown S = 1): once an episode's clock starts the
 robot runs at 100 Hz whatever the agent does; it drives the robot through the realtime client from a program
 of its own, with 10 resets (only the last episode is graded), the robot's own sensors and the cameras that
 follow it.
@@ -31,7 +31,7 @@ from its first control step (`submit(..., at=0)`); it uses no privileged informa
 run at the same control steps as in the privileged replay, and the episode ends after the 1000 steps of the schedule, with success.
 
 ## Verification
-The sim service (`environment/sim/rcb_realtime.py` + `rcb_service.py`, the shared eai-standard/2.3 layer, with
+The sim service (`environment/sim/rcb_realtime.py` + `rcb_service.py`, the realtime layer, with
 `environment/sim/server.py`, this benchmark's adapter) judges the episode live and records every control step it ran
 (`trajectory_live.f64`); after the agent's time the collect hook stops the agent's programs and signals the service,
 which writes the live episode's verdict into `final.json` (`graded_by = "live"`, `replays = 0`: the task's check on the

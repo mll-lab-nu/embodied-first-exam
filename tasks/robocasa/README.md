@@ -73,7 +73,7 @@ SIGUSR1 collect hook, `/data` evidence, verdict before video. Differences (items
 1. The action type, channels and limits come from the instance (`casa_tool.action_spec`), not a fixed `joint_position`.
 2. A hold chunk (`/submit` with `interpolate: "hold"`, `seconds`, no rows) holds the robot still (delta channels zero; targets, grip and mode kept).
 3. Camera calibration is computed for every response (robot-mounted cameras move); `meta.task` is the instruction.
-4. The protocol is reported as `eai-standard/2.1`, with HumanoidBench's client (accepts both spellings); a simulator
+4. The protocol is reported as `eai-standard/3.0`, with HumanoidBench's client (accepts both spellings); a simulator
    error (500) ends the episode with `reason = "error"`; a body over 64 MB gets 413; the grader writes numeric fields.
 5. A first collect hook stops every process in the agent's container before the episode is ended (as HumanoidBench).
 6. **Graded by the live episode** (`finalize()`). When the episode ends

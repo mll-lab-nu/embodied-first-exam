@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | MyoSuite |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `myosuite-relocate-i00-privileged` |
 | Simulator / robot | `myosuite` / `myoarm` |
 | Family / instance | `relocate` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 MyoSuite `myoChallengeRelocateP1-v0` (MyoArm, 63 muscles) on the same frozen instance as `myosuite-relocate-i00-privileged`: Pick up the object on the table and put it in the receptacle.
-An object stands on the table in front of the arm; a receptacle marks the target position. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
+An object stands on the table in front of the arm; a receptacle marks the target position. Standard mode (eai-standard/3.0): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty
 Same instance and success rule as `myosuite-relocate-i00-privileged` (first-pass rating: hard). In standard mode the agent loses free resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in actuator-command chunks, and gets 10 resets, so it has to close the loop on what it sees and learn the body from a few real attempts.

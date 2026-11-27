@@ -1,6 +1,6 @@
 # RoboTwin 2.0
 
-RoboTwin 2.0's standard tasks serve `eai-standard/2.1` (docs/protocol/standard_mode.md Part 1), the service the base protocol
+RoboTwin 2.0's standard tasks serve `eai-standard/3.0` (docs/protocol/standard_mode.md Part 1), the service the base protocol
 was written from. The task directories are the deliverable; the tooling that built them is kept outside this repository.
 
 ## Quick start

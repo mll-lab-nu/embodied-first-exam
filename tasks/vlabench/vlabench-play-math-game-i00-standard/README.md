@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | VLABench |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `vlabench-play-math-game-i00-privileged` |
 | Simulator / robot | `vlabench` / `franka-panda` |
 | Family / instance | `vlabench/play_math_game` / seed 0 |

@@ -5,7 +5,7 @@ benchmark: 200 frozen tabletop tasks for a fixed Franka Panda with long fin-ray 
 specification over physics predicates (dropped, upright, on top of, closed, touching), checked after every control step
 by a Spot-compiled monitor. It runs on BEHAVIOR-1K **v3.7.2** (OmniGibson 3.7.2 on Isaac Sim 4.5), ManiGuard's own pin.
 `simulator = "maniguard"`, `robot = "franka-panda-longfinger"`. Tasks: `maniguard-<family>-i<NN>-privileged` and the
-standard twin `maniguard-<family>-i<NN>-standard` (`eai-standard/2.2`), NN = the ManiGuard-Bench task index, base level.
+standard twin `maniguard-<family>-i<NN>-standard` (`eai-standard/3.0`), NN = the ManiGuard-Bench task index, base level.
 
 ## Quick start
 ```bash
@@ -61,7 +61,7 @@ PRO 6000 Blackwell (both driver 580.178.04; see "Other hosts").
 
 The 14 tasks below are frozen (the same state hash and object poses in fresh containers, also without network) and have
 a `full` oracle in both modes: a time-resampled public demonstration (lid 16, lid 7 and cabinets 20 and 22: with one step
-redone on the tooling) that Harbor's oracle run scores 1, with `nop` 0; every standard twin passes the eai-standard/2.2 conformance check. Blocked (no oracle that meets the bar):
+redone on the tooling) that Harbor's oracle run scores 1, with `nop` 0; every standard twin passes the eai-standard/3.0 conformance check. Blocked (no oracle that meets the bar):
 `dusty_transfer/task_0002` and `task_0000` (the poured potato bounces off the flat
 plate; the potato rolls into the fingers when the tray is lifted) and `lid_transport/task_0014` (its lid-on-kettle goal
 cannot hold under the handle arch; replaced by `lid_transport/task_0007`). The other reserve tasks have not run.
@@ -319,7 +319,7 @@ As for BEHAVIOR-1K: every compose file names its cache volume without a fixed na
 `rcb_maniguard_cache_trusted` for the verifier and the standard sidecar), so it belongs to the trial and Harbor's teardown
 deletes it.
 
-## Standard mode (eai-standard/2.2)
+## Standard mode (eai-standard/3.0)
 `joint_position` (8: 7 joints + the binary gripper, +1 open / -1 close, switched at the row; rows a multiple of 1/20 s) and
 `ee_pose` (8: fingertip-centre pose, world frame, xyzw + gripper; numpy IK per row, then joint-space interpolation); cameras
 `cam_opposite`, `cam_left`, `cam_right`, `cam_left_shoulder` (static) and `wrist` (on the hand), 256×256; OmniGibson

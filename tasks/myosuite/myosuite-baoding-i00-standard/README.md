@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | MyoSuite |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `myosuite-baoding-i00-privileged` |
 | Simulator / robot | `myosuite` / `myohand` |
 | Family / instance | `baoding` / seed 0 |
@@ -13,7 +13,7 @@
 
 ## Task
 MyoSuite `myoChallengeBaodingP1-v1` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-baoding-i00-privileged`: Roll the two balls around each other in your palm so that each one follows its moving marker, for one full circle of the markers.
-Two balls rest in the palm of the upturned hand; two small markers show where each ball should be now. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
+Two balls rest in the palm of the upturned hand; two small markers show where each ball should be now. Standard mode (eai-standard/3.0): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty
 Same instance and success rule as `myosuite-baoding-i00-privileged` (first-pass rating: hard). In standard mode the agent loses free resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in actuator-command chunks, and gets 10 resets, so it has to close the loop on what it sees and learn the body from a few real attempts.

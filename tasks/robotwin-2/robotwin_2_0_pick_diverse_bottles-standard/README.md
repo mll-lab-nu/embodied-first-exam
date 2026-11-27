@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | RoboTwin 2.0 |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `robotwin_2_0_pick_diverse_bottles-privileged` |
 | Simulator / robot | `robotwin` / `aloha-agilex` |
 | Family / instance | `pick_diverse_bottles` / seed 77321 |
@@ -15,7 +15,7 @@
 Pick up both bottles, one in each hand, and hold them up at least a hand's length above the table, side by side near the middle and a little closer to the robot, with the bottle that started on the robot's left still on the left.
 
 Standard-mode twin of `robotwin_2_0_pick_diverse_bottles-privileged` (same frozen instance, RoboTwin seed 77321): the agent gets
-only the `eai-standard/2.1` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
+only the `eai-standard/3.0` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the seed, judges the live episode, records it as a
 (T, 34) trajectory and renders the six-view video from it once after the verdict. The verifier runs in a separate
 sandbox (`tests/Dockerfile`) over the sidecar's artifacts. Compare against the privileged task to
@@ -52,4 +52,4 @@ Caps per container (PROTOCOL §6).
 ## Details
 | | |
 |---|---|
-| action space | `eai-standard/2.1`: `submit` chunks of `joint_position` (14, streamed at 250 Hz with the agent's `dt`) or `ee_pose` (16, CuRobo-planned); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); binary RCB1 responses |
+| action space | `eai-standard/3.0`: `submit` chunks of `joint_position` (14, streamed at 250 Hz with the agent's `dt`) or `ee_pose` (16, CuRobo-planned); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); binary RCB1 responses |

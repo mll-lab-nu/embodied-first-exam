@@ -19,7 +19,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/pandadyn-s08-load-switch-recover-i00-realtime"
-description = "REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = 6): Panda Dynamic Scenes S08 Load a coasting cart, throw the switch, recover the part (one Franka Panda) on the same frozen instance as the privileged task. Task: Grasp the part from the moving conveyor, lift it about a hand's length and drop it into the coasting cart without stopping the cart. Before the cart reaches the switch, push the switch with a finger so that it sends the cart into the branch nearer to you, then lift the part back out of the cart and hold it up. Once an episode starts the scene and the robot move whatever the agent does (at 1/S of real speed), so the agent plans or streams joint_position targets from a program of its own through the realtime client (RGB, depth + proprioception). 3 resets, only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
+description = "REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/3.0, slowdown S = 6): Panda Dynamic Scenes S08 Load a coasting cart, throw the switch, recover the part (one Franka Panda) on the same frozen instance as the privileged task. Task: Grasp the part from the moving conveyor, lift it about a hand's length and drop it into the coasting cart without stopping the cart. Before the cart reaches the switch, push the switch with a finger so that it sends the cart into the branch nearer to you, then lift the part back out of the cart and hold it up. Once an episode starts the scene and the robot move whatever the agent does (at 1/S of real speed), so the agent plans or streams joint_position targets from a program of its own through the realtime client (RGB, depth + proprioception). 3 resets, only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
 keywords = ["robotics", "pandadyn", "maniskill", "sapien", "franka-panda", "single-arm", "dynamic-manipulation", "realtime-mode", "trajectory"]
 
 [metadata]
@@ -28,7 +28,7 @@ simulator = "maniskill"
 robot = "franka-panda"
 family = "s08_load_switch_recover"
 dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.3"
+protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 8.0

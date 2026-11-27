@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | DexJoCo |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `dexjoco-bimanual-unlock-ipad-i00-privileged` |
 | Simulator / robot | `dexjoco` / `franka-allegro-bimanual` |
 | Family / instance | `bimanual_unlock_ipad` / seed 0 (allowed seeds: [0, 3, 4]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 DexJoCo `bimanual_unlock_ipad` (two Franka Panda arms, each with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-bimanual-unlock-ipad-i00-privileged`: Unlock the iPad by typing the passcode 1-2-3 on its screen with the right hand's fingertips; touches by the left hand do not count.
-Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with the robot's own
+Standard mode (eai-standard/3.0): the agent drives the robot through a client in one episode, with the robot's own
 sensors, calibrated cameras (RGB, optional depth) and the robot's kinematics.
 
 ## Difficulty

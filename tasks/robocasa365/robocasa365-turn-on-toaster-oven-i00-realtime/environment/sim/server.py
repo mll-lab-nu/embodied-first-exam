@@ -1,4 +1,4 @@
-"""eai-standard/2.3 sim service for RoboCasa365's realtime tasks -- the adapter behind the shared realtime layer
+"""eai-standard/3.0 sim service for RoboCasa365's realtime tasks -- the adapter behind the shared realtime layer
 (`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/README.md §3,
 tasks/robocasa365/README.md "Realtime").
 

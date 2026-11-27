@@ -92,7 +92,7 @@ without a colour), and an "all of a colour and shape" directive for the generic 
   (`/opt/abc-tools/grade.py`) checks the file (readable, `(T, 14)`, finite, not too long: otherwise `bad_trajectory`, the
   agent's 0) before it replays it once, in a fresh process; a replay that then gives no result is
   `replay_failed` with `grader_error = 1` and `infra_error = 1`. A second replay renders `replay.mp4` after the verdict.
-- **Standard (`eai-standard/2.2`):** the shared layer of `embodied_first_exam/standard/` (from the pinned
+- **Standard (`eai-standard/3.0`):** the shared layer of `embodied_first_exam/standard/` (from the pinned
   `standard-files` image) and the adapter `/opt/abc-tools/standard/server.py` (in the base image; `run.sh` starts it
   through `RCB_SERVER`):
   - action type `joint_position`: the 14 numbers per control step, as in privileged mode; `linear` or `hold` between rows
@@ -108,7 +108,7 @@ without a colour), and an "all of a colour and shape" directive for the generic 
   - resume class `exact` (MuJoCo on the CPU repeats bit for bit in a fresh process); `max_frames_per_call` 1000;
   - reset budget 0 (the mode's default): one episode. The adapter implements the optional reset capability, so a run
     can grant resets with `RCB_RESET_BUDGET`.
-- **Realtime (`eai-standard/2.3`):** the shared realtime layer (`rcb_realtime.py` from `standard-files`,
+- **Realtime (`eai-standard/3.0`):** the shared realtime layer (`rcb_realtime.py` from `standard-files`,
   `rcb_service.py` byte-identical to the other realtime benchmarks' copies, in the base image at
   `/opt/abc-tools/realtime/`) and the adapter `/opt/abc-tools/realtime/server.py` on the same Session: the standard twin's
   instance, action, success rule, cameras and proprioception (not served: `/kinematics`, per-frame camera poses, depth
@@ -239,6 +239,6 @@ twins also the task's text for the service (`environment/sim/task.json`). Everyt
 repository.
 
 ## Standard-mode service details
-Serves `eai-standard/2.2` (MuJoCo on the CPU, EGL rendering, resume class `exact`); `max_frames_per_call` = 1000. The
+Serves `eai-standard/3.0` (MuJoCo on the CPU, EGL rendering, resume class `exact`); `max_frames_per_call` = 1000. The
 optional reset capability is implemented with a budget of 0 by default; the 2.2 client has no `reset()`, so a run that
 grants resets calls `POST /reset` through `Robot._post`. The scene builds in 1-5 s (`RCB_STARTUP_TIMEOUT_S` 300).

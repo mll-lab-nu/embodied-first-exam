@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robowits-move-cube-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboWits move_cube on the same frozen instance as the privileged task (evaluation scene 0 of task 28). Move one of the three cubes across the goal line, to the side away from the robot, and leave it on the table there. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): RoboWits move_cube on the same frozen instance as the privileged task (evaluation scene 0 of task 28). Move one of the three cubes across the goal line, to the side away from the robot, and leave it on the table there. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 keywords = ["robotics", "robowits", "genesis", "marvin-bimanual", "dual-arm", "standard-mode", "trajectory", "move_cube"]
 
 [metadata]
@@ -22,7 +22,7 @@ simulator = "robowits"
 robot = "marvin-bimanual"
 family = "move_cube"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 oracle = "none"
 oracle_evidence = "No reference solution: RoboWits ships no expert or planner for its seed tasks. Solvable: model trial robowits-move-cube-i00-limited__9Vd2dpc (robowits-lunaxh-limited-0929, standard) graded success=1, deterministic=1 by the separate verifier; nop scored 0. These records are from earlier versions of the task (before protocol v1.0, on the same frozen instance and predicate); not re-run on this version (static validation only, 2026-10-01). Human review per family (protocol §4). Re-graded with the current grader (two AMD workstations; the earlier positives were graded on the Intel laptop, so a trajectory that fails the earlier grader on AMD too says nothing either way): the cited __9Vd2dpc passes the earlier grader but fails the current one: the cube past the line is off the table; the privileged __Zz28YtH passes the current grader."
 instance_seed = 0

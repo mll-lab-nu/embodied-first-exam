@@ -1,11 +1,11 @@
-"""The match extension of eai-standard/2.x (docs/protocol/standard_mode.md Part 5): the standard endpoints and the match's
+"""The match extension of eai-standard/3.0 (docs/protocol/standard_mode.md Part 5): the standard endpoints and the match's
 own calls, translated onto the match service's methods (the same methods the core's seat API /<SEAT>/<ep> calls).
 
-    GET  /spec      the match's spec as a 2.x spec (+ `match`: the core's own spec, as `game spec` gives it)
+    GET  /spec      the match's spec as an eai-standard spec (+ `match`: the core's own spec, as `game spec` gives it)
     GET  /status    the state, no images
     POST /observe   {cameras, last_s, video, query, team_since}: the observation as RCB1 (last/ and frames/ per camera);
                     it never waits and never lets time pass (eai-standard/3.0)
-    POST /submit    {type, dt, at, entity, rows}: action rows (commands); realtime: a plan from step `at` (2.3);
+    POST /submit    {type, dt, at, entity, rows}: action rows (commands); realtime: a plan from step `at`;
                     {type, interpolate: "hold", seconds} without rows: a hold chunk (eai-standard/3.0)
     POST /start     extension: you are ready (the core's `start`)
     POST /ready     extension: {why, plan}, your review (the core's `ready`)
@@ -13,7 +13,7 @@ own calls, translated onto the match service's methods (the same methods the cor
     POST|GET /team  extension (team formats): {since}
 
 Every answer's meta carries the match: `score`, `review_due`, `match_over` (and `phase`, `world`, `state`: the core's
-state of the seat). Three clocks, one per core service: realtime (core/realtime.py, eai-standard/2.3: /submit answers at
+state of the seat). Three clocks, one per core service: realtime (core/realtime.py, the realtime layer's clock: /submit answers at
 once, the rows become a plan), lockstep (core/lockstep.py, standard mode: /submit executes the rows, the world waits) and
 turn (core/turn.py: one action per turn, a review after each).
 
@@ -44,10 +44,7 @@ try:                                      # core >= 0.2.x: the body check of the
 except ImportError:  # pragma: no cover
     check_body = None
 
-PROTOCOL = {"realtime": "eai-standard/2.3+match/1.0", "lockstep": "eai-standard/2.1+match/1.0",
-            "turn": "eai-standard/2.1+match/1.0"}
-EXTENSION = {"match": "1.0"}
-EAI_STANDARD = "eai-standard/3.0"
+PROTOCOL = "eai-standard/3.0"
 HOLD_HINT = ('observe never lets time pass (eai-standard/3.0): to let n seconds pass, submit a hold chunk {"type": <type>, '
              '"interpolate": "hold", "seconds": n} with no rows; the match keeps no recorder: last_s = n answers with '
              "the sport's own frames of now")
@@ -58,7 +55,7 @@ MAX_JSON_ROWS = 1000
 MAX_CHUNK_S = 10.0                        # game seconds a chunk may cover
 TURN_WAIT_MAX_S = 60.0                    # turn-based: max_chunk_s, the real seconds a hold chunk may wait for your turn
 MAX_AHEAD_S = 10.0                        # realtime: `at` at most this far ahead (game seconds)
-MAX_VIDEO_FPS = 30                        # video_fps lies in [1, 30] (eai-standard/3.0, 2.1/2.3); the match renders the
+MAX_VIDEO_FPS = 30                        # video_fps lies in [1, 30] (eai-standard/3.0); the match renders the
                                           # sport's own frames, so the value is checked, then not used
 RECENT_EFFECTS = 64
 STATE_KEYS_SKIP = {"team_messages", "ready", "retired"}
@@ -213,7 +210,7 @@ class Adapter:
         if self.seat not in svc.cfg.seats:
             raise ValueError(f"EAI_STD_SEAT {self.seat!r} is not a seat of this match")
         self.clock = "turn" if svc.protocol == "turn" else ("lockstep" if hasattr(svc, "may_step") else "realtime")
-        self.protocol = PROTOCOL[self.clock]
+        self.protocol = PROTOCOL
         self.dt = None if self.clock == "turn" else float(svc.m.dt)
         self.lock = threading.Lock()
         self.calls = self.chunk_id = self.obs_id = 0
@@ -345,7 +342,7 @@ class Adapter:
              "score": scores, "side": svc.cfg.side_of(self.seat), "review_due": bool(due) and phase != "over",
              "match_over": phase == "over", "phase": phase, "world": st.get("world"), "state": st, **rt}
         if self.clock == "realtime" and "effects" not in extra:
-            m["effects"] = self.take_effects()          # the planned rows' effects since the last answer (2.3 plan)
+            m["effects"] = self.take_effects()          # the planned rows' effects since the last answer (the realtime plan)
         m.update(extra)
         return jsonable(m)
 
@@ -387,14 +384,12 @@ class Adapter:
         types_note = ("the types of the match's schema (spec match.actions); a type the task text names besides "
                          "them (e.g. a toss) is sent the same way, as JSON rows; the match checks every row when it is "
                          "sent (an invalid row: 400 in standard mode, meta.effects `code` 400 in realtime)")
-        out = {"protocol": self.protocol, "protocol_compat": [], "extensions": EXTENSION,
-               "match_protocol": core.get("protocol"), "simulator": "embodied-olympics core",
+        out = {"protocol": self.protocol, "simulator": "embodied-olympics core",
                "sport": svc.sport.name, "revision": core.get("revision"), "seat": self.seat, "side": core.get("side"),
                "format": core.get("format"), "action_level": core.get("action_level"),
                "control_hz": None if not self.dt else round(1.0 / self.dt, 6), "physics_substeps": None,
                "control_dt": self.dt, "max_chunk_s": self.max_chunk_s, "max_chunk_rows": MAX_JSON_ROWS,
                "max_video_fps": MAX_VIDEO_FPS,
-               "standard": EAI_STANDARD,
                "max_request_bytes": MAX_REQUEST_BYTES, "entities": entities,
                "cameras": cams, "action_types": {**types, "not_yet": []}, "action_types_note": types_note,
                "proprio_layout": None,
@@ -991,7 +986,7 @@ class Adapter:
                               planned_duration_s=planned, plan=[], clipped=[], n_clipped=0, **info), parts
 
     def submit_realtime(self, req, cid):
-        """eai-standard/2.3: answers at once; the rows become the plan of their entity from control step `at`
+        """Realtime: answers at once; the rows become the plan of their entity from control step `at`
         (default: the next one), replacing what was planned from `at` on; rows whose step has run are dropped."""
         svc = self.svc
         ent = req["entity"]
@@ -1153,11 +1148,11 @@ DEVIATIONS = {
                  "control_dt x S seconds of wall time",
          "why": "a match is a contest of several seats; its start is the core's barrier, and results are comparable "
                 "only under it"},
-        {"rule": "2.3: the clock runs until the episode ends",
+        {"rule": "realtime: the clock runs until the episode ends",
          "here": "after every unit (a point) the world freezes until every due seat has sent /ready (at most "
                  "review_timeout_s of real time, else that side loses: ready_timeout); the plan is cleared at a freeze",
          "why": "the frozen review is part of Embodied Olympics' rules; acts of a finished unit never take effect"},
-        {"rule": "2.3: a row takes effect at its control step",
+        {"rule": "realtime: a row takes effect at its control step",
          "here": "a row is handed to the match at its step (after step - 1 ran) and takes effect at the first "
                  "control-step boundary after its preparation (the platform's planning of a high-level action): "
                  "normally that step, later when the preparation takes longer than one control period "
@@ -1165,7 +1160,7 @@ DEVIATIONS = {
                  "previous row's effect",
          "why": "the core applies an act only after it is prepared, at a boundary; preparing rows ahead of time would "
                 "change the platform's behaviour and the results' comparability"},
-        {"rule": "2.3: behind the clock by more than 0.5 s the service drops the debt (a stall)",
+        {"rule": "realtime: behind the clock by more than 0.5 s the service drops the debt (a stall)",
          "here": "the core runs missed steps back to back and records how late (final.json sim_lag); the match is "
                  "voided as infrastructure past the integrity limits (README)",
          "why": "the core's clock, unchanged"},
@@ -1176,9 +1171,9 @@ DEVIATIONS = {
         {"rule": "3.0: a hold chunk holds the current target for n seconds",
          "here": "it clears the entity's plan from `at` for n seconds; the command in force stays (zero-order hold)",
          "why": "the match's actions are commands, not targets"},
-        {"rule": "2.3: /submit answers with the frames of now",
+        {"rule": "realtime: /submit answers with the frames of now",
          "here": "with images only when `cameras` is given (a render costs the clock)", "why": "camera budget"},
-        {"rule": "2.1: `linear` / `hold` interpolation between rows",
+        {"rule": "standard: `linear` / `hold` interpolation between rows",
          "here": "every action type is a command (one row, one control step), never interpolated; the last "
                  "command stays in force as the sport defines it (zero-order hold)",
          "why": "the match's actions are commands, not targets"},
@@ -1187,13 +1182,13 @@ DEVIATIONS = {
         {"rule": "3.0: /observe last_s = n returns the frames recorded during the last n seconds of /submit",
          "here": "the sport's own frames of now (meta.last_s says what they span); a hold chunk answers with the "
                  "observation at its end, no video", "why": "the core renders images only on observation"},
-        {"rule": "2.1: the episode runs until it ends", "here": "after every unit the world freezes for /ready (at "
+        {"rule": "standard: the episode runs until it ends", "here": "after every unit the world freezes for /ready (at "
          "most review_timeout_s of real time)", "why": "Embodied Olympics' rules"},
-        {"rule": "2.1: `linear` / `hold` interpolation", "here": "commands only, never interpolated",
+        {"rule": "standard: `linear` / `hold` interpolation", "here": "commands only, never interpolated",
          "why": "the match's actions are commands"},
     ],
     "turn": [
-        {"rule": "2.1: /submit executes a chunk of rows", "here": "one action per turn, then /ready",
+        {"rule": "standard: /submit executes a chunk of rows", "here": "one action per turn, then /ready",
          "why": "a turn-based match"},
         {"rule": "3.0: a hold chunk {type, interpolate: hold, seconds: n} holds the current target for n seconds",
          "here": "it waits up to n real seconds for your turn (n at most max_chunk_s, real seconds here)",

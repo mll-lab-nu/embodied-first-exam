@@ -1,7 +1,7 @@
 # The match service of Embodied Olympics' tabletennis_g1 (revision g1tt-10+core-0.5) inside the task. Four containers
 # share the egress sidecar's network namespace (keep [agent] network_mode = "allowlist"): main (the agent: the seat
 # image with the G1 toolkit, the GPU training kit and the practice sandbox; one NVIDIA GPU) reaches the match service
-# (`sim`, core/launch.py, eai-standard-lockstep/1.0, core/lockstep.py) at localhost:8000 and the practice service (`practice`, full copies
+# (`sim`, core/launch.py, eai-standard/3.0, core/lockstep.py) at localhost:8000 and the practice service (`practice`, full copies
 # of the match world: no opponent or the practice player, never the official one) at localhost:8100; the practice player
 # (`practice_player`) answers the practice service at localhost:8200. The seat is unmetered: no metering proxy and no
 # credential in the sim (Harbor records the model's usage). The opponent (the platform's G1 at level 4) plays in

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Panda Dynamic Scenes |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `pandadyn-s05-sliding-receive-align-deliver-i00-privileged` |
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `s05_sliding_receive_align_deliver` / seed 0 |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-Standard-mode twin of `pandadyn-s05-sliding-receive-align-deliver-i00-privileged` (same frozen instance and success check): the agent gets only the `eai-standard/2.1`
+Standard-mode twin of `pandadyn-s05-sliding-receive-align-deliver-i00-privileged` (same frozen instance and success check): the agent gets only the `eai-standard/3.0`
 client (docs/protocol/standard_mode.md Part 1, with the optional reset capability); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar for SAPIEN's renderer), which owns the scene, judges the episode
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
@@ -33,7 +33,7 @@ one-second `joint_position` chunks through the client in the last episode; after
 resumed episode and continues from the control step the service reports. It uses no privileged information at run time.
 
 ## Verification
-The sim service (`environment/sim/rcb_service.py`, the shared eai-standard/2.1 layer, with `environment/sim/server.py`,
+The sim service (`environment/sim/rcb_service.py`, the sidecar layer, with `environment/sim/server.py`,
 this benchmark's adapter on `rcb_pandadyn.Session`) judges the episode live and records every control step it ran
 (`trajectory_live.f64`); after the agent's time the collect hook stops the agent's programs and signals the service, which
 writes the last episode's verdict into `final.json` (`graded_by` = `live`, `replays` = 0; nothing is replayed to grade it)

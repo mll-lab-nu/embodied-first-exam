@@ -1,4 +1,4 @@
-"""Protocol eai-standard-turn/1.0: turns decided by the plugin (Match.to_move), one chess clock per seat (CLOCK_S of
+"""The turn service: turns decided by the plugin (Match.to_move), one chess clock per seat (CLOCK_S of
 wall time, running only on its own turn, service time excluded; out of time = the match is lost), and after every
 action that does not end the match its actor reviews (ready WHY PLAN) before play goes on.
 
@@ -32,7 +32,7 @@ REVIEW_MAX_CHARS = 2000
 
 class TurnService(Service):
     protocol = "turn"
-    protocol_id = "eai-standard-turn/1.0"
+    protocol_id = "eai-standard/3.0"
 
     def __init__(self, *a, **kw):
         self.clock_s = float(os.environ.get("CLOCK_S", "3600"))
@@ -128,7 +128,7 @@ class TurnService(Service):
         return obs
 
     def spec_core(self):
-        return {"clock": {"total_s": self.clock_s, "runs": "on your turn only (your actions and your reviews); the "
+        return {"turn_based": True, "clock": {"total_s": self.clock_s, "runs": "on your turn only (your actions and your reviews); the "
                           "time the service is busy does not count; out of time = you lose the match",
                           "start_window_s": self.start_window()},
                 "start": self.start_rule(),

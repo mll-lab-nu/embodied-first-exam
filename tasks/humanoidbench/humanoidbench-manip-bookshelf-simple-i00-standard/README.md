@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | HumanoidBench |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `humanoidbench-manip-bookshelf-simple-i00-privileged` |
 | Simulator / robot | `humanoidbench` / `unitree-h1hand` |
 | Family / instance | `bookshelf_simple` / seed 0 |
@@ -14,7 +14,7 @@
 ## Task
 Put the five red objects on the bookshelf one at a time, palest first and darkest last, each on the see-through copy of itself.
 
-Standard mode (robot as a service, `eai-standard/2.1`) of
+Standard mode (robot as a service, `eai-standard/3.0`) of
 `humanoidbench-manip-bookshelf-simple-i00-privileged`: the same frozen instance and the same success rule.
 HumanoidBench runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the sidecar for rendering),
 which holds the reward, judges the episode as it runs, records it and, after the verdict, renders its video

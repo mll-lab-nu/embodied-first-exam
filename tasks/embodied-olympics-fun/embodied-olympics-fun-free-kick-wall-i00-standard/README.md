@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-fun-free-kick-wall-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `free_kick_wall` / seed 0 |
@@ -44,7 +44,7 @@ Caps per container (PROTOCOL §6).
 | Category | football-and-volleyball |
 | Rule book | IFAB Laws of the Game 2025/26: Law 1 (the goal 7.32 m x 2.44 m, posts and crossbar 12 cm wide; the penalty area 16.5 m deep), Law 2 (a size-5 ball: 68-70 cm round, 410-450 g), Law 10 (a goal: the whole ball passes over the goal line between the posts and under the crossbar), Law 13 (free kicks: a direct free kick, the ball stationary, in play when it is kicked and clearly moves; the kicker may not touch it again until it has touched another player; all opponents at least 9.15 m from the ball until it is in play) and the glossary (a kick: contact with the foot and/or the ankle); deviations: Law 13 (the opponents): the defensive wall is 4 free-standing training mannequins (FORZA senior free-kick mannequin size: 1.75 m tall, 0.5 m wide) on FORZA's 13.0 kg rubber base, side by side with their faces 9.15 m from the ball, covering the near post. They are free bodies standing on the grass (rubber on grass, friction 0.8: an estimate): a ball that hits one can rock, slide or topple it. They do not jump, and there is no goalkeeper and no other player: opponents cannot be simulated otherwise. · Law 13 (one kick): the referee takes every contact of a foot with the ball within 0.15 s of the first as the one kick; a later contact by the kicker is a second touch. A referee's eye is replaced by this number. · Glossary (a kick is made with the foot or the ankle): the foot is the robot's ankle-roll link; its lower-leg collision hull covers the instep and the ankle, so a contact with that hull counts as the foot where it lies over the foot (from 0.08 m behind to 0.15 m ahead of the ankle joint) and no more than 0.12 m above the ankle joint; higher up it is the shin, which may not touch the ball. · Law 1: only the attacked end of the field is there (the penalty area, the goal area and the arc painted); the goal's net is a rigid cage 2.0 m deep; no wind. The free kick's spot (20.0 m from the goal line, 4.0 m to the right of the goal's centre) is this benchmark's choice: outside the penalty area, where a direct free kick is taken, and inside the range of the robot's measured hard kicks (10 to 16 m/s; the ball has to roll or fly about 21 m). The kicker starts at the ball, without a run-up. |
 | Stages | kick → goal |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 3000 control steps (30 s at 100 Hz); 5 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

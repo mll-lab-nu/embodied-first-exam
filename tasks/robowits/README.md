@@ -64,7 +64,7 @@ has a positive; their frozen instances are in dev branch 9eb18edf.
 ## Tasks
 - The task directories are the deliverable; the tooling that built them is kept outside this repository. Every task
   gets the shared sources from files images (Tooling, below): the tooling `rcb_robowits.py`, the standard sim adapter
-  `server.py` and the mode's grader from `robowits-files`, the eai-standard/2.2 layer (`rcb_limited.py`, `rcb_client.py`,
+  `server.py` and the mode's grader from `robowits-files`, the eai-standard/3.0 layer (`rcb_limited.py`, `rcb_client.py`,
   `rcb1.py`, `run.sh`) from `standard-files` (`embodied_first_exam/standard/`); the standard oracle player
   `solution/oracle_replay.py` is the same file in each standard task that has a reference. The privileged
   instruction quotes RoboWits' `_check_success` verbatim (MIT, RoboWits @ 9cc30ae).
@@ -190,7 +190,7 @@ demonstrations of its seed tasks (the LeRobot dataset its README names; the imag
   after a crash included. It needs neither: the same image and assets as the privileged simulator.
 - Both verifiers: `no-network` (Grading and determinism).
 
-## Standard mode (eai-standard/2.2)
+## Standard mode (eai-standard/3.0)
 `joint_position` (16) and `ee_pose` (16, right arm first, IK per row on RoboWits' pink/pinocchio IK, gripper-tip frame);
 cameras `ego` (static) and `wrist_right` / `wrist_left` (link-mounted); Genesis rasterizer depth; `/kinematics` on
 pinocchio (14 arm joints); 80 proprio columns; the end condition in `/spec` (`episode`). docs/protocol/standard_mode.md §16.

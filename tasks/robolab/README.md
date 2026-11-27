@@ -3,7 +3,7 @@
 [NVIDIA RoboLab](https://github.com/NVlabs/RoboLab) v0.3.1 on Isaac Lab 2.3.2 / Isaac Sim 5.1: tabletop language-goal tasks
 for a Franka with a Robotiq 2F-85 (DROID joint-position actions). `simulator = "robolab"`, `robot = "franka-robotiq-2f85"`.
 53 families, each as a privileged task `robolab-<family>-i00-privileged` and its standard twin
-`robolab-<family>-i00-standard` (`eai-standard/2.2`), on the same frozen instance. Results are attributed by DIGEST
+`robolab-<family>-i00-standard` (`eai-standard/3.0`), on the same frozen instance. Results are attributed by DIGEST
 (PROTOCOL H.8).
 
 ## Quick start
@@ -227,7 +227,7 @@ registry lists all 88 RoboLab tasks that were frozen (the 53 here and the 35 wit
   `ci_checks/benchmarks/robolab/advisory-world-frame.sh`); the robot's root frame (Franka base at the origin) is the world convention. Privileged tasks
   give the privileged state through the tooling.
 
-## Standard mode (eai-standard/2.2)
+## Standard mode (eai-standard/3.0)
 `joint_position` (8: 7 joints + binary gripper, switched at the row; rows `dt` apart, a multiple of 1/15 s, anything else
 is a 400) and `ee_pose` (8, closed-loop differential IK, at most 0.25 m/s, fingertip-centre frame); cameras
 `egocentric_mirrored_camera`, `over_shoulder_left_camera` (static) and `wrist_cam` (on the Robotiq base link); Isaac

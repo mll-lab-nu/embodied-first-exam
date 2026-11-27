@@ -11,7 +11,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/dextoolbench_marker_sharpie_marker_draw_smile-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): DexToolBench (SimToolReal) sharpie_marker / draw_smile in MuJoCo: KUKA iiwa 14 + Sharpa HA4 hand; produce one replayable joint-target trajectory that carries the sharpie marker through the 36 demonstrated goal poses in order. Task: Pick up the marker and draw a smiley face, following the green ghost marker through its poses in order. The agent only gets a client: camera RGB-D + proprioception and joint-target chunks; 20 resets (only the last episode graded), no object poses; the sim service records every episode and grades the last one live (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): DexToolBench (SimToolReal) sharpie_marker / draw_smile in MuJoCo: KUKA iiwa 14 + Sharpa HA4 hand; produce one replayable joint-target trajectory that carries the sharpie marker through the 36 demonstrated goal poses in order. Task: Pick up the marker and draw a smiley face, following the green ghost marker through its poses in order. The agent only gets a client: camera RGB-D + proprioception and joint-target chunks; 20 resets (only the last episode graded), no object poses; the sim service records every episode and grades the last one live (no grading replay)."
 keywords = ["robotics", "dextoolbench", "simtoolreal", "mujoco", "dexterous", "tool-use", "iiwa", "sharpa", "code-as-policy", "trajectory", "standard-mode"]
 
 [metadata]
@@ -22,7 +22,7 @@ family = "dextoolbench/marker/sharpie_marker/draw_smile"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
 instance_seed = 0                 # DexToolBench fixes the start pose and goals (from a human demo); no randomization
 expert_time_estimate_hours = 4.0
-protocol = "eai-standard/2.1"
+protocol = "eai-standard/3.0"
 oracle = "full"
 
 [verifier]

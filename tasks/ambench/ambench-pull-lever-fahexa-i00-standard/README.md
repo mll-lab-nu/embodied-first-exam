@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | AM-Bench |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | — (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4) |
 | Simulator / robot | `ambench` / `ambench-fahexa` |
 | Family / instance | `pull_lever_fahexa` / seed 0 |
@@ -13,7 +13,7 @@
 
 ## Task
 Standard-only task (no privileged twin: its physics does not replay bit for bit, so an open-loop trajectory of it cannot be graded reproducibly; the frozen instance: AM-Bench environment `PullLever-Am-FAHexa-Abs-PID-Direct-v0`, its seeded reset with seed
-0): Pull the lever on the wall up as far as it goes. The agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in
+0): Pull the lever on the wall up as far as it goes. The agent gets only the `eai-standard/3.0` client (docs/protocol/standard_mode.md); the simulator runs in
 the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the scene and records the episode as a
 (T, 8) trajectory of AM-Bench's own end-effector pose actions. The collect hook (`environment/sim/finalize.sh`) ends the
 episode, lets the service exit, writes `final.json` from the live episode's record (no replay) and then films the

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | MetaWorld+ |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `metaworldplus-soccer-i00-privileged` |
 | Simulator / robot | `mujoco` / `sawyer` |
 | Family / instance | `metaworld/soccer` / seed 1 (allowed seeds: [1, 2, 3]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `metaworldplus-soccer-i00-privileged`: the same instance and success check (Push the ball into the goal.), served
-as a robot service (`embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py`, protocol eai-standard/2.1, tool module `mw_tool`). The
+as a robot service (`embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py`, protocol eai-standard/3.0, tool module `mw_tool`). The
 agent sees camera RGB-D, the robot's own state and the target point; no object poses, no reset; one episode.
 
 ## Difficulty

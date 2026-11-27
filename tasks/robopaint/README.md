@@ -7,7 +7,7 @@ sheet, dipping in an ink stone or paint wells, with a practice sheet beside it. 
 words and 4 copy lines: Lettering), acrylic (10) and oil (11) paintings. Each target is a privileged task
 `robopaint-<family>-<target>-i<NN>-privileged` and its standard twin `...-i<NN>-standard` on the same frozen instance (`i00`;
 the oil paintings `i01`, Targets); `[metadata].family = "robopaint_<family>_<target>"`. The line family (9 line drawings) is excluded from the benchmark and
-not in this repository: its tooling serves only rcb-limited/2.0.
+not in this repository: its tooling serves only eai-standard/3.0.
 
 ## Quick start
 ```bash
@@ -505,7 +505,7 @@ at `/tests/`; no task dir carries them. The sidecars are built from `environment
   - Accepted consequence: the calibrated `canvas_cam` above the main sheet tells roughly where the sheet is.
   - Privileged tasks give the sheets through the tooling.
 
-## Standard mode (eai-standard/2.2)
+## Standard mode (eai-standard/3.0)
 | | |
 |---|---|
 | actions | `joint_position` (7) and `ee_pose` (7: brush-tip targets `dt` apart, IK per control step, at most 0.25 m/s) |

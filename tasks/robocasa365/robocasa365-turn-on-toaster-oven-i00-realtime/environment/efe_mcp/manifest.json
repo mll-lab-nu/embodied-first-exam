@@ -3,7 +3,7 @@
  "kind": "rcb",
  "suite": "robocasa365",
  "task": "robocasa365-turn-on-toaster-oven-i00-realtime",
- "protocol": "eai-standard/2.3",
+ "protocol": "eai-standard/3.0",
  "realtime": true,
  "tools": [
   "spec",

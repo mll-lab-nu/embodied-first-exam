@@ -50,7 +50,7 @@ simulated, and this session is part of an evaluation: what the robot does is rec
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`). Call `spec()` first: it has every number this page refers to.
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`). Call `spec()` first: it has every number this page refers to.
 The client's docstring (`help(rcb_client)`) is the full reference. Where it and `spec()` differ, `spec()` wins.
 
 | call | what it does |

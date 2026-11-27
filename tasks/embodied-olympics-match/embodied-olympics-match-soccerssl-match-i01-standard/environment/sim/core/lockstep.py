@@ -1,7 +1,7 @@
-"""Embodied First Exam: protocol eai-standard-lockstep/1.0, the standard mode of Embodied Olympics' real-time matches.
+"""Embodied First Exam: the lockstep service, the standard mode of Embodied Olympics' real-time matches.
 
 The match, the world, the referee, the opponent, the observation, the reviews, the record and the grading are those of
-eai-standard-realtime/1.0 (core/realtime.py, unchanged); only the clock differs. The world does not run on the wall
+the realtime service (core/realtime.py, unchanged); only the clock differs. The world does not run on the wall
 clock: it advances one control step at a time, and only while every seat that plays (a built-in seat too) lets it:
 
   - a seat lets it advance while one of its `wait {dt}` calls is open (up to that call's target step) or while one of
@@ -11,7 +11,7 @@ clock: it advances one control step at a time, and only while every seat that pl
     act never costs game time: it takes effect at the step after the state it answers, whatever its wall time;
   - between calls the world stands still (no step is ever taken for a seat that is thinking).
 
-Everything else is eai-standard-realtime/1.0's: one act per (seat, entity) in flight (429), acts lowered at a step
+Everything else is the realtime service's: one act per (seat, entity) in flight (429), acts lowered at a step
 boundary, the frozen review after every unit with its time limit (READY_TIMEOUT_S of real time; a side that misses it
 loses, ready_timeout), the start window, the collect rules (a single side whose match has started loses when its
 session ends, abandoned), live grading. The reply fields are the same (`now.world` is "running" while the match is in
@@ -35,7 +35,7 @@ from . import serve
 from .realtime import RealtimeService
 from .sport import FINISHED, UNIT_OVER
 
-PROTOCOL_ID = "eai-standard-lockstep/1.0"
+PROTOCOL_ID = "eai-standard/3.0"
 RULE = ("the world advances only while you let it: during an open `wait {dt}` (up to dt game seconds) and, for an "
         "accepted act, up to the step at which it takes effect (the step after the state it answers); between your "
         "calls it stands still, and preparing an act (planning, a skill call) takes no game time. With two seats the "

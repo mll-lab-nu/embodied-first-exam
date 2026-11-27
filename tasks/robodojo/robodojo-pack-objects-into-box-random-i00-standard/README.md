@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | RoboDojo |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `robodojo-pack-objects-into-box-random-i00-privileged` |
 | Simulator / robot | `robodojo` / `arx-x5-bimanual` |
 | Family / instance | `pack_objects_into_box_random` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `robodojo-pack-objects-into-box-random-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/pack_objects_into_box_random_0.json`). Put the car, the toothbrush, the hammer and the shoe in the box, each lying lengthwise with its front end pointing left, and keep the box upright without turning it. Then move both arms back to where they started. (RoboDojo's `pack_objects_into_box_random`). The agent drives the
-robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
+robot only through the eai-standard/3.0 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 
 ## Difficulty

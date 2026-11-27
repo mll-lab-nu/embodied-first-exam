@@ -18,7 +18,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/humanoidbench-loco-walk-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): HumanoidBench walk on the same frozen instance as humanoidbench-loco-walk-i00-privileged. Task: Walk forward and keep walking, without falling. The agent only gets a client: /observe, /submit and /reset (head-camera RGB, joint proprioception, a pelvis IMU, a fixed room camera; joint-position chunks). Up to 50 resets (each a new episode from the frozen start), no privileged state, no reward; the sim service records the episodes and grades the last one as it ran (the live episode; nothing is replayed)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): HumanoidBench walk on the same frozen instance as humanoidbench-loco-walk-i00-privileged. Task: Walk forward and keep walking, without falling. The agent only gets a client: /observe, /submit and /reset (head-camera RGB, joint proprioception, a pelvis IMU, a fixed room camera; joint-position chunks). Up to 50 resets (each a new episode from the frozen start), no privileged state, no reward; the sim service records the episodes and grades the last one as it ran (the live episode; nothing is replayed)."
 keywords = ["robotics", "humanoidbench", "mujoco", "h1", "locomotion", "standard-mode", "trajectory", "walk"]
 
 [metadata]
@@ -27,7 +27,7 @@ simulator = "humanoidbench"
 robot = "unitree-h1"
 family = "walk"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+protocol = "eai-standard/3.0"
 instance_seed = 0
 expert_time_estimate_hours = 4.0
 oracle = "none"

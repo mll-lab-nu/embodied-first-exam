@@ -30,8 +30,8 @@ COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-match-files-0.3.0@sha256:0c
      /sim/bodies/ssl_robot/trajectory.py \
      /srv/bodies/ssl_robot/
 COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-match-files-0.3.0@sha256:0c6710ec1d7682bc4bf1b828a71d4c8b6c21193a279f13ad7e39d683307a95af \
-     /sim/variants/f2ac92d9b2/core/README.md \
-     /sim/variants/6e764a014e/core/__init__.py \
+     /sim/variants/26491263db/core/README.md \
+     /sim/variants/eea4470a69/core/__init__.py \
      /sim/core/builtin_seat.py \
      /privileged/environment/fullsim/core/channel.py \
      /sim/core/client.py \

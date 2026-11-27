@@ -185,7 +185,7 @@ PhysX runs on the CPU (LabUtopia's default backend, `numpy`). Measured in the im
   Deliverable `/app/output/trajectory.npz`, `(T, 18)`. LabUtopia's code other than the controllers is in the image, and
   so is Isaac Sim's own motion generation for the Franka (RMPflow, Lula kinematics). The verifier replays the rows once,
   in a fresh process in its own sandbox: the replay must succeed.
-- **Standard (`eai-standard/2.2`):** the shared layer of `embodied_first_exam/standard/` and the adapter
+- **Standard (`eai-standard/3.0`):** the shared layer of `embodied_first_exam/standard/` and the adapter
   `environment/sim/server.py`, the same in all nine families:
   - action types `joint_position` (9 position targets within the joints' ranges; velocity targets zero) and
     `joint_position_velocity` (the 18 targets above, with their wider ranges); rows `dt` apart, a multiple of 1/60 s,

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | MetaWorld+ |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `metaworldplus-faucet-close-i00-privileged` |
 | Simulator / robot | `mujoco` / `sawyer` |
 | Family / instance | `metaworld/faucet-close` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `metaworldplus-faucet-close-i00-privileged`: the same instance and success check (Turn the faucet off.), served
-as a robot service (`embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py`, protocol eai-standard/2.1, tool module `mw_tool`). The
+as a robot service (`embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py`, protocol eai-standard/3.0, tool module `mw_tool`). The
 agent sees camera RGB-D, the robot's own state and the target point; no object poses, no reset; one episode.
 
 ## Difficulty

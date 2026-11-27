@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | MuJoCo Playground |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `mujoco_playground_spot_flat_terrain_joystick-privileged` |
 | Simulator / robot | `mujoco` / `boston-dynamics-spot` |
 | Family / instance | `mujoco_playground/SpotFlatTerrainJoystick` / seed 0 |
@@ -13,7 +13,7 @@
 
 ## Task
 MuJoCo Playground `SpotFlatTerrainJoystick` (Boston Dynamics Spot) on the same frozen instance as `mujoco_playground_spot_flat_terrain_joystick-privileged`: Make the robot follow the joystick's commands for the whole schedule without falling over.
-For 20 s the robot gets a joystick command schedule (5 segments: planar velocity and yaw rate in its own frame) and must track it without falling over. Standard mode (eai-standard/2.2): the agent drives the robot through a client, with 10 resets (only
+For 20 s the robot gets a joystick command schedule (5 segments: planar velocity and yaw rate in its own frame) and must track it without falling over. Standard mode (eai-standard/3.0): the agent drives the robot through a client, with 10 resets (only
 the last episode is graded), the robot's own sensors and the cameras that follow it.
 
 ## Difficulty

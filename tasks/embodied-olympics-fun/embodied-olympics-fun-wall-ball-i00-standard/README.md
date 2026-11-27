@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-fun-wall-ball-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
 | Family / instance | `wall_ball` / seed 0 |
@@ -44,7 +44,7 @@ Caps per container (PROTOCOL §6).
 | Category | throwing-catching-striking |
 | Rule book | No rule book: a wall-ball drill (throw and catch against a wall, as used in baseball, cricket and handball training) with this benchmark's numbers. The ball is the ITF's (Rules of Tennis 2024, Rule 3 and Appendix I: size, mass, rebound); deviations: The hands: the H1-2's own Inspire five-finger hands at the device's forces (six drives: four fingers, the thumb's flexion and rotation; fingertip forces 20 N, the thumb 30 N; the fingers close at most 260 deg/s, the thumb 70 deg/s), each closed by one command (the synergy: every drive towards its closed position); they hold the ball by contact and friction only, and it can slip, turn and drop. · The throw and the catch: the ball is released when it has touched no part of you for 0.05 s (at its last touch); a hand holds it while it touches that hand's fingers and its thumb or palm, its centre on the palm's side of the hand and within 0.12 m of the hand's grasp point (not a ball balanced on the back of the hand or the fingertips), and a catch is the ball held after the rebound. A held ball may lose that hold for at most 0.05 s. · The wall is rigid and smooth; the ball's rebound from it is the ITF ball's rebound from a hard floor (0.745 of the speed across the wall, on average: with 1 ms physics it varies by up to 0.05 either way with where in a step the ball arrives; a real ball keeps less at high speed, about 0.65 at 17 m/s). The impact itself is the ball's measured one on a rigid surface (R. Cross, Sports Engineering 2, 1999): about 4.5 ms long, the ball's centre coming about 20 mm closer to the wall at 17 m/s. · Flight: quasi-steady aerodynamics (MuJoCo's ellipsoid fluid model: drag and Magnus lift), still air. The world has elliptic friction cones and an impedance ratio of 100 (the real hands' setting, which makes a held ball stay put); they apply to every contact. |
 | Stages | release → target → catch → hold |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 1500 control steps (15 s at 100 Hz); 5 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

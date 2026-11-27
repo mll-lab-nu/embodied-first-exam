@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/behavior-collecting-aluminum-cans-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): BEHAVIOR-1K v3.9.2 collecting_aluminum_cans on the same frozen instance as the privileged task (2026 challenge public_test instance 301). Collect all six soda cans into the bucket. The agent only gets a client: get_obs (RGB-D + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory, resumes it after a crash, and grades the episode it ran (no replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): BEHAVIOR-1K v3.9.2 collecting_aluminum_cans on the same frozen instance as the privileged task (2026 challenge public_test instance 301). Collect all six soda cans into the bucket. The agent only gets a client: get_obs (RGB-D + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory, resumes it after a crash, and grades the episode it ran (no replay)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "standard-mode", "trajectory", "collecting_aluminum_cans"]
 
 [metadata]
@@ -24,7 +24,7 @@ simulator = "behavior"
 robot = "r1pro"
 family = "collecting_aluminum_cans"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 oracle = "none"
 oracle_evidence = "No reference solution: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance. Solvable: model trial behavior-collecting-aluminum-can__VRvxwLv (behavior-lunaxh-t8-0927, the privileged twin behavior-collecting-aluminum-cans-i00-privileged on the same frozen instance and BDDL goal) graded success=1, deterministic=1 by the separate verifier on a pre-v1.0 version of this task (dev branch 20a382a8; grader verdict and frozen instance unchanged since); not re-run on this version (static validation only). Human review per family (protocol §4)."
 instance_seed = 301

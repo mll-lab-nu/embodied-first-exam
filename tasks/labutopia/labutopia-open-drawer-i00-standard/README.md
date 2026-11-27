@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | LabUtopia |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `labutopia-open-drawer-i00-privileged` |
 | Simulator / robot | `labutopia` / `franka-panda` |
 | Family / instance | `open_drawer` / seed 2 |
@@ -13,7 +13,7 @@
 
 ## Task
 LabUtopia's `open_drawer` (Open Drawer) on the same frozen instance as `labutopia-open-drawer-i00-privileged`: Pull the cabinet's top drawer open, then let go of it and move the hand away.
-On the bench in front of the arm: a grey cabinet with a white top, about 67 cm deep, 76 cm wide and 79 cm high: two drawers at the top, one above the other, each with a bar handle, and two doors below them. Everything is closed. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
+On the bench in front of the arm: a grey cabinet with a white top, about 67 cm deep, 76 cm wide and 79 cm high: two drawers at the top, one above the other, each with a bar handle, and two doors below them. Everything is closed. Standard mode (eai-standard/3.0): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty
 Same instance and success rule as `labutopia-open-drawer-i00-privileged` (LabUtopia's level 1). The drawer has to be pulled out more than 12 cm by a thin bar handle and then released: a grip that slips leaves it short, and a drawer still held does not count. In standard mode the agent loses resets, the simulator and the state of the objects: it sees camera images (glassware is nearly transparent in them and absent from the depth maps) and the robot's proprioception, acts in joint target chunks, and gets one episode, so it has to find the things it handles in the images and recover from its own mistakes without starting over.

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | HumanoidBench |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `humanoidbench-manip-room-i00-privileged` |
 | Simulator / robot | `humanoidbench` / `unitree-h1hand` |
 | Family / instance | `room` / seed 0 |
@@ -14,7 +14,7 @@
 ## Task
 Gather the six loose things in the room (the chair, the trophy, the headphones, the two packages and the snow globe) close together, anywhere you like.
 
-Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-manip-room-i00-privileged`: the same
+Standard mode (robot as a service, `eai-standard/3.0`) of `humanoidbench-manip-room-i00-privileged`: the same
 frozen instance and the same success rule. HumanoidBench runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar for rendering), which holds the reward, judges the
 episode as it runs, records it and, after the verdict, renders its video from the recorded trajectory; the

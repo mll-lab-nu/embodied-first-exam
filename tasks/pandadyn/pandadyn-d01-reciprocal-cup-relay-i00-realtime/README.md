@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Panda Dynamic Scenes |
-| Mode | realtime (`eai-standard/2.3`) |
+| Mode | realtime (`eai-standard/3.0`) |
 | Twin | `pandadyn-d01-reciprocal-cup-relay-i00-privileged` |
 | Simulator / robot | `maniskill` / `franka-panda-bimanual` |
 | Family / instance | `d01_reciprocal_cup_relay` / seed 0 |
@@ -14,7 +14,7 @@
 
 ## Task
 Realtime twin of `pandadyn-d01-reciprocal-cup-relay-i00-privileged` (same frozen instance and success check as it and as `pandadyn-d01-reciprocal-cup-relay-i00-standard`): the agent gets only
-the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
+the realtime client (`eai-standard/3.0`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 3** (one 10 ms control step every 30 ms of wall-clock time), with
 3 resets (only the last episode is graded). Catch the falling ball in the left cup and throw it high through the air to the right cup, which must be moving as it catches it. Carry it with the right cup to the second transfer point and throw it back from there; catch it again in the left cup and drop it into the sliding cart while the cart is moving.
 
@@ -32,7 +32,7 @@ time. Checked at S = 3: live success, fresh-process replay success, the
 same final state.
 
 ## Verification
-The sim service (`environment/sim/rcb_realtime.py` + `rcb_service.py`, the shared eai-standard/2.3 layer, with
+The sim service (`environment/sim/rcb_realtime.py` + `rcb_service.py`, the realtime layer, with
 `environment/sim/server.py`, this benchmark's adapter on `rcb_pandadyn.Session`) judges the episode live and records
 every control step it ran (`trajectory_live.f64`); after the agent's time the collect hook stops the agent's programs and
 signals the service, which writes the live episode's verdict into `final.json` (`graded_by` = `live`, `replays` = 0;

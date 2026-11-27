@@ -20,7 +20,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/roboarc-horseshoe-ring-02-i01-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboARC horseshoe_ring on the same frozen instance as the privileged task. Take the removable ring out of the puzzle and put all of it inside the green dashed goal square. Leave the horseshoes and chains behind, no closer to the goal than they were at the start. Keep every chain hooked in its horseshoe. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): RoboARC horseshoe_ring on the same frozen instance as the privileged task. Take the removable ring out of the puzzle and put all of it inside the green dashed goal square. Leave the horseshoes and chains behind, no closer to the goal than they were at the start. Keep every chain hooked in its horseshoe. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 keywords = ["robotics", "roboarc", "mujoco", "aloha", "standard-mode", "trajectory", "horseshoe_ring"]
 
 [metadata]
@@ -29,7 +29,7 @@ simulator = "roboarc"
 robot = "aloha-2"
 family = "horseshoe_ring"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.4"
+protocol = "eai-standard/3.0"
 oracle = "full"
 difficulty = "easier"
 grasp = "assisted (the contact_weld_v1 grasp regions on horseshoe_left, horseshoe_right, target_ring)"

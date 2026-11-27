@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | RoboLab |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `robolab-pick-glasses-i00-privileged` |
 | Simulator / robot | `robolab` / `franka-robotiq-2f85` |
 | Family / instance | `pick_glasses` / seed 0 |
@@ -15,7 +15,7 @@
 Pick up the eyeglasses and lift them clear of the table.
 
 Standard-mode twin of `robolab-pick-glasses-i00-privileged` (same frozen instance, the state after RoboLab's canonical seed-0 reset):
-the agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
+the agent gets only the `eai-standard/3.0` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the scene and records the episode as a (T, 8)
 trajectory and films it (live video). The collect hook (`environment/sim/finalize.sh`) ends the episode, lets the
 service exit, writes `final.json` from the live episode's record (no replay) and encodes the video; the verifier runs in a

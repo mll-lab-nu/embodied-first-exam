@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | LIBERO-MAX |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `libero-max-long-porcelain-mug-and-white-yellow-mug-on-plate-visual-theme-switch-i00-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda` |
 | Family / instance | `libero-max/libero_10/visual_theme_switch` / seed 195 (allowed seeds: [195, 1, 2]; PROTOCOL §2) |

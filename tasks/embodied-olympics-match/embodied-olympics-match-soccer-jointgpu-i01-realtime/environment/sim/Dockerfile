@@ -19,8 +19,8 @@ COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-match-files-0.3.0@sha256:0c
      /privileged/environment/fullsim/bodies/sources.py \
      /srv/bodies/
 COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-match-files-0.3.0@sha256:0c6710ec1d7682bc4bf1b828a71d4c8b6c21193a279f13ad7e39d683307a95af \
-     /sim/variants/185c3aedd3/core/README.md \
-     /sim/variants/b3dc8021b2/core/__init__.py \
+     /sim/variants/56839c849b/core/README.md \
+     /sim/variants/ad819abd79/core/__init__.py \
      /privileged/environment/fullsim/core/channel.py \
      /sim/core/client.py \
      /privileged/environment/fullsim/core/diaglog.py \

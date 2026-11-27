@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | MyoSuite |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `myosuite-dex-bunny-inspect-i00-privileged` |
 | Simulator / robot | `myosuite` / `myohand` |
 | Family / instance | `dex_bunny_inspect` / seed 0 |
@@ -13,7 +13,7 @@
 
 ## Task
 MyoSuite `MyoHandStanfordbunnyInspect-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-dex-bunny-inspect-i00-privileged`: Pick up the bunny and turn it to look it over, following the recorded reference motion.
-The Stanford bunny lies on the table; the MyoHand is at its pre-grasp pose. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
+The Stanford bunny lies on the table; the MyoHand is at its pre-grasp pose. Standard mode (eai-standard/3.0): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty
 Same instance and success rule as `myosuite-dex-bunny-inspect-i00-privileged` (first-pass rating: hard). In standard mode the agent loses free resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in actuator-command chunks, and gets 10 resets, so it has to close the loop on what it sees and learn the body from a few real attempts.

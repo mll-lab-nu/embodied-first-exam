@@ -17,7 +17,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/vlabench-play-math-game-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): VLABench play_math_game (Franka Panda) on the same frozen instance as vlabench-play-math-game-i00-privileged: Answer this question with the number cubes, side by side on the placemat so that the answer reads from the robot's left to its right: A mechanic charges different rates to repair the tires of trucks and cars. For each truck tire that is repaired, the mechanic will charge $60 and for each car tire that is repaired, the mechanic will charge $40. On Thursday, the mechanic repairs 6 truck tires and 4 car tires. On Friday, the mechanic repairs 12 car tires and doesn't repair any truck tires. How much more revenue did the mechanic earn on the day with higher revenue? The agent only gets a client: four cameras (RGB, optional depth, calibrated) and the robot's own state; joint-position chunks; one episode, no reset, no object poses; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): VLABench play_math_game (Franka Panda) on the same frozen instance as vlabench-play-math-game-i00-privileged: Answer this question with the number cubes, side by side on the placemat so that the answer reads from the robot's left to its right: A mechanic charges different rates to repair the tires of trucks and cars. For each truck tire that is repaired, the mechanic will charge $60 and for each car tire that is repaired, the mechanic will charge $40. On Thursday, the mechanic repairs 6 truck tires and 4 car tires. On Friday, the mechanic repairs 12 car tires and doesn't repair any truck tires. How much more revenue did the mechanic earn on the day with higher revenue? The agent only gets a client: four cameras (RGB, optional depth, calibrated) and the robot's own state; joint-position chunks; one episode, no reset, no object poses; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
 keywords = ["robotics", "vlabench", "mujoco", "franka-panda", "code-as-policy", "trajectory", "standard-mode"]
 
 [metadata]
@@ -26,7 +26,7 @@ simulator = "vlabench"
 robot = "franka-panda"
 family = "vlabench/play_math_game"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 2.0

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Match |
-| Mode | standard (`eai-standard/2.1+match/1.0`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-match-fencing-bout-i02-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `fencing_bout` / seed 35 (allowed seeds: [35, 202, 212]; PROTOCOL §2) |

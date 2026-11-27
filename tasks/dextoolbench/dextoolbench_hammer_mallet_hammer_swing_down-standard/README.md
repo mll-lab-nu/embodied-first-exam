@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | DexToolBench |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `dextoolbench_hammer_mallet_hammer_swing_down-privileged` |
 | Simulator / robot | `mujoco` / `kuka-iiwa14-sharpa-ha4` |
 | Family / instance | `dextoolbench/hammer/mallet_hammer/swing_down` / seed 0 |
@@ -14,7 +14,7 @@
 ## Task
 Pick up the mallet and swing it down, following the green ghost mallet through its poses in order.
 
-Standard-mode twin of `dextoolbench_hammer_mallet_hammer_swing_down-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py`, protocol eai-standard/2.1, tooling `rcb_dtb`). The agent sees camera RGB-D and proprioception only.
+Standard-mode twin of `dextoolbench_hammer_mallet_hammer_swing_down-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py`, protocol eai-standard/3.0, tooling `rcb_dtb`). The agent sees camera RGB-D and proprioception only.
 
 ## Difficulty
 Same scene, instance and success rule as `dextoolbench_hammer_mallet_hammer_swing_down-privileged` (see its Difficulty). In standard mode the agent loses privileged state and planning primitives, and has 20 resets instead of unlimited ones: it sees camera images and proprioception only, acts through the client, and every try is a real episode from the same start, of which only the last is graded.

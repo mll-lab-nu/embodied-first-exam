@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | YAMLab |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `yamlab-put-pot-on-cooktop-i07-privileged` |
 | Simulator / robot | `yamlab` / `i2rt-yam-bimanual` |
 | Family / instance | `put_pot_on_cooktop` / seed 0 |
@@ -15,7 +15,7 @@
 Lift the pot with both grippers and set it down on the cooktop.
 
 Standard-mode twin of `yamlab-put-pot-on-cooktop-i07-privileged` (same frozen instance: YAMLab's objects `pot` = `Pot/pot_007` and `cooktop` = `Cooktop/cooktop_007` as placed in teleoperation
-demonstration `putpot_007.hdf5 demo_7`, both arms at the home pose): the agent gets only the `eai-standard/2.2` client
+demonstration `putpot_007.hdf5 demo_7`, both arms at the home pose): the agent gets only the `eai-standard/3.0` client
 (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the
 sidecar), which owns the scene and records the episode as a (T, 14) trajectory of YAMLab's own actions. The collect hook
 (`environment/sim/finalize.sh`) ends the episode, lets the service exit, writes `final.json` from the live episode's record

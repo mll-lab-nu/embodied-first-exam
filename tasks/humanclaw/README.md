@@ -11,7 +11,7 @@ Half-Physics.
 | simulator | Habitat-Sim `acbe6f4` with HumanCLAW's Half-Physics patch (Bullet `2c204c4`), MotionDiT flow-matching skills (30 NFE midpoint), GPU (EGL rendering, CUDA) |
 | robot | `smplx-human`: HumanCLAW's SMPL-X neutral body, 8 motion skills (walk, turn, side step, step back, climb up / down a step, sit, stop) |
 | score | HumanCLAW's own metric code, unchanged (`evaluation/metrics/episode.py`): NavSR@20cm (chair, potted plant, TV) or InteractSR (bed, couch, toilet) |
-| tasks | 55 frozen episodes x 2 modes (110 task dirs; Selection below): `tasks/humanclaw/humanclaw-{nav,sit}-<category>-i<NN>-privileged` and `-standard` (`eai-standard/2.1`) |
+| tasks | 55 frozen episodes x 2 modes (110 task dirs; Selection below): `tasks/humanclaw/humanclaw-{nav,sit}-<category>-i<NN>-privileged` and `-standard` (`eai-standard/3.0`) |
 | image | `ghcr.io/mll-lab-nu/efe-private:humanclaw-<VERSION>` (`images/humanclaw/`, BUILD_ONLY: without access to the organization's packages, build it once yourself, Before you run below) |
 
 ## The task

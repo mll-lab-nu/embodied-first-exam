@@ -36,7 +36,7 @@ Read [Before you run](#before-you-run) first: the first run builds the simulator
 - **Nothing to download or accept by hand** beyond the licence above: the first run builds everything.
 
 Nine of AM-Bench's twelve tasks, one frozen instance each (seed 0): eight in both modes, `ambench-<task>-fahexa-i00-privileged`
-and `-standard` (`eai-standard/2.2`), and PullLever in standard mode only, graded by its live episode (below): 17 task
+and `-standard` (`eai-standard/3.0`), and PullLever in standard mode only, graded by its live episode (below): 17 task
 directories, `oracle = "full"`.
 
 | Family | AM-Bench environment (`…-Am-FAHexa-Abs-PID-Direct-v0`) | Task | Episode | Oracle: success at control step (end state) |
@@ -226,7 +226,7 @@ no Isaac process started). Standard `nop`: 9/9 reward 0 (`time_up`, `infra_error
 on a shared card can run a film out of GPU memory; the films never decide. Conformance: 164 PASS, 0 FAIL (Standard mode,
 below).
 
-## Standard mode (eai-standard/2.2)
+## Standard mode (eai-standard/3.0)
 - **Action**: `ee_pose` (8: AM-Bench's own action) rows `dt` apart (a multiple of 1/120 s, at most 0.5 s), `hold` (each row
   exactly as given) or `linear` (positions linear, orientation slerp, gripper linear); no `joint_position` (the arm alone
   is not AM-Bench's action space: the controller moves the airframe too). `ci_checks/check-standard-protocol.py` tests the

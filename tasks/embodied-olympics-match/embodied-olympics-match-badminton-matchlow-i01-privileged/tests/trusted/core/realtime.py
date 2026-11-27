@@ -1,4 +1,4 @@
-"""Protocol eai-standard-realtime/1.0: a continuous world paced at slowdown S (one control step every dt x S wall
+"""The realtime service: a continuous world paced at slowdown S (one control step every dt x S wall
 seconds), frozen at every unit end for the reviews of the seats the referee names (Phase.review).
 
 Phases: prepare (until every seat sent start/ready; after the first, START_TIMEOUT_S: a side that has not started by
@@ -51,7 +51,7 @@ def query_of(body) -> dict | None:
 
 class RealtimeService(Service):
     protocol = "realtime"
-    protocol_id = "eai-standard-realtime/1.0"
+    protocol_id = "eai-standard/3.0"
 
     def __init__(self, *a, **kw):
         super().__init__(*a, **kw)

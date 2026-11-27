@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-fun-round-off-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `round_off` / seed 0 |
@@ -44,7 +44,7 @@ Caps per container (PROTOCOL §6).
 | Category | parkour-apparatus-balance |
 | Rule book | FIG Men's Artistic Gymnastics Code of Points 2025-2028: floor exercise, Art. 10.1 (the floor area, 12 m x 12 m), Art. 10.2.1.2a (inside the floor area, the lines included), Art. 10.2.2.6l (a round-off with a 1/4 turn to land facing forward, the Tinsica, is not permitted: the round-off lands facing back), Art. 9.2.12-13 (an element through the handstand deviating more than 45 degrees from it is not recognised), Art. 9.2.17 (landings on the feet, the feet at most 10 cm apart to bring the heels together); the round-off itself as gymnastics defines it: a half turn with hand support, the legs joined over the top, both feet landing together facing the direction you came from; deviations: FIG Apparatus Norms, floor: the floor is rigid and level (friction 1.0), not the norm's sprung floor, because the simulator's ground is rigid and no sourced stiffness of the sprung floor is used here · the hands: the G1 has rubber fists without fingers; any part of the hand may touch the floor · Art. 9.2.17 (feet together at the landing): the robot's legs are 0.24 m apart in its stance and its hips are not built to close them; a two-foot landing here is both feet touching down within 0.1 s of each other (judged after every 1 ms physics step; a foot counts as down until it has been off the floor for more than 0.03 s), not the feet within 10 cm · the round-off is one continuous element, a half turn through the handstand without a stop (Art. 9.2.12-13 recognise it through the handstand; a held handstand is another element). The Code sets no time, so here the hand support, from the moment the feet leave the floor before it to the first foot's touchdown of the landing, may last at most 0.7 s (the number is this benchmark's: a gymnast's round-off spends a few tenths of a second on the hands; the G1 falling from a straight handstand, its feet over its hands, needs about 0.6 s to reach the floor with its feet); a kick-up to a handstand and a step down is not a round-off · a round-off is judged pass or fail, as one element without a run-up requirement or judges: hand support with the torso within 45.0 degrees of upside down, a two-foot landing facing back within 45.0 degrees, and a stand; height, speed and form are not scored |
 | Stages | hand support → landing → stand |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 3000 control steps (30 s at 100 Hz); 5 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

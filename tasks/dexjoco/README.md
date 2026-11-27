@@ -16,7 +16,7 @@ Every image is public: Harbor pulls it.
 | simulator | `dexjoco`: DexJoCo's gymnasium envs on MuJoCo 3.4.0, CPU physics (bit-exact replay in a fresh process), OSMesa rendering; no GPU |
 | robots | `franka-allegro` (6 tasks), `franka-allegro-bimanual` (5 tasks, two arms side by side) |
 | score | binary: DexJoCo's own success check (its episode ends at the first success (privileged) or task failure); `water_plant` adds an aiming condition (below) |
-| tasks | 11 families × 2 modes: `tasks/dexjoco/dexjoco-<family>-i00-privileged` and `-standard` (`eai-standard/2.2`) |
+| tasks | 11 families × 2 modes: `tasks/dexjoco/dexjoco-<family>-i00-privileged` and `-standard` (`eai-standard/3.0`) |
 | image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` (`images/dexjoco/`: DexJoCo @ 8d23b0f and its pinned dependency closure; no demonstrations, no policies) |
 | oracle | full, both modes: the demonstration's own actions |
 | agent time budget | 3600 s for every task, one number for both modes; each task's own `[agent] timeout_sec`, stated in the Time line of every instruction's closing `## Limits` (PROTOCOL §2) |
@@ -115,7 +115,7 @@ and `infra_error` = 1.
   OpenBLAS threads: `too_few_cpus`, Threads above). The verdict is written before `replay.mp4` is rendered, and the
   video stops 2700 s after the grader started.
 
-## Standard mode (`eai-standard/2.2`)
+## Standard mode (`eai-standard/3.0`)
 The 2.2 adapter (each standard task's `environment/sim/server.py`) on the shared layer (`embodied_first_exam/standard/`, copied
 unchanged), resume class `exact`:
 - **actions:** `ee_pose` (DexJoCo's own row) and `joint_position` (per arm 7 arm + 16 hand joint targets; the arm part
@@ -163,7 +163,7 @@ unchanged), resume class `exact`:
   inside the agent's calls (`sim_crashed`, `resume_failed`), on `instance_mismatch`, and when the sidecar ran fewer than
   4 OpenBLAS threads (`too_few_cpus`, with `grader_error = 1`; Threads above). Crashes all inside the agent's calls
   (`sim_crashed_on_call`), a task failure and the timeout are the agent's 0. An episode that a simulator error ended
-  (`reason = "error"`) is reported as `sim_error = 1` and stays the trial's result: `eai-standard/2.2` has no rule that
+  (`reason = "error"`) is reported as `sim_error = 1` and stays the trial's result: `eai-standard/3.0` has no rule that
   makes it an infrastructure failure (that rule is realtime's).
 - **malformed requests:** a request is checked in full before anything is executed (`parse_submit` / `parse_observe`
   under `checked`): a field of the wrong JSON type (a number or an object as `note`, a string or
@@ -210,4 +210,4 @@ The task directories are the deliverable; the tooling that built them is kept ou
 
 ## Standard-mode service details
 
-Serves `eai-standard/2.2`; `max_frames_per_call` = 1000. The service refuses the episode at its start with fewer than 4 CPUs (a give-up answered at once, docs/protocol/standard_mode.md §13).
+Serves `eai-standard/3.0`; `max_frames_per_call` = 1000. The service refuses the episode at its start with fewer than 4 CPUs (a give-up answered at once, docs/protocol/standard_mode.md §13).

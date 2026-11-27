@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | MyoSuite |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `myosuite-hand-reach-i00-privileged` |
 | Simulator / robot | `myosuite` / `myohand` |
 | Family / instance | `hand_reach` / seed 0 |
@@ -13,7 +13,7 @@
 
 ## Task
 MyoSuite `myoHandReachFixed-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-hand-reach-i00-privileged`: Put each of your five fingertips on its own small sphere and hold them all there for a second.
-The hand hangs relaxed; five small spheres mark where the thumb, index, middle, ring and little fingertips must go. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
+The hand hangs relaxed; five small spheres mark where the thumb, index, middle, ring and little fingertips must go. Standard mode (eai-standard/3.0): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty
 Same instance and success rule as `myosuite-hand-reach-i00-privileged` (first-pass rating: easy). In standard mode the agent loses free resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in actuator-command chunks, and gets 10 resets, so it has to close the loop on what it sees and learn the body from a few real attempts.

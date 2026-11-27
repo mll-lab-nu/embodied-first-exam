@@ -65,7 +65,7 @@ evidence, verdict before video). Differences:
    numeric array) is a 400 that changes nothing; `final.json` carries `live_success` and the grader writes numeric
    fields only; `/status` and `meta` also carry `sim_steps`, submit responses `clipped`.
 
-Protocol: `eai-standard/2.1` (`/spec`, `task.toml`, instructions). Every task is in the normal form of
+Protocol: `eai-standard/3.0` (`/spec`, `task.toml`, instructions). Every task is in the normal form of
 `scripts/task_conventions.py` `normalize` (README layout, no `results/`).
 
 ## Grading (standard mode): the live episode

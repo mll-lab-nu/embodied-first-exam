@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Panda Dynamic Scenes |
-| Mode | realtime (`eai-standard/2.3`) |
+| Mode | realtime (`eai-standard/3.0`) |
 | Twin | `pandadyn-d10-moving-grasp-handover-i00-privileged` |
 | Simulator / robot | `maniskill` / `franka-panda-bimanual` |
 | Family / instance | `d10_moving_grasp_handover` / seed 0 |
@@ -14,7 +14,7 @@
 
 ## Task
 Realtime twin of `pandadyn-d10-moving-grasp-handover-i00-privileged` (same frozen instance and success check as it and as `pandadyn-d10-moving-grasp-handover-i00-standard`): the agent gets only
-the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
+the realtime client (`eai-standard/3.0`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 6** (one 10 ms control step every 60 ms of wall-clock time), with
 3 resets (only the last episode is graded). Grasp the part with the left gripper while it rides the conveyor, lift it about a hand's length and carry it, still moving, through the presentation point. Hand it to the right gripper while it keeps moving, then lay it into the sliding slot and let go while the slot is moving.
 
@@ -32,7 +32,7 @@ time. Checked at S = 6: live success, fresh-process replay success, the
 same final state.
 
 ## Verification
-The sim service (`environment/sim/rcb_realtime.py` + `rcb_service.py`, the shared eai-standard/2.3 layer, with
+The sim service (`environment/sim/rcb_realtime.py` + `rcb_service.py`, the realtime layer, with
 `environment/sim/server.py`, this benchmark's adapter on `rcb_pandadyn.Session`) judges the episode live and records
 every control step it ran (`trajectory_live.f64`); after the agent's time the collect hook stops the agent's programs and
 signals the service, which writes the live episode's verdict into `final.json` (`graded_by` = `live`, `replays` = 0;

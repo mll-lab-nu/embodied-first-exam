@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-fun-pitch-target-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
 | Family / instance | `pitch_target` / seed 0 |
@@ -44,7 +44,7 @@ Caps per container (PROTOCOL §6).
 | Category | throwing-catching-striking |
 | Rule book | Official Baseball Rules (MLB, 2024 edition): 2.01 and Appendices 1-2 (the pitcher's plate 60 ft 6 in from the back point of home plate, 10 in above it; the mound), 2.02 (home plate), 3.01 (the ball), 5.07(a) (the pivot foot in contact with the plate), 5.07(c) (the 15 s pitch timer), Definitions of Terms: "strike zone", "in flight"; deviations: 3.01 (the ball in the pitcher's hand): the hand is the H1-2's own Inspire five-finger hand (six drives for four fingers and a thumb, fingertip forces 20 N, the thumb 30 N, one closure command for the whole hand); the ball starts held against its palm by the fingers' and thumb's contact and friction only (no seams: no grip-made spin beyond what the fingers' motion gives). The release is the moment the ball last touched you before it had touched nothing of you for 0.02 s. · Definitions (strike zone): there is no batter, so the zone's height is fixed, 0.46 m to 1.07 m above home plate (the hollow of the knee to the midpoint of the torso of a 1.8 m batter). A strike is called when the ball's centre crosses the zone's front plane (home plate's front edge) inside the zone, in flight; the rule's "any part of the ball through any part of the zone" (the plate's whole depth, the ball's edge) is not used: stricter. · 5.07(a): "the pivot foot in contact with the plate" is judged at the release: a foot that touches the mound and whose sole is over the plate; either foot may be the pivot foot. Wind-up and set positions and balks are not judged (no runners). · 5.07(c): the pitch timer runs from the start of the episode: the ball must be released within 15.0 s. · No batter, catcher or umpire: a backstop behind home plate; one pitch (a ball dropped or caught again is no second chance), and a fall before the call ends the attempt as a failure. · Flight: quasi-steady aerodynamics (MuJoCo's ellipsoid fluid model: drag and Magnus lift), still air. · The pitch is the hand's alone: the rule book has no article on the pitcher touching the ball in flight after the release; here the right arm may still brush it during 0.2 s after the release, but those touches may change its velocity by at most 0.5 m/s in all (the sum of their contact impulses over its mass): a harder touch is a second propulsion, and fails the pitch. |
 | Stages | release → strike |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 2000 control steps (20 s at 100 Hz); 5 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

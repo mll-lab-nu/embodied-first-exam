@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Fun |
-| Mode | realtime (`eai-standard/2.3`) |
+| Mode | realtime (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-fun-catch-and-shoot-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
 | Family / instance | `catch_and_shoot` / seed 0 |
@@ -22,7 +22,7 @@ The pass arrives at 8.4 m/s and hands smaller than the ball cannot close around 
 None (as `embodied-olympics-fun-catch-and-shoot-i00-privileged`).
 
 ## Verification
-The sim sidecar (`rcb_realtime.py` + `rcb_service.py`, the shared eai-standard/2.3 layer, with the standard twin's
+The sim sidecar (`rcb_realtime.py` + `rcb_service.py`, the realtime layer, with the standard twin's
 `server.py`) runs the attempt on its clock and its referee judges it live; every control step the simulator applied is
 recorded, and the live referee's call on the last attempt is the verdict (`final.json`: `graded_by` live, `replays` 0; no
 grading replay, owner 2026-10-17); the video is rendered from the recorded attempt afterwards.
@@ -49,7 +49,7 @@ Caps per container (PROTOCOL §6).
 | Category | basketball-and-rackets |
 | Rule book | FIBA Official Basketball Rules 2024: Art. 2 (court), Art. 3 and the Basketball Equipment appendix (backboard, ring, size-7 ball), Art. 13 (how the ball is played: with the hands), Art. 14 (control: a player holds a live ball), Art. 16 (goal; a ball that passes through the basket from below is a violation), Art. 25 (travelling); deviations: the player's hands: the H1-2's own Inspire hands (five fingers, six drives: four fingers, the thumb's flexion and rotation; the core's fingertip forces, 20 N, the thumb 30 N: twice the device's), closed by one command per hand; they hold the ball by contact and friction only (nothing is welded), a hand smaller than a player's (its span about 0.2 m against the ball's 0.24 m): one hand alone cannot hold the ball, two hold it pressed between the palms. Any shooting style is allowed; the ball is released when no hand touches it any more. · Art. 14 (control) has no duration: here the ball is caught when both your hands have been on it together for 0.1 s without a break (a two-hand hold that lasts, not a tap that passes it on). · Art. 13.1.2 (the ball is played with the hands only) is read strictly: from the pass until the shot is through, the ball may touch no part of you but your hands (fingers, thumb, palm and wrist); trapping it against the trunk, the arms or a leg is not a catch of this task, and a touch by a leg or a foot (always taken as deliberate: intent cannot be judged) is a violation. · Basketball Equipment (basket): the ring is rigid (no pressure release) and the net is only drawn: it does not slow the ball. A goal is judged at the ring: the ball's centre down through the ring's plane and on to one ball diameter below it. · The pass is thrown by a two-wheel passing machine standing where the passer would stand (on the left wing), not by a team-mate: 0.40 m pneumatic wheels on speed-controlled 15 N m motors, the ball pushed into them from the machine's throat by a force-limited ram; always the same chest pass, at a fixed time, chest high on a flat arc at about 9.0 m/s (a chest pass: about 7-10 m/s), but without the backspin a player's thumbs give it (the wheels turn at the same speed: no spin). · Art. 25.2.1: a ball caught with a foot off the floor is judged by the two-step rule without the pivoting it allows after a stop: after two steps no foot may touch the floor again while the ball is held. · One attempt, no opponent, no rebound: a pass that is not caught on the fly, and touching the ball after the shot's release, end the attempt. |
 | Stages | catch → release → through the ring |
-| Service | `environment/sim/rcb_realtime.py` (the shared realtime layer, eai-standard/2.3) with the standard twin's `server.py` on `rcb_service.py`, `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's); EGL rendering on the GPU |
+| Service | `environment/sim/rcb_realtime.py` (the shared realtime layer, eai-standard/3.0) with the standard twin's `server.py` on `rcb_service.py`, `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's); EGL rendering on the GPU |
 | Slowdown | S = 1 (`RCB_SLOWDOWN`'s default): RTF 0.99 with the clock flat out (physics only, the start command held, 4 attempts) on the slowest evaluation host kind (AMD EPYC 7763, one thread; estimated from Xeon Gold 6338 measurements); S = 1 in every family: Embodied Olympics runs the venue in real time (PROTOCOL §2's default would slow these hosts down; a slower host may fall behind, which the clock's record reports) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 1500 control steps (15 s at 100 Hz); 5 resets, the last attempt graded |

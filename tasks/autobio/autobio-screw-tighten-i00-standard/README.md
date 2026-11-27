@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | AutoBio |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `autobio-screw-tighten-i00-privileged` |
 | Simulator / robot | `autobio` / `aloha-2` |
 | Family / instance | `screw_tighten` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 AutoBio's `screw_tighten` (Screw on centrifuge tube cap) on the same frozen instance as `autobio-screw-tighten-i00-privileged`: Screw the cap that lies on the bench onto the 50 mL tube in the rack.
-On the bench: a rack with an open 50 mL tube standing in it, and the tube's screw cap lying on the bench. The thread is a real one: the cap goes on only by turning it. AutoBio's prompt for this task: "one grips tube while the other twists cap". Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
+On the bench: a rack with an open 50 mL tube standing in it, and the tube's screw cap lying on the bench. The thread is a real one: the cap goes on only by turning it. AutoBio's prompt for this task: "one grips tube while the other twists cap". Standard mode (eai-standard/3.0): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty
 Same instance and success rule as `autobio-screw-tighten-i00-privileged` (AutoBio's level: hard). A real thread: the cap has to be picked off the bench, set on the tube within 5 mm of its axis and turned down to within 3.3 mm of fully on. In standard mode the agent loses resets, the simulator and the state of the tubes and instruments: it sees camera images and the robot's proprioception, acts in joint-position chunks, and gets one episode, so it has to find the things it handles in the images and recover from its own mistakes without starting over.

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | EmbodiedSWE |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodiedswe-puzzle-stack-blocks-g1-pink-ik-i00-privileged` |
 | Simulator / robot | `embodiedswe` / `unitree-g1-dex3` |
 | Family / instance | `puzzle.stack_blocks.g1.pink_ik` / seed 0 |

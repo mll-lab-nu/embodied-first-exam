@@ -3,7 +3,7 @@
  "kind": "rcb",
  "suite": "pandadyn",
  "task": "pandadyn-s08-load-switch-recover-i00-standard",
- "protocol": "eai-standard/2.1",
+ "protocol": "eai-standard/3.0",
  "realtime": false,
  "tools": [
   "spec",

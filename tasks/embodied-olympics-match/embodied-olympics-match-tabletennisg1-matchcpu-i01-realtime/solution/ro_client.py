@@ -811,14 +811,13 @@ def main(argv):
     spec = wait_for(base, seat)
     player = factory(spec, seat, cf["player_seed"])
     c = Seat(base, seat)
-    proto = spec.get("protocol", "")
     lockstep = (spec.get("timing") or {}).get("clock") == "lockstep"   # EFE standard twin: observe, act, wait
-    if callable(getattr(player, "play", None)) and not proto.startswith("eai-standard-turn") and not lockstep:
+    if callable(getattr(player, "play", None)) and not spec.get("turn_based") and not lockstep:
         open_session(c)                     # a player with its own realtime loop (e.g. a joint-level controller that
         c.call("start", {})                 # reads `status` every control step and observes the cameras apart)
         end = player.play(c)
     else:
-        end = play_turn(c, player) if proto.startswith("eai-standard-turn") else play_realtime(c, player)
+        end = play_turn(c, player) if spec.get("turn_based") else play_realtime(c, player)
     print(json.dumps({"final_state": {k: end.get(k) for k in ("reason", "won", "winner", "scores") if k in end},
                       "replies_with_images": REPLY_IMAGES[0]}))
 

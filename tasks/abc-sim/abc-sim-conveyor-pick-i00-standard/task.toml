@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, { source
 
 [task]
 name = "embodied-first-exam/abc-sim-conveyor-pick-i00-standard"
-description = "ABC Sim conveyor pick (two I2RT YAM arms, MuJoCo): Pick the three objects off the moving conveyor belt and put them in the bin. The robot as a service (eai-standard/2.2); graded by the live episode."
+description = "ABC Sim conveyor pick (two I2RT YAM arms, MuJoCo): Pick the three objects off the moving conveyor belt and put them in the bin. The robot as a service (eai-standard/3.0); graded by the live episode."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "conveyor_pick", "standard"]
 
 [metadata]
@@ -12,7 +12,7 @@ simulator = "mujoco"                # ABC Sim (abc_sim, amazon-far/abc @ d0832d1
 robot = "i2rt-yam-bimanual"
 family = "conveyor_pick"
 dynamics = "dynamic"                # the conveyor belt moves the objects
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 6.0

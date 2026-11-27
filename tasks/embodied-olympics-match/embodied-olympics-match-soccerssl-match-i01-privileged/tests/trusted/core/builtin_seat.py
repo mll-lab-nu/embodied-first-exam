@@ -102,8 +102,7 @@ def start(service, plugin: str, seats: dict[str, str]) -> list[threading.Thread]
                     if not hasattr(service.m, "builtin_truth"):
                         raise RuntimeError(f"{ref} uses truth but the sport's Match has no builtin_truth(seat)")
                     player = TruthPlayer(player, service, seat)
-                proto = spec.get("protocol", "")
-                end = (client.play_turn(c, player) if proto.startswith("eai-standard-turn")
+                end = (client.play_turn(c, player) if spec.get("turn_based")
                        else client.play_realtime(c, player))
                 print(f"built-in seat {seat} ({ref}) done: {end.get('reason')}", flush=True)
             except Exception as exc:  # noqa: BLE001

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | DexJoCo |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `dexjoco-bimanual-microwave-cook-i00-privileged` |
 | Simulator / robot | `dexjoco` / `franka-allegro-bimanual` |
 | Family / instance | `bimanual_microwave_cook` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 DexJoCo `bimanual_microwave_cook` (two Franka Panda arms, each with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-bimanual-microwave-cook-i00-privileged`: Put the hot dog in the microwave, close the door and press the start button.
-Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with the robot's own
+Standard mode (eai-standard/3.0): the agent drives the robot through a client in one episode, with the robot's own
 sensors, calibrated cameras (RGB, optional depth) and the robot's kinematics.
 
 ## Difficulty

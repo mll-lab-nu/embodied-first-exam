@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | HumanoidBench |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `humanoidbench-manip-powerlift-i00-privileged` |
 | Simulator / robot | `humanoidbench` / `unitree-h1hand` |
 | Family / instance | `powerlift` / seed 0 |
@@ -14,7 +14,7 @@
 ## Task
 Lift the dumbbell off the floor to overhead and hold it there.
 
-Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-manip-powerlift-i00-privileged`: the
+Standard mode (robot as a service, `eai-standard/3.0`) of `humanoidbench-manip-powerlift-i00-privileged`: the
 same frozen instance and the same success rule. HumanoidBench runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar for rendering), which holds the reward, judges the
 episode as it runs, records it and, after the verdict, renders its video from the recorded trajectory; the

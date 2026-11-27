@@ -3,7 +3,7 @@
  "kind": "rcb",
  "suite": "robotwin-2",
  "task": "robotwin_2_0_place_bread_basket-standard",
- "protocol": "eai-standard/2.1",
+ "protocol": "eai-standard/3.0",
  "realtime": false,
  "tools": [
   "spec",

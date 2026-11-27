@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | EmbodiedSWE |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodiedswe-locomanip-box-to-bin-g1-loco-pink-ik-i00-privileged` |
 | Simulator / robot | `embodiedswe` / `unitree-g1-dex3` |
 | Family / instance | `locomanip.box_to_bin.g1.loco_pink_ik` / seed 0 |

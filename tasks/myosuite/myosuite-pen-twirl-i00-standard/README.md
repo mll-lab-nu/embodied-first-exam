@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | MyoSuite |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `myosuite-pen-twirl-i00-privileged` |
 | Simulator / robot | `myosuite` / `myohand` |
 | Family / instance | `pen_twirl` / seed 0 |
@@ -13,7 +13,7 @@
 
 ## Task
 MyoSuite `myoHandPenTwirlFixed-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-pen-twirl-i00-privileged`: Turn the pen in your hand until it points the same way as the see-through target pen, and hold it there for a second without dropping it.
-A pen lies across the fingers of the upturned hand; a translucent target pen shows the goal orientation. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
+A pen lies across the fingers of the upturned hand; a translucent target pen shows the goal orientation. Standard mode (eai-standard/3.0): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty
 Same instance and success rule as `myosuite-pen-twirl-i00-privileged` (first-pass rating: hard). In standard mode the agent loses free resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in actuator-command chunks, and gets 10 resets, so it has to close the loop on what it sees and learn the body from a few real attempts.

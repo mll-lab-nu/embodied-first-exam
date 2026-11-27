@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | DexJoCo |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `dexjoco-bimanual-photograph-i00-privileged` |
 | Simulator / robot | `dexjoco` / `franka-allegro-bimanual` |
 | Family / instance | `bimanual_photograph` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 DexJoCo `bimanual_photograph` (two Franka Panda arms, each with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-bimanual-photograph-i00-privileged`: Take a picture of the logo: hold the camera about 40 cm in front of the logo and about 30 cm above the table, pointed straight at it, and press its shutter button.
-Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with the robot's own
+Standard mode (eai-standard/3.0): the agent drives the robot through a client in one episode, with the robot's own
 sensors, calibrated cameras (RGB, optional depth) and the robot's kinematics.
 
 ## Difficulty

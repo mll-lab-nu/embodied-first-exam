@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | YAMLab |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `yamlab-hang-mug-on-tree-i10-privileged` |
 | Simulator / robot | `yamlab` / `i2rt-yam-bimanual` |
 | Family / instance | `hang_mug_on_tree` / seed 0 |
@@ -15,7 +15,7 @@
 Pick up the mug with the left arm, pass it to the right arm in the air, and hang it on the mug tree.
 
 Standard-mode twin of `yamlab-hang-mug-on-tree-i10-privileged` (same frozen instance: YAMLab's objects `mug` = `Mug/mug_010` and `mug_tree` = `MugTree/mug_tree_010` as placed in teleoperation
-demonstration `hangmug_010.hdf5 demo_1`, both arms at the home pose): the agent gets only the `eai-standard/2.2` client
+demonstration `hangmug_010.hdf5 demo_1`, both arms at the home pose): the agent gets only the `eai-standard/3.0` client
 (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the
 sidecar), which owns the scene and records the episode as a (T, 14) trajectory of YAMLab's own actions. The collect hook
 (`environment/sim/finalize.sh`) ends the episode, lets the service exit, writes `final.json` from the live episode's record

@@ -15,7 +15,7 @@ Every image is public: Harbor pulls it.
 | simulator | MuJoCo 3.3 (Dynamic3D) in KinDER's MimicLabs lab, CPU physics |
 | robot | TidyBot++: holonomic base, Kinova Gen3 7-DoF arm, Robotiq 2F-85 gripper; delta actions (MuJoCo: 10 Hz) |
 | score | pass = KinDER's own goal check within the episode (1000 control steps) |
-| tasks | 5 families × 2 modes: `tasks/kinder/kinder-<family>-i00-privileged` (scoop-pour, sweep-simple: `-i01-`) and `-standard` (`eai-standard/2.1`) |
+| tasks | 5 families × 2 modes: `tasks/kinder/kinder-<family>-i00-privileged` (scoop-pour, sweep-simple: `-i01-`) and `-standard` (`eai-standard/3.0`) |
 | image | `ghcr.io/mll-lab-nu/efe:kinder-0.1.6` (`images/kinder/`, 4.6 GB with the lab scenes) |
 | oracle | `dynamo` (the fixture): full, both modes; the other four: none, human review (positive examples below; scoop-pour and sweep-simple: none yet, unvalidated) |
 
@@ -107,7 +107,7 @@ runs with another reset budget are reported separately.
 
 ## Standard-mode service details
 
-**KinDER and HumanoidBench service (`eai-standard/2.1`).** Same endpoints, RCB1 frames and crash recovery, served by one
+**KinDER and HumanoidBench service (`eai-standard/3.0`).** Same endpoints, RCB1 frames and crash recovery, served by one
 shared service (`rcb_service.py` in each standard task's `environment/sim/`, identical in both) with a per-benchmark
 simulator adapter (`server.py`). Actions are delta or joint-position rows at the task's control rate (KinDER 10 Hz,
 PyBullet tasks kinematic: a refused move comes back `blocked` and stops the chunk; HumanoidBench 50 Hz); the step

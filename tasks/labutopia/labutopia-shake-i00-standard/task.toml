@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/labutopia-shake-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): LabUtopia shake (Shake) on the same frozen instance as labutopia-shake-i00-privileged: Pick up the beaker and, holding it in the air, shake it sideways five times, each shake moving it a thumb's length or more; then hold it still for a second. The agent only gets a client: cameras (RGB, optional depth, calibration), the robot's proprioception, joint target chunks, arm kinematics; one episode, no reset, no object or instrument state; the sim service records the episode and grades the live episode (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): LabUtopia shake (Shake) on the same frozen instance as labutopia-shake-i00-privileged: Pick up the beaker and, holding it in the air, shake it sideways five times, each shake moving it a thumb's length or more; then hold it still for a second. The agent only gets a client: cameras (RGB, optional depth, calibration), the robot's proprioception, joint target chunks, arm kinematics; one episode, no reset, no object or instrument state; the sim service records the episode and grades the live episode (no grading replay)."
 keywords = ["robotics", "labutopia", "isaac-sim", "laboratory", "chemistry", "franka-panda", "code-as-policy", "trajectory", "shake", "standard-mode"]
 
 [metadata]
@@ -22,7 +22,7 @@ simulator = "labutopia"           # LabUtopia @ 8df7278 on NVIDIA Isaac Sim 6.1.
 robot = "franka-panda"
 family = "shake"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 oracle = "full"
 level = 1                         # LabUtopia's own level for the task (config level1_shake)
 instance_seed = 0                 # numpy's and Python's random generators before LabUtopia's reset

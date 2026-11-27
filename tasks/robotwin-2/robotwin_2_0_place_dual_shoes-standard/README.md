@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | RoboTwin 2.0 |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `robotwin_2_0_place_dual_shoes-privileged` |
 | Simulator / robot | `robotwin` / `aloha-agilex` |
 | Family / instance | `place_dual_shoes` / seed 60417 |
@@ -15,7 +15,7 @@
 Put both shoes in the shoebox, sole down with the toe pointing to the robot's left: the shoe that starts on the left in the half nearer the robot, the other in the far half. Then let go.
 
 Standard-mode twin of `robotwin_2_0_place_dual_shoes-privileged` (same frozen instance, RoboTwin seed 60417): the agent gets
-only the `eai-standard/2.1` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
+only the `eai-standard/3.0` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the seed, judges the live episode, records it as a
 (T, 34) trajectory and renders the six-view video from it once after the verdict. The verifier runs in a separate
 sandbox (`tests/Dockerfile`) over the sidecar's artifacts. Compare against the privileged task to
@@ -52,4 +52,4 @@ Caps per container (PROTOCOL §6).
 ## Details
 | | |
 |---|---|
-| action space | `eai-standard/2.1`: `submit` chunks of `joint_position` (14, streamed at 250 Hz with the agent's `dt`) or `ee_pose` (16, CuRobo-planned); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); binary RCB1 responses |
+| action space | `eai-standard/3.0`: `submit` chunks of `joint_position` (14, streamed at 250 Hz with the agent's `dt`) or `ee_pose` (16, CuRobo-planned); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); binary RCB1 responses |

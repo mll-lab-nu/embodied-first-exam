@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/molmospaces-close-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): MolmoSpaces close on the same frozen episode as molmospaces-close-i00-privileged. Close the open cabinet door. The agent only gets a client: camera images (RGB, depth) and proprioception, joint-position chunks, upstream's kinematic model, done. No reset, no object state; the sim service records the episode and grades it with upstream's success check."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): MolmoSpaces close on the same frozen episode as molmospaces-close-i00-privileged. Close the open cabinet door. The agent only gets a client: camera images (RGB, depth) and proprioception, joint-position chunks, upstream's kinematic model, done. No reset, no object state; the sim service records the episode and grades it with upstream's success check."
 keywords = ["robotics", "molmospaces", "mujoco", "franka-robotiq-2f85", "standard-mode", "trajectory", "close"]
 
 [metadata]
@@ -22,7 +22,7 @@ simulator = "molmospaces"
 robot = "franka-robotiq-2f85"
 family = "close"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 instance_seed = 0
 expert_time_estimate_hours = 3.0
 oracle = "none"

@@ -20,7 +20,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/roboarc-fiber-bundling-10-i01-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboARC fiber_bundling on the same frozen instance as the privileged task. Feed every fine fiber, tip first, and the front of the sheath through the fixed copper ring, touching only the thick sheath with the gripper. Leave the rear terminal anchored where it is. Route the sheath past the two pegs, the first from the cradle on its right and the second on its left (looking from the rear terminal toward the ring). The red fiber has to come out at 7:40 on the ring (within 12°), read as a clock face from the side the fibers go in. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): RoboARC fiber_bundling on the same frozen instance as the privileged task. Feed every fine fiber, tip first, and the front of the sheath through the fixed copper ring, touching only the thick sheath with the gripper. Leave the rear terminal anchored where it is. Route the sheath past the two pegs, the first from the cradle on its right and the second on its left (looking from the rear terminal toward the ring). The red fiber has to come out at 7:40 on the ring (within 12°), read as a clock face from the side the fibers go in. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 keywords = ["robotics", "roboarc", "mujoco", "panda_robotiq", "standard-mode", "trajectory", "fiber_bundling"]
 
 [metadata]
@@ -29,7 +29,7 @@ simulator = "roboarc"
 robot = "franka-robotiq-2f85"
 family = "fiber_bundling"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.4"
+protocol = "eai-standard/3.0"
 oracle = "full"
 difficulty = "hard"
 grasp = "assisted (the contact_weld_v1 grasp regions on fiber_bundle)"

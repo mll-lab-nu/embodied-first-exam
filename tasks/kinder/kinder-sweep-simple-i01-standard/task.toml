@@ -18,7 +18,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/kinder-sweep-simple-i01-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): KinDER SweepSimple3D-o50-sweep_the_blocks_to_the_right_side_of_the_kitchen_island on the same frozen instance as kinder-sweep-simple-i01-privileged. Task: Get the 50 small cubes on the floor into the grey box marked on the floor right in front of you, at the near end of the kitchen island. There is a wiper you can use. The agent only gets a client: /observe and /submit (the robot's camera RGB-D + joint encoders + base odometry; delta actions in chunks). No reset: one episode, which is graded. No privileged state, no goal check; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): KinDER SweepSimple3D-o50-sweep_the_blocks_to_the_right_side_of_the_kitchen_island on the same frozen instance as kinder-sweep-simple-i01-privileged. Task: Get the 50 small cubes on the floor into the grey box marked on the floor right in front of you, at the near end of the kitchen island. There is a wiper you can use. The agent only gets a client: /observe and /submit (the robot's camera RGB-D + joint encoders + base odometry; delta actions in chunks). No reset: one episode, which is graded. No privileged state, no goal check; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
 keywords = ["robotics", "kinder", "mujoco", "tidybot", "mobile-manipulation", "physical-reasoning", "standard-mode", "trajectory", "sweep-simple"]
 
 [metadata]
@@ -27,7 +27,7 @@ simulator = "kinder"
 robot = "tidybot-plus-plus"
 family = "sweep-simple"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+protocol = "eai-standard/3.0"
 instance_seed = 0
 expert_time_estimate_hours = 6.0
 oracle = "none"

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | DexHand |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `dexhand-ram-module-install-i00-privileged` |
 | Simulator / robot | `mujoco` / `sharpa-wave-floating` |
 | Family / instance | `ram_module_install` / seed 0 |

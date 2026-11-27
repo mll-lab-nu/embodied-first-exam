@@ -27,4 +27,4 @@ VERSION = "0.2.31"   # 0.2.31: built-in seats (RO_BUILTIN_SEATS, core/builtin_se
 # a preview format ([formats.<f>] preview = true) is never an official configuration
 # 0.2.20: the team channel is read with a read mark (seq, team_since, POST /team), never consumed
 # 0.2.19: once frozen (hidden seeds registered) only a registered hidden seed is official, over the sport's own rule; 0.2.18: a declared reaction delay
-PROTOCOLS = {"realtime": "eai-standard-realtime/1.0", "turn": "eai-standard-turn/1.0"}
+PROTOCOLS = {"realtime": "eai-standard/3.0", "turn": "eai-standard/3.0"}

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | AutoBio |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `autobio-pipette-i00-privileged` |
 | Simulator / robot | `autobio` / `ur5e-dexhand-2f85-bimanual` |
 | Family / instance | `pipette` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 AutoBio's `pipette` (Aspirate with pipette) on the same frozen instance as `autobio-pipette-i00-privileged`: Draw up liquid from the 50 mL tube with the pipette: press the plunger, push the tip down into the liquid near the middle of the tube, let the plunger go, then lift the tip well out of the tube.
-On the bench, between the arms: a rack with an open, part-filled 50 mL tube standing in it. AutoBio's prompt for this task: "one arm lifts centrifuge tube, the other aligns pipette tip and aspirates liquid"; the test itself does not ask for the tube to be lifted. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
+On the bench, between the arms: a rack with an open, part-filled 50 mL tube standing in it. AutoBio's prompt for this task: "one arm lifts centrifuge tube, the other aligns pipette tip and aspirates liquid"; the test itself does not ask for the tube to be lifted. Standard mode (eai-standard/3.0): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty
 Same instance and success rule as `autobio-pipette-i00-privileged` (AutoBio's level: medium). Two arms. The pipette tip has to enter a 50 mL tube within 6.5 mm of its axis and reach below the liquid surface, with the plunger pressed before and released there. In standard mode the agent loses resets, the simulator and the state of the tubes and instruments: it sees camera images and the robot's proprioception, acts in joint-position chunks, and gets one episode, so it has to find the things it handles in the images and recover from its own mistakes without starting over.

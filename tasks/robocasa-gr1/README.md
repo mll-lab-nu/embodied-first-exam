@@ -59,7 +59,7 @@ request #4 (PR #4: closed without merging; commit ad3c510, fetchable as `refs/pu
 
 ## Standard-mode service
 `embodied_first_exam/benchmarks/robocasa/sim/server_casa.py`, the RoboCasa benchmark's service: derived from
-`embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py`, `eai-standard/2.1`, crash recovery, collect hooks. The collect hook is
+`embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py`, `eai-standard/3.0`, crash recovery, collect hooks. The collect hook is
 each standard task's `environment/sim/finalize.sh`; both files are RoboCasa's byte for byte (`tasks/robocasa/README.md`:
 graded by the live episode, nothing replayed, the start checked against the frozen instance (`RCB_INSTANCE_SHA`,
 `RCB_START_SHA` in each task's `environment/docker-compose.yaml`, a mismatch is infrastructure), the video one

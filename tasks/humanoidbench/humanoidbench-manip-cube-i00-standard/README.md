@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | HumanoidBench |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `humanoidbench-manip-cube-i00-privileged` |
 | Simulator / robot | `humanoidbench` / `unitree-h1hand` |
 | Family / instance | `cube` / seed 0 |
@@ -14,7 +14,7 @@
 ## Task
 Turn the two cubes on your palms until each sits the same way round as the see-through cube floating above your hands, without dropping either.
 
-Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-manip-cube-i00-privileged`: the same
+Standard mode (robot as a service, `eai-standard/3.0`) of `humanoidbench-manip-cube-i00-privileged`: the same
 frozen instance and the same success rule. HumanoidBench runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar for rendering), which holds the reward, judges the
 episode as it runs, records it and, after the verdict, renders its video from the recorded trajectory; the

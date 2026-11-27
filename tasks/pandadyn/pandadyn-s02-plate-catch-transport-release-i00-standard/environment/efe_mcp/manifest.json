@@ -3,7 +3,7 @@
  "kind": "rcb",
  "suite": "pandadyn",
  "task": "pandadyn-s02-plate-catch-transport-release-i00-standard",
- "protocol": "eai-standard/2.1",
+ "protocol": "eai-standard/3.0",
  "realtime": false,
  "tools": [
   "spec",

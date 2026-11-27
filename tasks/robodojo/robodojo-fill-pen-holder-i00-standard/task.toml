@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robodojo-fill-pen-holder-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo fill_pen_holder (Long-Horizon) on the same frozen layout as the privileged task (arx_x5/0/fill_pen_holder_0.json). Task: Put all four pens in the pen holder: the white ballpoint tip down, the other three cap end up. Then make sure the holder stands upright and move both arms back to where they started. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): RoboDojo fill_pen_holder (Long-Horizon) on the same frozen layout as the privileged task (arx_x5/0/fill_pen_holder_0.json). Task: Put all four pens in the pen holder: the white ballpoint tip down, the other three cap end up. Then make sure the holder stands upright and move both arms back to where they started. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "standard-mode", "trajectory"]
 
 [metadata]
@@ -23,7 +23,7 @@ simulator = "robodojo"
 robot = "arx-x5-bimanual"
 family = "fill_pen_holder"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 oracle = "none"
 oracle_evidence = "no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); marked unvalidated (PROTOCOL §2 `validated`); human review in PR #142"
 instance_seed = 0

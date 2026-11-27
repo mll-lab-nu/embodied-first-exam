@@ -18,7 +18,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/kinder-scoop-pour-i01-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): KinDER ScoopPour3D-o50 on the same frozen instance as kinder-scoop-pour-i01-privileged. Task: Move all 50 small cubes from the yellow bin into the green bin. There is a scoop you can use. The agent only gets a client: /observe and /submit (the robot's camera RGB-D + joint encoders + base odometry; delta actions in chunks). No reset: one episode, which is graded. No privileged state, no goal check; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): KinDER ScoopPour3D-o50 on the same frozen instance as kinder-scoop-pour-i01-privileged. Task: Move all 50 small cubes from the yellow bin into the green bin. There is a scoop you can use. The agent only gets a client: /observe and /submit (the robot's camera RGB-D + joint encoders + base odometry; delta actions in chunks). No reset: one episode, which is graded. No privileged state, no goal check; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
 keywords = ["robotics", "kinder", "mujoco", "tidybot", "mobile-manipulation", "physical-reasoning", "standard-mode", "trajectory", "scoop-pour"]
 
 [metadata]
@@ -27,7 +27,7 @@ simulator = "kinder"
 robot = "tidybot-plus-plus"
 family = "scoop-pour"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+protocol = "eai-standard/3.0"
 instance_seed = 0
 expert_time_estimate_hours = 8.0
 oracle = "none"

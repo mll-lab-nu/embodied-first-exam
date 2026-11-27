@@ -24,7 +24,7 @@ The topological families: `roboarc-<family>-<NN>-i01-{privileged,standard}` (PRO
   difficulty is not in the name: it is `[metadata].difficulty` in task.toml (TAXONOMY).
 - `i01`: the MuJoCo instance (the HF dataset's `instances/<family>-<NN>-i01/`).
 
-Every topological task shares the tooling `rcb_topogym.py`, the graders, the sim service and the eai-standard/2.4 layer:
+Every topological task shares the tooling `rcb_topogym.py`, the graders, the sim service and the eai-standard/3.0 layer:
 - physics: MuJoCo 3.14.0, CPU float64 (the blanket families' cloth: a deterministic CUDA step, `blanket_vbd_gpu`);
 - the numpy / OpenBLAS SIMD masking in every container that runs a Session (so every CPU class builds the same frozen
   bytes); `render_bridge.py` and `nyx_direct.py` next to every tooling copy, named in the runtime binding;
@@ -165,7 +165,7 @@ height and physics parameters are withheld. The service's `robot_felt` passes ex
 
 ## Standard mode, world frame, network
 
-`eai-standard/2.4`; no world coordinates in standard texts (D7,
+`eai-standard/3.0`; no world coordinates in standard texts (D7,
 `ci_checks/benchmarks/roboarc/advisory-world-frame.sh`); agent egress on the allowlist (PROTOCOL Appendix H.6).
 
 Every text the agent sees calls the service's frame the world frame, as the other services call theirs, and defines it in
@@ -188,12 +188,12 @@ each task's own `[agent] timeout_sec`.
 
 ## Standard-mode service details
 
-Serves `eai-standard/2.4` (docs/protocol/standard_mode.md Part 4). Contact and safety telemetry is published in `meta["safety"]`, declared field by field in this doc. `max_frames_per_call` = 2000 (IKEA suite: 1000; PROTOCOL §3 "Images per call"); `meta.frames_skipped` counts the frames a call whose length is known only while it runs left out. Its service ends the episode when `time_left_s` reaches 0 (counted from the agent's first request), until its next task update.
+Serves `eai-standard/3.0` (docs/protocol/standard_mode.md Part 4). Contact and safety telemetry is published in `meta["safety"]`, declared field by field in this doc. `max_frames_per_call` = 2000 (IKEA suite: 1000; PROTOCOL §3 "Images per call"); `meta.frames_skipped` counts the frames a call whose length is known only while it runs left out. Its service ends the episode when `time_left_s` reaches 0 (counted from the agent's first request), until its next task update.
 
 ## IKEA suite
 
 The IKEA furniture-assembly tasks (`roboarc-ikea-<item>-i00-{privileged,standard}`, eight items in both modes) are part of
-RoboARC. They share the `roboarc-` prefix, this folder, the eai-standard/2.4 layer and the 3 h budget;
+RoboARC. They share the `roboarc-` prefix, this folder, the eai-standard/3.0 layer and the 3 h budget;
 everything else is their own: the tooling `rcb_ikea.py` (not `rcb_topogym.py`), the scenes, the graders and the sim service
 (source `embodied_first_exam/benchmarks/roboarc/ikea/`, files-only image `efe:ikea-mujoco-files`), and the images
 `efe:ikea-mujoco-<VERSION>` / `efe:ikea-mujoco-sim-<VERSION>` (`images/ikea-mujoco/`), which keep their names. The sections
@@ -223,7 +223,7 @@ directly. To rebuild the images from source, see [IKEA image and assets](#ikea-i
 
 `simulator = "mujoco"`; `robot = "franka-panda-bimanual"` (two Franka Panda arms with MuJoCo Menagerie's Panda hand;
 stegesund names its arms `left/` / `right/`, the others `left_` / `right_`) or `"aloha-2"` (svallet: MuJoCo Menagerie's
-ALOHA 2, two ViperX 300 s arms). Standard tasks speak `eai-standard/2.4` (the operations capability:
+ALOHA 2, two ViperX 300 s arms). Standard tasks speak `eai-standard/3.0` (the operations capability:
 `r.operation_status()`).
 
 The agent budget is 10800 s (3 h) of wall clock in both modes. One reference execution must fit 40 % of it (4320 s) on

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | RoboARC |
-| Mode | standard (`eai-standard/2.4`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `roboarc-horseshoe-ring-01-i01-privileged` |
 | Simulator / robot | `roboarc` / `aloha-2` |
 | Family / instance | `horseshoe_ring` / seed 0 |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` |
 
 ## Task
-Standard-mode twin of `roboarc-horseshoe-ring-01-i01-privileged` (same frozen instance): the agent gets only the `eai-standard/2.4` client
+Standard-mode twin of `roboarc-horseshoe-ring-01-i01-privileged` (same frozen instance): the agent gets only the `eai-standard/3.0` client
 (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the
 sidecar), which owns the scene and records the episode as a (T, 14) trajectory; its collect hook
 (`environment/sim/finalize.sh`) writes the live episode's verdict, then renders the video in one video-only
@@ -72,10 +72,10 @@ Take the removable ring out of the puzzle and put all of it inside the green das
 | | |
 |---|---|
 | mode | standard (RGB, optional depth, proprioception, calibrated cameras, no reset) |
-| action space | `eai-standard/2.4`: `submit` chunks of `joint_position` (14, streamed at the 40 Hz control rate with the agent's `dt`) or `ee_pose` (16, IK per row); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); binary RCB1 responses |
+| action space | `eai-standard/3.0`: `submit` chunks of `joint_position` (14, streamed at the 40 Hz control rate with the agent's `dt`) or `ee_pose` (16, IK per row); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); binary RCB1 responses |
 | oracle | `full` (`solution/`) |
 | verification | `success` = the live success: the task predicate on the live simulator with the instance's own thresholds (its confirmation time included), as the sim service recorded it (`final.json`: `graded_by` live, `replays` 0); no grading replay. The frozen instance is checked when the service builds it (`instance_mismatch`: infrastructure). After the verdict is written, one video-only fresh-process replay in the sidecar's collect hook renders `/logs/verifier/replay.mp4` (and, for a success held for review, the frames around its live review events); a failed video never changes the verdict |
-| crash recovery | `eai-standard/2.4` §13: journal + per-call checkpoints, `restart: on-failure:6`, resume class `approx` |
+| crash recovery | `eai-standard/3.0` §13: journal + per-call checkpoints, `restart: on-failure:6`, resume class `approx` |
 
 ### Provenance
 - Frozen instance: a MuJoCo instance (`simulator.physics_engine` "mujoco", its scene frozen under `instance_assets/mujoco/`), built by TopoGym source `6fb23e0d` (MuJoCo instance made before this image was built (TopoGym source 6fb23e0d; its bytes are bound into the release image efe:roboarc-0.2.0)); bound to this release's runtime (source `c9171f79`, tooling `d8692e15`).

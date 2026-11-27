@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | LabUtopia |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `labutopia-press-i00-privileged` |
 | Simulator / robot | `labutopia` / `franka-panda` |
 | Family / instance | `press` / seed 0 |
@@ -13,7 +13,7 @@
 
 ## Task
 LabUtopia's `press` (Press) on the same frozen instance as `labutopia-press-i00-privileged`: Press the red button on the instrument's front panel and hold it in for a second.
-In front of the arm stands an instrument with a vertical front panel that carries three square buttons in a row, each 8 cm across: one red, two dark grey. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
+In front of the arm stands an instrument with a vertical front panel that carries three square buttons in a row, each 8 cm across: one red, two dark grey. Standard mode (eai-standard/3.0): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty
 Same instance and success rule as `labutopia-press-i00-privileged` (LabUtopia's level 1). The target is one of three identical buttons told apart by colour only, on a vertical panel at arm's length; it has to be held in for a full second. In standard mode the agent loses resets, the simulator and the state of the objects: it sees camera images (glassware is nearly transparent in them and absent from the depth maps) and the robot's proprioception, acts in joint target chunks, and gets one episode, so it has to find the things it handles in the images and recover from its own mistakes without starting over.

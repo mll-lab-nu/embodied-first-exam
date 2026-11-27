@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | AutoBio |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `autobio-thermal-cycler-close-i00-privileged` |
 | Simulator / robot | `autobio` / `ur5e-robotiq-2f85` |
 | Family / instance | `thermal_cycler_close` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 AutoBio's `thermal_cycler_close` (Close thermal cycler lid) on the same frozen instance as `autobio-thermal-cycler-close-i00-privileged`: Close the thermal cycler's lid and lock it with the lever on the lid.
-On the bench: a thermal cycler (a Bio-Rad C1000 model) with its lid open. The lid carries a lever that locks it and a force knob. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
+On the bench: a thermal cycler (a Bio-Rad C1000 model) with its lid open. The lid carries a lever that locks it and a force knob. Standard mode (eai-standard/3.0): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty
 Same instance and success rule as `autobio-thermal-cycler-close-i00-privileged` (AutoBio's level: easy). Two articulated parts have to reach their end stops within 0.01 rad: the hinged lid and the lever on it that locks it. In standard mode the agent loses resets, the simulator and the state of the tubes and instruments: it sees camera images and the robot's proprioception, acts in joint-position chunks, and gets one episode, so it has to find the things it handles in the images and recover from its own mistakes without starting over.

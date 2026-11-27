@@ -3,7 +3,7 @@
  "kind": "rcb",
  "suite": "libero-max",
  "task": "libero-max-long-white-yellow-mug-in-desk-caddy-back-illumination-switch-i00-standard",
- "protocol": "eai-standard/2.1",
+ "protocol": "eai-standard/3.0",
  "realtime": false,
  "tools": [
   "spec",

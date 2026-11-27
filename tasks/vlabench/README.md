@@ -42,7 +42,7 @@ The files images `efe:vlabench-files` (the tasks' tooling) and `efe:vlabench-bui
 | tasks | `tasks/vlabench/vlabench-<task>-i00-privileged` and `tasks/vlabench/vlabench-<task>-i00-standard` |
 | metadata | `simulator = "vlabench"`, `robot = "franka-panda"`, `family = "vlabench/<task>"`, `oracle = "full"` |
 | image | built by each task from `images/vlabench/Dockerfile` (stage `vlabench-base`), build cache `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0`; CPU only, ~15 GB (12 GB assets) |
-| standard service | `rcb_service.py` (main's HumanoidBench copy, `eai-standard/2.1`) + each standard task's `environment/sim/server.py` |
+| standard service | `rcb_service.py` (main's HumanoidBench copy, `eai-standard/3.0`) + each standard task's `environment/sim/server.py` |
 | standard client | the shared client base and exact pins of `embodied_first_exam/standard/` (`client.env`, `client-requirements.txt`); `rcb_client.py` / `rcb1.py` as in main's HumanoidBench tasks |
 | instances | the instances and references, imported from this repository's pull request #4 (PR #4: closed without merging; commit ad3c510, fetchable as `refs/pull/4/head`), each `instance.json` committed in three byte-identical copies (the privileged task's `environment/instance.json` and `tests/instance.json`, the standard twin's `environment/sim/instance.json`; `check-instance-copies.sh`), and the same `solution/oracle.npy` in both twins. The task directories are the deliverable; the tooling that built them is kept outside this repository. |
 
@@ -132,7 +132,7 @@ minutes); it never changes the verdict. `infra_error = 1` only for no or an unfi
 crashes not all inside the agent's calls, a reset whose scene does not rebuild, and `instance_mismatch`; a simulator
 error raised by the agent's call, crashes inside its calls, a timeout and a failure are the agent's 0.
 `environment/sim/rcb_service.py` is a byte copy of HumanoidBench's standard tasks' `environment/sim/rcb_service.py`
-(protocol `eai-standard/2.1`: four endpoints, RCB1, no reset unless `budget.reset > 0`, journal + checkpoints with at
+(protocol `eai-standard/3.0`: four endpoints, RCB1, no reset unless `budget.reset > 0`, journal + checkpoints with at
 most two resumes, startup watchdog, SIGUSR1 collect hook, `/data` evidence, verdict before video, 413 / 500 handling).
 `final.json` is `finalized` the moment the verdict is written, before the video is rendered (`video_pending` while it
 renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow,
@@ -192,7 +192,7 @@ Final-state hashes of some references (live = replay 1 = replay 2):
   (PROTOCOL §4).
 - **Privileged difficulty.** With VLABench's skills as planning primitives the privileged mode is largely solved;
   the standard twin carries the difficulty.
-- **eai-standard/2.1 or 2.2.** The standard twins serve 2.1 with main's HumanoidBench layer (byte copies); moving to the
+- **eai-standard/3.0 or 2.2.** The standard twins serve 2.1 with main's HumanoidBench layer (byte copies); moving to the
   shared 2.2 layer (`embodied_first_exam/standard/`) would add its optional capabilities (depth as uint16, `robot_spec`,
   `/kinematics`, a per-call wall-clock bound) and its CI identity check.
 

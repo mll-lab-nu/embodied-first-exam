@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | MuJoCo Playground |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `mujoco_playground_aloha_hand_over-privileged` |
 | Simulator / robot | `mujoco` / `aloha-2` |
 | Family / instance | `mujoco_playground/AlohaHandOver` / seed 60417 (allowed seeds: [60417, 60418, 60419]; PROTOCOL §2) |
@@ -14,7 +14,7 @@
 ## Task
 Pick up the red box with the left arm, pass it to the right arm, and hold it at the see-through target box. Then take the left arm off the box.
 
-Standard-mode twin of `mujoco_playground_aloha_hand_over-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`embodied_first_exam/benchmarks/mujoco-playground/sim/server_mj.py`, protocol eai-standard/2.1, tooling `rcb_aloha`). The agent sees camera RGB-D and proprioception only.
+Standard-mode twin of `mujoco_playground_aloha_hand_over-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`embodied_first_exam/benchmarks/mujoco-playground/sim/server_mj.py`, protocol eai-standard/3.0, tooling `rcb_aloha`). The agent sees camera RGB-D and proprioception only.
 
 ## Difficulty
 Same scene, instance and success rule as `mujoco_playground_aloha_hand_over-privileged` (see its Difficulty). In standard mode the agent loses resets, privileged state and planning primitives: it sees camera images and proprioception only, acts through the client, and gets one episode, so it has to estimate the scene from images and recover from its own mistakes without starting over.

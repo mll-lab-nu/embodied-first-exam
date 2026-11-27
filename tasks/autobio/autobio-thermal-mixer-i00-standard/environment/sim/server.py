@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for the AutoBio tasks (docs/protocol/standard_mode.md): the adapter of the shared layer
+"""eai-standard/3.0 sim service for the AutoBio tasks (docs/protocol/standard_mode.md): the adapter of the shared layer
 rcb_limited.py; the simulator is rcb_autobio.Session (AutoBio on MuJoCo 3.3.0, CPU). HTTP surface: GET /spec,
 GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to /data/episode.jsonl.
 
@@ -128,7 +128,6 @@ EPISODE = {
 ROBOT_SPEC = S.robot_spec()
 SPEC = {
     "protocol": L.PROTOCOL,
-    "protocol_compat": list(L.COMPAT),
     "simulator": "AutoBio on MuJoCo 3.3.0 (CPU)",
     "robot": ROBOT_SPEC["name"],
     "task_text": TASK_TEXT,

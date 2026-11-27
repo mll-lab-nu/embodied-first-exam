@@ -50,7 +50,7 @@ README gives the count); `full`: it reaches all of them.
 | mode | the agent gets | resets | per-goal time limit | graded |
 |---|---|---|---|---|
 | privileged | the tooling (`rcb_dtb.Session`), the full state, free resets | unlimited | 30 s | the handed-in trajectory, replayed from the start |
-| standard (`eai-standard/2.1`) | the robot's cameras (RGB-D, calibrated) and proprioception, the current goal pose, through `rcb_client.py` | **20**; `RCB_RESET_BUDGET=0`: none | none (episode cap 360,000 control steps) | the last episode as it ran (live) |
+| standard (`eai-standard/3.0`) | the robot's cameras (RGB-D, calibrated) and proprioception, the current goal pose, through `rcb_client.py` | **20**; `RCB_RESET_BUDGET=0`: none | none (episode cap 360,000 control steps) | the last episode as it ran (live) |
 
 Both modes give the agent the same time: the time limit (Limits) of each task's instruction (PROTOCOL §2, docs/protocol/running.md "The agent's time").
 
@@ -98,7 +98,7 @@ Without `RCB_AGENT_END` the service behaves as described above.
 
 ## Standard-mode service details
 
-**MuJoCo service (DexToolBench, MuJoCo Playground manipulation; `eai-standard/2.1`).** Same endpoints and RCB1 frames,
+**MuJoCo service (DexToolBench, MuJoCo Playground manipulation; `eai-standard/3.0`).** Same endpoints and RCB1 frames,
 served by `embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py`. Differences: one action type, `joint_position` with the task's own
 actuator layout (DexToolBench 29, ALOHA 14, Panda 8), rows `dt` apart where `dt` is a multiple of `control_dt` (1/60 s
 DexToolBench, 1/50 s Playground), hold or linear interpolation per control step. Actions are sent as **float64** (MuJoCo

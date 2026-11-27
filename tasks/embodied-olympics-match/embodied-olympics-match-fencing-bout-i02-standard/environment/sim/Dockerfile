@@ -33,8 +33,8 @@ COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-match-files-0.3.0@sha256:0c
      /sim/bodies/unitree_g1/model.xml \
      /srv/bodies/unitree_g1/
 COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-match-files-0.3.0@sha256:0c6710ec1d7682bc4bf1b828a71d4c8b6c21193a279f13ad7e39d683307a95af \
-     /sim/variants/e1942b1e0a/core/README.md \
-     /sim/variants/90659b685d/core/__init__.py \
+     /sim/variants/d9beace13e/core/README.md \
+     /sim/variants/601a295b38/core/__init__.py \
      /privileged/environment/fullsim/core/channel.py \
      /sim/core/client.py \
      /privileged/environment/fullsim/core/diaglog.py \

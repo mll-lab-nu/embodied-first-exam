@@ -121,7 +121,7 @@ success rate), load rotor 14.7 / 1.0.
   `(T, n)` position targets, one row per control step. AutoBio's code other than the experts is in the image (inverse
   kinematics, path timing, scene helpers). The verifier replays the rows in one fresh process in its own sandbox: the
   episode must succeed.
-- **Standard (`eai-standard/2.2`):** the shared layer of `embodied_first_exam/standard/` and the adapter
+- **Standard (`eai-standard/3.0`):** the shared layer of `embodied_first_exam/standard/` and the adapter
   `environment/sim/server.py`, the same in all nine families:
   - action types `joint_position` (the action above; rows `dt` apart, a multiple of 2 ms, `linear` or `hold`; clipped
     values reported) and `done` (ends the episode in its current state: how the thermal mixer's episode is handed in);

@@ -78,7 +78,7 @@ replayed, the start checked against the frozen instance (`RCB_INSTANCE_SHA`, `RC
 each task's `environment/docker-compose.yaml`, a mismatch is infrastructure), the video one render pass after the
 verdict; the hook's budget; request validation; the camera calibration is the rendered viewpoint).
 
-## Realtime (`eai-standard/2.3`)
+## Realtime (`eai-standard/3.0`)
 The dynamic tasks (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-realtime` twin. In RoboCasa365 that is **TurnOnToasterOven** only: once set, the oven's timer knob turns back
 by itself (`ToasterOven.update_state`: 1/3000 of its range per simulated second, on `sim.data.time`, so a replay repeats
 it bit for bit). The toaster ovens and electric kettles of other tasks move by themselves too, but no other task uses them.

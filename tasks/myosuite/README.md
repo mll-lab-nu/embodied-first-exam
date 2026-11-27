@@ -116,7 +116,7 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   left (none when under 60 s remain). A replay process that then gives no result (out of time, killed, not started) is
   `replay_failed` with `grader_error = 1` and `infra_error = 1`, never the agent's 0, and every `reward.json` carries
   `infra_error`.
-- **Standard (`eai-standard/2.2`):** the shared layer of `embodied_first_exam/standard/` and the adapter
+- **Standard (`eai-standard/3.0`):** the shared layer of `embodied_first_exam/standard/` and the adapter
   `environment/sim/server.py`, the same file in all 22 families:
   - action type `muscle` (all-muscle bodies) or `actuators` (with the non-muscle ones: MyoDex's 6-DoF wrist positioning,
     table tennis's pelvis slides, the MPL prosthesis's motors; osl_run's prosthesis columns are ignored, its own
@@ -253,7 +253,7 @@ that score 0; an apple_lift trajectory that leaves the apple on the table scores
 - Determinism of set 3 before building: three replays in one process and one in a fresh process gave the same final
   state for random action sequences in every family.
 
-## Realtime (`eai-standard/2.3`)
+## Realtime (`eai-standard/3.0`)
 The dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-realtime` twin. In MyoSuite that is **table_tennis** only (the ball is served at 5.6 m/s at reset;
 every other family's objects start at rest, and chase_tag's opponent stands still in its frozen instance).
 - **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and Embodied Olympics - Fun, unchanged
@@ -336,4 +336,4 @@ outside this repository.
 
 ## Standard-mode service details
 
-Serves `eai-standard/2.2` (MuJoCo on the CPU, resume class `exact`); `max_frames_per_call` = 1000. Its service implements the optional reset capability (docs/protocol/standard_mode.md Part 1); the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`.
+Serves `eai-standard/3.0` (MuJoCo on the CPU, resume class `exact`); `max_frames_per_call` = 1000. Its service implements the optional reset capability (docs/protocol/standard_mode.md Part 1); the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`.

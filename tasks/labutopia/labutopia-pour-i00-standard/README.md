@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | LabUtopia |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `labutopia-pour-i00-privileged` |
 | Simulator / robot | `labutopia` / `franka-panda` |
 | Family / instance | `pour` / seed 0 |
@@ -13,7 +13,7 @@
 
 ## Task
 LabUtopia's `pour` (Pour (LabUtopia's level-2 PourLiquid is the same task)) on the same frozen instance as `labutopia-pour-i00-privileged`: Pick up the small beaker and tip it over the large beaker as if pouring into it, then turn it back upright and hold it over the large beaker for a couple of seconds.
-On the bench in front of the arm: two glass beakers: a small one, about 11 cm across and 9.5 cm tall (the one to pour), and a large one, about 15.5 cm across and 13 cm tall (the one to pour into). Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
+On the bench in front of the arm: two glass beakers: a small one, about 11 cm across and 9.5 cm tall (the one to pour), and a large one, about 15.5 cm across and 13 cm tall (the one to pour into). Standard mode (eai-standard/3.0): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty
 Same instance and success rule as `labutopia-pour-i00-privileged` (LabUtopia's level 1). Four conditions in a fixed order, three of them counted only while the held beaker is within 7.76 cm of the other one's axis: a tilt of more than 50 degrees and back, in the hand, without losing the beaker. In standard mode the agent loses resets, the simulator and the state of the objects: it sees camera images (glassware is nearly transparent in them and absent from the depth maps) and the robot's proprioception, acts in joint target chunks, and gets one episode, so it has to find the things it handles in the images and recover from its own mistakes without starting over.

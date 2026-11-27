@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | MuJoCo Playground |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `mujoco_playground_panda_pick_cube_orientation-privileged` |
 | Simulator / robot | `mujoco` / `franka-panda` |
 | Family / instance | `mujoco_playground/PandaPickCubeOrientation` / seed 60417 (allowed seeds: [60417, 60418, 60419]; PROTOCOL §2) |
@@ -14,7 +14,7 @@
 ## Task
 Pick up the green box and hold it at the see-through red box, tilted the same way.
 
-Standard-mode twin of `mujoco_playground_panda_pick_cube_orientation-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`embodied_first_exam/benchmarks/mujoco-playground/sim/server_mj.py`, protocol eai-standard/2.1, tooling `rcb_panda`). The agent sees camera RGB-D and proprioception only.
+Standard-mode twin of `mujoco_playground_panda_pick_cube_orientation-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`embodied_first_exam/benchmarks/mujoco-playground/sim/server_mj.py`, protocol eai-standard/3.0, tooling `rcb_panda`). The agent sees camera RGB-D and proprioception only.
 
 ## Difficulty
 Same scene, instance and success rule as `mujoco_playground_panda_pick_cube_orientation-privileged` (see its Difficulty). In standard mode the agent loses resets, privileged state and planning primitives: it sees camera images and proprioception only, acts through the client, and gets one episode, so it has to estimate the scene from images and recover from its own mistakes without starting over.

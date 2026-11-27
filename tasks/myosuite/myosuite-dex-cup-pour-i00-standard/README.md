@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | MyoSuite |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `myosuite-dex-cup-pour-i00-privileged` |
 | Simulator / robot | `myosuite` / `myohand` |
 | Family / instance | `dex_cup_pour` / seed 0 |
@@ -13,7 +13,7 @@
 
 ## Task
 MyoSuite `MyoHandCupPour-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-dex-cup-pour-i00-privileged`: Pick up the cup and tilt it as if pouring, following the recorded reference motion.
-A cup stands on the table; the MyoHand is at its pre-grasp pose. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
+A cup stands on the table; the MyoHand is at its pre-grasp pose. Standard mode (eai-standard/3.0): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
 
 ## Difficulty
 Same instance and success rule as `myosuite-dex-cup-pour-i00-privileged` (first-pass rating: hard). In standard mode the agent loses free resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in actuator-command chunks, and gets 10 resets, so it has to close the loop on what it sees and learn the body from a few real attempts.

@@ -1,4 +1,4 @@
-"""The efe-robot tools of an RCB task (eai-standard/2.x): one per agent-facing endpoint of the robot service.
+"""The efe-robot tools of an RCB task (eai-standard/3.0): one per agent-facing endpoint of the robot service.
 
     spec        GET /spec          the robot's facts; saved whole as a JSON file
     observe     POST /observe      what is already recorded (last_s), at once; the reply's meta + its parts as files
@@ -9,8 +9,8 @@
     kinematics  POST /kinematics   where the service offers it (spec `kinematics`)
     finish      POST /finish       where the episode is the agent's to end (spec success_signal starts with "hidden")
 
-GET /status has no tool: its fields are in every reply's meta. GET /operations/<id> has none either: against a 2.4
-service every request carries an operation id and a request deadline (as the 2.4 client sends them), and when a reply
+GET /status has no tool: its fields are in every reply's meta. GET /operations/<id> has none either: against a service
+with the operations capability every request carries an operation id and a request deadline (as its client sends them), and when a reply
 is lost (a connection error or a timeout; never an answer, a 5xx included) this module re-queries /operations/<id> itself
 and says whether the call ran.
 
@@ -157,7 +157,7 @@ class RcbTools:
                         "invalid" if 400 <= r.status_code < 500 else "service")
 
     def _lost(self, path, op, e):
-        """A reply that did not arrive: against a 2.4 service, /operations/<id> says whether the call ran."""
+        """A reply that did not arrive: against a service with the operations capability, /operations/<id> says whether the call ran."""
         import requests
         out = {"reply_lost": True, "path": path, "error": f"{type(e).__name__}: {str(e)[:300]}",
                "note": "the service may have restarted; it resumes the same episode: observe shows where things stand"}
@@ -184,7 +184,7 @@ class RcbTools:
         import requests
         meta = dict(meta)
         op = None
-        if str((self.spec or {}).get("protocol", "")) == "eai-standard/2.4":     # as the 2.4 client does
+        if (self.spec or {}).get("operations"):     # the operations capability, as its client does
             budget = float((self.spec or {}).get("max_call_wall_s", 900))
             meta.setdefault("operation_id", uuid.uuid4().hex)
             meta.setdefault("request_deadline_unix_s", time.time() + budget)

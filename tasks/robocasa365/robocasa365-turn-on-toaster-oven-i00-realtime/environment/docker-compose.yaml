@@ -1,5 +1,5 @@
 # Realtime mode (PROTOCOL §3): the simulator runs in the `sim` sidecar (the agent cannot open it), on its own clock
-# once an episode starts (sim/rcb_realtime.py, the shared eai-standard/2.3 layer, with sim/server.py, this benchmark's
+# once an episode starts (sim/rcb_realtime.py, the realtime layer, with sim/server.py, this benchmark's
 # adapter on casa_tool); the agent only reaches port 8000. No `expose`/`ports` on sim: under Harbor's egress control it
 # shares main's network namespace (localhost:8000).
 # CPU only, as the standard twin (MuJoCo physics, OSMesa rendering, about 0.12 s a 320 x 240 frame): no GPU reservation.

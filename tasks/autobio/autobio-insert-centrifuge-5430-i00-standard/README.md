@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | AutoBio |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `autobio-insert-centrifuge-5430-i00-privileged` |
 | Simulator / robot | `autobio` / `ur5e-robotiq-2f85` |
 | Family / instance | `insert_centrifuge_5430` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 AutoBio's `insert_centrifuge_5430` (Load centrifuge rotor) on the same frozen instance as `autobio-insert-centrifuge-5430-i00-privileged`: Put the 1.5 mL tube from the plate into the centrifuge's rotor, in the slot opposite the tube that is already there, without turning the rotor.
-On the bench: a centrifuge (an Eppendorf 5430 model) with its lid open and a 30-slot rotor holding one 1.5 mL tube, and a well plate with a second 1.5 mL tube standing in it. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
+On the bench: a centrifuge (an Eppendorf 5430 model) with its lid open and a 30-slot rotor holding one 1.5 mL tube, and a well plate with a second 1.5 mL tube standing in it. Standard mode (eai-standard/3.0): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty
 Same instance and success rule as `autobio-insert-centrifuge-5430-i00-privileged` (AutoBio's level: hard). A 1.5 mL tube is taken from a plate and seated within 5 mm in one particular slot of a 30-slot rotor, inside the centrifuge's bowl. In standard mode the agent loses resets, the simulator and the state of the tubes and instruments: it sees camera images and the robot's proprioception, acts in joint-position chunks, and gets one episode, so it has to find the things it handles in the images and recover from its own mistakes without starting over.

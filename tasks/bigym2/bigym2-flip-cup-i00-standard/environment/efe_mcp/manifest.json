@@ -3,7 +3,7 @@
  "kind": "rcb",
  "suite": "bigym2",
  "task": "bigym2-flip-cup-i00-standard",
- "protocol": "eai-standard/2.1",
+ "protocol": "eai-standard/3.0",
  "realtime": false,
  "tools": [
   "spec",

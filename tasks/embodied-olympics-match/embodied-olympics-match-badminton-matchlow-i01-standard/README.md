@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Match |
-| Mode | standard (`eai-standard-lockstep/1.0`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-match-badminton-matchlow-i01-privileged` |
 | Simulator / robot | `mujoco` / `franka-panda` |
 | Family / instance | `badminton_matchlow` / seed 8 (allowed seeds: [8, 202, 212]; PROTOCOL §2) |
@@ -57,4 +57,4 @@ Source: Embodied Olympics task `badminton-match-wallclock-program-lowlevel-stand
 opponent, the observation, the review between points and the grader are ours, unchanged; only the seat is
 unmetered (Harbor records the model's usage) and the instance is frozen.
 
-Standard twin of `embodied-olympics-match-badminton-matchlow-i01-realtime`: the same export, the world in lockstep (`environment/sim/core/lockstep.py`; `eai-standard-lockstep/1.0` in tasks/embodied-olympics-match/README.md).
+Standard twin of `embodied-olympics-match-badminton-matchlow-i01-realtime`: the same export, the world in lockstep (`environment/sim/core/lockstep.py`; `eai-standard/3.0` in tasks/embodied-olympics-match/README.md).

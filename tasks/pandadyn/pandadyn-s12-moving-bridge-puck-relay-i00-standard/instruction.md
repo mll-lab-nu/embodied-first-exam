@@ -42,7 +42,7 @@ as if it were real hardware.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`). Its docstring (`help(rcb_client)`) lists the calls and their
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`). Its docstring (`help(rcb_client)`) lists the calls and their
 arguments. Where the docstring's example numbers differ, this page and `r.spec()` are right.
 
 | call | what it does |

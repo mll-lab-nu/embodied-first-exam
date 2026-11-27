@@ -21,21 +21,21 @@ COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-match-files-0.3.0@sha256:0c
      /privileged/environment/fullsim/bodies/selfcollision.py \
      /srv/bodies/
 COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-match-files-0.3.0@sha256:0c6710ec1d7682bc4bf1b828a71d4c8b6c21193a279f13ad7e39d683307a95af \
-     /sim/variants/1500899ee1/core/README.md \
-     /sim/variants/268e1f745d/core/__init__.py \
+     /sim/variants/799beb1964/core/README.md \
+     /sim/variants/14a0ce6e49/core/__init__.py \
      /sim/core/builtin_seat.py \
      /privileged/environment/fullsim/core/channel.py \
-     /sim/variants/b30ac53069/core/client.py \
+     /sim/variants/99d2c61844/core/client.py \
      /privileged/environment/fullsim/core/diaglog.py \
      /privileged/environment/fullsim/core/diagnose.py \
      /privileged/environment/fullsim/core/episode.py \
-     /sim/variants/6828c8c4da/core/game.py \
+     /sim/variants/ae0f8e7b7d/core/game.py \
      /privileged/environment/fullsim/core/http.py \
      /sim/core/launch.py \
      /privileged/environment/fullsim/core/local.py \
      /privileged/environment/fullsim/core/observe.py \
      /privileged/environment/fullsim/core/outcome.py \
-     /sim/variants/7d590e169f/core/realtime.py \
+     /sim/variants/77b33bb0a3/core/realtime.py \
      /sim/core/rng.py \
      /privileged/environment/fullsim/core/score.py \
      /sim/core/seats.py \

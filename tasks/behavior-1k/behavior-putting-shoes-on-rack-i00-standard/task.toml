@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/behavior-putting-shoes-on-rack-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): BEHAVIOR-1K v3.9.2 putting_shoes_on_rack on the same frozen instance as the privileged task (2026 challenge public_test instance 301). Put both pairs of shoes on the hall tree, off the floor, each pair side by side. The agent only gets a client: get_obs (RGB-D + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory, resumes it after a crash, and grades the episode it ran (no replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): BEHAVIOR-1K v3.9.2 putting_shoes_on_rack on the same frozen instance as the privileged task (2026 challenge public_test instance 301). Put both pairs of shoes on the hall tree, off the floor, each pair side by side. The agent only gets a client: get_obs (RGB-D + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory, resumes it after a crash, and grades the episode it ran (no replay)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "standard-mode", "trajectory", "putting_shoes_on_rack"]
 
 [metadata]
@@ -24,7 +24,7 @@ simulator = "behavior"
 robot = "r1pro"
 family = "putting_shoes_on_rack"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 oracle = "partial"
 oracle_evidence = "solution/ streams the privileged oracle's joint targets (oracle_qpos.npy, 6283 rows) through the client. Recorded Harbor oracle run (laptop, a pre-v1.0 version): 2026-09-25 behavior-putting-shoes-on-rack-i__XB2NUoX (job behavior-putting-shoes-on-rack-i00-limited-oracle-0925-015349) scored 1 with live_matches_replay 1 (6283 control steps), 1 of 1. The sim service, collect hook, grader and oracle client changed since (crash recovery); not re-run on this version (static validation only)."
 instance_seed = 301

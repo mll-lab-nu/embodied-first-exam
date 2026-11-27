@@ -14,7 +14,7 @@ Every image is public: Harbor pulls it.
 | simulator | MuJoCo 3.3.7 + dm_control, CPU (upstream pins 3.1.6; see Physics) |
 | robots | `h1`: Unitree H1, 19 actuators · `h1hand`: H1 + two Shadow hands, 61 actuators |
 | score | an episode's summed reward (≤ 1000 steps); pass = at least upstream's success bar |
-| tasks | 10 × 3 modes: `tasks/humanoidbench/humanoidbench-<category>-<task>-i00-privileged`, `-standard` (`eai-standard/2.1`) and `-realtime` (the realtime mode, `eai-standard/2.3`: standard mode on a clock that does not stop, below) |
+| tasks | 10 × 3 modes: `tasks/humanoidbench/humanoidbench-<category>-<task>-i00-privileged`, `-standard` (`eai-standard/3.0`) and `-realtime` (the realtime mode, `eai-standard/3.0`: standard mode on a clock that does not stop, below) |
 | image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` (`images/humanoidbench/`) |
 | oracle | `sit_simple` (the fixture): full, all three modes; the 9 scored tasks: none, human review (`oracle_evidence` in each task.toml) |
 
@@ -99,7 +99,7 @@ HumanoidBench's standard configuration grants **50 resets** (`RCB_RESET_BUDGET` 
 `-standard` task's `environment/docker-compose.yaml`, so `spec()["budget"]["reset"]` is 50). Without them, the agent gets a single blind attempt: the H1 falls within 1-3 s of robot time under a
 first guess, and in standard mode there is no simulator to practise in. This is HumanoidBench's own choice of budget
 (PROTOCOL §2: each task declares its budget; the standard template's default is 0); results state the reset budget they ran under. What a reset does (`rcb_service.py`, the
-`eai-standard/2.1` service shared with KinDER and VLABench; each standard task's `environment/sim/`):
+`eai-standard/3.0` service shared with KinDER and VLABench; each standard task's `environment/sim/`):
 
 - `POST /reset` (`r.reset()`) abandons the running episode, or follows one that has ended (`failed`: a fall or the
   step limit; `error`), and starts a new one from the frozen instance: `Session.reset()` restores the robot, the scene,
@@ -126,7 +126,7 @@ chunks loses nothing. A real H1 does not wait. The realtime mode (PROTOCOL §3;
 `tasks/humanoidbench/humanoidbench-*-i00-realtime`, 10 tasks, one per family, `mode = "realtime"`) is standard mode with the same
 instance, sensors, success rule, reset budget (50), wall clock (each task's own `[agent] timeout_sec`, stated by the Time line of every instruction's closing `## Limits`, PROTOCOL §2) and client, on a
 clock that does not stop (each task's `environment/sim/rcb_realtime.py`, which extends `rcb_service.py`; the
-wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/protocol/standard_mode.md "Realtime mode"):
+wire protocol is `eai-standard/3.0`, 2.2 plus the realtime capability, docs/protocol/standard_mode.md "Realtime mode"):
 
 - **Clock.** An episode starts paused at the frozen start, its servos holding their starting targets. Its clock starts
   at its first `submit` and runs one control step every 20 ms of wall time
@@ -244,7 +244,7 @@ Realtime results are their own mode and are never pooled with standard ones; the
 
 ## Standard-mode service details
 
-**KinDER and HumanoidBench service (`eai-standard/2.1`).** Same endpoints, RCB1 frames and crash recovery, served by one
+**KinDER and HumanoidBench service (`eai-standard/3.0`).** Same endpoints, RCB1 frames and crash recovery, served by one
 shared service (`rcb_service.py` in each standard task's `environment/sim/`, identical in both) with a per-benchmark
 simulator adapter (`server.py`). Actions are delta or joint-position rows at the task's control rate (KinDER 10 Hz,
 PyBullet tasks kinematic: a refused move comes back `blocked` and stops the chunk; HumanoidBench 50 Hz); the step

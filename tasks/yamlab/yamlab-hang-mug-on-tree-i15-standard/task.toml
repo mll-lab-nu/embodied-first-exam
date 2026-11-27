@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/yamlab-hang-mug-on-tree-i15-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): YAMLab HangMugOnTree-v0 on the same frozen instance as the privileged task (`mug` = `Mug/mug_015` and `mug_tree` = `MugTree/mug_tree_015`). Task: Pick up the mug with the left arm, pass it to the right arm in the air, and hang it on the mug tree. Task: pick up the mug with the left arm, hand it over to the right arm, and hang it on the mug tree. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): YAMLab HangMugOnTree-v0 on the same frozen instance as the privileged task (`mug` = `Mug/mug_015` and `mug_tree` = `MugTree/mug_tree_015`). Task: Pick up the mug with the left arm, pass it to the right arm in the air, and hang it on the mug tree. Task: pick up the mug with the left arm, hand it over to the right arm, and hang it on the mug tree. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 keywords = ["robotics", "yamlab", "isaac-lab", "isaac-sim", "bimanual", "i2rt-yam", "standard-mode", "trajectory"]
 
 [metadata]
@@ -23,7 +23,7 @@ simulator = "yamlab"
 robot = "i2rt-yam-bimanual"
 family = "hang_mug_on_tree"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 3.0

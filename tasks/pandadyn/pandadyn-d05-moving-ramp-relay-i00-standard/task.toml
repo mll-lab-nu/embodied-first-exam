@@ -17,7 +17,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/pandadyn-d05-moving-ramp-relay-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): Panda Dynamic Scenes D05 Moving ramp relay (two Franka Pandas) on the same frozen instance as the privileged task. Task: Pass the ball from the left cup into the inlet half of the channel the right arm holds, and catch it again in the left cup after it flies out of the outlet end, which must be moving as the ball leaves. Do this twice, the second time with the channel held at a clearly different angle, then put the ball into the basin. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position chunks at 100 Hz) and reset; between calls the world is frozen. 3 resets (the benchmark's budget in both standard modes), only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): Panda Dynamic Scenes D05 Moving ramp relay (two Franka Pandas) on the same frozen instance as the privileged task. Task: Pass the ball from the left cup into the inlet half of the channel the right arm holds, and catch it again in the left cup after it flies out of the outlet end, which must be moving as the ball leaves. Do this twice, the second time with the channel held at a clearly different angle, then put the ball into the basin. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position chunks at 100 Hz) and reset; between calls the world is frozen. 3 resets (the benchmark's budget in both standard modes), only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
 keywords = ["robotics", "pandadyn", "maniskill", "sapien", "franka-panda", "bimanual", "dynamic-manipulation", "standard-mode", "trajectory"]
 
 [metadata]
@@ -26,7 +26,7 @@ simulator = "maniskill"
 robot = "franka-panda-bimanual"
 family = "d05_moving_ramp_relay"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 6.0

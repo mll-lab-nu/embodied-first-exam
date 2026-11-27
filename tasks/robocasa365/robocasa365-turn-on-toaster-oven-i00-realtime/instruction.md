@@ -22,7 +22,7 @@ does not stop while you think: one live episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, realtime mode. Its docstring is the full reference
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`, realtime mode. Its docstring is the full reference
 (`python -c "import rcb_client; help(rcb_client)"`).
 
 | call | endpoint | what it does |

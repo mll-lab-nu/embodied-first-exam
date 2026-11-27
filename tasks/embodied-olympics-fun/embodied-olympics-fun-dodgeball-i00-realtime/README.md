@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Fun |
-| Mode | realtime (`eai-standard/2.3`) |
+| Mode | realtime (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-fun-dodgeball-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `dodgeball` / seed 0 |
@@ -22,7 +22,7 @@ A ball thrown at you reaches you about 0.75 s after it leaves the machine, aimed
 `solution/oracle_plan.py` plans the privileged twin's reference rows (`solution/rows.npz`) into the attempt at the control steps where they ran there (`submit(..., at=step)`; the first, at step 0, starts the clock); it uses no privileged information at run time. Reference: the G1 turns side-on and walks back and forth on the walking policy so that it is moving at each feed; five 14.2 m/s throws from turret-aimed machines all miss; 9 of 10 perturbations (feed times, speed, gap, aim height, machine distance) succeed, the machine at 2.8 m fails.
 
 ## Verification
-The sim sidecar (`rcb_realtime.py` + `rcb_service.py`, the shared eai-standard/2.3 layer, with the standard twin's
+The sim sidecar (`rcb_realtime.py` + `rcb_service.py`, the realtime layer, with the standard twin's
 `server.py`) runs the attempt on its clock and its referee judges it live; every control step the simulator applied is
 recorded, and the live referee's call on the last attempt is the verdict (`final.json`: `graded_by` live, `replays` 0; no
 grading replay, owner 2026-10-17); the video is rendered from the recorded attempt afterwards.
@@ -49,7 +49,7 @@ Caps per container (PROTOCOL §6).
 | Category | throwing-catching-striking |
 | Rule book | WDBF Cloth Dodgeball Rules 2026 (World Dodgeball Federation): rule 1.1 (the playing court 18 m x 9 m), 1.3 (lines 5 cm wide, drawn inside the court; the centre line; the neutral zone lines 7 m from the back lines), 1.4 (fair territory, neutral zone), 2.1-2.3 (five balls of textured no-sting cloth over foam over a butyl bladder, 17.78 cm across, 110-125 mbar), 15.1 (a live player is out when hit by a live ball on any part of the body or clothing), 16.2 and 16.6 (a thrown ball is live from the throw until it touches a surface or a dead object that is not a ball), 26.1-26.5 (out of bounds: touching a boundary line, a surface outside them, the opponents' fair territory or the neutral zone line next to it: out); deviations: Rule 16 (the throwers): the five throws come from five two-wheel ball machines (the shared machine block, one ball each) standing in the opponents' fair territory 3.0 m beyond the centre line, their exits 1.2 m high, each on a turret (a yaw and a pitch joint driven by torque-limited servos, 20.0 and 30.0 N m) whose controller points it, until its feed, at where you are now: your pelvis, at a height of 0.8 m, with the elevation that the ball's drag needs for that distance; it does not lead a moving target. Each throws at 14.0 m/s with no spin, the first fed at 2.0 s and the others 2.5 s apart: an opposing team cannot be simulated. · Rules 20-22 (blocks and catches): you hold no ball, so you cannot block, and the robot cannot catch: any contact of a live ball with you is a hit (rule 15.1 counts every part, the head too). · Rule 2: the rules give no mass for the ball; it is 0.13 kg here (an estimate from its construction), its bounce, drag and stiffness are estimates from its pressure and build (said in the module). · The match is reduced to one player surviving five throws (rule 9: sets, players, the opening rush and the shot clock of rule 18 do not apply); you must stay on your feet, which the rules do not require. |
 | Stages | dodge 1 → dodge 2 → dodge 3 → dodge 4 → dodge 5 |
-| Service | `environment/sim/rcb_realtime.py` (the shared realtime layer, eai-standard/2.3) with the standard twin's `server.py` on `rcb_service.py`, `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's); EGL rendering on the GPU |
+| Service | `environment/sim/rcb_realtime.py` (the shared realtime layer, eai-standard/3.0) with the standard twin's `server.py` on `rcb_service.py`, `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's); EGL rendering on the GPU |
 | Slowdown | S = 1 (`RCB_SLOWDOWN`'s default): RTF 1.22 with the clock flat out (physics only, the start command held, 4 attempts) on the slowest evaluation host kind (AMD EPYC 7763, one thread; estimated from Xeon Gold 6338 measurements); S = 1 in every family: Embodied Olympics runs the venue in real time (PROTOCOL §2's default would slow these hosts down; a slower host may fall behind, which the clock's record reports) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 1550 control steps (15.5 s at 100 Hz); 5 resets, the last attempt graded |

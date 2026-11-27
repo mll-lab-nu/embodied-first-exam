@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | BiGym 2.0 |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `bigym2-drawer-top-open-i00-privileged` |
 | Simulator / robot | `bigym2` / `unitree-g1-dex1` |
 | Family / instance | `drawer-top-open` / seed 0 (allowed seeds: [0, 620100, 620101]; PROTOCOL §2) |
@@ -45,6 +45,6 @@ Caps per container (PROTOCOL §6).
 ## Details
 | | |
 |---|---|
-| Service | `environment/sim/server.py` (the BiGym 2.0 adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_bigym2.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the BiGym 2.0 adapter) on `rcb_service.py` (eai-standard/3.0), `rcb_bigym2.py`, `instance.json` (= the privileged twin's) |
 | Observations | three onboard RGB cameras (`RCB_IMAGE_HW`, default 84 px square, as upstream renders them, 60° field of view); upstream's low-dimensional observation (joints, grippers, tracked pelvis pose) |
 | Horizon | 1350 control steps (27 s at 50 Hz) |

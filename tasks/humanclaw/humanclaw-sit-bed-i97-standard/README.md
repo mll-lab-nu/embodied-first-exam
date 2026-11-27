@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | HumanCLAW |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `humanclaw-sit-bed-i97-privileged` |
 | Simulator / robot | `humanclaw` / `smplx-human` |
 | Family / instance | `sit-bed` / seed 0 |

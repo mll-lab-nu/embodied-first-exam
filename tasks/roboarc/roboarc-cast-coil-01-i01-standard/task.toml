@@ -20,7 +20,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/roboarc-cast-coil-01-i01-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboARC cast_coil on the same frozen instance as the privileged task. Fit the gold and silver pieces together into a cube with flush outer faces, resting on the table. Then let go of them and move both arms clear of them. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): RoboARC cast_coil on the same frozen instance as the privileged task. Fit the gold and silver pieces together into a cube with flush outer faces, resting on the table. Then let go of them and move both arms clear of them. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 keywords = ["robotics", "roboarc", "mujoco", "aloha", "standard-mode", "trajectory", "cast_coil"]
 
 [metadata]
@@ -30,7 +30,7 @@ robot = "aloha-2"
 family = "cast_coil"
 difficulty = "very_easy"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.4"
+protocol = "eai-standard/3.0"
 oracle = "full"
 grasp = "assisted (the contact_weld_v1 grasp regions on coil_gold, coil_silver)"
 success_rule = "task-native success (goal_complete True; frozen parameters; terminal revision release_settling_v2_grasp_contact_2mm)"

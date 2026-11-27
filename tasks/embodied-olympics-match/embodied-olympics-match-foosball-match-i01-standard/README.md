@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | Embodied Olympics - Match |
-| Mode | standard (`eai-standard/2.1+match/1.0`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodied-olympics-match-foosball-match-i01-privileged` |
 | Simulator / robot | `mujoco` / `foosball-rods` |
 | Family / instance | `foosball_match` / seed 7 (allowed seeds: [7, 303, 313]; PROTOCOL §2) |
@@ -50,4 +50,4 @@ Source: Embodied Olympics task `foosball-match-wallclock-program-standard`, revi
 opponent, the observation, the review between points and the grader are ours, unchanged; only the seat is
 unmetered (Harbor records the model's usage) and the instance is frozen.
 
-Standard twin of `embodied-olympics-match-foosball-match-i01-realtime`: the same export, the world in lockstep (`environment/sim/core/lockstep.py`; `eai-standard/2.1+match/1.0` in tasks/embodied-olympics-match/README.md).
+Standard twin of `embodied-olympics-match-foosball-match-i01-realtime`: the same export, the world in lockstep (`environment/sim/core/lockstep.py`; `eai-standard/3.0` in tasks/embodied-olympics-match/README.md).

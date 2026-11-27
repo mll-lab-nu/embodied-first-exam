@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/autobio-thermal-mixer-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): AutoBio thermal_mixer (Operate thermal mixer panel) on the same frozen instance as autobio-thermal-mixer-i00-privileged: Set the thermal mixer to time 30 s, temperature 33 °C, mixing speed 600 rpm, with the buttons on its front panel. The agent only gets a client: cameras (RGB, optional depth, calibration), the robot's proprioception, joint position chunks, arm kinematics; one episode, no reset, no object or instrument state; the sim service records the episode and grades the live episode (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): AutoBio thermal_mixer (Operate thermal mixer panel) on the same frozen instance as autobio-thermal-mixer-i00-privileged: Set the thermal mixer to time 30 s, temperature 33 °C, mixing speed 600 rpm, with the buttons on its front panel. The agent only gets a client: cameras (RGB, optional depth, calibration), the robot's proprioception, joint position chunks, arm kinematics; one episode, no reset, no object or instrument state; the sim service records the episode and grades the live episode (no grading replay)."
 keywords = ["robotics", "autobio", "mujoco", "laboratory", "biology", "ur5e-robotiq-2f85", "code-as-policy", "trajectory", "thermal_mixer", "standard-mode"]
 
 [metadata]
@@ -22,7 +22,7 @@ simulator = "autobio"             # AutoBio @ 0850421 on MuJoCo 3.3.0 (CPU)
 robot = "ur5e-robotiq-2f85"
 family = "thermal_mixer"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 oracle = "full"
 difficulty = "hard"              # AutoBio's own level for the task
 success_rule = "final"

@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 """The conventions of a task directory (docs/protocol/README.md), applied in place and idempotently.
 
-A task's author ends with `normalize(task_dir)`, so a re-rendered task equals the committed one. It also rewrites a task
-written to the fields the protocol's v2.1 text first named (`[metadata] network`, `mode`, `reset_budget`, `slowdown`,
-`[metadata.seeds] default`, `[metadata.resources]`, the `## Resource limits` and `## Compute resources` sections) into
-the current form; renaming directories is the caller's job.
+A task's author ends with `normalize(task_dir)`, so a re-rendered task equals the committed one; renaming directories
+is the caller's job.
 
     python3 scripts/task_conventions.py tasks/<benchmark>/<task> [...]     # normalize these tasks
     python3 scripts/task_conventions.py --check tasks/<benchmark>/<task>   # exit 1 if normalizing would change anything
@@ -12,10 +10,7 @@ the current form; renaming directories is the caller's job.
     python3 scripts/task_conventions.py task-dir <task> ...    # where a task dir lives: tasks/<benchmark folder>/<task>
 
 What it does:
-- `task.toml`: no copies of what another source says (the mode, the reset budget, the slowdown S, the network: below),
-  `oracle` (+ `oracle_evidence`) for benchmarks whose oracle level is known from their files.
-- the words of the protocol (`eai-standard/2.x`, "standard mode", the documents under docs/protocol/) in the task's
-  text files, also in files copied from an image source that still spells them otherwise (TEXT_REPLACEMENTS).
+- `task.toml`: `oracle` (+ `oracle_evidence`) for benchmarks whose oracle level is known from their files.
 - `tests/test.sh` clears `/logs/verifier` first.
 - no `results/` directory (results are published on the results site, not in the repository).
 - the resource caps (docs/protocol/README.md §6), every one an upper bound for one container, from the task's rule in
@@ -67,20 +62,9 @@ def _load_efe_mcp_inject():
 
 
 efe_mcp_inject = _load_efe_mcp_inject()   # the robot's MCP tools in every standard and realtime task
+service_layer = efe_mcp_inject.service_layer   # a task's service layer: operations | shared | realtime | sidecar
 
 CLEAR_LOGS = "rm -rf /logs/verifier/*"
-TEXT_SUFFIXES = {".md", ".toml", ".py", ".sh", ".yaml", ".yml", ".txt", ""}
-TEXT_REPLACEMENTS = [  # (old, new), applied to task text files in order (a task's copy of an image source spelled otherwise)
-    ("unlimited mode", "privileged mode"), ("Unlimited mode", "Privileged mode"), ("unlimited-mode", "privileged-mode"),
-    ("rcb-limited/2.1", "eai-standard/2.1"), ("rcb-limited/2.0", "eai-standard/2.1"), ("rcb-limited/1.0", "eai-standard/2.1"),
-    ("LIMITED MODE", "STANDARD MODE"), ("Limited-mode twin", "Standard-mode twin"), ("limited-mode twin", "standard-mode twin"),
-    ("Limited-mode", "Standard-mode"), ("limited-mode", "standard-mode"), ("Limited mode", "Standard mode"),
-    ("limited mode", "standard mode"), ("limited twin", "standard twin"), ("unlimited task", "privileged task"),
-    ("unlimited oracle", "privileged-mode oracle"), ("unlimited expert", "privileged-mode expert"),
-    *((f"docs/{old}.md", f"docs/protocol/{new}") for old, new in   # the protocol documents' folder
-      (("PROTOCOL", "README.md"), ("STANDARD_MODE", "standard_mode.md"), ("RUNNING", "running.md"), ("LEAKAGE", "leakage.md"),
-       ("rcb/PROTOCOL", "README.md"), ("rcb/STANDARD_MODE_2_2", "standard_mode.md"))),   # (rcb/: RoboARC's released texts)
-]
 # The benchmarks, one row each: (task directory name prefix, label, folder). The folder is tasks/<folder>/ and the
 # benchmark's embodied_first_exam/benchmarks/<folder>/; BENCHMARKS and BENCHMARK_DIRS below are views of this table, and
 # ci_checks/ci_scope.py --check holds its UNITS / FILES_IMAGE to it. A new benchmark adds one row here.
@@ -160,11 +144,11 @@ MODE_REGISTRY = {
     "privileged": {"short": "P", "section": "§3", "sidecar": False, "limit_scope": "trial", "protocols": (),
                    "twin": None, "same_cutoff_as": None},
     "standard": {"short": "S", "section": "§3", "sidecar": True, "limit_scope": "agent",
-                 "protocols": ("eai-standard/2.1", "eai-standard/2.2", "eai-standard/2.4"),
+                 "protocols": ("eai-standard/3.0",),
                  "twin": "privileged", "same_cutoff_as": "privileged",   # one cutoff for both modes (Appendix H.7)
                  "agent_end": True},   # v3.0: the agent ends the episode (§3 "Agent-ended episodes", H.3)
     "realtime": {"short": "RT", "section": "§3", "sidecar": True, "limit_scope": "agent",
-                          "protocols": ("eai-standard/2.3",), "twin": "privileged", "same_cutoff_as": None,
+                          "protocols": ("eai-standard/3.0",), "twin": "privileged", "same_cutoff_as": None,
                           "agent_end": True},
 }
 MODES = tuple(MODE_REGISTRY)
@@ -226,13 +210,6 @@ BENCHMARK_DIRS = {label: folder for _, label, folder in BENCHMARK_TABLE}
 
 
 # ---------------------------------------------------------------------------------------------------------------------
-def replace_words(s: str) -> str:
-    """TEXT_REPLACEMENTS, each only where it does not continue a longer word (e.g. not inside "unlimited mode")."""
-    for a, b in TEXT_REPLACEMENTS:
-        s = re.sub(r"(?<![A-Za-z])" + re.escape(a), lambda _m, b=b: b, s)
-    return s
-
-
 # PROTOCOL §1, §3: each mode of MODE_REGISTRY is the whole suffix of its task directories. A mode is recognised by
 # its complete suffix only, longest first: `-realtime` is never `-standard` (it does not end in it).
 MODES_LONGEST_FIRST = tuple(sorted(MODES, key=len, reverse=True))
@@ -440,15 +417,6 @@ def normalize_toml(task: Path) -> None:
     p = task / "task.toml"
     s = p.read_text()
     s = re.sub(r'^name = "embodied-first-exam/[^"]*"', f'name = "embodied-first-exam/{task.name}"', s, count=1, flags=re.M)
-    # Copies of what another source says are not kept in [metadata]: the mode is the directory's suffix (mode_of), the
-    # reset budget and the slowdown S the sim service's RCB_RESET_BUDGET and RCB_SLOWDOWN defaults (reset_budget_of,
-    # slowdown_of), the agent's egress [agent] network_mode (network_of: an open task's `network = "open"` becomes
-    # `network_mode = "public"` there)
-    open_net = re.search(r'(?m)^network = "open"', metadata_body(s)) is not None
-    s = metadata_sub(s, r'(?m)^(mode|reset_budget|slowdown) = .*\n', "")
-    s = metadata_sub(s, r'(?m)^network = "(open|allowlist)".*\n', "")
-    if open_net:
-        s = set_open_egress(s, task.name)
     lvl = oracle_level(task)
     meta = tomllib.loads(s).get("metadata", {})
     if lvl and "oracle" not in meta:
@@ -491,28 +459,6 @@ def metadata_insert(s: str, line: str, after: str = "") -> str:
         at = m.start() if m else len(body.rstrip("\n")) + 1
     body = body[:at] + line + body[at:]
     return s[:a] + body + s[b:]
-
-
-OPEN_EGRESS_LINE = 'network_mode = "public"'
-OPEN_EGRESS_COMMENT = "# open egress, the task author's choice (docs/protocol/README.md Appendix H.6)"
-
-
-def set_open_egress(s: str, task_name: str = "") -> str:
-    """An open task's [agent] egress: `network_mode = "public"` (Harbor's own field; network_of reads it), replacing
-    the table's network policy lines (an `allowed_hosts` has no meaning there)."""
-    m = re.search(r"(?m)^\[agent\]\n", s)
-    if not m:
-        raise RuntimeError(f"{task_name}: task.toml has no [agent] table")
-    h = re.search(r"(?m)^\[", s[m.end():])
-    b = m.end() + h.start() if h else len(s)
-    body = re.sub(r"(?m)^(network_mode|allowed_hosts)\s*=.*\n", "", s[m.end():b])
-    body = body.replace("Egress: open (Harbor's default), as `[metadata] network` declares.",
-                        'Egress: open, `network_mode = "public"` below (the author\'s choice).')
-    rest = body.rstrip("\n")
-    body = (rest + "\n" if rest else "") + OPEN_EGRESS_LINE + " " * 8 + OPEN_EGRESS_COMMENT + "\n" + body[len(rest):].lstrip("\n")
-    if not body.endswith("\n\n") and h:
-        body += "\n"
-    return s[:m.end()] + body + s[b:]
 
 
 def _rules() -> list[dict]:
@@ -627,11 +573,9 @@ def set_table_keys(s: str, table: str, values: dict, task_name: str = "") -> str
 
 def normalize_resources(task: Path) -> None:
     """The caps of main where Harbor reads them, `[environment]` (`cpus`, `memory_mb`, `storage_mb`, `gpu_types`), from
-    the task's rule (PROTOCOL §6; the other services' and main's processes: inject.py, in the compose file). Removes the
-    `[metadata.resources]` tables (resources are caps per container only: no minimums, soft limits or copies)."""
+    the task's rule (PROTOCOL §6; the other services' and main's processes: inject.py, in the compose file)."""
     p = task / "task.toml"
     s = p.read_text()
-    s = re.sub(r"(?ms)^\[metadata\.resources(?:\.limits|\.caps)?\]\n.*?(?=^\[|\Z)", "", s)
     r = rule_for(task)
     if r is not None:
         main = r["services"]["main"]
@@ -801,7 +745,7 @@ def no_twin_reason(task: Path) -> str | None:
 # finish line in `## Robot Interface` (ROBOT_FINISH) and the Finish (and Steps) lines of `## Limits` (render_limits).
 AGENT_END_RE = re.compile(r'^\s*RCB_AGENT_END:\s*"?1"?\s*(?:#.*)?$', re.M)
 STEP_LIMIT_RE = re.compile(r'^\s*RCB_STEP_LIMIT:\s*"?([0-9]+)"?\s*(?:#.*)?$', re.M)
-# a service's own technical episode cap set in its environment (the 2.1 adapters server_mw / server_casa / server_mj:
+# a service's own technical episode cap set in its environment (the benchmark-own adapters server_mw / server_casa / server_mj:
 # `/spec.max_control_steps`); without RCB_STEP_LIMIT it ends the episode the same way (standard_mode.md "Agent-ended
 # episodes"), so the instruction's Limits states it in a Steps line
 MAX_CONTROL_STEPS_RE = re.compile(r'^\s*RCB_MAX_CONTROL_STEPS:\s*"?([0-9]+)"?\s*(?:#.*)?$', re.M)
@@ -1423,40 +1367,6 @@ def normalize_instruction(task: Path) -> None:
     write_if_changed(p, body.rstrip() + "\n\n" + render_limits(task, s))
 
 
-def _shared_sources() -> set[bytes]:
-    """Contents of the files tasks copy unchanged from embodied_first_exam/standard/ (the eai-standard/2.2 layer, and the 2.4
-    layer in operations/): their copies must stay byte-identical to the source (check-tooling-identity.sh), so normalize never
-    rewrites them."""
-    src = Path(__file__).resolve().parents[1] / "embodied_first_exam/standard"
-    shared = {p.read_bytes() for p in src.rglob("*") if p.is_file() and "__pycache__" not in p.parts} if src.is_dir() else set()
-    return shared | rcb_monitor_inject.generated_sources()     # the resource monitor's copies (images/monitor/rcb_monitor/)
-
-
-def _is_layer_copy(f: Path) -> bool:
-    """A copy of some version of embodied_first_exam/standard/rcb_limited.py or operations/rcb_limited.py (its PROTOCOL line and COMPAT
-    list): a benchmark's tasks keep the version they were rendered with until they are rendered again."""
-    t = read_text(f) or ""
-    return bool(re.search(r'(?m)^PROTOCOL = "eai-standard/2\.\d"', t)) and bool(re.search(r"(?m)^COMPAT = \[", t))
-
-
-def normalize_text_files(task: Path) -> None:
-    shared = _shared_sources()
-    for f in sorted(task.rglob("*")):
-        if not f.is_file() or f.suffix not in TEXT_SUFFIXES or f.name in ("task.toml", "README.md") or f.stat().st_size > 2_000_000:
-            continue
-        if f.read_bytes() in shared:
-            continue
-        if f.name == "rcb_limited.py" and _is_layer_copy(f):
-            continue                    # an earlier version of the shared layer (a benchmark's tasks rendered with it):
-                                        # never rewritten either (its COMPAT list names rcb-limited/2.x on purpose)
-        s = read_text(f)
-        if s is None:
-            continue
-        t = s
-        t = replace_words(t)
-        write_if_changed(f, t)
-
-
 # A base image a task builds itself when it cannot pull it: the task's Dockerfile (environment/, tests/, or a sidecar's
 # under environment/) starts with the image's recipe between `# >>> images/<name>/Dockerfile` and
 # `# <<< images/<name>/Dockerfile` (its first FROM names the stage, `... AS <name>-base`, and later stages are
@@ -1516,7 +1426,7 @@ def parse_readme(s: str) -> tuple[str, list[tuple[str, str]], list[tuple[str, st
     out: list[tuple[str, str]] = []
     intro = ""
     for title, body in sections:
-        if title in ("Compute resources", RESOURCES_HEADING[3:]):   # rendered (readme_resources), never carried over
+        if title == RESOURCES_HEADING[3:]:   # rendered (readme_resources), never carried over
             continue
         text = "\n".join(body)
         body_rows, rest = [], []
@@ -1651,14 +1561,13 @@ def render_readme(task: Path) -> str:
 
 # ---------------------------------------------------------------------------------------------------------------------
 def seeds_of(md: dict) -> dict:
-    """The task's seeds (PROTOCOL §2): `default` = `[metadata] instance_seed` (the one field that names it; normalize
-    moves a `[metadata.seeds] default` there), else 0 (then 0 names the task's one frozen instance); from
+    """The task's seeds (PROTOCOL §2): `default` = `[metadata] instance_seed` (the one field that names it), else 0 (then 0 names the task's one frozen instance); from
     `[metadata.seeds]`, written only where they are not the defaults: `allowed` = [default] unless given (a list, a range
     `{from, to}` with both ends included, or "any"); `oracle` = the seeds the reference solution is for: the task's (else
     [default]) for an `oracle` of "full" or "partial", [] for "none"; `build` = "frozen" (every allowed seed a committed
     instance) unless the task says "runtime" (the task builds a seed's instance itself)."""
     given = md.get("seeds") if isinstance(md.get("seeds"), dict) else {}
-    default = int(md.get("instance_seed", given.get("default", 0)))
+    default = int(md.get("instance_seed", 0))
     allowed = given.get("allowed", [default])
     if isinstance(allowed, list):
         allowed = [int(x) for x in allowed]
@@ -1758,7 +1667,7 @@ def normalize_dynamics(task: Path) -> None:
 def realtime_of(task: Path) -> tuple[float, int | None] | None:
     """A realtime task's (slowdown S, reset budget) as its sim service starts by default: the `RCB_SLOWDOWN`
     and `RCB_RESET_BUDGET` defaults in environment/docker-compose.yaml (PROTOCOL §2). None: not a realtime task,
-    or a service without `RCB_SLOWDOWN` (ci_checks/check-realtime.py fails a 2.3 one)."""
+    or a service without `RCB_SLOWDOWN` (ci_checks/check-realtime.py fails one on the realtime layer)."""
     if mode_of(task) != "realtime":
         return None
     c = read_text(task / "environment/docker-compose.yaml") or ""
@@ -2063,11 +1972,7 @@ def readme_quick_start(tasks_dir: Path | None = None) -> str:
 TAXONOMY_FILE = Path(__file__).resolve().parents[1] / "docs/TAXONOMY.md"
 TAXONOMY_PROTOCOL_ROW = re.compile(r"(?m)^\| `protocol` \| .* \|$")
 # what a protocol value adds to its row in docs/TAXONOMY.md (the benchmarks that serve it come from the tasks)
-PROTOCOL_NOTES = {"eai-standard/2.4": "the operations capability",
-                  "eai-policy/1.0": "a benchmark's own runtime", "eai-policy/1.1": "a benchmark's own runtime",
-                  "eai-standard-turn/1.0": "a benchmark's own runtime", "eai-standard-realtime/1.0": "a benchmark's own runtime",
-                  "eai-standard/2.1+match/1.0": "the match extension, standard_mode.md Part 5",
-                  "eai-standard/2.3+match/1.0": "the match extension, standard_mode.md Part 5"}
+PROTOCOL_NOTES = {"eai-policy/1.0": "a benchmark's own runtime", "eai-policy/1.1": "a benchmark's own runtime"}
 
 
 def taxonomy_protocol_row(tasks_dir: Path | None = None) -> str:
@@ -2091,9 +1996,10 @@ def taxonomy_protocol_row(tasks_dir: Path | None = None) -> str:
             vals.append(f"`{proto}` ({(note + ': ') if note else ''}{', '.join(names)})")
         parts.append(f"{m[0].upper() + m[1:]}: " + " · ".join(vals))
     return ("| `protocol` | standard and realtime modes only; the benchmarks that serve each value (generated: "
-            "`python3 scripts/task_conventions.py taxonomy --write`). " + ". ".join(parts) + ". The `eai-standard` "
-            "versions are specified in [protocol/standard_mode.md](protocol/standard_mode.md); a benchmark's own runtime "
-            "names its protocol (PROTOCOL §3) |")
+            "`python3 scripts/task_conventions.py taxonomy --write`). " + ". ".join(parts) + ". `eai-standard/3.0` is "
+            "specified in [protocol/standard_mode.md](protocol/standard_mode.md) (a service's capabilities, such as "
+            "operations, realtime or the match extension, are in its `/spec`); a benchmark's own runtime names its "
+            "protocol (PROTOCOL §3) |")
 
 
 def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) -> list[str]:
@@ -2190,7 +2096,6 @@ def normalize(task: Path) -> None:
     efe_mcp_inject.apply(task, efe_mcp_manifest(task))   # the robot's MCP tools: server files, Dockerfile, task.toml
     caps = rule_caps(task)
     rcb_monitor_inject.write_compose(task, caps)   # the caps first: the instruction and the README show them
-    normalize_text_files(task)
     normalize_base_stages(task)
     normalize_instruction(task)
     normalize_test_sh(task)

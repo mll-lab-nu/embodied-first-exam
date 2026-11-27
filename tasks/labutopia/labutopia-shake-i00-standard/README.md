@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | LabUtopia |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `labutopia-shake-i00-privileged` |
 | Simulator / robot | `labutopia` / `franka-panda` |
 | Family / instance | `shake` / seed 0 |
@@ -13,7 +13,7 @@
 
 ## Task
 LabUtopia's `shake` (Shake (LabUtopia's level-2 ShakeBeaker is the same task)) on the same frozen instance as `labutopia-shake-i00-privileged`: Pick up the beaker and, holding it in the air, shake it sideways five times, each shake moving it a thumb's length or more; then hold it still for a second.
-On the bench in front of the arm: one small glass beaker, about 6.5 cm across and 10 cm tall. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
+On the bench in front of the arm: one small glass beaker, about 6.5 cm across and 10 cm tall. Standard mode (eai-standard/3.0): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty
 Same instance and success rule as `labutopia-shake-i00-privileged` (LabUtopia's level 1). A small beaker has to survive five quick moves of 5 cm in the grip and then be held within 1 cm for a second: the grasp has to be firm enough for the accelerations. In standard mode the agent loses resets, the simulator and the state of the objects: it sees camera images (glassware is nearly transparent in them and absent from the depth maps) and the robot's proprioception, acts in joint target chunks, and gets one episode, so it has to find the things it handles in the images and recover from its own mistakes without starting over.

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | EmbodiedSWE |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodiedswe-cutting-slice-franka-osc-i00-privileged` |
 | Simulator / robot | `embodiedswe` / `franka-panda` |
 | Family / instance | `cutting.slice.franka.osc` / seed 0 |

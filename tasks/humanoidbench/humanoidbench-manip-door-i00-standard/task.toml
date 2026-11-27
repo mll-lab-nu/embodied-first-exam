@@ -18,7 +18,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/humanoidbench-manip-door-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): HumanoidBench door on the same frozen instance as humanoidbench-manip-door-i00-privileged. Task: Open the door by pressing the handle and pulling it towards you, then walk through the doorway. The agent only gets a client: /observe, /submit and /reset (head-camera RGB, joint proprioception, a pelvis IMU, a fixed room camera; joint-position chunks). Up to 50 resets (each a new episode from the frozen start), no privileged state, no reward; the sim service records the episodes and grades the last one as it ran (the live episode; nothing is replayed)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): HumanoidBench door on the same frozen instance as humanoidbench-manip-door-i00-privileged. Task: Open the door by pressing the handle and pulling it towards you, then walk through the doorway. The agent only gets a client: /observe, /submit and /reset (head-camera RGB, joint proprioception, a pelvis IMU, a fixed room camera; joint-position chunks). Up to 50 resets (each a new episode from the frozen start), no privileged state, no reward; the sim service records the episodes and grades the last one as it ran (the live episode; nothing is replayed)."
 keywords = ["robotics", "humanoidbench", "mujoco", "h1", "manipulation", "standard-mode", "trajectory", "door"]
 
 [metadata]
@@ -27,7 +27,7 @@ simulator = "humanoidbench"
 robot = "unitree-h1"
 family = "door"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+protocol = "eai-standard/3.0"
 instance_seed = 0
 expert_time_estimate_hours = 6.0
 oracle = "none"

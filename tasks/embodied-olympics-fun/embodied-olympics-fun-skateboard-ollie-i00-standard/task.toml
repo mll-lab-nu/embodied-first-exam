@@ -18,7 +18,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-skateboard-ollie-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): Embodied Olympics skateboard-ollie on the same frozen instance as embodied-olympics-fun-skateboard-ollie-i00-privileged. Do an ollie: pop the skateboard into the air with your feet, land on it with both feet and all four wheels down, and stand still on it. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 5 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): Embodied Olympics skateboard-ollie on the same frozen instance as embodied-olympics-fun-skateboard-ollie-i00-privileged. Do an ollie: pop the skateboard into the air with your feet, land on it with both feet and all four wheels down, and stand still on it. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 5 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "standard-mode", "trajectory", "skateboard-ollie"]
 
 [metadata]
@@ -28,7 +28,7 @@ robot = "unitree-g1"
 family = "skateboard_ollie"
 category = "parkour-apparatus-balance"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+protocol = "eai-standard/3.0"
 instance_seed = 0
 expert_time_estimate_hours = 82.0
 oracle = "none"

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | EmbodiedSWE |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `embodiedswe-assembly-pc-motherboard-franka-osc-i00-privileged` |
 | Simulator / robot | `embodiedswe` / `franka-panda` |
 | Family / instance | `assembly.pc_motherboard.franka.osc` / seed 0 |

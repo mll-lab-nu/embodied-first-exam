@@ -1,4 +1,4 @@
-"""Standard-mode verifier (eai-standard/2.4): reads what the sim service (which the agent could not touch) wrote:
+"""Standard-mode verifier (eai-standard/3.0): reads what the sim service (which the agent could not touch) wrote:
 /data/final.json (the live episode's verdict, finalized by environment/sim/finalize.sh, and the crash-recovery fields),
 /data/startup_binding.json (the frozen instance the live episode was built from), /data/trajectory.npz (the deliverable),
 /data/replay.mp4 (the video). Adapted from Embodied First Exam's RoboWits standard grader.

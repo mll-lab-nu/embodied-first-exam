@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | RoboWits |
-| Mode | standard (`eai-standard/2.2`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `robowits-stack-cubes-i00-privileged` |
 | Simulator / robot | `robowits` / `marvin-bimanual` |
 | Family / instance | `stack_cubes` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
@@ -13,7 +13,7 @@
 
 ## Task
 Set the two grey cubes side by side, touching, and put the red cube on top of them, right above the green dot. The same frozen instance as
-`robowits-stack-cubes-i00-privileged`, as a robot service (`eai-standard/2.2`): the simulator runs in the `sim`
+`robowits-stack-cubes-i00-privileged`, as a robot service (`eai-standard/3.0`): the simulator runs in the `sim`
 sidecar, which the agent cannot open; the agent gets one episode, no reset and no privileged state, only the client
 (calibrated RGB-D cameras, proprioception, `joint_position` / `ee_pose` chunks, stateless kinematics). The sidecar
 judges the live episode, records it as the trajectory and renders the video from it; the success criterion as graded
@@ -57,7 +57,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 | | |
 |---|---|
-| Protocol | `eai-standard/2.2` (docs/protocol/standard_mode.md): `submit` chunks of `joint_position` (16, streamed at the 30 Hz control rate with the agent's `dt`) or `ee_pose` (16, IK per row); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); stateless `kinematics`; binary RCB1 responses |
+| Protocol | `eai-standard/3.0` (docs/protocol/standard_mode.md): `submit` chunks of `joint_position` (16, streamed at the 30 Hz control rate with the agent's `dt`) or `ee_pose` (16, IK per row); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); stateless `kinematics`; binary RCB1 responses |
 | Crash recovery | `restart: on-failure:6`; the service replays its journal and resumes the same episode (resume class `exact`, docs/protocol/standard_mode.md §13) |
 | Agent and verifier image | `docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f` with the shared pins (`environment/client-requirements.txt`) |
 | Instance | the privileged twin's frozen instance (`environment/sim/instance.json`): entry 0 of RoboWits' `eval_dataset_50/14.json` |

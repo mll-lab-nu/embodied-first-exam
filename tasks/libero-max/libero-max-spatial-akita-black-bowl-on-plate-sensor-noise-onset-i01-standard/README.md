@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | LIBERO-MAX |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `libero-max-spatial-akita-black-bowl-on-plate-sensor-noise-onset-i01-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda` |
 | Family / instance | `libero-max/libero_spatial/sensor_noise_onset` / seed 195 (allowed seeds: [195, 1, 2]; PROTOCOL §2) |

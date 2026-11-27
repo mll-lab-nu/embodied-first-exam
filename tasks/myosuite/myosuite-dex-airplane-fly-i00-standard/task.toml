@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/myosuite-dex-airplane-fly-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite dex_airplane_fly (MyoHand, 39 muscles) on the same frozen instance as myosuite-dex-airplane-fly-i00-privileged: Move the toy airplane along MyoDex's recorded fly (lift it and fly it through the air) motion: a reference of the object's pose over 99 control steps (1.98 s), from GRAB motion capture (TCDM / MyoDex). Task: Pick up the toy airplane and fly it through the air, following the recorded reference motion. The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): MyoSuite dex_airplane_fly (MyoHand, 39 muscles) on the same frozen instance as myosuite-dex-airplane-fly-i00-privileged: Move the toy airplane along MyoDex's recorded fly (lift it and fly it through the air) motion: a reference of the object's pose over 99 control steps (1.98 s), from GRAB motion capture (TCDM / MyoDex). Task: Pick up the toy airplane and fly it through the air, following the recorded reference motion. The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myohand", "code-as-policy", "trajectory", "dex_airplane_fly", "standard-mode"]
 
 [metadata]
@@ -22,7 +22,7 @@ simulator = "myosuite"            # MyoSuite 2.12.2 on MuJoCo 3.6.0 (CPU)
 robot = "myohand"
 family = "dex_airplane_fly"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 oracle = "none"
 oracle_evidence = "no positive example yet (two model attempts failed: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06) and Codex + GPT-6 Luna, effort high, run `codex-gpt6_luna-high`); the task is marked unvalidated (PROTOCOL §2 `validated`); human review in PR #65"
 instance_seed = 0                 # MyoHandAirplaneFly-v0: seed(0), then reset(seed=0)

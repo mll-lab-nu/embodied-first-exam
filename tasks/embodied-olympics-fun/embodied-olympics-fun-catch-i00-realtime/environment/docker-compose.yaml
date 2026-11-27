@@ -1,5 +1,5 @@
 # Realtime mode (PROTOCOL §3): the simulator runs in the `sim` sidecar (the agent cannot open it), on its own clock
-# once an attempt starts (sim/rcb_realtime.py, the shared eai-standard/2.3 layer, with the standard twin's sim/server.py);
+# once an attempt starts (sim/rcb_realtime.py, the realtime layer, with the standard twin's sim/server.py);
 # the agent only reaches port 8000. No `expose`/`ports` on sim.
 # GPU on sim: the physics is MuJoCo on the CPU, but every image the agent asks for is rendered here, and on a clock that
 # does not stop a render is time the simulator cannot step: EGL on the GPU takes milliseconds a frame, OSMesa about 1.6 s

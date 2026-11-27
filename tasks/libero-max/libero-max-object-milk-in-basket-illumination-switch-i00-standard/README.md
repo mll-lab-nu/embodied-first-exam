@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Benchmark | LIBERO-MAX |
-| Mode | standard (`eai-standard/2.1`) |
+| Mode | standard (`eai-standard/3.0`) |
 | Twin | `libero-max-object-milk-in-basket-illumination-switch-i00-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda` |
 | Family / instance | `libero-max/libero_object/illumination_switch` / seed 195 (allowed seeds: [195, 0, 2]; PROTOCOL §2) |
