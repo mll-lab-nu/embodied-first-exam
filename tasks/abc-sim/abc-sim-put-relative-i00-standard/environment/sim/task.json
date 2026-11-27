@@ -1,5 +1,5 @@
 {
- "task_text": "Set the soap dispenser down a short way to the right of the boxed food, as the arms face the table. Success: the soap dispenser stands on the table a short way to the right of the boxed food as the arms face the table, in line with it rather than off to its front or back. It must hold for about a second after the episode ends, while the robot keeps your last command.",
+ "task_text": "Set the soap dispenser down a short way to the right of the boxed food, as the arms face the table.",
  "default_cameras": [
   "top",
   "left",

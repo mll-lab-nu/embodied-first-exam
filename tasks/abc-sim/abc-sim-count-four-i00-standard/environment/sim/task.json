@@ -1,5 +1,5 @@
 {
- "task_text": "Put exactly four of the objects in the box. Success: the box holds exactly four objects, of any kind. It must hold for about a second after the episode ends, while the robot keeps your last command.",
+ "task_text": "Put exactly four of the objects in the box.",
  "default_cameras": [
   "top",
   "left",

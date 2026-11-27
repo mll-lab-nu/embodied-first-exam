@@ -1,5 +1,5 @@
 {
- "task_text": "Turn both mugs right side up and set them down. Success: both mugs stand right side up, set down rather than held up. It must hold for about a second after the episode ends, while the robot keeps your last command.",
+ "task_text": "Turn both mugs right side up and set them down.",
  "default_cameras": [
   "top",
   "left",

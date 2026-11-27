@@ -1,5 +1,5 @@
 {
- "task_text": "Pour the beads from the mug into the cup. Success: at least nine of the ten beads are in the cup, and the cup stands upright. It must hold for about a second after the episode ends, while the robot keeps your last command.",
+ "task_text": "Pour the beads from the mug into the cup.",
  "default_cameras": [
   "top",
   "left",

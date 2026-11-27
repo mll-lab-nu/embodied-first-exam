@@ -1,5 +1,5 @@
 {
- "task_text": "Find the measuring cup in the drawers and put it in the bin, then do the same with the dish brush. Success: the measuring cup has been put in the bin first, and then the dish brush. It must hold for about a second after the episode ends, while the robot keeps your last command.",
+ "task_text": "Find the measuring cup in the drawers and put it in the bin, then do the same with the dish brush.",
  "default_cameras": [
   "top",
   "left",

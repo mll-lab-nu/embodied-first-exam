@@ -1,5 +1,5 @@
 {
- "task_text": "Get all the paper scraps into the trash can. Success: all the paper scraps are in the trash can at the same time. It must hold for about a second after the episode ends, while the robot keeps your last command.",
+ "task_text": "Get all the paper scraps into the trash can.",
  "default_cameras": [
   "top",
   "left",

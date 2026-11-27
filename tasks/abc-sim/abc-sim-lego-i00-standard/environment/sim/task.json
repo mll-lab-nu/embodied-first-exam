@@ -1,5 +1,5 @@
 {
- "task_text": "Sort the LEGO blocks into the bins by colour. Success: every block is in the bin of its own colour, all at the same time. It must hold for about a second after the episode ends, while the robot keeps your last command.",
+ "task_text": "Sort the LEGO blocks into the bins by colour.",
  "default_cameras": [
   "top",
   "left",

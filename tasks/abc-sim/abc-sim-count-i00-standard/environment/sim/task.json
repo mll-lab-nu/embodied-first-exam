@@ -1,5 +1,5 @@
 {
- "task_text": "Put all the yellow triangular pieces in the box, and nothing else. Success: the box holds every yellow triangular piece from the table and nothing else. It must hold for about a second after the episode ends, while the robot keeps your last command.",
+ "task_text": "Put all the yellow triangular pieces in the box, and nothing else.",
  "default_cameras": [
   "top",
   "left",

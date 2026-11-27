@@ -1,5 +1,5 @@
 {
- "task_text": "Stand the plate on edge in the dish rack and let go of it. Success: the plate stands on edge in the rack, resting against it, and neither gripper touches it. It must hold for about a second after the episode ends, while the robot keeps your last command.",
+ "task_text": "Stand the plate on edge in the dish rack and let go of it.",
  "default_cameras": [
   "top",
   "left",

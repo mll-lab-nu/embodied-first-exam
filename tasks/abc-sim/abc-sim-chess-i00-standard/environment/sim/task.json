@@ -1,5 +1,5 @@
 {
- "task_text": "Put the black pieces that stand next to the board back on their empty starting squares, standing upright. Success: each of those pieces stands upright on an empty starting square of its own kind. It must hold for about a second after the episode ends, while the robot keeps your last command.",
+ "task_text": "Put the black pieces that stand next to the board back on their empty starting squares, standing upright.",
  "default_cameras": [
   "top",
   "left",

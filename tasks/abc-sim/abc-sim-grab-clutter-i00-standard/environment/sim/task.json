@@ -1,5 +1,5 @@
 {
- "task_text": "Find the ketchup among the things on the table and put it in the box. Success: the ketchup is in the box. It must hold for about a second after the episode ends, while the robot keeps your last command.",
+ "task_text": "Find the ketchup among the things on the table and put it in the box.",
  "default_cameras": [
   "top",
   "left",
