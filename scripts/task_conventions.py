@@ -1973,34 +1973,25 @@ def readme_quick_start(tasks_dir: Path | None = None) -> str:
 TAXONOMY_FILE = Path(__file__).resolve().parents[1] / "docs/TAXONOMY.md"
 TAXONOMY_PROTOCOL_ROW = re.compile(r"(?m)^\| `protocol` \| .* \|$")
 # what a protocol value adds to its row in docs/TAXONOMY.md (the benchmarks that serve it come from the tasks)
-PROTOCOL_NOTES = {"eai-policy/1.0": "a benchmark's own runtime", "eai-policy/1.1": "a benchmark's own runtime"}
 
 
 def taxonomy_protocol_row(tasks_dir: Path | None = None) -> str:
-    """docs/TAXONOMY.md's `protocol` row, from the tasks: per sidecar mode, each value of `[metadata] protocol` and the
-    benchmarks whose tasks declare it (BENCHMARK_TABLE order; "some tasks" where a benchmark's tasks of that mode
-    declare more than one)."""
-    use: dict = {}
+    """docs/TAXONOMY.md's `protocol` row, from the tasks: `eai-standard/3.0` for every standard and realtime task, and
+    each other value a benchmark's own runtime declares, with the benchmarks whose tasks declare it (BENCHMARK_TABLE
+    order)."""
+    other: dict = {}
     for t in iter_tasks(tasks_dir):
-        m = mode_of(t)
-        if m in SIDECAR_MODES:
-            use.setdefault(m, {}).setdefault(str(metadata_of(t).get("protocol", "")), set()).add(bench_of(t))
+        if mode_of(t) in SIDECAR_MODES:
+            proto = str(metadata_of(t).get("protocol", ""))
+            if proto != EAI_STANDARD:
+                other.setdefault(proto, set()).add(bench_of(t))
     order = {lab: i for i, (_, lab, _) in enumerate(BENCHMARK_TABLE)}
-    parts = []
-    for m in SIDECAR_MODES:
-        per = use.get(m, {})
-        vals = []
-        for proto in sorted(per, key=lambda p: (p.startswith("eai-standard/") is False, p)):
-            benches = sorted(per[proto], key=lambda b: order.get(b, len(order)))
-            names = [b + (" (some tasks)" if sum(b in bs for bs in per.values()) > 1 else "") for b in benches]
-            note = PROTOCOL_NOTES.get(proto)
-            vals.append(f"`{proto}` ({(note + ': ') if note else ''}{', '.join(names)})")
-        parts.append(f"{m[0].upper() + m[1:]}: " + " · ".join(vals))
-    return ("| `protocol` | standard and realtime modes only; the benchmarks that serve each value (generated: "
-            "`python3 scripts/task_conventions.py taxonomy --write`). " + ". ".join(parts) + ". `eai-standard/3.0` is "
-            "specified in [protocol/standard_mode.md](protocol/standard_mode.md) (a service's capabilities, such as "
-            "operations, realtime or the match extension, are in its `/spec`); a benchmark's own runtime names its "
-            "protocol (PROTOCOL §3) |")
+    own = ", ".join(f"`{p}` ({', '.join(sorted(b, key=lambda x: order.get(x, len(order))))})"
+                    for p, b in sorted(other.items()))
+    return (f"| `protocol` | standard and realtime modes only: `{EAI_STANDARD}`, specified in "
+            "[protocol/eai-standard.md](protocol/eai-standard.md). What a service offers beyond the base is in its "
+            "`/spec` capabilities." + (f" A benchmark's own runtime names its own protocol: {own}." if own else "")
+            + " (Generated: `python3 scripts/task_conventions.py taxonomy --write`.) |")
 
 
 def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) -> list[str]:
