@@ -36,7 +36,7 @@ _USR1 = {"pending": False}
 signal.signal(signal.SIGUSR1, lambda *_: _USR1.__setitem__("pending", True))
 
 # Agent-ended episodes (docs/protocol/README.md §3 "Agent-ended episodes", standard_mode.md; required for every standard
-# task from protocol v2.5; the same rules as rcb_service.py's AGENT_END). RCB_AGENT_END=1: the service never shows the
+# task from protocol v3.0; the same rules as rcb_service.py's AGENT_END). RCB_AGENT_END=1: the service never shows the
 # task's success and a success never ends the episode (RoboTwin's check_success is still read after every call, and only
 # recorded); POST /finish (JSON {}) ends it (reason "finished"), and so does the end of the agent's session ("timeout");
 # both are judged on the state they leave: RoboTwin's check_success on it (no settle window: the check is one state's).

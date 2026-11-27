@@ -1,9 +1,9 @@
 """Standard-mode sim service for the MetaWorld+ tasks (wire protocol eai-standard/2.1): robot as a service.
 
-Derived from the MuJoCo service (images/mujoco/limited/server_mj.py) and identical to it in protocol and lifecycle:
-GET /spec, GET /status, POST /observe, POST /submit, binary RCB1 responses, no reset, crash recovery (journal +
-per-call checkpoints, at most RCB_MAX_RESUMES resumes), startup watchdog, SIGUSR1 from the collect hook ends the
-episode, /data evidence. Differences, all from Meta-World:
+Derived from the MuJoCo service (embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py) and identical to it in
+protocol and lifecycle: GET /spec, GET /status, POST /observe, POST /submit, binary RCB1 responses, no reset, crash
+recovery (journal + per-call checkpoints, at most RCB_MAX_RESUMES resumes), startup watchdog, SIGUSR1 from the collect
+hook ends the episode, /data evidence. Differences, all from Meta-World:
 - the action type is the tool module's (mw_tool.ACTION_TYPE: `ee_delta`, Meta-World's native [dx, dy, dz, grip]);
   Meta-World's Sawyer has no arm actuators (the hand is driven by a mocap weld), so there is no `joint_position`;
 - a hold chunk (eai-standard/3.0: /submit {"interpolate": "hold", "seconds": n}, no rows) holds the hand still
@@ -78,7 +78,7 @@ E = {"ready": False, "calls": 0, "rows": 0, "done": False, "reason": None, "t0":
 E.update({"t_first": None, "video_done": False, "video_pending": False})
 
 # Agent-ended episodes (docs/protocol/README.md §3 "Agent-ended episodes", standard_mode.md; required for every standard
-# and realtime task from protocol v2.5; the same rules as rcb_service.py's AGENT_END). RCB_AGENT_END=1: the service never
+# and realtime task from protocol v3.0; the same rules as rcb_service.py's AGENT_END). RCB_AGENT_END=1: the service never
 # shows the task's success and a success never ends the episode; POST /finish (JSON {}) ends it (reason "finished"),
 # and so do the step cap (reason "step_limit": RCB_MAX_CONTROL_STEPS, or RCB_STEP_LIMIT=N when set, which may only lower
 # it) and the end of the agent's session ("timeout"); those three ends are judged on the state they leave (END_JUDGEMENT

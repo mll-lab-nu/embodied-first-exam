@@ -1,7 +1,7 @@
 """Standard-mode sim service for the RoboCasa-series tasks (eai-standard/2.1): robot as a service.
 
-Derived from the MuJoCo service (images/mujoco/limited/server_mj.py, via images/metaworld/standard/server_mw.py) and
-identical to it in protocol and lifecycle: GET /spec, GET /status, POST /observe, POST /submit, binary RCB1 responses,
+Derived from the MuJoCo service (embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py, via
+embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py) and identical to it in protocol and lifecycle: GET /spec, GET /status, POST /observe, POST /submit, binary RCB1 responses,
 no reset, crash recovery (journal + per-call checkpoints, at most RCB_MAX_RESUMES resumes), startup watchdog, SIGUSR1
 from the collect hook ends the episode, /data evidence. Differences, all from robosuite / RoboCasa:
 - the action type is the robot's native composite-controller command, laid out per instance by the tool module
@@ -75,7 +75,7 @@ E = {"ready": False, "calls": 0, "rows": 0, "done": False, "reason": None, "t0":
 E["t_first"] = None  # the agent's first request (its clock starts there: _touch, _agent_time)
 
 # Agent-ended episodes (docs/protocol/README.md §3 "Agent-ended episodes", standard_mode.md; required for every standard
-# and realtime task from protocol v2.5; the same rules as rcb_service.py's AGENT_END). RCB_AGENT_END=1: the service never
+# and realtime task from protocol v3.0; the same rules as rcb_service.py's AGENT_END). RCB_AGENT_END=1: the service never
 # shows the task's success and a success never ends the episode; POST /finish (JSON {}) ends it (reason "finished"),
 # and so do the step cap (reason "step_limit": RCB_MAX_CONTROL_STEPS, or RCB_STEP_LIMIT=N when set, which may only lower
 # it) and the end of the agent's session ("timeout"); those three ends are judged on the state they leave (END_JUDGEMENT

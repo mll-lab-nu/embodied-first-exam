@@ -63,7 +63,7 @@ E = {"ready": False, "calls": 0, "rows": 0, "done": False, "reason": None, "t0":
 # begins in it. stopping: the agent's time is up (SIGUSR1): no reset any more.
 
 # Agent-ended episodes (docs/protocol/README.md §3 "Agent-ended episodes", standard_mode.md; required for every standard
-# and realtime task from protocol v2.5; the same rules as rcb_service.py's AGENT_END). RCB_AGENT_END=1: the service never
+# and realtime task from protocol v3.0; the same rules as rcb_service.py's AGENT_END). RCB_AGENT_END=1: the service never
 # shows the task's success and a success never ends the episode; POST /finish (JSON {}) ends it (reason "finished"),
 # and so do the step cap (reason "step_limit": RCB_MAX_CONTROL_STEPS, or RCB_STEP_LIMIT=N when set, which may only lower
 # it) and the end of the agent's session ("timeout"); those three ends are judged on the state they leave (END_JUDGEMENT
