@@ -1,9 +1,10 @@
 """eai-standard/2.2 (formerly rcb-limited/2.2): the HTTP layer, the protocol helpers and the crash recovery that every
 2.2 sim service shares (docs/protocol/standard_mode.md, Part 2; the 2.1 base is its Part 1).
 
-The source is scripts/eai_standard/rcb_limited.py; the generators copy it unchanged into every standard task's
-environment/sim/ (ci_checks/check-tooling-identity.sh). A service keeps its simulator to itself (scene, action
-execution, cameras, kinematic model) and hands this module plain callables:
+The source is embodied_first_exam/standard/rcb_limited.py, copied unchanged into every 2.2 task's
+environment/sim/ (its benchmark's files image, scripts/files_image.py; ci_checks/check-tooling-identity.sh).
+A service keeps its simulator to itself (scene, action execution, cameras, kinematic model) and hands
+this module plain callables:
 
     import rcb_limited as L
     EP = L.Episode(DATA, dim=N, resume="exact")   # before the scene is built; "approx" for a nondeterministic simulator
@@ -49,6 +50,7 @@ the agent's session begins (the harness installs the agent first), so the servic
 from __future__ import annotations
 import errno, faulthandler, json, math, os, re, select, signal, socket, sys, tempfile, threading, time, traceback, zlib
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import urlparse
 from typing import Any, Callable
 
 import numpy as np
@@ -166,7 +168,7 @@ def depth_frames_part(name: str, stack) -> tuple[str, str, bytes, dict]:
     return (name, "bytes", Deflate(stack), {"codec": "zlib", "dtype": "uint16", "shape": shape, "unit": "mm"})
 
 
-def encode_mp4(frames, fps: int) -> bytes:
+def encode_mp4(frames, fps: float) -> bytes:
     """H.264 mp4 (yuv420p, faststart) of uint8 (N,H,W,3) frames (an array or a list of (H,W,3) frames): the same
     encoding every 2.0 service used."""
     import imageio.v2 as imageio
@@ -865,6 +867,8 @@ class Episode:
         self.log({"ev": "restart_refused", "reason": reason})
         if not final_verdict(self.data):
             fin = _read_json(self.f_final)
+            if "ended_by" in fin:            # an agent-ended episode's record (rcb_agent_end) of an earlier end: the
+                fin["ended_by"] = "error"    # trial ends on this give-up, no end the agent or the task chose
             fin.update({"success": False, "live_success": False, "done": True, "reason": reason, "finalized": True,
                         "gave_up": True, "replays": 0, "protocol": PROTOCOL, **({} if infra else {"graded_by": "live"}),
                         **self.final_fields(), **({"infra_error": 1} if infra else {})})
@@ -1142,7 +1146,10 @@ def hold_request(meta: dict, parts: dict, spec: dict):
     (the seconds to run are at least one control step); None for a chunk with rows. ValueError (400) for rows together
     with seconds, or a malformed hold chunk."""
     sec = meta.get("seconds")
-    rows = ("actions" in parts or meta.get("actions") not in (None, []) or meta.get("rows") not in (None, []))
+    part = parts.get("actions")
+    data = part.get("data") if isinstance(part, dict) else part
+    rows = ((part is not None and data is not None and np.size(data) > 0)
+            or meta.get("actions") not in (None, []) or meta.get("rows") not in (None, []))
     if sec is None:
         return None
     s = _real(meta, "seconds")
@@ -1216,13 +1223,14 @@ def _observe_view(svc, meta: dict, last_s: float):
     keep = [p for p in blobs if p[0].startswith(("last/", "last_depth/"))]
     parts = []
     hz = RING.hz or 1.0
+    gap = (sel[-1][0] - sel[0][0]) / (len(sel) - 1) if len(sel) > 1 else 0
+    rate = hz / gap if gap and RING.hz else float(max(1, int(round(fps))))   # the frames' real rate, as 2.1's
     for c in cams:
         good = [f[1][c] for f in sel if f[1].get(c) is not None]
         hw = good[-1].shape[:2] if good else (1, 1)
         frames = [f[1][c] if f[1].get(c) is not None else np.zeros(hw + (3,), np.uint8) for f in sel]
         if video in ("mp4", "both"):
-            parts.append((f"video/{c}", "mp4", encode_mp4(frames, max(1, int(round(fps)))),
-                          {"fps": max(1, int(round(fps))), "n": len(frames)}))
+            parts.append((f"video/{c}", "mp4", encode_mp4(frames, rate), {"fps": round(rate, 3), "n": len(frames)}))
         if video in ("frames", "both"):
             parts.append(rcb1.frames_part(f"frames/{c}", list(frames)))
         parts.append(rcb1.array_part(f"extrinsic_cv/{c}", np.stack([f[2].get(c, np.full((3, 4), np.nan)) for f in sel])))
@@ -1255,7 +1263,8 @@ def standard_call(svc, path: str, meta: dict, parts: dict, ep, rows0: int, rows_
       frame, last_s = n the ring's last n seconds (_observe_view);
     - a rows-free hold chunk runs the adapter's own hold (its observe watch, `seconds` = n: the command in force held for
       n seconds) and answers as a submit: chunk_id, type, hold, executed_rows 0, duration_s;
-    - every submit answer adds duration_s (control steps run x control_dt) and planned_duration_s (rows x dt);
+    - every submit answer adds duration_s (control steps run x control_dt) and planned_duration_s (rows x dt; for a
+      planner type only the adapter's own, where it reports one);
     - every answer with images adds meta.frame_step (with_frame_step).
     - the 400s every layer answers (check_common, check_chunk) before the adapter runs.
     rows_of(meta, parts) -> the rows of an ordinary chunk (the layer's own parsing; ValueError -> 400)."""
@@ -1295,13 +1304,18 @@ def standard_call(svc, path: str, meta: dict, parts: dict, ep, rows0: int, rows_
                         **_durations(spec, out, steps, sent)})
             return with_frame_step(out, blobs)
         A = rows_of(meta, parts)
+        if getattr(A, "ndim", 0) >= 1 and int(A.shape[0]) == 0:
+            raise ValueError('a chunk without rows is a hold chunk: {"type": <type>, "interpolate": "hold", "seconds": n}')
         check_chunk(meta, A, spec)
         out, blobs = svc.submit(meta, A)
         hz = _num(spec.get("control_hz")) or 0.0
         dt = _real(meta, "dt") or (1.0 / hz if hz > 0 else None)
         n = int(A.shape[0]) if getattr(A, "ndim", 0) >= 1 else 0
         steps = _steps_ran(ep, rows0, out, "control_steps_chunk")
-        return with_frame_step({**out, **_durations(spec, out, steps, n * dt if dt else None)}, blobs)
+        # a planner type's rows are not dt apart (an ee_pose row runs as many steps as its plan takes): no rows x dt,
+        # only the adapter's own planned_duration_s where it reports one
+        planned = None if meta.get("type") in PLANNER_TYPES or not dt else n * dt
+        return with_frame_step({**out, **_durations(spec, out, steps, planned)}, blobs)
     finally:
         RING.active = False
 
@@ -1355,6 +1369,7 @@ def make_handler(svc: Service):
         def parse_request(self):             # every request, of any method and path (a subclass's endpoints too)
             ok = super().parse_request()
             if ok:
+                self.path = urlparse(self.path).path   # a query string is ignored, as by 2.1 and 2.3
                 svc.touch()
             return ok
 

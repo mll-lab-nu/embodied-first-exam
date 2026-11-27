@@ -45,8 +45,8 @@ CI checks that read a task's files see a build context as its image holds it: co
 Dockerfile copies from a pinned files-only image; copied_from() also returns the COPY --from lines of a files-only image it
 cannot resolve (a check reports them).
 
-A change to a source file needs a new image version (VERSION, build, push, pin) before the generators render it; their
-check modes fail until then.
+A change to a source file needs a new image version (VERSION, build, push, pin) before the tasks take it (their pinned
+COPY --from lines; ci_checks/check-tooling-identity.sh fails until then).
 """
 from __future__ import annotations
 
@@ -103,7 +103,9 @@ def copied_from(dockerfile: Path) -> tuple[dict[str, Path], list[str]]:
     files-only image (a repository of images/*/FILES.json, or any *-files repository). A line resolves when it names the
     pinned image@digest, carries no other flag, and copies one file or one directory of the image (`/<dir>/`: every file
     of FILES.json under it, to <dest>/<path below it>), or several files into one directory (`/<a> /<b> <dir>/`: each
-    keeps its basename); anything else is a problem, never silently skipped. The sources of an image pinned to a Hugging
+    keeps its basename); one file goes to <dest>/<basename> when <dest> ends with `/`, else to <dest> itself, which must
+    then read as a file (the file's basename, or a name with an extension: Docker would copy into an existing directory
+    of that name); anything else is a problem, never silently skipped. The sources of an image pinned to a Hugging
     Face dataset are fetched first (once per process)."""
     if not dockerfile.is_file():
         return {}, []
@@ -140,6 +142,12 @@ def copied_from(dockerfile: Path) -> tuple[dict[str, Path], list[str]]:
         for a in args[:-1]:
             src = a.strip("/")
             if src in s["files"]:
+                base = dest.rstrip("/").rsplit("/", 1)[-1]
+                if not dest.endswith("/") and base != src.rsplit("/", 1)[-1] and "." not in base:
+                    # Docker copies the file INTO <dest> when the image already has that directory: say which is meant
+                    bad.append(f"{dockerfile}: {line.strip()}: a single file to `{dest}` (a directory or a file?): end a "
+                               "directory destination with `/`, or name the file (its basename, or a name with an extension)")
+                    continue
                 out[dest + src.rsplit("/", 1)[-1] if dest.endswith("/") else dest] = ROOT / s["source"] / src
                 continue
             if len(args) > 2:

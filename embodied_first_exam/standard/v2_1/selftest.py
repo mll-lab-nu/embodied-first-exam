@@ -356,12 +356,13 @@ def main() -> None:
     for p in v3.values():
         test_v3(p)
     copies: dict[str, list[Path]] = {}
-    for p in sorted((ROOT / "embodied_first_exam/benchmarks").glob("*/*/rcb_service.py")):
+    for p in sorted(list((ROOT / "embodied_first_exam/benchmarks").glob("**/rcb_service.py"))
+                    + list((ROOT / "images").glob("*/tools/**/rcb_service.py"))):
         copies.setdefault(hashlib.sha256(p.read_bytes()).hexdigest(), []).append(p)
     tested = 0
     for h, paths in copies.items():
-        if "def _first_episode" not in paths[0].read_text():
-            print(f"note: {len(paths)} copy(ies) without the first-attempt record ({h[:10]}): "
+        if "def _first_episode" not in paths[0].read_text():   # every copy is the same code (check-tooling-identity.sh)
+            check(False, f"{len(paths)} copy(ies) without the first-attempt record ({h[:10]}): "
                   + ", ".join(str(p.relative_to(ROOT)) for p in paths))
             continue
         test(paths[0])

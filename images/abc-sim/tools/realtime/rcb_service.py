@@ -37,6 +37,13 @@ Evidence under DATA, never visible to the agent:
                        video is rendered ("video_pending": true while it is), so the video never decides anything
   trajectory.npz       the graded episode (the deliverable: every control step since the last reset, as executed)
   replay.mp4, replay.last.png   the episode's video, rendered from trajectory.npz after the verdict (for people only)
+  trajectory.first.npz, replay.first.mp4, replay.first.last.png   with resets, the trial's first episode too (its
+                       rows from the journal, its video rendered after the graded one's): the no-reset view, for people;
+                       final.json's first_success / first_reason say how it ended (evidence only). Without
+                       agent-ended episodes a success ends the trial, so first_success is the graded success when no
+                       reset was made, else 0; with them (a success ends nothing, and a step-limit or failure end may be
+                       followed by a reset) it is the first episode's own end judgement, as the "end" event recorded it
+                       (no end window, no live_verdict), or null when that is not on record
 
 The verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17): success = the episode this
 service ran ended in success under the task's rule (the adapter's step()), judged here, after the agent's container is
@@ -123,9 +130,10 @@ if STEP_LIMIT is not None and (not AGENT_END or STEP_LIMIT < 1):
     raise RuntimeError("RCB_STEP_LIMIT needs RCB_AGENT_END=1 and a positive number of steps")
 END_STATE_REASONS = ("finished", "timeout", "step_limit")     # ends judged on the state they leave
 # final.json "ended_by": "session_end" is the end of the agent's session (its time limit, its token budget or its own
-# exit: the runner's record says which); any end not listed is "failed" (the task's own failure rule)
+# exit: the runner's record says which); an infrastructure end (the reason's word before any ":") is "error"; any end
+# not listed is "failed" (the task's own failure rule)
 ENDED_BY = {"finished": "finish", "step_limit": "step_limit", "timeout": "session_end", "error": "error",
-            "sim_crashed_on_call": "error", "sim_crashed": "error"}
+            "sim_crashed_on_call": "error", "sim_crashed": "error", "resume_failed": "error", "instance_mismatch": "error"}
 HIDDEN_KEYS = frozenset({"success", "live_success", "is_success", "reward", "score", "progress", "stage", "stages",
                          "stages_reached", "subtask", "subtasks_done", "hold_steps", "settled"})
 SUCCESS_SIGNAL_NOTE = ("hidden: the service never tells you whether you have succeeded and a success does not end the "
@@ -203,7 +211,8 @@ RESERVED = frozenset({"protocol", "success", "live_success", "done", "reason", "
                       "control_steps_total", "episodes", "resets", "reset_budget", "elapsed_s", "sim_startups",
                       "finalized", "n_actions", "graded_by", "replays", "state_sha", "video", "video_pending",
                       "video_source", "live_rule", "live_verdict_error", "finalize_error", "infra_error",
-                      "instance_mismatch", "ev", "ts", "deterministic", "replay_success", "live_sha"} | set(AE_FIELDS))
+                      "instance_mismatch", "ev", "ts", "deterministic", "replay_success", "live_sha", "first_success",
+                      "first_reason", "first_n_actions", "first_video"} | set(AE_FIELDS))
 
 
 def json_safe(d: dict) -> dict:
@@ -335,6 +344,8 @@ def give_up(data: str, reason: str, infra: bool) -> None:
     except (OSError, ValueError):
         fin = {}
     if not fin.get("finalized"):
+        if "ended_by" in fin:                        # an agent-ended episode's record of an earlier end: the trial
+            fin["ended_by"] = "error"                # ends on this give-up, no end the agent or the task chose
         fin.update({"protocol": PROTOCOL, "success": False, "done": True, "reason": reason, "finalized": True,
                     **({"infra_error": 1} if infra else {})})
         write_json_atomic(path, fin)
@@ -630,6 +641,17 @@ class Service:
             d["infra_error"] = 1
         if not self.ep_start_ok:                        # the graded episode began off the frozen instance (a reset)
             d.update(success=False, instance_mismatch=True, infra_error=1)
+        # The first attempt (evidence only). No reset: it is the graded episode. Without agent-ended episodes a success
+        # ends the trial, so a first episode a reset followed did not succeed; with them a success ends nothing and a
+        # step-limit or failure end may be followed by a reset: the first episode's own end judgement (_first_episode,
+        # in finalize; null until then or when it is not on record).
+        if self.resets == 0:
+            d["first_success"] = bool(d["success"])
+        elif not self.agent_end:
+            d["first_success"] = False
+        else:
+            d.setdefault("first_success", None)
+        d.setdefault("first_reason", self.reason if self.resets == 0 else None)
         write_json_atomic(os.path.join(self.data, "final.json"), d)
 
     def _ae_fields(self) -> dict:
@@ -637,7 +659,7 @@ class Service:
         if not self.agent_end:
             return {}
         r = self.reason
-        out = {"success_signal": "hidden", "ended_by": ENDED_BY.get(r, "failed") if r else None,
+        out = {"success_signal": "hidden", "ended_by": ENDED_BY.get(str(r).split(":")[0], "failed") if r else None,
                "end_judgement": self.end_judgement, "hidden_success_seen": self.seen_step is not None,
                "hidden_success_first_step": self.seen_step, "trial_hidden_success_seen": bool(self.trial_seen),
                "finish_time_s": round(self.finish_t - self.t0, 1) if self.finish_t and self.t0 else None}
@@ -718,7 +740,15 @@ class Service:
         in_calls = sum(bool(e["crashed_in_call"]) for e in ev if e["ev"] == "resuming") + int(in_call)
         died = [d for d in deaths(self.data) if d["process"] >= first]      # the deaths since the episode began
         fatal = bool(died and died[-1]["fatal_signal"])                      # the one just before this start
-        cp = [e for e in ev if "state_sha" in e and "journal_rows" in e][-1]
+        ci = max(i for i, e in enumerate(ev) if "state_sha" in e and "journal_rows" in e)
+        cp = ev[ci]
+        # An end logged after it without a checkpoint (_end's fallback: the state could not be hashed) still ended the
+        # episode: it resumes from that checkpoint ended, as the end event says
+        end = next((e for e in reversed(ev[ci + 1:]) if e["ev"] == "end" and e.get("done")), None)
+        if end is not None:
+            cp = {**cp, "done": True, "reason": end["reason"], "success": bool(end.get("success")),
+                  "error_infra": bool(end.get("error_infra")),
+                  **({"finish_t": end["finish_t"]} if end.get("finish_t") is not None else {})}
         # The live outcome is decided when the graded episode has ended and nothing can follow it: a success, or a
         # failure with no reset left. Then crashes after it cannot take that outcome away: past the restarts, the
         # episode is resumed and finalized as it ended (its own verdict, live_verdict() included), not given up.
@@ -898,6 +928,15 @@ class Service:
             body["resets_left"] = self._resets_left()
         return Refused(409, body)
 
+    def _observe_refusal(self) -> Refused | None:
+        """An /observe's 409, whatever it asks: after /finish, after the session's end (SIGUSR1) and after a give-up
+        every call but GET /spec and /status is refused; after any other end of the episode it may still look."""
+        if self.stopping or (self.agent_end and self.done and self.reason == "finished"):
+            return self._conflict()
+        if self.finalized:
+            return Refused(409, {"error": "the sim service gave up on this trial", "reason": self.reason, "gave_up": True})
+        return None
+
     def _step(self, typ: str, row: np.ndarray) -> dict:
         """One control step: execute, journal, and end the episode if it is over."""
         sim_row = np.asarray(self.sim.to_sim(typ, row), dtype=np.float64)
@@ -932,7 +971,9 @@ class Service:
         try:
             self._checkpoint("end")
         except Exception as exc:  # noqa: BLE001 -- a broken simulator may not even hash: the end is still logged
-            self.log("end", reason=reason, checkpoint_error=repr(exc)[:300])
+            # (with how it ended: a resume from the checkpoint before it keeps the episode ended, _resume)
+            self.log("end", reason=reason, done=True, success=bool(self.success), error_infra=bool(self.error_infra),
+                     **({"finish_t": self.finish_t} if self.agent_end else {}), checkpoint_error=repr(exc)[:300])
             self._write_final()
 
     def _agent_finish(self) -> dict:
@@ -1093,8 +1134,9 @@ class Service:
     def _observe(self, meta: dict, parts: dict) -> tuple[dict, list]:
         """A pure read (eai-standard/3.0): no time passes. last_s = 0 the current frame; last_s = n the frames the
         recorder took in the last n robot seconds (none: the current frame, meta.last_s = 0)."""
-        if self.agent_end and self.done and self.reason == "finished":
-            raise self._conflict()                   # after /finish every call but /spec and /status is refused
+        refused = self._observe_refusal()
+        if refused:
+            raise refused
         with bad_request():
             if real(meta, "seconds", 0.0) != 0.0:
                 raise ValueError(SECONDS_GONE)
@@ -1177,7 +1219,8 @@ class Service:
             try:
                 self._checkpoint("end", reset_failed=True)
             except Exception as exc:  # noqa: BLE001 -- a broken simulator may not even hash
-                self.log("end", reason="error", reset_failed=True, checkpoint_error=repr(exc)[:300])
+                self.log("end", reason="error", reset_failed=True, done=True, success=False, error_infra=True,
+                         checkpoint_error=repr(exc)[:300])
                 self._write_final()
             raise
         self.resets += 1
@@ -1220,6 +1263,25 @@ class Service:
                 self._end("timeout")
             self._finalize()
 
+    def _first_episode(self) -> tuple[dict, np.ndarray | None]:
+        """With resets, the trial's first episode: how it ended (the last "end" of episode 1 in the log; a reset lost
+        with its call did not end it) and its rows (the journal up to the first reset's ep_start). Without: nothing."""
+        if self.resets == 0:
+            return {}, None
+        ev = self._events()
+        end = [e for e in ev if e["ev"] == "end" and int(e.get("resets", 0)) == 0]
+        cut = next((int(e["ep_start"]) for e in ev if e["ev"] == "reset" and int(e.get("resets", 0)) == 1
+                    and "ep_start" in e), None)
+        info = {"first_reason": end[-1].get("reason") if end else None}
+        if self.agent_end:                           # the "end" event's own judgement (no end window, no live_verdict)
+            info["first_success"] = bool(end[-1].get("success")) if end and "success" in end[-1] else None
+        if not cut:
+            return info, None
+        rows = np.fromfile(self.journal_path, dtype=np.float64, count=cut * int(self.sim.raw_dim))
+        if rows.size != cut * int(self.sim.raw_dim):
+            return info, None
+        return {**info, "first_n_actions": cut}, rows.reshape(cut, -1)
+
     def _finalize(self) -> None:
         """The verdict: the live episode's (docs/protocol/README.md H.4). The graded episode (every control step since the last
         reset) is saved as the trajectory, the deliverable that stays replayable, and the success is the one the live
@@ -1227,7 +1289,7 @@ class Service:
         written ("finalized": true). Nothing is replayed to grade it. Then a video for humans, rendered from the
         trajectory, which can no longer change or void the verdict: while it renders final.json says
         "video_pending": true (the collect hook waits for it as long as its time allows)."""
-        rows = None
+        rows = first_rows = None
         try:
             rows = np.asarray(self.episode, dtype=np.float64).reshape(-1, self.sim.raw_dim)
             try:
@@ -1240,6 +1302,20 @@ class Service:
                                       "episode": self.resets + 1})
             verdict = {"n_actions": int(len(rows)), "graded_by": "live", "replays": 0, "state_sha": live_sha,
                        "video": False, "video_source": "render"}
+            first_rows = None
+            try:                                     # the first episode is evidence only: it never decides anything
+                first, first_rows = self._first_episode()
+                verdict.update(first)
+                if first_rows is not None:
+                    self.sim.save_trajectory(first_rows, os.path.join(self.data, "trajectory.first.npz"),
+                                             {"source": "standard-mode episode (the first; not graded)",
+                                              "protocol": PROTOCOL, "reason": str(first.get("first_reason")),
+                                              "episode": 1})
+                    verdict["first_video"] = False
+            except Exception as exc:  # noqa: BLE001
+                traceback.print_exc()
+                self.log("first_episode_error", error=repr(exc)[:500])
+                first_rows = None
             window = int(getattr(self.sim, "end_window_steps", 0) or 0)
             if (self.agent_end and window > 0 and self.end_judgement == "state" and self.reason in END_STATE_REASONS
                     and self.ep_start_ok):
@@ -1291,6 +1367,13 @@ class Service:
         except Exception as exc:  # noqa: BLE001 -- the video is for humans; it never decides the verdict
             traceback.print_exc()
             self.log("video_error", error=repr(exc)[:500])
+        if first_rows is not None:
+            try:
+                self.sim.render_video(first_rows, os.path.join(self.data, "replay.first.mp4"))
+                self.verdict["first_video"] = True
+            except Exception as exc:  # noqa: BLE001
+                traceback.print_exc()
+                self.log("first_video_error", error=repr(exc)[:500])
         self.verdict["video_pending"] = False
         try:
             self._write_final()

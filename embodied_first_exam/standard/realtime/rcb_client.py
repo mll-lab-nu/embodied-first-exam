@@ -47,7 +47,7 @@ Calls (each is one HTTP request; every answer that carries data is an RCB1 frame
     r.reset(cameras=None, include_depth=False)
                                              POST /reset, only when spec()["budget"]["reset"] > 0: abandons the
                                              running episode and starts a new one, paused, from the same starting state;
-                                             only the last episode is graded, and a success ends the trial
+                                             only the last episode is graded; refused after finish()
 
 cameras=None means every camera in spec()["cameras"]; cameras=[] means no images at all, only proprioception (the
 fastest call: what a controller loop wants). video: "mp4" (one H.264 file per camera), "frames" (the images as arrays),
@@ -56,8 +56,9 @@ for the cameras that have it.
 
 Result (what get_obs / submit / hold / reset return):
     res.meta                 dict: calls, rows, control_steps (steps run in this episode: the next one is this number),
-                             sim_time_s, time_s, time_left_s, proprio {"layout", "now"}, done, reason ("success" |
-                             "failed" | "timeout" | "error"; None while the episode runs), running, planned_steps,
+                             sim_time_s, time_s, time_left_s, proprio {"layout", "now"}, done, reason ("finished": your
+                             finish() | "step_limit" | "failed": the task's failure rule | "timeout": your session
+                             ended | "error"; None while the episode runs), running, planned_steps,
                              lag_s; per submit: start_step, late_steps, plan_end_step, clipped [{row, index, reason}]
                              (values outside [-1, 1] are clipped, not refused); with a reset budget also episode,
                              resets_left
@@ -91,6 +92,19 @@ MAX_BODY = 64 * 1024 * 1024                          # the protocol's request li
 
 class EpisodeOver(RuntimeError):
     pass
+
+
+def _over(r) -> str:
+    """What a 409 says: the reason the episode is over. A service that gave up on the episode for good (it refused to
+    start it, or could not resume it after its crashes) answers every request with one, GET /spec and /status too."""
+    try: err = r.json()
+    except Exception: return "episode finished"
+    if not isinstance(err, dict): return "episode finished"
+    if err.get("gave_up"):
+        return (f"the sim service gave up on this episode: {err.get('reason')}"
+                + (" (an infrastructure failure, recorded as one: not a result of your actions)" if err.get("infra_error") else "")
+                + ". It will not serve this trial again: waiting or calling again cannot help.")
+    return err.get("reason")
 
 
 GONE = ("get_obs(seconds=...) is gone (eai-standard/3.0): observe never waits; the clock runs by itself (wait with "
@@ -162,6 +176,8 @@ class Robot:
                     if r.status_code == 503:
                         last = "warming up"
                         continue
+                    if r.status_code == 409:         # it gave up for good: no wait brings it back
+                        raise EpisodeOver(_over(r))
                     r.raise_for_status()
                     self.base, self._spec = b, r.json()
                     if not str(self._spec.get("protocol", "")).startswith(PROTOCOLS):
@@ -177,6 +193,8 @@ class Robot:
 
     def status(self) -> dict:
         r = requests.get(self.base + "/status", timeout=(5, 60))
+        if r.status_code == 409:                     # the service gave up for good
+            raise EpisodeOver(_over(r))
         r.raise_for_status()
         return r.json()
 

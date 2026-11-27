@@ -20,7 +20,7 @@
     agent's image, could reach it: the runner puts the drawn seed's instance in the usual place, scripts/task_seed.py).
 
     python3 ci_checks/check-seeds.py [task dirs]      # default: every task
-Fix: the generator writes `instance_seed` and, where a task allows more, `[metadata.seeds]` (scripts/task_conventions.py
+Fix: the task's author writes `instance_seed` and, where a task allows more, `[metadata.seeds]` (scripts/task_conventions.py
 `normalize` keeps only the keys that are not the defaults) and the seeds' instances. Standard library only.
 """
 from __future__ import annotations

@@ -122,10 +122,15 @@ def main(argv) -> int:
     full = "--full" in argv
     check = "--check" in argv
     args = [a for a in argv if not a.startswith("--")]
+    if not args:
+        print("usage: stamp_mtimes.py [--full] [--check] <tasks dir | task dir> ...", file=sys.stderr)
+        return 2
+    missing = [a for a in args if not os.path.isdir(a)]
+    if missing:                      # a typo must not pass as "0 files, nothing to stamp"
+        print(f"stamp_mtimes: not a directory: {', '.join(missing)}", file=sys.stderr)
+        return 2
     tot = dict(files=0, hashed=0, changed=0, bad=0, err=0)
     for a in args:
-        if not os.path.isdir(a):
-            continue
         for t in roots(a):
             for k, v in stamp_tree(t, full, check).items():
                 tot[k] += v

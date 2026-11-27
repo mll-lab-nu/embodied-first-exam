@@ -55,8 +55,11 @@ def errors(tasks: list[Path]) -> list[str]:
 
 
 def main(argv: list[str]) -> int:
-    tasks = [Path(a).resolve() for a in argv if (Path(a) / "task.toml").is_file()] if argv else \
-        tc.iter_tasks()
+    bad = [a for a in argv if not (Path(a) / "task.toml").is_file()]
+    if bad:                          # a path that is no task dir must not pass as "0 task(s)"
+        print(f"FAIL check-twins: not a task directory: {', '.join(bad)}")
+        return 1
+    tasks = [Path(a).resolve() for a in argv] if argv else tc.iter_tasks()
     errs = errors(tasks)
     for e in errs:
         print(f"FAIL {e}")

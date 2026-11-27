@@ -171,8 +171,7 @@ paths:
           10 fps on the simulator's thread (recorder.fps says which), with the depth of recorder.depth's cameras
           (per-frame depth with last_s > 0 for any other camera: 400). A service without a recorder answers last_s
           with the current frame. `cameras: []` returns no images, only proprioception. Before the first frame of the
-          episode is rendered the answer has no images and sets `frames_skipped` / `frames_pending`. While the
-          service is starting, 503.
+          episode is rendered the answer has no images and sets `frames_skipped` / `frames_pending`.
         match: |
           No recorder (a declared deviation): last_s = n answers with the sport's own frames of now; adds the `view`
           part, `frame_step/<cam>` parts and `meta.observation`. After the match is over: 200, the final state, no images.
@@ -199,7 +198,6 @@ paths:
         "413": {$ref: "#/components/responses/TooLarge"}
         "429": {$ref: "#/components/responses/TooMany"}
         "500": {$ref: "#/components/responses/SimulatorError"}
-        "503": {$ref: "#/components/responses/WarmingUp"}
   /submit:
     post:
       operationId: submit
@@ -290,8 +288,8 @@ paths:
         required: false
         description: |
           Optional and ignored: no layer (2.1-2.4) parses it. Clients send `{}`; an empty or malformed body is
-          accepted as well. Its Content-Length is checked as every POST's (2.1/2.3 leave the body unread, 2.2/2.4
-          read and drop it): a bad one is a 400, one over the body limit a 413.
+          accepted as well. Every layer reads the body and drops it; its Content-Length is checked as every POST's:
+          a bad one is a 400, one over the body limit a 413.
         content:
           application/json:
             schema: {$ref: "#/components/schemas/FinishRequest"}
@@ -624,12 +622,6 @@ components:
       description: |
         The simulator failed while serving the call; on `/submit` and `/observe` the episode ends with
         `reason = "error"`. A /kinematics 500 does not end the episode.
-      content:
-        application/json:
-          schema: {$ref: "#/components/schemas/Error"}
-    WarmingUp:
-      description: "Realtime: the service has not published its first state yet (`{\"error\": \"warming up\"}`); retry."
-      x-eai-layer: "2.3"
       content:
         application/json:
           schema: {$ref: "#/components/schemas/Error"}

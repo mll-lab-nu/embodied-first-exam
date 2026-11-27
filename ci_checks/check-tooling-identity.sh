@@ -28,10 +28,14 @@
 #    2.0. Every file shared by the tasks of a mode is byte-identical
 #    within the benchmark and mode (FAMILY_SHARED: service, client, graders, tests/test.sh, Dockerfiles, the oracle's
 #    runner; the Playground ALOHA and Panda standard tasks count as DexToolBench's, their privileged twins as a
-#    benchmark each), the tooling module is one version in every mode, and the service is the one under images/ (MetaWorld+:
-#    unchanged; the MuJoCo service: as scripts/task_conventions.py replace_words spells it). RoboTwin's privileged
+#    benchmark each), the tooling module is one version in every mode, and the service is its one source,
+#    embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py (the MuJoCo Playground copy is the same file) or
+#    embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py. RoboTwin's privileged
 #    tests/test.sh and solution/solve.sh differ by the task's name only and are compared with the name replaced.
 #    Not covered here: the per-task texts of these benchmarks (instruction.md, README.md, task.toml).
+# 5. The shared 2.1 sidecar service rcb_service.py (docs/protocol/standard_mode.md Part 1; under the 2.3 layer too): every
+#    copy, embodied_first_exam/benchmarks/**/rcb_service.py and images/*/tools/**/rcb_service.py, is the same code
+#    (compared without comments and docstrings, which a few copies word differently).
 # Usage: check-tooling-identity.sh [tasks dir]   (repo-level; run_all.sh calls it once)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -64,15 +68,10 @@ FAMILY = {"dextoolbench_": ("dextoolbench", "rcb_dtb.py"), "metaworldplus-": ("m
 FAMILY_SHARED = SHARED | {"environment/Dockerfile", "tests/Dockerfile", "tests/test.sh", "solution/solve.sh", "solution/oracle_replay.py",
                           "environment/sim/server_mj.py", "environment/sim/server_mw.py", "environment/sim/rcb_live.py"}
 BY_NAME = {("robotwin_2_0", "privileged"): {"tests/test.sh", "solution/solve.sh"}}   # the same but for the task's own name
-from task_conventions import replace_words  # noqa: E402  (what normalize rewrites in a task's text files)
 images = os.path.join(ROOTD, "images")
-FAMILY_SOURCE = {"environment/sim/server_mj.py": ("images/mujoco/limited/server_mj.py", replace_words),
-                 "environment/sim/server_mw.py": ("images/metaworld/standard/server_mw.py", lambda x: x)}
-src_sha = {}
-for rel, (f, spell) in FAMILY_SOURCE.items():
-    p = os.path.join(os.path.dirname(images), f)
-    if os.path.isfile(p):
-        src_sha[rel] = hashlib.sha256(spell(open(p, encoding="utf-8").read()).encode()).hexdigest()[:16]
+FAMILY_SOURCE = {"environment/sim/server_mj.py": "embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py",
+                 "environment/sim/server_mw.py": "embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py"}
+src_sha = {rel: sha(os.path.join(ROOTD, f)) for rel, f in FAMILY_SOURCE.items() if os.path.isfile(os.path.join(ROOTD, f))}
 V24 = {"rcb_limited.py", "rcb_client.py"}   # the 2.4 layer's own files (embodied_first_exam/standard/v2_4/); the rest is 2.2's
 src22 = lambda f: f  # noqa: E731  (each layer: its file's path under embodied_first_exam/standard/)
 src24 = lambda f: f"v2_4/{f}" if f in V24 else f  # noqa: E731
@@ -125,20 +124,6 @@ def check_layer(t: str, layer: dict, ref: dict, at, ver: str, img: dict) -> None
             bad.append(f"{t}: {rel} differs from {srcf} (regenerate the task)")
 
 
-def sim_service(compose: str) -> str:
-    """The `sim:` service block of a compose file (indentation-based, no YAML dependency)."""
-    out, inside = [], False
-    for line in open(compose).read().splitlines():
-        ind = len(line) - len(line.lstrip())
-        if line.strip() and ind <= 2 and inside:
-            break
-        if re.match(r"^  sim:\s*$", line):
-            inside = True; continue
-        if inside:
-            out.append(line)
-    return "\n".join(out)
-
-
 # task dirs: tasks/<benchmark folder>/<task>/ (task_conventions.iter_tasks), or a flat tree of task dirs
 TDIR = {p.name: str(p) for p in tc.iter_tasks(tasks)} or {d: os.path.join(tasks, d) for d in os.listdir(tasks)}
 for t in sorted(TDIR):
@@ -159,7 +144,7 @@ for t in sorted(TDIR):
         n_layer += 1
         check_layer(t, LAYER, *((canon24, src24, "2.4") if v24 else (canon, src22, "2.2")), img)
         cf = os.path.join(TDIR[t], "environment/docker-compose.yaml")
-        blk = sim_service(cf) if os.path.isfile(cf) else ""
+        blk = tc.service_block(open(cf).read(), "sim") if os.path.isfile(cf) else ""
         m = re.search(r"^\s*restart:\s*[\"']?on-failure:(\d+)", blk, re.M)
         if not m or int(m.group(1)) < 3:
             bad.append(f"{t}: the sim service needs `restart: on-failure:N` with N >= 3 (crash recovery)")
@@ -186,14 +171,14 @@ for t in sorted(TDIR):
                     h = hashlib.sha256(open(os.path.join(dp, f), "rb").read().replace(own.encode(), b"@TASK@")).hexdigest()[:16]
                 seen[fam][role].setdefault(h, f"{t}/{rel}")
                 if rel in src_sha and h != src_sha[rel]:
-                    bad.append(f"{t}: {rel} differs from {FAMILY_SOURCE[rel][0]} (the service has one source: change it there and regenerate)")
+                    bad.append(f"{t}: {rel} differs from {FAMILY_SOURCE[rel]} (the service has one source: change it there and regenerate)")
         for rel, h in sorted(img.items()):     # the copies the image builds put in place (a sidecar's from its Dockerfile)
             if module and os.path.basename(rel) == module:
                 seen[own_fam][module].setdefault(h, f"{t}/{rel} (files image)")
             elif rel in FAMILY_SHARED and rel not in BY_NAME.get((fam, mode), ()):
                 seen[fam][f"{mode} {rel}"].setdefault(h, f"{t}/{rel} (files image)")
                 if rel in src_sha and h != src_sha[rel][:16]:
-                    bad.append(f"{t}: {rel} (from a files-only image) differs from {FAMILY_SOURCE[rel][0]} (the service has one source)")
+                    bad.append(f"{t}: {rel} (from a files-only image) differs from {FAMILY_SOURCE[rel]} (the service has one source)")
     if bench not in MODULE:
         continue
     module = MODULE[bench]
@@ -215,6 +200,27 @@ for t in sorted(TDIR):
         role = module if f == module else f"{mode} {rel}" if rel in SHARED else None
         if role:
             seen[bench][role].setdefault(h, f"{t}/{rel} (files image)")
+# 5. the 2.1 sidecar service: one code in every copy (comments and docstrings aside)
+import ast  # noqa: E402
+
+
+def code_sha(p: Path) -> str:
+    tree = ast.parse(p.read_text(encoding="utf-8"))
+    for n in ast.walk(tree):
+        if (isinstance(n, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)) and n.body
+                and isinstance(n.body[0], ast.Expr) and isinstance(n.body[0].value, ast.Constant)
+                and isinstance(n.body[0].value.value, str)):
+            n.body = n.body[1:] or [ast.Pass()]
+    return hashlib.sha256(ast.dump(tree).encode()).hexdigest()[:16]
+
+
+v21 = collections.defaultdict(list)
+for p in sorted([*Path(ROOTD, "embodied_first_exam/benchmarks").glob("**/rcb_service.py"),
+                 *Path(images).glob("*/tools/**/rcb_service.py")]):
+    v21[code_sha(p)].append(os.path.relpath(p, ROOTD))
+if len(v21) > 1:
+    bad.append(f"rcb_service.py (the 2.1 sidecar service): {len(v21)} versions of its code: "
+               + "; ".join(f"{h} ({', '.join(ps)})" for h, ps in sorted(v21.items())))
 bad += [f"{b}: {len(v)} versions of {role}: " + ", ".join(f"{h} ({p})" for h, p in sorted(v.items()))
         for b, roles in sorted(seen.items()) for role, v in sorted(roles.items()) if len(v) > 1]
 if bad:
@@ -225,5 +231,6 @@ if bad:
         print(f"  ... {len(bad) - 60} more")
     sys.exit(1)
 print("ok shared sources: " + ("; ".join(f"{b} {dirs[b]} task dirs, {len(seen[b])} shared files" for b in sorted(seen)) or "no BEHAVIOR / RoboLab / RoboWits / ManiGuard / MolmoSpaces / MyoSuite / DexJoCo / DexHand / RoboARC / BiGym 2.0 / YAMLab tasks")
-      + f"; the eai-standard/2.2 / 2.4 layers in {n_layer} task dirs; the eai-standard/2.3 realtime layer in {n_rt}")
+      + f"; the eai-standard/2.2 / 2.4 layers in {n_layer} task dirs; the eai-standard/2.3 realtime layer in {n_rt}"
+      + f"; rcb_service.py (2.1) one code in {sum(map(len, v21.values()))} copies")
 PY

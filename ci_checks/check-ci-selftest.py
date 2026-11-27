@@ -44,8 +44,12 @@ RP_LEAK = ["bash", str(ROOT / "ci_checks/benchmarks/robopaint/invariant-leak.sh"
 EOM_MI = [sys.executable, str(ROOT / "ci_checks/benchmarks/embodied-olympics-match/invariant-match-instance.py")]
 ARC_BIND = [sys.executable, str(ROOT / "ci_checks/benchmarks/roboarc/invariant-runtime-binding.py")]
 AGENT_END = [sys.executable, str(ROOT / "ci_checks/check-agent-end.py"), "--tier", "invariants"]
+MG_LEAK = ["bash", str(ROOT / "ci_checks/benchmarks/maniguard/invariant-leak.sh")]
+RE_BOUND = [sys.executable, str(ROOT / "ci_checks/benchmarks/roboengineer/invariant-boundary.py")]
+EOM_STD = [sys.executable, str(ROOT / "ci_checks/benchmarks/embodied-olympics-match/invariant-eai-std.py")]
 # the checks that enforce Appendix H (run_invariants.sh); every other check here is advisory
-INVARIANT_CMDS = (ISOLATION, POINTERS, TWINS, INSTANCE, STDIMG, MONITOR, DIGESTS, RP_LEAK, EOM_MI, ARC_BIND, AGENT_END)
+INVARIANT_CMDS = (ISOLATION, POINTERS, TWINS, INSTANCE, STDIMG, MONITOR, DIGESTS, RP_LEAK, EOM_MI, ARC_BIND, AGENT_END,
+                  MG_LEAK, RE_BOUND, EOM_STD)
 WITH_NEIGHBOURS = (IDENTITY, TWINS, EOM_MI)   # run on the broken copy among (links to) every other task
 
 STD = "behavior-boxing-books-up-for-storage-i00-standard"      # a sim sidecar with a trusted cache volume
@@ -55,7 +59,7 @@ MG_P = "maniguard-cabinet-pickup-i19-privileged"               # its frozen inst
 ARC_P = "roboarc-blanket-flatten-01-i01-privileged"            # an instance lock, runtime_binding.json, in tests/ and environment/
 EOM_P = "embodied-olympics-match-soccer-match-i00-privileged"  # a match's settings (tests/match_instance.json), its twin's in compose
 RT = "humanoidbench-loco-walk-i00-realtime"           # a realtime task: main and sim capped
-# benchmarks whose generators have no check mode: their shared files are held together by check-tooling-identity.sh
+# benchmarks whose task dirs share files from a files-only image: the copies are held together by check-tooling-identity.sh
 DTB, DTB_P = "dextoolbench_hammer_claw_hammer_swing_down-standard", "dextoolbench_hammer_claw_hammer_swing_down-privileged"
 MJ = "mujoco_playground_aloha_hand_over-standard"              # serves DexToolBench's service (server_mj.py)
 MWP, MWP_P = "metaworldplus-coffee-button-i00-standard", "metaworldplus-coffee-button-i00-privileged"
@@ -63,6 +67,8 @@ TWIN_P = "robotwin_2_0_grab_roller-privileged"
 OPEN = "embodied-olympics-fun-sprint-i00-standard"                      # declares open egress, `[agent] network_mode = "public"` (Appendix H.6)
 FUN_P = "embodied-olympics-fun-sprint-i00-privileged"                   # its tooling and grader from a files-only image (COPY --from)
 RP = "robopaint-acrylic-applesoranges-i00-privileged"           # a benchmark with its own leak hook (ci_checks/benchmarks/*/invariant-*)
+RE = "roboengineer-anycar-compact-lap-monaco-6-i00-standard"     # roboEngineer's public/private boundary hook
+EOM_X = "embodied-olympics-match-soccer-jointgpu-i01-standard"   # a match that serves the match extension (eai_std/ copy)
 
 
 def check_name(cmd: list[str]) -> str:
@@ -222,7 +228,19 @@ MUTATIONS = [
     ("a standard task's sim service shows the success again (no RCB_AGENT_END: H.3, PROTOCOL §3)",
      STD, COMPOSE, sub(r"^[ \t]*RCB_AGENT_END:.*\n", ""), AGENT_END, "does not set RCB_AGENT_END"),
     ("... its instruction no longer says how to end the episode (the Finish line)",
-     STD, "instruction.md", sub(r"(?ms)^- Finish: .*?(?=^- |\Z)", ""), AGENT_END, "has no Finish line"),
+     STD, "instruction.md", sub(r"(?ms)^- Finish: .*?(?=^- |\Z)", ""), AGENT_END, "has 0 Finish lines, not one"),
+    ("... its Finish line says something else than the one normalize renders",
+     STD, "instruction.md", sub(r"^(- Finish: .*?)\.$", r"\1, or when you stop."), AGENT_END, "Finish line is"),
+    ("... its Robot Interface no longer has the /finish line (moved into the Goal)",
+     STD, "instruction.md", lambda s: sub(r"^## Goal\n", "## Goal\n" + tc.robot_finish(tc.task_dir(STD)) + "\n")(
+         sub(r"^" + re.escape(tc.robot_finish(tc.task_dir(STD))) + r"\n", "")(s)),
+     AGENT_END, "`## Robot Interface` has no line"),
+    ("... RCB_AGENT_END moved from the sim service to main (only the service's own setting counts)",
+     STD, COMPOSE, lambda s: in_service("main", "    environment:\n      RCB_AGENT_END: \"1\"")(
+         sub(r"^[ \t]*RCB_AGENT_END:.*\n", "")(s)), AGENT_END, "does not set RCB_AGENT_END"),
+    ("... a protocol that only looks like its mode's (a trailing space) with RCB_AGENT_END removed (H.3 bypass)",
+     STD, TOML, {TOML: sub(r'^(protocol = "eai-standard/2\.2)"', r'\1 "'),
+           COMPOSE: sub(r"^[ \t]*RCB_AGENT_END:.*\n", "")}, AGENT_END, "is neither one of standard mode's"),
     ("the instruction no longer states the network rule (what the network reaches)",
      STD, "instruction.md", sub(r"(?ms)^- Network: .*?(?=^- )", ""), RESOURCES, "does not state the Network line"),
     ("the frozen instance the agent reads names where its scene came from",
@@ -358,11 +376,11 @@ MUTATIONS = [
     ("a sidecar image whose tag is a variable", STD, COMPOSE, sub(r"^(    image: ghcr\.io/mll-lab-nu/efe:monitor)-\S+", r"\1-${TAG:-latest}"), DOCKERFILE, "must be pinned"),
     ("tests/test.sh removes only a look-alike of the verifier's logs",
      STD, TEST_SH, sub(r"^rm -rf /logs/verifier/\*", "rm -rf /logs/verifier/*.bak"), ISOLATION, "must empty /logs/verifier"),
-    # ---- review round 3, M6: benchmarks without a generator check mode (one task hand-edited, its digest refreshed)
+    # ---- review round 3, M6: shared files of a benchmark's task dirs (one task hand-edited, its digest refreshed)
     ("DexToolBench: one task's grader is another file of the files image", DTB, TEST_DF,
      sub(r" /standard/tests/grade\.py /tests/grade\.py$", " /privileged/tests/grade.py /tests/grade.py"), IDENTITY,
      "dextoolbench: 2 versions of standard tests/grade.py"),
-    ("... its service", DTB, None, sidecar_drift(DTB, "server_mj.py"), IDENTITY, "environment/sim/server_mj.py differs from images/mujoco/limited/server_mj.py"),
+    ("... its service", DTB, None, sidecar_drift(DTB, "server_mj.py"), IDENTITY, "environment/sim/server_mj.py differs from embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py"),
     ("... its client (from the standard client image, another digest)", DTB, "environment/Dockerfile",
      sub(r"(efe:standard-files-\S+@sha256:)[0-9a-f]{64}( /rcb1\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY, "not the pinned"),
     ("... its tooling module (from the files image, another digest)", DTB_P, TEST_DF,
@@ -370,7 +388,7 @@ MUTATIONS = [
      "not the pinned"),
     ("... tests/test.sh without the resource step", DTB_P, TEST_SH, NO_TRAP, IDENTITY, "dextoolbench: 2 versions of privileged tests/test.sh"),
     ("MuJoCo Playground (ALOHA): the same service edited", MJ, None, sidecar_drift(MJ, "server_mj.py"), IDENTITY, "dextoolbench: 2 versions of standard environment/sim/server_mj.py"),
-    ("MetaWorld+: one task's service edited", MWP, None, sidecar_drift(MWP, "server_mw.py"), IDENTITY, "environment/sim/server_mw.py differs from images/metaworld/standard/server_mw.py"),
+    ("MetaWorld+: one task's service edited", MWP, None, sidecar_drift(MWP, "server_mw.py"), IDENTITY, "environment/sim/server_mw.py differs from embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py"),
     ("... its grader (from the files image, another digest)", MWP_P, TEST_DF,
      sub(r"(efe:metaworldplus-files-\S+@sha256:)[0-9a-f]{64}( /privileged/environment/mw_tool\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY,
      "not the pinned"),
@@ -468,6 +486,17 @@ MUTATIONS = [
      RP_LEAK, "only an allowed agent-side file of the pinned"),
     ("a RoboPaint task dir's own rcb_brush.py with grader code, next to the files-only image's", RP, "+environment/rcb_brush.py",
      append("def score_canvas(sheet):\n    pass\n"), RP_LEAK, "grader code ('def score_canvas') in the agent's tooling"),
+    # the other benchmark hooks (ci_checks/benchmarks/*/invariant-*, run_invariants.sh EXPECTED_HOOKS)
+    ("a ManiGuard agent build context gets a file of its own", HEAVY, "+environment/demos.txt",
+     append("demo 1\n"), MG_LEAK, "environment/demos.txt: not a file the generator writes"),
+    ("a ManiGuard compose file names the scripted demonstrations", HEAVY, COMPOSE,
+     append("# replays episodes.jsonl\n"), MG_LEAK, "names a reference solution source ('episodes.jsonl')"),
+    ("a roboEngineer agent copy gets a reference solution", RE, "+environment/public/solve.sh", append("#!/bin/sh\n"),
+     RE_BOUND, "environment/public/solve.sh: an evaluator, instance or reference file"),
+    ("a roboEngineer agent Dockerfile copies the private sidecar dir", RE, "environment/Dockerfile",
+     append("COPY sim/ /opt/sim/\n"), RE_BOUND, "copies sim/ from the build context"),
+    ("a match's eai_std copy drifts from its source", EOM_X, "environment/sim/eai_std/serve.py", append("# drift\n"),
+     EOM_STD, "environment/sim/eai_std/serve.py differs from"),
     # PROTOCOL §2: a realtime task declares its slowdown S and its reset budget once, in its sim service
     ("a copy of the slowdown S in [metadata]",
      "humanoidbench-loco-walk-i00-realtime", TOML, sub(r'^(dynamics = .*\n)', r'\1slowdown = 1\n'), REALTIME,

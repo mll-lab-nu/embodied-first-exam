@@ -74,6 +74,13 @@ fi
 # longer than a single argument may be, 128 KiB)
 list="$(mktemp)"; log=""; trap 'rm -f "$list" ${log:+"$log"}' EXIT
 printf '%s\n' "${tasks[@]}" > "$list"
+# The hooks are pinned: a hook removed or renamed (or a new one not listed here) fails the job.
+EXPECTED_HOOKS="ci_checks/benchmarks/embodied-olympics-match/invariant-eai-std.py
+ci_checks/benchmarks/embodied-olympics-match/invariant-match-instance.py
+ci_checks/benchmarks/maniguard/invariant-leak.sh
+ci_checks/benchmarks/roboarc/invariant-runtime-binding.py
+ci_checks/benchmarks/roboengineer/invariant-boundary.py
+ci_checks/benchmarks/robopaint/invariant-leak.sh"
 hooks=()
 for h in ci_checks/benchmarks/*/invariant-*; do
   [ -f "$h" ] || continue
@@ -81,6 +88,11 @@ for h in ci_checks/benchmarks/*/invariant-*; do
   case "$h" in *.py) run="python3 $(q "$h")" ;; *) run="bash $(q "$h")" ;; esac
   add "hook:$h" "xargs $run < $(q "$list")"
 done
+found_hooks="$(printf '%s\n' ${hooks[@]+"${hooks[@]}"} | sort)"
+[ "$found_hooks" = "$(printf '%s\n' "$EXPECTED_HOOKS" | sort)" ] || {
+  echo "FAIL run_invariants.sh: the benchmark invariant hooks differ from EXPECTED_HOOKS:"
+  diff <(printf '%s\n' "$EXPECTED_HOOKS" | sort) <(printf '%s\n' "$found_hooks") | sed -n 's/^</  missing:/p; s/^>/  not listed:/p'
+  exit 1; }
 # the per-task checks, in chunks; each prints `INVARIANT-PASS per-task <n>` (not an id of its own: their sum is checked)
 chunk=24; nchunks=0
 for ((i = 0; i < ntasks; i += chunk)); do

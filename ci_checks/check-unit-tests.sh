@@ -5,8 +5,8 @@
 #     (a request outlasting it is a graded timeout, not infra; needs Landlock, skipped with a note otherwise).
 #  2. numpy + requests (no simulator, no image, no GPU): the eai-standard/2.2 and 2.4 layers' selftests on a stub
 #     simulator (embodied_first_exam/standard/), the 2.1 service's first-attempt record on a toy simulator (v2_1/), and
-#     the per-call image budget of the 2.1, 2.2 and 2.3 layers (frames_selftest.py), and the 2.2 layer's optional agent-ended
-#     episodes (agent_end/agent_end_selftest.py), and the robot's MCP tools on toy 2.2 / 2.3 / 2.4 services and a match seat
+#     the per-call image budget of the 2.1, 2.2 and 2.3 layers (frames_selftest.py), the agent-ended episodes of the
+#     2.2 layer and of the 2.1 service and 2.3 layer (agent_end/), and the robot's MCP tools on toy 2.2 / 2.3 / 2.4 services and a match seat
 #     (standard/mcp/tests/: the API path and the MCP path leave the same episode). Run when both modules can be imported, skipped with a note otherwise;
 #     `--all` makes a missing module a failure.
 # A benchmark's own tests live with its tasks (their tests/), not here. The resource monitor's tests are run by

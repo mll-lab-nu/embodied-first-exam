@@ -33,7 +33,8 @@ END_STATE_REASONS = ("finished", "timeout", "step_limit")             # ends jud
 # final.json "ended_by" (PROTOCOL §3): the service's end reasons; "session_end" is the end of the agent's session (its
 # time limit, its token budget or its own exit: the runner's record says which)
 ENDED_BY = {"finished": "finish", "step_limit": "step_limit", "timeout": "session_end", "error": "error",
-            "sim_crashed_on_call": "error"}   # any other end: "failed" (the task's own failure rule)
+            "sim_crashed_on_call": "error", "sim_crashed": "error", "resume_failed": "error",
+            "instance_mismatch": "error", "call_watchdog": "error"}   # any other end: "failed" (the task's failure rule)
 SUCCESS_SIGNAL_NOTE = ("hidden: the service never tells you whether you have succeeded and a success does not end the "
                        "episode; POST /finish (JSON {}) ends it (if you never call it, the end of your session does) and "
                        "the episode is judged then, as the instruction's Goal says: on how things stand at that moment, "
@@ -67,7 +68,7 @@ def final_fields(state: dict, steps_used: int | None = None) -> dict:
         return {}
     t0, ft = state.get("t_first"), state.get("finish_t")
     r = state.get("reason")
-    out = {"success_signal": "hidden", "ended_by": ENDED_BY.get(r, "failed" if r else None),
+    out = {"success_signal": "hidden", "ended_by": ENDED_BY.get(str(r).split(":")[0], "failed") if r else None,
            "hidden_success_seen": state.get("seen_step") is not None,
            "hidden_success_first_step": state.get("seen_step"), "trial_hidden_success_seen": bool(state.get("trial_seen")),
            "finish_time_s": round(float(ft) - float(t0), 1) if ft and t0 else None}

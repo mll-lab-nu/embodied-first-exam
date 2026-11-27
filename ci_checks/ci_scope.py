@@ -9,7 +9,8 @@ FULL suite. Pushes to main always run the full suite (.github/workflows/static-c
 a scoped run stays unnoticed for longer than one merge.
 
 A benchmark B is affected by a changed path P when P is one of B's own paths (UNITS below: its task-name prefix,
-images/<b>/, its pages tasks/<folder>/*.md, ci_checks/benchmarks/<b>/, extra files) or when B's and P's benchmark refer to each other's
+images/<b>/, its pages tasks/<folder>/*.md, its advisory hooks ci_checks/benchmarks/<b>/advisory-*, extra files; the
+rest of ci_checks/benchmarks/<b>/, its invariant hooks, their helpers and its exported.toml, runs the full suite) or when B's and P's benchmark refer to each other's
 paths (`scripts/<x>` / `images/<x>` in a .py / .sh file under the other's own directories: shared layers that one
 benchmark copies from another, e.g. MyoSuite and HumanoidBench's realtime service).
 
@@ -173,6 +174,9 @@ def scope(paths: list[str]) -> dict:
     for p in paths:
         if p in NO_TASK_EFFECT or p in REPO_LEVEL_ONLY:
             continue
+        if re.match(r"ci_checks/benchmarks/[^/]+/(?!advisory-)", p):   # an invariant hook, a file one runs (check_leak.sh)
+            return {"scope": "full", "reason": f"{p}: a benchmark's invariant hook or what it reads (exported.toml), whose "
+                    "mutations check-ci-selftest.py runs in the full suite only", "benches": []}
         own = owners(p)
         if not own or any(o not in UNITS for o in own):
             why = "not one benchmark's path" if not own else f"benchmark {sorted(own)} has no row in ci_checks/ci_scope.py UNITS"
@@ -244,9 +248,7 @@ def main(argv: list[str]) -> int:
         s = scope(paths)
     benches = s["benches"]
     prefixes = sorted({p for b in benches for p in UNITS[b]})
-    tprefixes = tuple(pre for pre, lab in tc.BENCHMARKS if lab in benches)
-    tasks = [t.relative_to(ROOT).as_posix() for t in tc.iter_tasks()
-             if label_of_task(t.name) in benches] if tprefixes else []
+    tasks = [t.relative_to(ROOT).as_posix() for t in tc.iter_tasks() if label_of_task(t.name) in benches] if benches else []
     print(f"RCB_SCOPE={s['scope']}")
     print(f"RCB_SCOPE_REASON={shlex.quote(s['reason'])}")
     print(f"RCB_SCOPE_BENCHES={shlex.quote(';'.join(benches))}")
