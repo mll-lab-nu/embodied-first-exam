@@ -21,8 +21,9 @@ Any of these ends the episode at once as a failure, which later actions cannot u
 
 Deliverable: `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 28)` for `sharpa` or
 `(T, 26)` for `wuji`, at most 6000 rows, plus the `hand` member (`s.save_trajectory` writes both), and
-`/app/output/gen.py`, the script that produced it. Save it compressed (`numpy.savez_compressed`; `s.save_trajectory`
-does): an archive larger than 64 MB is rejected. Save a valid one early and overwrite it when you have a better one.
+`/app/output/gen.py`, the script that produced it. Save it compressed with `numpy.savez_compressed` (`s.save_trajectory`
+does this). An archive larger than 64 MB is rejected. Save a valid one early and overwrite it when you have a better
+one.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
 benchmark's demonstrations, trained policies); trials are reviewed.
@@ -59,7 +60,7 @@ brace at `brace_pos` (lying along x). Bore entries and dowel tips are MuJoCo sit
 `<rail>_tip_<m|p>`).
 
 ### Actions
-Each row is one 50 Hz control. The first six entries are the wrist-stage targets, identical for both hands:
+Each row is one 50 Hz control step. The first six entries are the wrist-stage targets, identical for both hands:
 `wrist_x, wrist_y, wrist_z` (metres, offsets of the stage from its origin `task.json` `stage_origin`, along the world
 axes) and `wrist_rx, wrist_ry, wrist_rz` (radians, serial XYZ joints, not a quaternion). At zero wrist angles the palm
 faces down, the fingers point along +x and the thumb is on the +y side. The finger targets follow in native actuator
@@ -76,12 +77,12 @@ finger start pose of each hand is in `task.json` (`initial_targets`).
 ### Hands
 Two hand models: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger
 actuators); the task is the same for both. Choose the hand with `Session(..., hand="wuji")` or the environment variable
-`DEXHAND_HAND=wuji` (default `sharpa`). `s.save_trajectory(actions, path)` records the hand in the archive (`hand`
-member, `sharpa` when absent); a trajectory whose row width does not match its hand is rejected. Action rows are `28`
-wide for `sharpa` and `26` wide for `wuji`; `s.actuator_names` gives the exact order. Both hands hang from the same
-six-axis wrist stage, with the same wrist joints, ranges, gains and start targets; the wrist x/y/z targets are offsets
-from the stage origin (stage origin (0.55, -0.1, 1.15) m) along the world axes, and at zero wrist angles the palm faces
-down with the fingers along +x.
+`DEXHAND_HAND=wuji` (default `sharpa`). `s.save_trajectory(actions, path)` records the hand in the archive as the `hand`
+member; an archive without it counts as `sharpa`. A trajectory whose row width does not match its hand is rejected.
+Action rows are `28` wide for `sharpa` and `26` wide for `wuji`; `s.actuator_names` gives the exact order. Both hands
+hang from the same six-axis wrist stage, with the same wrist joints, ranges, gains and start targets; the wrist x/y/z
+targets are offsets from the stage origin (stage origin (0.55, -0.1, 1.15) m) along the world axes, and at zero wrist
+angles the palm faces down with the fingers along +x.
 
 ### Robot
 You control one dexterous hand mounted on a six-DoF wrist positioning stage (three prismatic and three serial revolute

@@ -19,8 +19,8 @@ Deliverable: `/app/output/trajectory.npz` with a finite numeric `actions` array 
 `(T, 26)` for `wuji`, at most 1500 rows, plus the `hand` it was made for, and `/app/output/gen.py`, the script that
 produced it. Each row is one 50 Hz control: `wrist_x, wrist_y, wrist_z` targets (metres), `wrist_rx, wrist_ry, wrist_rz`
 (radians, serial XYZ joints), then the finger targets in `s.actuator_names` order. Targets must lie within
-`s.model.actuator_ctrlrange`. Save it compressed (`numpy.savez_compressed`; `s.save_trajectory` does): an archive larger
-than 64 MB is rejected. Save a valid one early and overwrite it when you have a better one.
+`s.model.actuator_ctrlrange`. Save it compressed with `numpy.savez_compressed` (`s.save_trajectory` does this). An
+archive larger than 64 MB is rejected. Save a valid one early and overwrite it when you have a better one.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
 benchmark's demonstrations, trained policies); trials are reviewed.
@@ -60,10 +60,10 @@ hand's native actuator order.
 ### Hands
 Two hand models: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger
 actuators); the task is the same for both. Choose the hand with `Session(..., hand="wuji")` or the environment variable
-`DEXHAND_HAND=wuji` (default `sharpa`). `s.save_trajectory(actions, path)` records the hand in the archive (`hand`
-member, `sharpa` when absent); a trajectory whose row width does not match its hand is rejected. Action rows are `28`
-wide for `sharpa` and `26` wide for `wuji`; `s.actuator_names` gives the exact order. Sharpa starts in a near-edge
-pregrasp; Wuji starts at the same six wrist targets with its fingers curled clear of the paper.
+`DEXHAND_HAND=wuji` (default `sharpa`). `s.save_trajectory(actions, path)` records the hand in the archive as the `hand`
+member; an archive without it counts as `sharpa`. A trajectory whose row width does not match its hand is rejected.
+Action rows are `28` wide for `sharpa` and `26` wide for `wuji`; `s.actuator_names` gives the exact order. Sharpa starts
+in a near-edge pregrasp; Wuji starts at the same six wrist targets with its fingers curled clear of the paper.
 
 ### Robot
 A dexterous hand on a six-DoF wrist positioning stage is your robot. The wrist stage is position actuated in the physics

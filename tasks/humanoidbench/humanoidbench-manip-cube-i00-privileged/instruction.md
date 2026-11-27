@@ -14,16 +14,16 @@ Any of these ends the episode at once, and nothing after it counts:
 
 You cannot see the score here: the reward function is not in this container (`s.step()` returns `None` where the reward
 would be, and `s.status()` reports no return). You do have the complete physical state (`s.obs()`, `s.low.model`,
-`s.low.data`): build your own measure of what the episode is judged on and optimise against it; it should improve when
-the robot visibly does the task better.
+`s.low.data`). Build your own measure of what the episode is judged on and optimise against it; your measure should
+improve when the robot visibly does the task better.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(...)`, at most 500 rows (`s.max_steps`); it
-is replayed open-loop from the fixed start and passes if the replayed episode's score reaches the mark. Also leave
-`/app/output/gen.py`, the script that produced it, which must run and reproduce `trajectory.npz` (not a paraphrase of
-it) reading nothing but `/app/instance.npz` and files under `/app/output/`, and `/app/output/NOTES.md`, at most 20
-lines: your final approach and why it works, and the approaches you tried that failed and what each told you about the
-task. Only the trajectory is scored. Save one as soon as you have any trajectory and overwrite it (with `gen.py` and
-`NOTES.md` to match) whenever you have a better one; since you cannot see the score, keep improving it until the time is
+is replayed open-loop from the fixed start and passes if the replayed episode's score reaches the mark. Also leave two
+files. `/app/output/gen.py` is the script that produced it; it must run and reproduce `trajectory.npz` (not a paraphrase
+of it), reading nothing but `/app/instance.npz` and files under `/app/output/`. `/app/output/NOTES.md`, at most 20
+lines, gives your final approach and why it works, and the approaches you tried that failed and what each told you about
+the task. Only the trajectory is scored. Save one as soon as you have any trajectory. Overwrite it, with `gen.py` and
+`NOTES.md` to match, whenever you have a better one. You cannot see the score, so keep improving it until the time is
 up.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -62,10 +62,10 @@ the two ends of a servo's range, linearly, so 0 is mid-range, not 0 rad. The 61 
 `right_hip_yaw`, `right_hip_roll`, `right_hip_pitch`, `right_knee`, `right_ankle`, `torso`, `left_shoulder_pitch`,
 `left_shoulder_roll`, `left_shoulder_yaw`, `left_elbow`, `left_wrist_yaw`, `right_shoulder_pitch`,
 `right_shoulder_roll`, `right_shoulder_yaw`, `right_elbow`, `right_wrist_yaw`. The remaining 40 are the two Shadow
-hands, 20 each — `lh_A_*` then `rh_A_*`; each hand's first 2 are its wrist (`*_A_WRJ2`, `*_A_WRJ1`) and the other 18 its
-fingers, where each of the 4 `*J0` ones (`*_A_FFJ0`, `*_A_MFJ0`, `*_A_RFJ0`, `*_A_LFJ0`) drives a tendon that moves two
-finger joints together. A constant action commands joint *targets*, not a pose: whether the robot stays there depends on
-whether that pose is stable under gravity and contact.
+hands, 20 each: `lh_A_*`, then `rh_A_*`. In each hand the first 2 are the wrist (`*_A_WRJ2`, `*_A_WRJ1`) and the other
+18 are the fingers. Each of the 4 `*J0` actuators (`*_A_FFJ0`, `*_A_MFJ0`, `*_A_RFJ0`, `*_A_LFJ0`) drives a tendon that
+moves two finger joints together. A constant action commands joint *targets*, not a pose: whether the robot stays there
+depends on whether that pose is stable under gravity and contact.
 
 ### Speed and rendering
 - One 500-step episode costs about 0.58 s of one core, and the container has 16, so large-scale search is affordable.
@@ -75,7 +75,7 @@ whether that pose is stable under gravity and contact.
 
 ## Others
 - The trajectory is replayed open-loop, but MuJoCo on the CPU repeats exactly, so actions recorded from a feedback
-  controller reproduce when replayed; `s.low.data` can be snapshotted and restored to branch rollouts.
+  controller reproduce when replayed. You can snapshot and restore `s.low.data` to branch rollouts.
 - The goal orientation is not in `(qpos, qvel)`: it is the goal cube's `body_quat` in the MuJoCo model and the last four
   numbers of `s.obs()`; it is fixed for this instance and does not move between resets.
 - Of the two ways of turning a cube onto the goal orientation, only one counts: the other ends at the same orientation

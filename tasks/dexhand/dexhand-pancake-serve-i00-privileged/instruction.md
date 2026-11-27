@@ -17,10 +17,11 @@ Any of these ends the episode at once as a failure, which later actions cannot u
 - The pancake, the pan, the plate or the turner leaves the work area.
 - The physics becomes unstable.
 
-Deliverable: `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 58)` for `sharpa` or
-`(T, 54)` for `wuji`, at most 3000 rows, plus the `hand` member (`s.save_trajectory` writes both), and
-`/app/output/gen.py`, the script that produced it. Save it compressed (`numpy.savez_compressed`; `s.save_trajectory`
-does): an archive larger than 64 MB is rejected. Save a valid one early and overwrite it when you have a better one.
+Deliverable: `/app/output/trajectory.npz` and `/app/output/gen.py`, the script that produced it. The archive holds a
+finite numeric `actions` array of shape `(T, 58)` for `sharpa` or `(T, 54)` for `wuji`, at most 3000 rows, plus the
+`hand` member; `s.save_trajectory` writes both. Save it compressed with `numpy.savez_compressed` (`s.save_trajectory`
+does this). An archive larger than 64 MB is rejected. Save a valid one early and overwrite it when you have a better
+one.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
 benchmark's demonstrations, trained policies); trials are reviewed.
@@ -73,9 +74,9 @@ the counter and the left arm parked (`task.json` `initial_qpos` and `initial_tar
 ### Hands
 Two hand models: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger
 actuators); the task is the same for both. Choose the hand with `Session(..., hand="wuji")` or the environment variable
-`DEXHAND_HAND=wuji` (default `sharpa`). `s.save_trajectory(actions, path)` records the hand in the archive (`hand`
-member, `sharpa` when absent); a trajectory whose row width does not match its hand is rejected. Action rows are `58`
-wide for `sharpa` and `54` wide for `wuji`; `s.actuator_names` gives the exact order.
+`DEXHAND_HAND=wuji` (default `sharpa`). `s.save_trajectory(actions, path)` records the hand in the archive as the `hand`
+member; an archive without it counts as `sharpa`. A trajectory whose row width does not match its hand is rejected.
+Action rows are `58` wide for `sharpa` and `54` wide for `wuji`; `s.actuator_names` gives the exact order.
 
 ### Robot
 The robot is a fixed Tianji Marvin stand at the world origin facing +x, with two 7-joint arms and a dexterous hand on

@@ -10,9 +10,9 @@ over the table. The replay of your trajectory ends as soon as the task is done (
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`:
 `task` and `actions`, a (T, 8) float array of at most 100,000 rows (one per control step, 1.9 h of robot time); anything
 else (another shape, NaN, more rows, a file that is not such an npz) scores 0. It is replayed open-loop from the fixed
-start (`s.replay(actions)` and the replay CLI do the same); a replay can end slightly differently from your run, so
-leave a margin. Leave the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it when
-you have a better one.
+start, the same way `s.replay(actions)` and the replay CLI do it. A replay can end slightly differently from your run,
+so leave a margin. Leave the script that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it
+when you have a better one.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
 benchmark's demonstrations, trained policies); trials are reviewed.

@@ -17,7 +17,7 @@ Any of these ends the episode at once as a failure, which later actions cannot u
 - The parked left arm or the left hand touches the jar or the lid.
 - The physics becomes unstable.
 
-The steps before the last count as they happen.
+Each step of the Goal before the last one counts at the moment it happens.
 
 When you are done, send `/finish` to end the episode and get it graded. Everything else is judged on the state at that
 point.
@@ -65,10 +65,11 @@ links; no IK primitive is supplied. If the service connection fails, call `r.wai
 before continuing. Crash recovery resumes the same journaled episode, without a reset, and the wall-clock budget keeps
 running.
 
-Resets: `r._post("/reset", ...)` (`POST /reset`) starts a new episode from the same starting state, abandoning the
-running one or after one has ended; it takes no simulated time and returns the start's images and proprioception. Once
-an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]` and `meta["resets_left"]` count
-the episodes; `meta["control_steps"]` is the current episode's, `meta["control_steps_total"]` all of them.
+Resets: `r._post("/reset", ...)` (`POST /reset`) starts a new episode from the same starting state. You can call it
+during a running episode, which it abandons, or after one has ended. It takes no simulated time and returns the start's
+images and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]`
+and `meta["resets_left"]` count the episodes. `meta["control_steps"]` counts the current episode's control steps,
+`meta["control_steps_total"]` those of all episodes.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -94,8 +95,8 @@ Hold interpolation holds each row for `dt`; linear interpolation starts from the
 scalar gripper opening.
 
 Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's
-finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`); the left arm is parked and
-only the right arm/hand perform the task.
+finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`). The left arm is parked;
+only the right arm and hand perform the task.
 
 ### Observations
 You receive camera RGB, optional calibrated depth, and the robot's own joint positions, velocities, actuator efforts,
@@ -116,9 +117,9 @@ You control the right arm and right hand of a fixed Tianji Marvin robot: a stand
 hand on each wrist (the robot stands behind the worktop, its base centre at x = -0.56, y = 0.08 on the floor, facing +x;
 shoulders at z = 1.121 m (1.221 m above the floor)). The left arm stays parked beside the torso with its hand open; the
 task is done by the right arm and hand alone. Every arm and finger joint is a position servo inside the physics engine
-under native force bounds; arm servos have stiffness 700 N m/rad, damping 48 N m s/rad and no gravity compensation (a
-held target sags under the arm's weight unless your targets account for it). Turning, lifting, carrying and releasing
-the lid require physical contact, and the jar is held by nothing but its own weight and friction on the worktop. The
+under native force bounds. Arm servos have stiffness 700 N m/rad, damping 48 N m s/rad and no gravity compensation, so a
+held target sags under the arm's weight unless your targets account for it. Turning, lifting, carrying and releasing the
+lid require physical contact, and the jar is held by nothing but its own weight and friction on the worktop. The
 controller runs at 50 Hz, with ten 2 ms physics substeps. At reset the right hand hangs open, palm down, about 0.1 m
 above the lid with its fingers along +x; the left arm is at its parked pose.
 

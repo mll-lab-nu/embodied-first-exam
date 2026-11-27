@@ -5,9 +5,9 @@ Make the scene look like the goal image /app/goal.png, the head camera's view on
 does not have to match it.
 
 ## Goal
-Success: the objects that matter stand as the picture shows them (what is on, in, under, next to or touching what, what
-is open, what the robot holds and what it has let go of), and two of them each stand roughly where the picture shows
-them, turned roughly as there; then the robot and those objects stay still for at least a second and a half.
+Success: the objects that matter stand as the picture shows them: what is on, in, under, next to or touching what, what
+is open, what the robot holds and what it has let go of. Also, two of them each stand roughly where the picture shows
+them, turned roughly the same way. Then the robot and those objects stay still for at least a second and a half.
 
 A replay ends as soon as the task is done, and also at your last row: end the trajectory with at least a second and a
 half of the robot standing still.
@@ -62,13 +62,13 @@ gripper (1).
 ### Observations
 - Frames and units: the odometry frame is the robot's `base_link` at the start (x forward, y left, z up); `s.env` also
   gives the world frame. Quaternions are XYZW, lengths in m, angles in rad.
-- Cameras: `s.cameras()` names the three RGB cameras (head `robot_r1:zed_link:Camera:0`, the goal image's camera, and
-  the two wrists), 1080 × 1080; `s.frames(cams)` gives their images after the last step and `s.extrinsics(cams)` their
-  poses (odometry frame to camera, OpenCV axes). While the robot moves, a camera frame shows the scene 2 control steps
-  earlier.
+- Cameras: `s.cameras()` names the three RGB cameras, 1080 × 1080: the head camera `robot_r1:zed_link:Camera:0` (the
+  goal image's camera) and the two wrists. `s.frames(cams)` gives their images after the last step, and
+  `s.extrinsics(cams)` gives their poses (odometry frame to camera, OpenCV axes). While the robot moves, a camera frame
+  shows the scene 2 control steps earlier.
 - `s.env` and `s.robot` are OmniGibson's environment and robot: every object's pose and state. OmniGibson and
-  iSpatialGym's simulator code are installed; this tooling gives you no motion primitives or planners (only what the
-  installed packages themselves ship): moving the robot is up to you.
+  iSpatialGym's simulator code are installed. This tooling gives you no motion primitives or planners beyond what those
+  installed packages ship themselves: moving the robot is up to you.
 
 ### Goal image
 `/app/goal.png` is what the robot's head camera (`robot_r1:zed_link:Camera:0`) sees once the task is done. It is the
@@ -77,8 +77,9 @@ same camera, resolution and intrinsics as the robot's own head camera.
 ## Others
 - Nothing installed here knows the goal: `/app/instance.json` is only the start, and your simulator never reports
   success.
-- `s.reset()` returns to the start in the same process, close to but not exactly the frozen state; a new process starts
-  exactly from it, as the grader's replay does: check the trajectory you hand in with the replay command above.
+- `s.reset()` returns to the start in the same process, but only close to the frozen state, not exactly. A new process
+  starts exactly from the frozen state, as the grader's replay does. So check the trajectory you hand in with the replay
+  command above.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At

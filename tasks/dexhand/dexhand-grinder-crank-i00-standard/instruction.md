@@ -15,7 +15,7 @@ Any of these ends the episode at once as a failure, which later actions cannot u
 - An arm, torso or stand link of the robot touches anything (only the hands may make contact).
 - The physics becomes unstable.
 
-The steps before the last count as they happen.
+Each step of the Goal before the last one counts at the moment it happens.
 
 When you are done, send `/finish` to end the episode and get it graded. Everything else is judged on the state at that
 point.
@@ -62,10 +62,11 @@ links; no IK primitive is supplied. If the service connection fails, call `r.wai
 before continuing. Crash recovery resumes the same journaled episode, without a reset, and the wall-clock budget keeps
 running.
 
-Resets: `r._post("/reset", ...)` (`POST /reset`) starts a new episode from the same starting state, abandoning the
-running one or after one has ended; it takes no simulated time and returns the start's images and proprioception. Once
-an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]` and `meta["resets_left"]` count
-the episodes; `meta["control_steps"]` is the current episode's, `meta["control_steps_total"]` all of them.
+Resets: `r._post("/reset", ...)` (`POST /reset`) starts a new episode from the same starting state. You can call it
+during a running episode, which it abandons, or after one has ended. It takes no simulated time and returns the start's
+images and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]`
+and `meta["resets_left"]` count the episodes. `meta["control_steps"]` counts the current episode's control steps,
+`meta["control_steps_total"]` those of all episodes.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,

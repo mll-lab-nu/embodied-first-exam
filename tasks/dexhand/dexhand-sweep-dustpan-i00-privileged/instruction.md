@@ -20,8 +20,8 @@ Deliverable: `/app/output/trajectory.npz` with a finite numeric `actions` array 
 (Wuji), 1 <= T <= 160000, as a compressed archive of at most 64 MB, and `/app/output/gen.py`, the script that produced
 it. Use `s.save_trajectory(actions, "/app/output/trajectory.npz")`, which compresses and records the hand. Row `i` holds
 the motor targets for physics step `i` after the frozen reset, in `s.actuator_names` order, within
-`s.model.actuator_ctrlrange`. Save it compressed (`numpy.savez_compressed`; `s.save_trajectory` does): an archive larger
-than 64 MB is rejected. Save a valid one early and overwrite it when you have a better one.
+`s.model.actuator_ctrlrange`. Save it compressed with `numpy.savez_compressed` (`s.save_trajectory` does this). An
+archive larger than 64 MB is rejected. Save a valid one early and overwrite it when you have a better one.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
 benchmark's demonstrations, trained policies); trials are reviewed.
@@ -69,12 +69,13 @@ IP, then index/middle/ring/pinky MCP flexion, MCP abduction, PIP, DIP; radians).
 ### Hands
 Two hand models: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger
 actuators); the task is the same for both. Choose the hand with `Session(..., hand="wuji")` or the environment variable
-`DEXHAND_HAND=wuji` (default `sharpa`). `s.save_trajectory(actions, path)` records the hand in the archive (`hand`
-member, `sharpa` when absent); a trajectory whose row width does not match its hand is rejected. Action rows are `58`
-wide for `sharpa` and `54` wide for `wuji`; `s.actuator_names` gives the exact order. This task uses two hands of one
-model on the two arms of a fixed robot: Sharpa Wave (default) or Wuji Hand 2.2. With Wuji the start differs only in the
-finger joints and their targets: both Wuji hands start closed on the same broom and dustpan (the arm, tool, debris and
-bristle coordinates and the arm targets are those of the Sharpa start), and `s.hold_action()` keeps them.
+`DEXHAND_HAND=wuji` (default `sharpa`). `s.save_trajectory(actions, path)` records the hand in the archive as the `hand`
+member; an archive without it counts as `sharpa`. A trajectory whose row width does not match its hand is rejected.
+Action rows are `58` wide for `sharpa` and `54` wide for `wuji`; `s.actuator_names` gives the exact order. This task
+uses two hands of one model on the two arms of a fixed robot: Sharpa Wave (default) or Wuji Hand 2.2. With Wuji the
+start differs only in the finger joints and their targets: both Wuji hands start closed on the same broom and dustpan
+(the arm, tool, debris and bristle coordinates and the arm targets are those of the Sharpa start), and `s.hold_action()`
+keeps them.
 
 ### Robot
 The robot is a fixed Tianji Marvin base with two seven-joint arms. The left arm's hand holds the dustpan by its handle;

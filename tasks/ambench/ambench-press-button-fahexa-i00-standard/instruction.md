@@ -19,10 +19,10 @@ Rules:
   is frozen.
 
 ## Robot Interface
-A simulated aerial manipulator: a fully actuated hexarotor (six tilted rotors, so it can hold any attitude while
-hovering) carrying a small arm (four joints: three pitch joints and a roll joint) with a two-finger gripper, in AM-Bench
-(Isaac Lab). The robot runs as a service you reach through its client or its MCP tools, as if it were real hardware: one
-live episode.
+A simulated aerial manipulator in AM-Bench (Isaac Lab). It is a fully actuated hexarotor: six tilted rotors let it hold
+any attitude while hovering. It carries a small arm with four joints (three pitch joints and a roll joint) and a
+two-finger gripper. The robot runs as a service you reach through its client or its MCP tools, as if it were real
+hardware: one live episode.
 
 `POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.
 
@@ -69,10 +69,11 @@ Optional inputs (ask only for what you need):
 - `spec["robot_spec"]` (the arm's joints and limits, the gripper and its command, the controller, the tool frame),
   `spec["world"]` (frame, units, wxyz), `spec["proprio_groups"]` + `res.group("base_pose")` (joint_pos, joint_vel,
   tcp_pose, gripper_opening, gripper_cmd, joint_effort, base_pose, base_vel, ee_cmd).
-- `r.fk(q4, base_pose=base7)` -> poses of `spec["kinematics"]["links"]` (in the airframe frame without `base_pose`,
-  world with it); `r.ik({"tcp": pose7}, seed=q4, base_pose=base7)` -> `{"ok", "q", "error"}`: a stateless model of the
-  arm on its airframe (no physics, no simulated time); `q4` = the arm's four joints. AM-Bench's own controller moves the
-  airframe too (below): this model is the arm alone, for reasoning about reach and camera poses.
+- `r.fk(q4, base_pose=base7)` -> poses of `spec["kinematics"]["links"]`, in the airframe frame without `base_pose` and
+  in the world frame with it. `r.ik({"tcp": pose7}, seed=q4, base_pose=base7)` -> `{"ok", "q", "error"}`. Both use a
+  stateless model of the arm on its airframe (no physics, no simulated time); `q4` = the arm's four joints. AM-Bench's
+  own controller moves the airframe too (below): this model is the arm alone, for reasoning about reach and camera
+  poses.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -86,21 +87,22 @@ Optional inputs (ask only for what you need):
 - The client and the tools drive the same robot in the same episode; use either, or both.
 
 ### Actions
-- World frame: metres, z up, the ground is the plane z = 0; positions relative to the environment's origin (the same
-  frame for the action, the proprio poses, the camera extrinsics and `r.fk` with `base_pose`); quaternions are wxyz.
+- World frame: metres, z up, the ground is the plane z = 0. Positions are relative to the environment's origin; the
+  action, the proprio poses, the camera extrinsics and `r.fk` with `base_pose` all use this frame. Quaternions are wxyz.
 - At the start the airframe hovers level, facing +x, with the arm at its zero joint configuration and the gripper
   closed.
-- `ee_pose` (8 per row): `x y z qw qx qy qz gripper` — AM-Bench's own action. The target pose of the tool frame `tcp`
-  (the end-effector link, the frame of proprio `tcp_pose`; position in metres, world frame; orientation wxyz) and the
-  gripper command (-1 = closed .. +1 = open). Every control step, AM-Bench's whole-body controller turns the target into
-  an airframe pose (its floating-base inverse kinematics), the airframe pose into the six rotor thrusts (a PID) and the
-  arm joints into targets for their drives: you command where the end effector should be, the airframe follows.
-- Rows are `dt` apart (`1/120 ≤ dt ≤ 0.5` s, a multiple of the 120 Hz control period: 1/120, 2/120, ...; any other `dt`
-  is rejected, never rounded); `interpolate="hold"` (each row exactly as given, for its dt) or `"linear"` (default: from
-  the previous target, positions linear, orientation slerp, gripper linear); a chunk may cover at most 10 s; a gripper
-  value outside [-1, 1] is clipped and listed in `meta["clipped"]`. Start from the target in force
-  (`res.group("ee_cmd")`, or the proprio `tcp_pose`) to move smoothly: at the start the target is the end effector's own
-  pose and the gripper is closed.
+- `ee_pose` (8 per row): `x y z qw qx qy qz gripper` — AM-Bench's own action. The target pose of the tool frame `tcp`,
+  and the gripper command (-1 = closed .. +1 = open). `tcp` is the end-effector link, the frame of proprio `tcp_pose`;
+  its position is in metres in the world frame, its orientation wxyz. Every control step, AM-Bench's whole-body
+  controller turns the target into an airframe pose (its floating-base inverse kinematics). A PID turns the airframe
+  pose into the six rotor thrusts, and the arm joints become targets for their drives. You command where the end
+  effector should be; the airframe follows.
+- Rows are `dt` apart. `dt` must be a multiple of the 120 Hz control period (1/120, 2/120, ...) with `1/120 ≤ dt ≤ 0.5`
+  s; any other `dt` is rejected, never rounded. With `interpolate="hold"` each row is used exactly as given, for its dt;
+  with `"linear"` (default) the target moves from the previous one: positions linear, orientation slerp, gripper linear.
+  A chunk may cover at most 10 s. A gripper value outside [-1, 1] is clipped and listed in `meta["clipped"]`. To move
+  smoothly, start from the current target (`res.group("ee_cmd")`, or the proprio `tcp_pose`). At the start, the target
+  is the end effector's own pose and the gripper is closed.
 - A malformed request (a wrong type, a value out of range, a position more than 30 m from the origin, a zero quaternion)
   is answered 400 with the reason and executes nothing.
 - Control and physics run at 120 Hz (simulated time; one physics step of 1/120 s per control step).
@@ -110,9 +112,10 @@ Optional inputs (ask only for what you need):
   `base_camera` (on the airframe, looking forward); their intrinsics and mounts are in the spec's `cameras`, their pose
   at every frame comes with each reply.
 - Depth (`depth=True`): z-depth in metres, 0 = no reading, pixel-aligned with the colour image, in 1 mm steps.
-- Proprioception: 45 values a row (their `layout` comes with them): the arm's joint positions, velocities and efforts,
-  the gripper's opening and command, the tool frame's pose (`tcp_pose`), the airframe's pose and velocity (`base_pose`,
-  `base_vel`) and the end-effector target in force (`ee_cmd`); the groups are in the spec's `proprio_groups`.
+- Proprioception: 45 values a row (their `layout` comes with them). They are the arm's joint positions, velocities and
+  efforts, the gripper's opening and command, the tool frame's pose (`tcp_pose`), the airframe's pose and velocity
+  (`base_pose`, `base_vel`) and the current end-effector target (`ee_cmd`). The groups are in the spec's
+  `proprio_groups`.
 
 ### Episode
 One episode lasts 20 s of simulated time.

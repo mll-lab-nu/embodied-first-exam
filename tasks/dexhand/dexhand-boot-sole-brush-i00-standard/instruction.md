@@ -17,7 +17,7 @@ Any of these ends the episode at once as a failure, which later actions cannot u
 - Any part of the robot other than its right hand touches anything, the robot itself included.
 - The physics becomes unstable.
 
-The steps before the last count as they happen.
+Each step of the Goal before the last one counts at the moment it happens.
 
 When you are done, send `/finish` to end the episode and get it graded. Everything else is judged on the state at that
 point.
@@ -65,10 +65,11 @@ links; no IK primitive is supplied. If the service connection fails, call `r.wai
 before continuing. Crash recovery resumes the same journaled episode, without a reset, and the wall-clock budget keeps
 running.
 
-Resets: `r._post("/reset", ...)` (`POST /reset`) starts a new episode from the same starting state, abandoning the
-running one or after one has ended; it takes no simulated time and returns the start's images and proprioception. Once
-an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]` and `meta["resets_left"]` count
-the episodes; `meta["control_steps"]` is the current episode's, `meta["control_steps_total"]` all of them.
+Resets: `r._post("/reset", ...)` (`POST /reset`) starts a new episode from the same starting state. You can call it
+during a running episode, which it abandons, or after one has ended. It takes no simulated time and returns the start's
+images and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]`
+and `meta["resets_left"]` count the episodes. `meta["control_steps"]` counts the current episode's control steps,
+`meta["control_steps_total"]` those of all episodes.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -93,8 +94,8 @@ s; a chunk covers at most 10 s. Hold interpolation holds each row for `dt`; line
 previous target. The robot has no scalar gripper opening.
 
 Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's
-finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`); the left arm is parked and
-only the right arm/hand perform the task.
+finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`). The left arm is parked;
+only the right arm and hand perform the task.
 
 ### Observations
 You receive camera RGB, optional calibrated depth, and the robot's own joint positions, velocities, actuator efforts,
@@ -114,8 +115,8 @@ hand on each wrist. The stand rests on the floor (z = 0) beside the counter's -y
 (0.147, -0.591, 0.10), facing +y (shoulders 1.121 m above the base origin, at z = 1.221 m; the right shoulder is on the
 +x side). The left arm stays parked beside the torso with its hand open; the task is done by the right arm and hand
 alone, and no other part of the robot may touch anything. Every arm and finger joint is a position servo inside the
-physics engine under native force bounds; arm servos have stiffness 700 N m/rad, damping 48 N m s/rad and no gravity
-compensation (a held target sags under the arm's weight unless your targets account for it). Grasping, carrying,
+physics engine under native force bounds. Arm servos have stiffness 700 N m/rad, damping 48 N m s/rad and no gravity
+compensation, so a held target sags under the arm's weight unless your targets account for it. Grasping, carrying,
 brushing and releasing require physical contact. The controller runs at 50 Hz, with ten 2 ms physics substeps. The
 frozen reset lets the boot, the clods, the brush and the arms settle for 0.5 s before control 1.
 

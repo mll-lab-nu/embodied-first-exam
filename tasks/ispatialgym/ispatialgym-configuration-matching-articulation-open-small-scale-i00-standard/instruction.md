@@ -47,9 +47,9 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio   # execution video 
 One call returns at most 300 images. A malformed request is refused with a 400 and nothing is executed (a wrong type or
 shape, a value out of range, a `dt` that is not a whole number of control periods, `video_fps` outside 1-30, a call over
 the image limit): fix it and send it again. If the service crashes (a connection error or a 5xx answer), it restarts and
-resumes the SAME episode (never a reset) in the state after the last call it completed, which you may not have received:
-call `r.wait_ready()`, then check `r.status()` (`calls`, `control_steps`) before you continue. The simulator runs at
-about 8 control steps per second of wall time.
+resumes the SAME episode; it never resets. It resumes in the state after the last call it completed, and you may not
+have received that call's answer. Call `r.wait_ready()`, then check `r.status()` (`calls`, `control_steps`) before you
+continue. The simulator runs at about 8 control steps per second of wall time.
 
 - Per frame: `res.frame_step`, `res.frame_time_s` and `res.extrinsic_cv[cam]` (N, 3, 4; odometry -> camera, OpenCV
   axes). Intrinsics `spec["cameras"][cam]["intrinsic_cv"]` (the goal image's are the head camera's), mounting
@@ -59,9 +59,9 @@ about 8 control steps per second of wall time.
   `res.group("tcp_pose", now=True)` now.
 - Robot: `spec["robot_spec"]`: joint names and limits, the gripper rule, the end-effector frame and the fingertip centre
   (TCP), the base command.
-- Kinematics (stateless: no physics, no time): `r.fk(q)`, `r.ik({"left_tcp": pose}, seed=q)`; q =
-  `spec["kinematics"]["joint_names"]` (trunk + both arms); poses in the robot's base frame, or in the odometry frame
-  with `base_pose=` the 7 base_pose proprio columns.
+- Kinematics (stateless: no physics, no time): `r.fk(q)` and `r.ik({"left_tcp": pose}, seed=q)`. q follows
+  `spec["kinematics"]["joint_names"]` (trunk + both arms). Poses are in the robot's base frame, or in the odometry frame
+  if you pass `base_pose=` the 7 base_pose proprio columns.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -76,30 +76,31 @@ about 8 control steps per second of wall time.
 
 ### Actions
 Blocks (`spec["action_types"]["joint_position"]["blocks"]`): base (3), trunk (4), left arm (7), left gripper (1), right
-arm (7), right gripper (1). Rows are `dt` apart (`1/30 ≤ dt ≤ 0.5` s, a multiple of the 30 Hz control period: `k/30` s;
-any other `dt` is a 400); a chunk covers at most 10 s; out-of-limit values are clipped and listed in `meta["clipped"]`.
+arm (7), right gripper (1). Rows are `dt` apart. `dt` must be a multiple of the 30 Hz control period (`k/30` s) with
+`1/30 ≤ dt ≤ 0.5` s; any other `dt` is a 400. A chunk covers at most 10 s. Out-of-limit values are clipped and listed in
+`meta["clipped"]`.
 - Base: a velocity command in [-1, 1] in the robot's own frame (forward, left, yaw rate), scaled to 0.75 m/s, 0.75 m/s
-  and 1 rad/s; it switches at the row and holds until the next one; zeros stop.
+  and 1 rad/s. It changes at once at the start of its row and holds until the next row; zeros stop the base.
 - Trunk and arms: absolute joint targets (rad), linearly interpolated between rows (or held, `interpolate="hold"`).
-- Grippers: one command each in [-1, 1]: -1 closed, 1 fully open, in between the fingers' target as a fraction of their
-  travel; it switches at the row. Grasping is assisted: closing on an object holds what the finger pads touch, and the
-  hand lets go only at 1.
+- Grippers: one command each in [-1, 1]: -1 closed, 1 fully open, and values in between set the fingers' target as a
+  fraction of their travel. It changes at once at the start of its row. Grasping is assisted: closing on an object holds
+  what the finger pads touch, and the hand lets go only at 1.
 
 ### Observations
 - Cameras: `robot_r1:zed_link:Camera:0` (head: the goal image's camera; it moves with the base and the trunk),
   `robot_r1:left_realsense_link:Camera:0` and `robot_r1:right_realsense_link:Camera:0` (wrists), 1080×1080 RGB each, no
   depth. They all move, so always use the calibration that arrived with the image. While the robot moves, a frame shows
-  the scene 2 control steps (67 ms) before the step it is reported at; the camera pose that comes with it is the one it
-  was rendered with.
+  the scene as it was 2 control steps (67 ms) before the step it is reported at. The camera pose that comes with a frame
+  is the pose it was rendered with.
 - Proprioception: the robot's joints, base pose and velocity, end-effector and fingertip poses and gripper openings.
   Every pose is in the odometry frame: the robot's `base_link` at the start of the episode (x forward, y left, z up).
-  Mind the joint order: the joint columns follow the robot spec's joint list (the trunk, then the two arms interleaved:
-  left joint 1, right joint 1, left joint 2, ...), while the action's arm blocks (and the kinematics' `q`) are grouped
-  (left arm joints 1-7, then right arm joints 1-7); map by name.
+  Mind the joint order. The joint columns follow the robot spec's joint list: the trunk, then the two arms interleaved
+  (left joint 1, right joint 1, left joint 2, ...). The action's arm blocks and the kinematics' `q` are grouped instead:
+  left arm joints 1-7, then right arm joints 1-7. Map by name.
 
 ### Holding still
 Simulated time passes only while you submit rows or hold (`r.hold(s)`). To hold still, first send a row with the base
-command at 0 (the base keeps its last command until the next row), then submit rows that hold still, or call
+command at 0, because the base keeps its last command until the next row. Then submit rows that hold still, or call
 `r.hold(s)`, which holds the last command.
 
 ### Goal image

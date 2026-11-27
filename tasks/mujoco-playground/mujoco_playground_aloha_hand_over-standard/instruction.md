@@ -61,9 +61,9 @@ rows are `dt` apart (a multiple of `control_dt`), each held (`interpolate="hold"
 ### Observations
 `meta["proprio"]` (`layout`, `now`): the joint positions, velocities and current targets. `meta["task"]` is the task's
 target (`target_pos`, and `target_quat_wxyz` where it has one). Calibration: `meta["cameras"][cam]` holds `intrinsic_cv`
-(pinhole, pixels) and `cam2world_gl` (4x4 camera-to-world, OpenGL axes: x right, y up, the camera looks along -z; the
-viewpoint the image is rendered from), for the state at the end of that call (the `last` image and the last frame of
-every stack). Depth is the distance along the viewing axis, in metres. The overhead and teleoperator cameras are fixed.
+(pinhole, pixels) and `cam2world_gl`, the 4x4 camera-to-world pose the image is rendered from (OpenGL axes: x right, y
+up, the camera looks along -z). Both describe the state at the end of that call: the `last` image and the last frame of
+every stack. Depth is the distance along the viewing axis, in metres. The overhead and teleoperator cameras are fixed.
 The two wrist cameras move with the arms (`spec["cameras"][cam]["moving"]`): for them a response with several frames
 also carries one pose per frame, `res.raw["cam2world_gl/<cam>"]["data"]`, float64 `(n_frames, 4, 4)`. `intrinsic_cv` is
 `[[fx, 0, cx], [0, fy, cy], [0, 0, 1]]` for the 320 x 240 image; fx and fy differ for the overhead and wrist cameras

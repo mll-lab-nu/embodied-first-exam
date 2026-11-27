@@ -54,9 +54,9 @@ res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/, l
 - One call returns at most 6020 images.
 - A call that runs longer than `spec["max_call_wall_s"]` (900 s) stops at the next control step and returns what it
   executed (`res.stopped`, `meta["executed_rows"]`).
-- If the service crashes (a connection error or a 5xx answer), it restarts and resumes the same episode (never a reset)
-  in the state after the last call it completed, which you may not have received: call `r.wait_ready()`, then check
-  `r.status()` (`calls`, `control_steps`) before you continue.
+- If the service crashes (a connection error or a 5xx answer), it restarts and resumes the same episode; it never
+  resets. It resumes in the state after the last call it completed, and you may not have received that call's answer.
+  Call `r.wait_ready()`, then check `r.status()` (`calls`, `control_steps`) before you continue.
 - Optional inputs (nothing changes unless you ask):
   - Depth: `depth=True` adds `res.last_depth[cam]` (z-depth in metres, 0 = no reading, pixel-aligned with the RGB);
     `depth="frames"` also returns `res.depth[cam]`, one map per frame.

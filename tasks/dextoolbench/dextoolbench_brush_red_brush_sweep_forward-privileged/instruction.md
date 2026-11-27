@@ -8,10 +8,10 @@ Success: the brush has lined up closely with the ghost brush, in both position a
 in order. A replay ends as soon as the task is done; later rows are not run. Each pose must be reached within 30 s
 (1,800 control steps), or the attempt ends there.
 
-Deliverable: `/app/output/trajectory.npz`: joint position targets, shape `(T, 29)`, one row per control step (1/60 s,
-each held for 10 physics steps), at most 360,000 rows; record it with the tooling (`s.record_start()`,
-`s.record_stop()`, `s.save_trajectory(A)`) so the layout is right. It is replayed from the fixed start. Leave the script
-that produced it at `/app/output/gen.py`. Save a valid one early and overwrite it when you have a better one.
+Deliverable: `/app/output/trajectory.npz`: joint position targets, shape `(T, 29)`, at most 360,000 rows. Each row is
+one control step (1/60 s, held for 10 physics steps). Record it with the tooling (`s.record_start()`, `s.record_stop()`,
+`s.save_trajectory(A)`) so the layout is right. It is replayed from the fixed start. Leave the script that produced it
+at `/app/output/gen.py`. Save a valid one early and overwrite it when you have a better one.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
 benchmark's demonstrations, trained policies); trials are reviewed.
