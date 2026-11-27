@@ -3,7 +3,7 @@
 # FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
 FROM ghcr.io/mll-lab-nu/efe:dexhand-0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350
 COPY . /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:dexhand-files-0.10.0@sha256:e24823d9e8264dbb53fb609a45cc07bd7299f0c1c3bdfb301f1e9231a63a6856 \
+COPY --from=ghcr.io/mll-lab-nu/efe:dexhand-files-0.11.0@sha256:4e16e8b63a4d2c93ed37a7a8b24ba27238c4a81764b9a9f02446640defa55519 \
      /privileged/environment/checker.py \
      /privileged/environment/essential.py \
      /privileged/environment/essential_articulated.py \
@@ -27,9 +27,9 @@ COPY --from=ghcr.io/mll-lab-nu/efe:dexhand-files-0.10.0@sha256:e24823d9e8264dbb5
      /privileged/environment/scene.py \
      /sim/server.py \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.7.0@sha256:1ab8c16d4372a0b44f5c0ea7f819f6febafcfdc132013b1736a04f360375b28f \
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:8a712f54d69d3fb089573d962c0756ef1026119a4337be28785e4a14410d20b3 \
      /rcb1.py \
      /rcb_limited.py \
      /run.sh \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:agent-end-files-0.4.0@sha256:96a5c925a9128ed91e1654e2b9aac99373517c80c3aa5e47b8f74880a0c413d0 /rcb_agent_end.py /srv/rcb_agent_end.py
+COPY --from=ghcr.io/mll-lab-nu/efe:agent-end-files-0.5.0@sha256:b6943584134a0cabb6d0a42a7a4e5e617be92c7299468e90a6021a023b6e557e /rcb_agent_end.py /srv/rcb_agent_end.py

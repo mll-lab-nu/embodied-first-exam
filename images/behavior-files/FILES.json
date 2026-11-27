@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:behavior-files-0.7.0@sha256:520f055c171edb22272d1f565ed2fe2a8fba309f9c4f29ddba6d6fc4afed492c",
+ "image": "ghcr.io/mll-lab-nu/efe:behavior-files-0.8.0@sha256:2dfdaa026c83ef781ba5338f0ed83035316d8159eea77f7c5e7809675e7b35dc",
  "source": "embodied_first_exam/benchmarks/behavior-1k",
  "files": {
   "privileged/grade.py": "09be201fa726339a83a67ce4112f4a509f997d9f8fcbcfc0eeea57a6c3986301",
@@ -7,6 +7,6 @@
   "rcb_behavior.py": "00f518cec973573b0faacf47cf27d5ab13c738f7189293ca76af00232a4c8fe7",
   "sim/finalize.sh": "d6aaea7cf17f1769d149a590f09c0b5f9f064f9302d69fa1422d889147d96752",
   "sim/server.py": "aa54ccde329287e53e5f58ba11ec366dffb753a66e8c7cc0e6f7580e38194727",
-  "standard/grade.py": "b0d5625ede7a6328f6139df97166e0022c2ab06d965a3bf3ee9973a1f949154f"
+  "standard/grade.py": "2c877a30bd21777c7788b33fd7cb2a1036ee55c2d2bf7ab1ada35180c6faaaa3"
  }
 }

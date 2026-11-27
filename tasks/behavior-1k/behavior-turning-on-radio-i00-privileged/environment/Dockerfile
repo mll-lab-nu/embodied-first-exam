@@ -30,8 +30,8 @@ WORKDIR /app
 # environment/docker-compose.yaml mounts the host's licensed copy.
 FROM behavior-base
 COPY instance.json /app/instance.json
-COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.7.0@sha256:520f055c171edb22272d1f565ed2fe2a8fba309f9c4f29ddba6d6fc4afed492c /rcb_behavior.py /opt/tools/rcb_behavior.py
-COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.7.0@sha256:520f055c171edb22272d1f565ed2fe2a8fba309f9c4f29ddba6d6fc4afed492c /r1pro_primitives_eval.yaml /opt/tools/r1pro_primitives_eval.yaml
+COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.8.0@sha256:2dfdaa026c83ef781ba5338f0ed83035316d8159eea77f7c5e7809675e7b35dc /rcb_behavior.py /opt/tools/rcb_behavior.py
+COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.8.0@sha256:2dfdaa026c83ef781ba5338f0ed83035316d8159eea77f7c5e7809675e7b35dc /r1pro_primitives_eval.yaml /opt/tools/r1pro_primitives_eval.yaml
 ENV PYTHONPATH=/opt/tools
 # sets of strings iterate in the same order in every process (with the tooling's stable object hashes, item 16 of the
 # 2026-10-14 failure analysis: a replay must take the same path as the live run)

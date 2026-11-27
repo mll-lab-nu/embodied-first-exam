@@ -7,7 +7,7 @@ COPY --from=ghcr.io/mll-lab-nu/efe:robocasa365-files-0.8.0@sha256:ad8015a0b5be06
      /privileged/environment/casa_tool.py \
      /sim/rcb_service.py \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.7.0@sha256:1ab8c16d4372a0b44f5c0ea7f819f6febafcfdc132013b1736a04f360375b28f \
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:8a712f54d69d3fb089573d962c0756ef1026119a4337be28785e4a14410d20b3 \
      /rcb1.py \
      /realtime/rcb_realtime.py \
      /srv/

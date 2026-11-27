@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:robopaint-files-0.8.0@sha256:cbafd0760e862a76db9ef14f295807769280d02a68b583d68bd97b047b256793",
+ "image": "ghcr.io/mll-lab-nu/efe:robopaint-files-0.9.0@sha256:86fe81e67a639072b2ff289b1d74c5854f98b0d4164f668912fc675a2f2f4089",
  "source": "embodied_first_exam/benchmarks/robopaint",
  "files": {
   "privileged/grade.py": "0c7809fe54e1b9803a0e7ead887feaa01219f06696331efbaa4bf9bf69b1a2d8",
@@ -17,6 +17,6 @@
   "sim/variants/49c8421692/NOTICE-exemplar.md": "49c8421692baba9efe9754d424aa4de8f49939e753f0db186374b86cf9659143",
   "sim/variants/d6118d094a/NOTICE-exemplar.md": "d6118d094a7cfb695f19e9d9f6acfd8c4ce19cb6ce185fd5e5938636e158dc0a",
   "sim/variants/f948360d71/NOTICE-exemplar.md": "f948360d71aa09c39e49f19f774867e7fb437b9939cf4661f54618d87434b57d",
-  "standard/grade.py": "c8608e9e73693324e710a8a990536496fdc9e5a4a887705354ff17b33e8fb08b"
+  "standard/grade.py": "4633cab8c80f026d9b351d0dd961b95d253e396961c5843e8fa797550d3c0f50"
  }
 }

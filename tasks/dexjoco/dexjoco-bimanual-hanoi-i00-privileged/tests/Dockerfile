@@ -3,7 +3,7 @@
 # artifacts (/app/output/), so a patched success check in the agent container cannot count.
 FROM ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2
 COPY instance.npz test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:dexjoco-files-0.6.0@sha256:bd2f4ee3063a29dd36443d54a161f8621b54321deda4470040c1fbf5a9162f5c /privileged/environment/rcb_dexjoco.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:dexjoco-files-0.7.0@sha256:cb5c3cb0c303d3a3545650a1ba1b0c6048c10e80d031cf038506f21f838219be /privileged/environment/rcb_dexjoco.py /privileged/tests/grade.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 # the thread count the instances and references were made with; it needs 4 CPUs visible to this container, which

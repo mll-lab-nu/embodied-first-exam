@@ -32,9 +32,9 @@ WORKDIR /app
 # interpreter in the agent container cannot influence the verdict.
 FROM behavior-base
 COPY instance.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.7.0@sha256:520f055c171edb22272d1f565ed2fe2a8fba309f9c4f29ddba6d6fc4afed492c /privileged/grade.py /tests/grade.py
-COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.7.0@sha256:520f055c171edb22272d1f565ed2fe2a8fba309f9c4f29ddba6d6fc4afed492c /rcb_behavior.py /tests/rcb_behavior.py
-COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.7.0@sha256:520f055c171edb22272d1f565ed2fe2a8fba309f9c4f29ddba6d6fc4afed492c /r1pro_primitives_eval.yaml /tests/r1pro_primitives_eval.yaml
+COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.8.0@sha256:2dfdaa026c83ef781ba5338f0ed83035316d8159eea77f7c5e7809675e7b35dc /privileged/grade.py /tests/grade.py
+COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.8.0@sha256:2dfdaa026c83ef781ba5338f0ed83035316d8159eea77f7c5e7809675e7b35dc /rcb_behavior.py /tests/rcb_behavior.py
+COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.8.0@sha256:2dfdaa026c83ef781ba5338f0ed83035316d8159eea77f7c5e7809675e7b35dc /r1pro_primitives_eval.yaml /tests/r1pro_primitives_eval.yaml
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 # this task's state-dump patch (sitecustomize.py, imported at startup from PYTHONPATH): the state can be dumped on the

@@ -3,7 +3,7 @@
 FROM ghcr.io/mll-lab-nu/efe:robopaint-0.2.0
 COPY instance.json NOTICE-exemplar.md /app/
 COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-pictures-files-0.1.0@sha256:3ce92526aa79918994ccb934390221e1dd6c3f4364109a40e5746140def6062e /caoshu-wen-i00/target.png /app/target.png
-COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.8.0@sha256:cbafd0760e862a76db9ef14f295807769280d02a68b583d68bd97b047b256793 /rcb_brush.py /opt/tools/rcb_brush.py
+COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.9.0@sha256:86fe81e67a639072b2ff289b1d74c5854f98b0d4164f668912fc675a2f2f4089 /rcb_brush.py /opt/tools/rcb_brush.py
 RUN uv pip uninstall --python /opt/venv/bin/python svgpathtools && mkdir -p /app/output
 ENV PYTHONPATH=/opt/tools
 WORKDIR /app

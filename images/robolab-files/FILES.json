@@ -1,10 +1,10 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:robolab-files-0.8.0@sha256:faedb141d5d889db8f735d4589cc2293af77212d31a0a170ba34185e44f76eac",
+ "image": "ghcr.io/mll-lab-nu/efe:robolab-files-0.9.0@sha256:d5bdb51948373bb0645d8b01d8966962a2b33f40303922c427dceb9fe79e8fde",
  "source": "embodied_first_exam/benchmarks/robolab",
  "files": {
   "rcb_robolab.py": "7912390a918ba26adc7b5d1478e39ea2a9f841f4341d0f377d683c555b0e2d2a",
   "sim/finalize.sh": "6968f8b9ee0caafd89fa3470f8e5bcf66c449f1bc3d2d1f4b1b3c114f769ef7c",
   "sim/live_video.py": "eb4f98634ffbade423a0c10cc45140b78695dc42c86bc8d6fa5b4941c3b19075",
-  "sim/server.py": "b5923491157cd281b9bec00a210259ba4aac93d31b1b0b5d16c418c01623576a"
+  "sim/server.py": "589a8cd2a48281e323b55cf7e2ea139bdf9bb411f27f596ecc7bd9b0d1091ffc"
  }
 }

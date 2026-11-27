@@ -1,12 +1,12 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:standard-files-0.7.0@sha256:1ab8c16d4372a0b44f5c0ea7f819f6febafcfdc132013b1736a04f360375b28f",
+ "image": "ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:8a712f54d69d3fb089573d962c0756ef1026119a4337be28785e4a14410d20b3",
  "source": "embodied_first_exam/standard",
  "files": {
   "rcb1.py": "d8c6ceabdad914afd39ac4a93904e486039c69c14ec5ae140b33aa653ff7979f",
   "rcb_client.py": "9e7b33e2f1e69613cba5451cbb437ba3f1d211e78bc23863f127f845d3b147ac",
   "rcb_limited.py": "e780ec0b416d58411f2f0c579ad5fd5b998be96629e2a90bf23829ec419d1edf",
   "realtime/rcb_client.py": "c780b8b9691bea221ddfc0a50ef08e2e6c84d4c59aa4ca8030d9bade101375d8",
-  "realtime/rcb_realtime.py": "6b3e14c33bc54d28f5994e88e7a2d870210430f3b5330cd80937ccd562f2bc33",
+  "realtime/rcb_realtime.py": "dc6bbbb0f85b581d119a9b6bca08b718389b8b6200d7f8315435a4908dce6560",
   "run.sh": "08e4659bf4adca636a47b432a4649ae89777e1d394dceb9afc9b8896cd158376",
   "v2_1/grade.py": "ff863225171ee723d8b40ac13f17190dfc908f7f1683681b19f40d6dec3980b4",
   "v2_1/rcb_client.py": "acfbe5c7bd8ab20c0519718a054d78c0c681b08f576c54556f4b75ac1440090b",

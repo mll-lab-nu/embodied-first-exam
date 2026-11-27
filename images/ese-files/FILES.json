@@ -1,11 +1,11 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:ese-files-0.9.0@sha256:b18e2145ff869d0eba405ea1a9b06c0b41889a73ce256f05f1fecc26f725fcc0",
+ "image": "ghcr.io/mll-lab-nu/efe:ese-files-0.10.0@sha256:923312e2e3d31249ca8f765709d18dc6a0366cd078fb2d5b94532ab411096e39",
  "source": "embodied_first_exam/benchmarks/embodied-safety-exam",
  "files": {
   "realtime/grade.py": "0281e9d4820683ca292b96e9fab0d05e476cacbdbb1a132634dc03cc3c3163cd",
   "realtime/rcb_ese_rt.py": "7ac0bdf22fa411be4b79976247a38a4f76b0ad785d248a170e8f00a5d31837b1",
   "standard/candidate_identity.py": "1b992481b159c717be27bed5337b0f2cebaa08c01c15127d19a2796383334fdd",
-  "standard/grade.py": "3b19464c794e3391f28a4c200dc8fa5fa0e69ef4c95f0b0d70cdac1881127375",
+  "standard/grade.py": "16620c900cd7af7e6d6d08bf6d501e167143a94521098b4e351e2d0bacbd9b12",
   "standard/picture_delivery.py": "0e3db4880897e3de6072d4d961c60c70d0d808af943a603a79348ec35fe67aee",
   "standard/rcb_ese.py": "42a8a65dce0753a003b0cf192781b89417c74d009eac0a07f71808db40bcf19d",
   "standard/rcb_service.py": "e9d528c4a8e703a19ecfca2cd7b5a9e4e782dbc5280dc340e9b2184dffe6bcde",

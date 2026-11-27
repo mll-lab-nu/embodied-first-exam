@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:myosuite-files-0.8.0@sha256:1eabccb4e8a6dcd506062f12a79361f626dd9ac8babbc83401274335d8cd2fd2",
+ "image": "ghcr.io/mll-lab-nu/efe:myosuite-files-0.9.0@sha256:ac495582d703fef1a000932aa461f1bb2500a79c1ac503025a9683becde529d8",
  "source": "embodied_first_exam/benchmarks/myosuite",
  "files": {
   "privileged/environment/rcb_myosuite.py": "a75674e92068538c659bc7b0ada1bb5cde0b62e99d439ce65567e0d828f00839",
@@ -9,6 +9,6 @@
   "sim/server.py": "f43b41bba15d66d2b3c41c9f704a41ff4a393f8e48d034cbb8d8aa0e9d22cab3",
   "sim/task.json": "112ffa34ccfb324c0402072e7325d4b0881095ca8667bc434cffac061a41f9fd",
   "sim/video.py": "3c91ab66932205353f68341b2f5172861d88678c3516b0bf8f548ccaba9c656d",
-  "standard/tests/grade.py": "ee1265ae2027815790b9cfc1e5be43a7934179187bee2fbb142fca3ef9476569"
+  "standard/tests/grade.py": "1995b7135d6b72c76b499d7b978bf3ce4c48d4be3e3dcbc9bdec6c361ce9a2c7"
  }
 }
