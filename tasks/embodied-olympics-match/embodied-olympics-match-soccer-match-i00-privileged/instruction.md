@@ -7,10 +7,11 @@ Win a 2 v 2 robot soccer match against the other team.
 Success: your program wins the complete formal match.
 
 Deliverable: `/app/output/policy/program.py`, with any helper or data files in that directory (at most 512 regular files
-and 32 MiB; no links or special files; helpers are importable). It defines `make_policy(config)`, returning an object
-with `act(view)` that lives for the whole match. `view` has `state` (the twin's observation), `truth` (the full current
-state) and `scores`; `act` returns one action of the twin's interface (or a list of at most 2), `{"type": "ready"}`
-during a review, or None. Save a valid program early and overwrite it when you have a better one.
+and 32 MiB; no links or special files; helpers are importable). It defines `make_policy(config)`, which returns an
+object with an `act(view)` method; that object lives for the whole match. `view` has `state` (the twin's observation),
+`truth` (the full current state) and `scores`; `act` returns one action of the twin's interface (or a list of at most
+2), `{"type": "ready"}` during a review, or None. Save a valid program early and overwrite it when you have a better
+one.
 
 The formal match: a separate verifier without network runs your final program as an unprivileged process against a fresh
 match, with no reset. The world runs at 1/5 of real speed while your program computes, as in the realtime twin; each

@@ -7,14 +7,15 @@ Win a game of table tennis to 5 points against the other robot.
 Success: your program wins the complete formal match.
 
 Deliverable: `/app/output/policy/program.py`, with any helper or data files in that folder (at most 512 regular files,
-32 MiB; no links; helpers are importable). It defines `make_policy(config)`, returning an object with `act(view)` that
-lives for the whole match. `config` has `spec` (the seat's spec), `seat`, `level`, `seed`, `call_limit_s`, `budget_s`.
-Every control step (0.01 s of game time) `act` gets `view`: `state` (the seat's state: the score, the rally, your
-robot's joints and sensors, ...), `observation` (the camera images, as the twins' seat gets them) and `truth` (the
-ground truth: the ball's position, velocity and spin, both robots' `qpos` / `qvel`, the score, the rally). It returns
-one joint-level action body (the spec's schema: joint targets with gains, or the serve's toss) or `None`. The formal
-match runs your program with the system `python3` on the CPU (no GPU, no PyTorch): keep trained weights as files in your
-folder that your program reads with NumPy. Save a valid program early and overwrite it when you have a better one.
+32 MiB; no links; helpers are importable). It defines `make_policy(config)`, which returns an object with an `act(view)`
+method; that object lives for the whole match. `config` has `spec` (the seat's spec), `seat`, `level`, `seed`,
+`call_limit_s`, `budget_s`. Every control step (0.01 s of game time) `act` gets `view`: `state` (the seat's state: the
+score, the rally, your robot's joints and sensors, ...), `observation` (the camera images, as the twins' seat gets them)
+and `truth` (the ground truth: the ball's position, velocity and spin, both robots' `qpos` / `qvel`, the score, the
+rally). It returns one joint-level action body (the spec's schema: joint targets with gains, or the serve's toss) or
+`None`. The formal match runs your program with the system `python3` on the CPU (no GPU, no PyTorch): keep trained
+weights as files in your folder that your program reads with NumPy. Save a valid program early and overwrite it when you
+have a better one.
 
 The formal match: after your session a separate verifier without network runs your final program as an unprivileged
 process against a fresh copy of the simulator, with the sport's in-process runner: the world waits for your answer at

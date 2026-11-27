@@ -56,13 +56,13 @@ client is installed (`from rcb_client import Robot`).
 | `POST /ready {"why": "...", "plan": "..."}` | your review |
 
 `/submit` takes one row: the action of your turn; an action the match refuses is a 400. Every answer's `meta` has
-`score`, `review_due` (send `/ready` now), `match_over`, `step`, `phase` and your `state`. A `/submit` while the world
-is frozen or before the start executes nothing (`ok: false`, `not_now`); after the match is over requests are a 409.
-`/finish` and `/reset` are not offered (404): the match's rules end it, and there is one match. What differs from the
-plain standard: `timing.deviations` in `/spec`.
+`score`, `review_due` (send `/ready` now), `match_over`, `step`, `phase` and your `state`. A `/submit` sent while the
+world is frozen or before the start executes nothing (`ok: false`, `not_now`). After the match is over, every request
+gets a 409. `/finish` and `/reset` are not offered (404): the match's rules end it, and there is one match.
+`timing.deviations` in `/spec` lists what differs from the plain standard.
 
-The same match also answers the `game` command, or the same calls as HTTP with JSON under
-`http://localhost:8000/<SEAT>/` (the paths below are under it; your seat is `$SEAT`); you may use both:
+The same match also answers the `game` command, and the same calls as HTTP with JSON under
+`http://localhost:8000/<SEAT>/` (your seat is `$SEAT`; the paths below are under it). You may use both:
 
 | `game` command | HTTP | |
 | --- | --- | --- |
@@ -75,9 +75,9 @@ The same match also answers the `game` command, or the same calls as HTTP with J
 | `game phrase INTENTION` | `POST /act {"type": "phrase", ...}` | your intention for the next phrase (`game spec` lists the fields) |
 | `game ready "WHY" "PLAN"` | `POST /ready {"why": "...", "plan": "..."}` | your review |
 
-Errors: 400 = an invalid action (nothing happens), 409 = not now (not your turn, or a review is due), 429 = one action
-in flight (sent before the previous one returned), or more than 20 requests per second or 4 open requests from your seat
-(empty body: retry more slowly).
+Errors: 400 = an invalid action (nothing happens); 409 = not now (not your turn, or a review is due); 429 = one action
+already in flight (sent before the previous one returned), or more than 20 requests per second or 4 open requests from
+your seat (empty body: retry more slowly).
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
