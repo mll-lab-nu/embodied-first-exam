@@ -18,11 +18,11 @@ cameras ride on the robot, so each camera's current pose is part of every propri
 camera-to-world pose, OpenGL axes, as the standard twin's `cam2world_gl`); their intrinsics are in /spec. Never an
 object's pose, the scene layout or the success check.
 
-The episode: the standard twin grades the state after the last control step of an episode that runs until the agent's
-time is up. On a clock that does not stop such an episode would be as long as the agent's time and its replay longer
-than the verifier's; here an episode ends at the first control step after which the success check holds (the privileged
-rule applied to the trajectory up to that step), after max_control_steps (the privileged deliverable's cap, 3000 steps =
-150 s of robot time), when the agent's time is up, or on a simulator error; resets as RCB_RESET_BUDGET grants (0: one episode; rcb_service).
+The episode (agent-ended, as every realtime task from eai-standard/3.0; below): it runs until the agent's POST /finish,
+max_control_steps (the privileged deliverable's cap, 3000 steps = 150 s of robot time; reason "step_limit"), the end of
+the agent's time, or a simulator error, and the state it ends in is graded, as the standard twin grades it; resets as
+RCB_RESET_BUDGET grants (0: one episode; rcb_service). Without RCB_AGENT_END (before 3.0) an episode ended at the first
+control step after which the success check held.
 
 Settings (environment/docker-compose.yaml): RCB_INSTANCE (the frozen instance), RCB_START_SHA (the state hash a fresh
 episode of it starts in, recorded when the task was built), RCB_MAX_CONTROL_STEPS (3000), RCB_DATA,
