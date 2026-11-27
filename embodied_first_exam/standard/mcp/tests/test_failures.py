@@ -76,7 +76,7 @@ SHIM_ORACLE = textwrap.dedent('''
 def main():
     tmp = pathlib.Path(tempfile.mkdtemp(prefix="efe_mcp_fail_"))
     tools = tmp / "tools"; tools.mkdir()
-    shutil.copy(STD / "rcb1.py", tools / "rcb1.py"); shutil.copy(STD / "v2_4/rcb_client.py", tools / "rcb_client.py")
+    shutil.copy(STD / "rcb1.py", tools / "rcb1.py"); shutil.copy(STD / "operations/rcb_client.py", tools / "rcb_client.py")
     man = tmp / "manifest.json"
     man.write_text(json.dumps({"manifest": "efe-mcp-manifest/1", "kind": "rcb", "suite": "toy", "task": "toy-2.4",
                                "protocol": "eai-standard/2.4", "realtime": False,

@@ -3,7 +3,7 @@ the 2.1 base is its Part 1) plus the operations capability of its Part 4: operat
 and request deadlines (408 / 409), GET /operations/<id>, the service-owned call watchdog, the physics-tick ledger
 (journal.ticks.i64) and fsynced journals. First served by RoboTangle (whose release called it 2.3).
 
-The source is embodied_first_exam/standard/v2_4/rcb_limited.py; every 2.4 task's sim image takes it unchanged from the
+The source is embodied_first_exam/standard/operations/rcb_limited.py; every 2.4 task's sim image takes it unchanged from the
 files-only image standard-files (`COPY --from`, images/standard-files/FILES.json, scripts/files_image.py;
 ci_checks/check-tooling-identity.sh checks the pin).
 A service keeps its simulator to itself (scene, action execution, cameras, kinematic model) and hands

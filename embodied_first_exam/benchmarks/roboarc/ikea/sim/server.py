@@ -1,5 +1,5 @@
 """Standard-mode sim service of the IKEA MuJoCo tasks (robot as a service; the shared layer rcb_limited.py of
-embodied_first_exam/standard/v2_4/, serves eai-standard/2.4 and answers 2.1 / 2.2 requests unchanged).
+embodied_first_exam/standard/operations/, serves eai-standard/2.4 and answers 2.1 / 2.2 requests unchanged).
 Adapted from the RoboTangle / RoboARC standard services.
 
 Physics: the scene's own runtime (rcb_ikea.Session, the privileged twin's tooling, copied unchanged): MuJoCo 3.14.0 on

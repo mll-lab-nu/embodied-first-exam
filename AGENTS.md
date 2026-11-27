@@ -96,8 +96,8 @@ invariants of Appendix H bind and no task value overrides them), `docs/protocol/
   the trial; that is an implementation detail, and the protocol's rule is the runner's infrastructure rerun (Appendix
   H.5). `python3 embodied_first_exam/standard/selftest.py` tests that crash recovery on the CPU in about two minutes.
 - `eai-standard/2.4` (docs/protocol/standard_mode.md Part 4, RoboARC): 2.3 plus the operations capability. Its layer is
-  `embodied_first_exam/standard/v2_4/rcb_limited.py` and `rcb_client.py` with 2.2's `rcb1.py` and `run.sh`, taken from
-  the same `standard-files` image (`check-tooling-identity.sh`); `python3 embodied_first_exam/standard/v2_4/selftest.py`
+  `embodied_first_exam/standard/operations/rcb_limited.py` and `rcb_client.py` with 2.2's `rcb1.py` and `run.sh`, taken from
+  the same `standard-files` image (`check-tooling-identity.sh`); `python3 embodied_first_exam/standard/operations/selftest.py`
   tests what 2.4 adds (about 15 seconds).
 - MCP tools (docs/protocol/standard_mode.md "MCP tools"): every standard and realtime task also offers its robot service
   as the `efe-robot` MCP server, one tool per agent-facing endpoint; source `embodied_first_exam/standard/mcp/`, written

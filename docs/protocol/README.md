@@ -290,7 +290,7 @@ that writes the result (`"legacy"` for a trial of another version of the task), 
 by (`CONFIG_KEYS`, running.md "Results"). The wire protocol's versions:
 `eai-standard/2.1` (the base: `/spec`, `/status`, `/observe`, `/submit`, RCB1 frames), 2.2 (depth, kinematics, per-call
 bounds; shared layer `embodied_first_exam/standard/`), 2.3 (2.2 + realtime), 2.4 (2.3 + operation ids and deadlines; layer
-`embodied_first_exam/standard/v2_4/`). Minor versions only add; `/spec.protocol` equals `metadata.protocol`. A protocol change is
+`embodied_first_exam/standard/operations/`). Minor versions only add; `/spec.protocol` equals `metadata.protocol`. A protocol change is
 an issue, then one pull request updating standard_mode.md, the reference implementation and an example task.
 In this version a task declares its open egress only as `[agent] network_mode = "public"`, its reset budget and S only
 in its `sim` service, and its default seed as `[metadata] instance_seed`; CI fails a task.toml with `[metadata] network`

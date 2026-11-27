@@ -1425,7 +1425,7 @@ def normalize_instruction(task: Path) -> None:
 
 def _shared_sources() -> set[bytes]:
     """Contents of the files tasks copy unchanged from embodied_first_exam/standard/ (the eai-standard/2.2 layer, and the 2.4
-    layer in v2_4/): their copies must stay byte-identical to the source (check-tooling-identity.sh), so normalize never
+    layer in operations/): their copies must stay byte-identical to the source (check-tooling-identity.sh), so normalize never
     rewrites them."""
     src = Path(__file__).resolve().parents[1] / "embodied_first_exam/standard"
     shared = {p.read_bytes() for p in src.rglob("*") if p.is_file() and "__pycache__" not in p.parts} if src.is_dir() else set()
@@ -1433,7 +1433,7 @@ def _shared_sources() -> set[bytes]:
 
 
 def _is_layer_copy(f: Path) -> bool:
-    """A copy of some version of embodied_first_exam/standard/rcb_limited.py or v2_4/rcb_limited.py (its PROTOCOL line and COMPAT
+    """A copy of some version of embodied_first_exam/standard/rcb_limited.py or operations/rcb_limited.py (its PROTOCOL line and COMPAT
     list): a benchmark's tasks keep the version they were rendered with until they are rendered again."""
     t = read_text(f) or ""
     return bool(re.search(r'(?m)^PROTOCOL = "eai-standard/2\.\d"', t)) and bool(re.search(r"(?m)^COMPAT = \[", t))

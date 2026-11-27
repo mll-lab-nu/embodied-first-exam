@@ -22,6 +22,8 @@ import requests
 import rcb1
 
 PROTOCOL = "eai-standard/2.1"
+# the dtype of the action rows sent: float64 (MuJoCo replays bit-exactly) unless the task's image sets RCB_ACTION_DTYPE
+ACTION_DTYPE = np.dtype(os.environ.get("RCB_ACTION_DTYPE", "float64"))
 
 
 class EpisodeOver(RuntimeError):
@@ -120,7 +122,7 @@ class Robot:
                video: str = "mp4", include_depth: bool = False, note: str = "") -> Result:
         """Execute a chunk of low-level actions (T, dim). See spec()['action_types'] for dims and semantics
         (joint_position rows may carry 14 extra velocity feed-forward columns)."""
-        a = np.asarray(actions, dtype=np.float64)   # float64: MuJoCo replays bit-exactly
+        a = np.asarray(actions, dtype=ACTION_DTYPE)
         if a.ndim == 1: a = a[None, :]
         meta = {"type": action_type, "dt": float(dt), "interpolate": interpolate, "cameras": list(cameras), "video_fps": int(video_fps),
                 "video": video, "include_depth": bool(include_depth), "note": note}

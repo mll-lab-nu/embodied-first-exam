@@ -219,7 +219,7 @@ Codex session (`agent/sessions/`). Run Codex with `--ak reasoning_summary=detail
   disk first (`final.json` `finalized`; `video_pending` while the video is made) and `final.json` says `video_source`
   (`live` / `render`). Published videos follow the same rule and keep the label.
 - **First attempt (standard modes with resets):** only benchmarks on the shared 2.1 sidecar service (`rcb_service.py`,
-  standard_mode.md "Evidence and grading") graded by the shared grader (`embodied_first_exam/standard/v2_1/grade.py`)
+  standard_mode.md "Evidence and grading") graded by the shared grader (`embodied_first_exam/standard/sidecar/grade.py`)
   keep the first episode (`trajectory.first.npz`, `replay.first.mp4`) and how it ended: `first_success` is the graded
   success when `resets` = 0; after a reset it is 0 without agent-ended episodes (a success ends the trial) and, with
   them, the first episode's own end judgement, or null when that is not on record. A task whose sidecar runs a

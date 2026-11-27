@@ -4,7 +4,7 @@
 #     runner's lane stop and infra rules (account_failure_check.py --selftest), and the EmbodiedSWE grader's rollout limit
 #     (a request outlasting it is a graded timeout, not infra; needs Landlock, skipped with a note otherwise).
 #  2. numpy + requests (no simulator, no image, no GPU): the eai-standard/2.2 and 2.4 layers' selftests on a stub
-#     simulator (embodied_first_exam/standard/), the 2.1 service's first-attempt record on a toy simulator (v2_1/), and
+#     simulator (embodied_first_exam/standard/), the 2.1 service's first-attempt record on a toy simulator (sidecar/), and
 #     the per-call image budget of the 2.1, 2.2 and 2.3 layers (frames_selftest.py), the agent-ended episodes of the
 #     2.2 layer and of the 2.1 service and 2.3 layer (agent_end/), and the robot's MCP tools on toy 2.2 / 2.3 / 2.4 services and a match seat
 #     (standard/mcp/tests/: the API path and the MCP path leave the same episode). Run when both modules can be imported, skipped with a note otherwise;
@@ -45,10 +45,10 @@ run 60 ci_checks/benchmarks/embodied-olympics-match/invariant-match-instance.py 
 run 120 embodied_first_exam/benchmarks/embodiedswe/rollout_limit_selftest.py
 if python3 -c "import numpy, requests" 2>/dev/null; then
   export PATH="$(dirname "$(command -v python3)"):$PATH"   # run.sh starts `python`: the same interpreter
-  for t in embodied_first_exam/standard/selftest.py embodied_first_exam/standard/v2_4/selftest.py \
-           embodied_first_exam/standard/v2_1/selftest.py embodied_first_exam/standard/frames_selftest.py \
+  for t in embodied_first_exam/standard/selftest.py embodied_first_exam/standard/operations/selftest.py \
+           embodied_first_exam/standard/sidecar/selftest.py embodied_first_exam/standard/frames_selftest.py \
            embodied_first_exam/standard/agent_end/agent_end_selftest.py \
-           embodied_first_exam/standard/agent_end/agent_end_v21_selftest.py \
+           embodied_first_exam/standard/agent_end/agent_end_sidecar_selftest.py \
            embodied_first_exam/standard/mcp/tests/test_toy.py embodied_first_exam/standard/mcp/tests/test_oracle_shim.py \
            embodied_first_exam/standard/mcp/tests/test_realtime.py embodied_first_exam/standard/mcp/tests/test_eo_match.py; do run 900 "$t"; done
 elif [ $all -eq 1 ]; then

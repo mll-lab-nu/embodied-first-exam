@@ -775,7 +775,7 @@ that built them is kept outside this repository.
 The benchmark's shared task code
 is `embodied_first_exam/benchmarks/embodied-safety-exam/<layer>/` (layers: `standard`, a paused task's service, standard grader,
 oracle driver and public observation helpers; `realtime`, the realtime clock's own files); the layers other benchmarks share keep their source in `embodied_first_exam/standard/` (`rcb1.py` and the paused
-standard client `v2_1/rcb_client.py`, in the files-only image `standard-files`; the realtime clock and client: `realtime/`). The files outside `environment/sim/` that many
+standard client `sidecar/rcb_client.py`, in the files-only image `standard-files`; the realtime clock and client: `realtime/`). The files outside `environment/sim/` that many
 tasks share are not in the task directories: the graders
 (`tests/grade.py`, the realtime tasks' `tests/grade_ese.py`) are built into the files-only image
 `images/ese-files/` (`ghcr.io/mll-lab-nu/efe:ese-files-<version>`, public like the simulator image;

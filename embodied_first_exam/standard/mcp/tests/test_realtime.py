@@ -99,7 +99,7 @@ def equivalence(tmp, tools, man):
 def standard_21(tmp):
     """The same toy robot behind the 2.1 service itself (a benchmark's own 2.1 service, standard mode)."""
     d = tmp / "v21"; d.mkdir()
-    shutil.copy(STD / "v2_1/rcb_client.py", d / "rcb_client.py"); shutil.copy(STD / "rcb1.py", d / "rcb1.py")
+    shutil.copy(STD / "sidecar/rcb_client.py", d / "rcb_client.py"); shutil.copy(STD / "rcb1.py", d / "rcb1.py")
     m = {"manifest": "efe-mcp-manifest/1", "kind": "rcb", "suite": "toy", "task": "toy-standard",
          "protocol": "eai-standard/2.1", "realtime": False, "tools": ["spec", "observe", "submit", "finish"]}
     (d / "manifest.json").write_text(json.dumps(m))

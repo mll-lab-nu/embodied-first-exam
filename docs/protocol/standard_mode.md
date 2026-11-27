@@ -19,7 +19,7 @@ types, cameras, proprioception columns, resume class, measured start-up times, k
 | `eai-standard/2.1` | the base: `/submit` and `/observe`, RCB1 responses, measured proprioception, optional depth noise; the optional reset capability | Part 1 | each benchmark's own service |
 | `eai-standard/2.2` | 2.1 + optional capabilities: depth `last` / `frames`, per-frame steps, times and extrinsics, camera intrinsics and mounting, `robot_spec`, `world`, `POST /kinematics`, a per-call wall-clock bound; one shared service layer | Part 2 (§1–§18) | [`embodied_first_exam/standard/`](../../embodied_first_exam/standard/) |
 | `eai-standard/2.3` | 2.2 + the realtime capability: a clock that does not stop | Part 3 | `embodied_first_exam/standard/realtime/rcb_realtime.py` |
-| `eai-standard/2.4` | 2.3 + the operations capability: operation ids, request deadlines, `GET /operations/<id>`, a call watchdog, a physics-tick ledger | Part 4 (§19–§25) | [`embodied_first_exam/standard/v2_4/`](../../embodied_first_exam/standard/v2_4/) |
+| `eai-standard/2.4` | 2.3 + the operations capability: operation ids, request deadlines, `GET /operations/<id>`, a call watchdog, a physics-tick ledger | Part 4 (§19–§25) | [`embodied_first_exam/standard/operations/`](../../embodied_first_exam/standard/operations/) |
 | `eai-standard/2.x+match/1.0` | an extension, not a version: 2.1 (lockstep, turn-based) or 2.3 (realtime) in front of a match service, plus the match's own calls `/start`, `/ready`, `/say`, `/team` and its score in `meta` | Part 5 (§26–§31) | [`embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/`](../../embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/) |
 
 Which version a task serves is its `[metadata] protocol` (= `/spec.protocol`); which benchmarks serve which version is
@@ -231,7 +231,7 @@ rows from the journal) and `replay.first.mp4`, rendered after the graded video; 
 `first_success` is 0; with them it is the first episode's own end judgement, as its end recorded it, or null when that
 is not on record) and decides nothing
 with it. A separate verifier transcribes `final.json` into `reward.json` (`graded_by_live` = 1); the shared grader
-(`embodied_first_exam/standard/v2_1/grade.py`) also writes `first_success`, the first-attempt, no-reset result reported
+(`embodied_first_exam/standard/sidecar/grade.py`) also writes `first_success`, the first-attempt, no-reset result reported
 beside the graded one, and copies the first episode's files. A service of a benchmark's own keeps no first episode and
 reports `resets` only; `first_success` is then `success` when no reset was made, else 0 (running.md "Results").
 `infra_error = 1` means there is no verdict on the agent: `final.json` is
@@ -333,7 +333,7 @@ client that never calls `/finish` is served as before, its session's end ending 
 - Implementation for the 2.1 sidecar and the 2.3 realtime layer: `rcb_service.py` (`AGENT_END`; the adapter's
   `end_judgement` = `"state"` or `"events"`, `end_window_steps` for a settle or hold window, `hidden_keys` for progress
   fields of `step()`'s info, `info["step_cap"]` for a done that is the episode's length) and `rcb_realtime.py` (the
-  `/finish` route); tests `agent_end_v21_selftest.py`.
+  `/finish` route); tests `agent_end_sidecar_selftest.py`.
 - `/spec.success_signal` is the key a front end reads: where it says `hidden`, an MCP front end offers a `finish` tool
   that sends `POST /finish`.
 
@@ -724,7 +724,7 @@ are part of a result's configuration (running.md).
 ## Part 4 — `eai-standard/2.4`: the operations capability
 
 Reference implementation:
-[`embodied_first_exam/standard/v2_4/`](../../embodied_first_exam/standard/v2_4/), with `rcb_limited.py` and `rcb_client.py`. `rcb1.py`,
+[`embodied_first_exam/standard/operations/`](../../embodied_first_exam/standard/operations/), with `rcb_limited.py` and `rcb_client.py`. `rcb1.py`,
 `run.sh`, the client image and the client pins are the 2.2 ones in `embodied_first_exam/standard/`. In the tables below, MUST
 means "required of a service that reports 2.4" (what a 2.4 client may rely on).
 
@@ -795,14 +795,14 @@ As in 2.2 (`/data/episode.jsonl`, `trajectory.npz`, `final.json`, `calls/`), plu
 
 The verifier still transcribes `final.json` only.
 
-`python3 embodied_first_exam/standard/v2_4/selftest.py` tests the watchdog's evidence, the tick ledger and the 400 for malformed
+`python3 embodied_first_exam/standard/operations/selftest.py` tests the watchdog's evidence, the tick ledger and the 400 for malformed
 bodies on the CPU (numpy only, about 15 s).
 
 ### 25. Compatibility
 
 - 2.x clients connect to a 2.4 service unchanged. They send no operation ids and get 2.2 behaviour.
 - The 2.4 client sends ids only when `/spec.protocol` is 2.4, so it also works against 2.1–2.3 services.
-- A benchmark adopts 2.4 by copying `embodied_first_exam/standard/v2_4/` unchanged; `ci_checks/check-tooling-identity.sh`
+- A benchmark adopts 2.4 by copying `embodied_first_exam/standard/operations/` unchanged; `ci_checks/check-tooling-identity.sh`
   checks the copies.
 
 ## Part 5 — The match extension: `eai-standard/2.x+match/1.0`

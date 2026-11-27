@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""CPU-only self-test of what the eai-standard/2.4 layer adds to 2.2's crash recovery (v2_4/rcb_limited.Episode): the call
+"""CPU-only self-test of what the eai-standard/2.4 layer adds to 2.2's crash recovery (operations/rcb_limited.Episode): the call
 watchdog's evidence and the physics-tick ledger, and of the HTTP layer's answer to malformed bodies (400, never a 500).
 No simulator, no GPU, no Docker; needs numpy. About 15 seconds.
 
-    python3 embodied_first_exam/standard/v2_4/selftest.py           # every case
-    python3 embodied_first_exam/standard/v2_4/selftest.py watchdog  # the cases whose name contains "watchdog"
+    python3 embodied_first_exam/standard/operations/selftest.py           # every case
+    python3 embodied_first_exam/standard/operations/selftest.py watchdog  # the cases whose name contains "watchdog"
 
 Each case drives Episode in child processes that end the way a sim service ends (os._exit after a "crash", the watchdog's
 own exit, an idle give-up), with the record directory kept between them, as compose's `restart: on-failure` keeps /data.

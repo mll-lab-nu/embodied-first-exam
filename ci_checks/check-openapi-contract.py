@@ -9,7 +9,7 @@
      2.1  rcb_service.py (the shared 2.1 sidecar, standard mode)  embodied_first_exam/standard/mcp/tests/toy_realtime.py --standard
      2.3  rcb_realtime.py over rcb_service.py (realtime mode)      embodied_first_exam/standard/mcp/tests/toy_realtime.py
      2.2  rcb_limited.py (the shared 2.2 layer)                    embodied_first_exam/standard/toy_server.py
-     2.4  v2_4/rcb_limited.py (toy_server.py staged next to it in the work directory)
+     2.4  operations/rcb_limited.py (toy_server.py staged next to it in the work directory)
    2.1 and 2.3 run with RCB_AGENT_END=1 and a reset budget of 1; 2.2 and 2.4 without the feature, and again as
    agent-ended adapters (2.2-ae, 2.4-ae: toy_server.py is one, with rcb_agent_end.py staged next to it, run with
    RCB_AGENT_END=1): /finish validated against FinishResponse, then the 409s after it. With a step
@@ -678,7 +678,7 @@ def gave_up(t: Target) -> None:
 
 
 def stage(work: pathlib.Path, std: pathlib.Path, name: str, layer: str, agent_end: bool) -> pathlib.Path:
-    """toy_server.py staged with a layer (2.2: rcb_limited.py; 2.4: v2_4/rcb_limited.py), rcb1.py and rcb_agent_end.py
+    """toy_server.py staged with a layer (2.2: rcb_limited.py; 2.4: operations/rcb_limited.py), rcb1.py and rcb_agent_end.py
     (the toy is an agent-ended adapter; agent_end: the target runs it with RCB_AGENT_END=1). Returns the directory."""
     d = work / f"stage_{name}"
     d.mkdir(exist_ok=True)
@@ -707,9 +707,9 @@ TOYS = {"2.2": ("rcb_limited.py", False, {}, layer_22),
         "2.2-ae": ("rcb_limited.py", True, {}, agent_ended_22),
         "2.2-limit": ("rcb_limited.py", True, {"RCB_STEP_LIMIT": "30"}, step_limit),
         "2.2-gaveup": ("rcb_limited.py", False, {"RCB_TOY_REFUSE": "the contract check's refusal"}, gave_up),   # (+ RCB_PORT)
-        "2.4": ("v2_4/rcb_limited.py", False, {}, layer_24),
-        "2.4-ae": ("v2_4/rcb_limited.py", True, {}, agent_ended_24),
-        "2.4-limit": ("v2_4/rcb_limited.py", True, {"RCB_STEP_LIMIT": "30"}, step_limit)}
+        "2.4": ("operations/rcb_limited.py", False, {}, layer_24),
+        "2.4-ae": ("operations/rcb_limited.py", True, {}, agent_ended_24),
+        "2.4-limit": ("operations/rcb_limited.py", True, {"RCB_STEP_LIMIT": "30"}, step_limit)}
 TARGETS = ("2.1", "2.1-limit", "2.3", "2.2", "2.2-ae", "2.2-limit", "2.2-gaveup", "2.4", "2.4-ae", "2.4-limit")
 
 
@@ -754,7 +754,7 @@ def main() -> int:
                 argv = [py, str(toy), str(port)] + (["--standard"] if name != "2.3" else [])
                 run = {"2.1": standard_21, "2.3": realtime_23, "2.1-limit": step_limit}[name]
             elif name in TOYS:
-                # toy_server.py (the 2.2 toy) staged next to the layer (v2_4/rcb_limited.py for 2.4: the repository
+                # toy_server.py (the 2.2 toy) staged next to the layer (operations/rcb_limited.py for 2.4: the repository
                 # has no runnable 2.4 toy service), the agent-ended targets with rcb_agent_end.py; a launcher gives the
                 # 2.4 module the one helper the toy needs that it lacks (agent_time, the 2.2 layer's first-request clock)
                 layer, agent_end, extra, run = TOYS[name]

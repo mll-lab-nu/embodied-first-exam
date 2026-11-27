@@ -19,7 +19,7 @@
 #    set up for crash recovery: `command: sh /srv/run.sh` (run.sh exits non-zero when the service crashes) and
 #    `restart: on-failure:N` with N >= 3 (docs/protocol/standard_mode.md).
 #    The eai-standard/2.4 layer (metadata.protocol 2.4: RoboARC, its IKEA suite included) is held to the same rules, with rcb_limited.py and
-#    rcb_client.py from embodied_first_exam/standard/v2_4/ (docs/protocol/standard_mode.md) and 2.2's rcb1.py and run.sh.
+#    rcb_client.py from embodied_first_exam/standard/operations/ (docs/protocol/standard_mode.md) and 2.2's rcb1.py and run.sh.
 # 3. The eai-standard/2.3 realtime layer (every task whose metadata.protocol is 2.3: HumanoidBench, BiGym 2.0
 #    realtime): the service's environment/sim/rcb_realtime.py and the agent's environment/rcb_client.py are
 #    byte-identical to their one source, embodied_first_exam/standard/realtime/ (docs/protocol/standard_mode.md,
@@ -72,9 +72,9 @@ images = os.path.join(ROOTD, "images")
 FAMILY_SOURCE = {"environment/sim/server_mj.py": "embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py",
                  "environment/sim/server_mw.py": "embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py"}
 src_sha = {rel: sha(os.path.join(ROOTD, f)) for rel, f in FAMILY_SOURCE.items() if os.path.isfile(os.path.join(ROOTD, f))}
-V24 = {"rcb_limited.py", "rcb_client.py"}   # the 2.4 layer's own files (embodied_first_exam/standard/v2_4/); the rest is 2.2's
+V24 = {"rcb_limited.py", "rcb_client.py"}   # the 2.4 layer's own files (embodied_first_exam/standard/operations/); the rest is 2.2's
 src22 = lambda f: f  # noqa: E731  (each layer: its file's path under embodied_first_exam/standard/)
-src24 = lambda f: f"v2_4/{f}" if f in V24 else f  # noqa: E731
+src24 = lambda f: f"operations/{f}" if f in V24 else f  # noqa: E731
 canon_of = lambda files, at: {f: sha(os.path.join(src, at(f))) for f in set(files) if os.path.isfile(os.path.join(src, at(f)))}  # noqa: E731
 canon, canon24 = canon_of(LAYER.values(), src22), canon_of(LAYER.values(), src24)
 # files-only images (scripts/files_image.py): a file's one source -> the sha256 FILES.json pins for it

@@ -21,7 +21,7 @@ Before the real servers, the checker runs on a built-in good and bad source (eac
 other), so a rule that went blind fails here. Exit 0: clean; 3: findings (advisory, ci_checks/run_all.sh); 2: the
 check itself could not run (no OpenAPI document, a source that does not parse).
 
-    python3 ci_checks/check-v21-servers.py [--repo DIR] [server.py ...]
+    python3 ci_checks/check-own-servers.py [--repo DIR] [server.py ...]
 """
 from __future__ import annotations
 
@@ -464,16 +464,16 @@ def main() -> int:
         doc = yaml.safe_load((repo / "docs/protocol/eai-standard-3.0.openapi.yaml").read_text())
         counters, spec_req = required(doc, "Counters"), required(doc, "Spec")
     except Exception as exc:  # noqa: BLE001
-        print(f"FAIL check-v21-servers.py: cannot read the OpenAPI document: {exc}")
+        print(f"FAIL check-own-servers.py: cannot read the OpenAPI document: {exc}")
         return 2
     broken = selftest(counters, spec_req)
     if broken:
         for b in broken:
-            print(f"FAIL check-v21-servers.py: {b}")
+            print(f"FAIL check-own-servers.py: {b}")
         return 2
     servers = [pathlib.Path(s) for s in a.servers] or discover(repo)
     if not servers:
-        print("FAIL check-v21-servers.py: no benchmark-own eai-standard/2.1 server found (the discovery went blind)")
+        print("FAIL check-own-servers.py: no benchmark-own eai-standard/2.1 server found (the discovery went blind)")
         return 2
     findings = []
     for p in servers:
@@ -481,7 +481,7 @@ def main() -> int:
         try:
             m = Module(p.read_text(), rel)
         except (OSError, SyntaxError) as exc:
-            print(f"FAIL check-v21-servers.py: {rel}: {exc}")
+            print(f"FAIL check-own-servers.py: {rel}: {exc}")
             return 2
         findings += check_module(m, counters, spec_req)
     for f in findings:
@@ -489,9 +489,9 @@ def main() -> int:
     names = ", ".join(re.sub(r"^embodied_first_exam/benchmarks/", "", str(p.resolve().relative_to(repo)))
                       for p in servers if p.resolve().is_relative_to(repo))
     if findings:
-        print(f"check-v21-servers.py: {len(findings)} finding(s) in {len(servers)} server(s) ({names}) -- advisory")
+        print(f"check-own-servers.py: {len(findings)} finding(s) in {len(servers)} server(s) ({names}) -- advisory")
         return 3
-    print(f"ok check-v21-servers.py: {len(servers)} benchmark-own 2.1 server(s) ({names}) carry the OpenAPI's keys")
+    print(f"ok check-own-servers.py: {len(servers)} benchmark-own 2.1 server(s) ({names}) carry the OpenAPI's keys")
     return 0
 
 

@@ -112,7 +112,7 @@ add python3 ci_checks/check-mcp-tools.py"$pargs"
 [ "${RCB_SKIP_UNIT_TESTS:-0}" = 1 ] || add python3 ci_checks/check-openapi-contract.py
 # the same document against the benchmarks' own 2.1 servers (their own HTTP layer, no shared layer), read from
 # their source: the keys /status, every answer meta and /spec must carry (static: no simulator)
-add python3 ci_checks/check-v21-servers.py
+add python3 ci_checks/check-own-servers.py
 # PROTOCOL §4: every task renders a video and the runner can collect it; a declared video time bound is not
 # shorter than the verdict replay's (privileged)
 add python3 ci_checks/check-video.py"$targs"

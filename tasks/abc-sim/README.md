@@ -122,7 +122,7 @@ The verdict is the live episode's (PROTOCOL H.4): the episode the sim sidecar ra
 `Session.step` applied it (the 1.02 s hold is part of the rule, run on the live simulator). Standard: the collect hook
 (`/opt/abc-tools/standard/finalize.sh`) ends the service, writes `final.json` (`graded_by` = `live`, `replays` = 0) and then
 renders `replay.mp4` in one pass over the trajectory (EGL on the sidecar's GPU); the video decides nothing. Realtime: the
-shared layer does the same from the adapter's `step()`. The verifier is the shared `v2_1/grade.py` (from the pinned
+shared layer does the same from the adapter's `step()`. The verifier is the shared `sidecar/grade.py` (from the pinned
 `standard-files` image), for both modes. At a fresh episode's start the service compares the built scene's state hash
 with the instance's recorded one; a mismatch gives up before the agent is served (`instance_mismatch`, `infra_error`).
 
