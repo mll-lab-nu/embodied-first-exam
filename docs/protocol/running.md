@@ -367,3 +367,7 @@ An official run starts the harness without them.
 
 An API key can still request a search directly. The usage gateway refuses such a request, and every path that is not a
 model call ([../operations.md](../operations.md#the-usage-gateway), [leakage.md](leakage.md)).
+
+## Without Docker: rootless podman (e.g. a Slurm cluster)
+
+See [../operations.md](../operations.md#rootless-podman).
