@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.5.0` |
 
 ## Task
-ABC Sim `spell_fish` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Spell FISH with the letter blocks: lay F, I, S and H side by side in a straight row on the table, letters up, reading from left to right as the arms face the table.
+ABC Sim `spell_fish` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Spell FISH with the letter blocks: lay F, I, S and H side by side in a straight row on the table, each with a letter face up or down, reading from left to right as the arms face the table.
 Twenty-six wooden letter blocks (A to Z, 3 cm cubes; each letter is printed on two opposite faces) lie on the table, letter face up. The robot is a service; the episode it runs is graded.
 
 ## Difficulty

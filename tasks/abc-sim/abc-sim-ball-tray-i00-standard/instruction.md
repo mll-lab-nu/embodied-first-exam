@@ -4,9 +4,9 @@
 Hold the tray by both handles, one gripper on each, and keep the ball on the tray until the episode ends.
 
 ## Goal
-Success: you keep holding both handles, one gripper on each, with the ball on the tray, through the whole countdown that
-starts once both handles are gripped, and the ball is still on the tray when the episode ends. The episode fails at once
-if the ball leaves the tray or a handle is let go during the countdown.
+Success: once both handles are gripped, an 11-second countdown starts; you keep holding both handles, one gripper on
+each, with the ball on the tray, until it completes, and the ball is still on the tray when the episode ends. The
+episode fails at once if the ball leaves the tray or a handle is let go during the countdown.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

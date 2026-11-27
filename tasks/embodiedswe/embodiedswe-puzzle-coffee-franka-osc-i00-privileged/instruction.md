@@ -6,9 +6,9 @@ serving tray.
 
 ## Goal
 Success: a brew ran to completion (the pod-bay cover closed, capsule in the bay, mug under the spout, left undisturbed
-until it finished), and the filled mug now stands upright on the serving tray, at rest. What counts is how things stand
-when the graded run of your program ends. Only success counts as solved; partial progress (EmbodiedSWE's rubric for this
-task, `progress`) is recorded too and ranks your checkpoints.
+until it finished), and the filled mug now stands upright on the serving tray, at rest. The brew counts as it happens in
+the graded run of your program; everything else counts as it stands when that run ends. Only success counts as solved;
+partial progress (EmbodiedSWE's rubric for this task, `progress`) is recorded too and ranks your checkpoints.
 
 Deliverable: the folder `/app/output/solution/`. Its entry point, `/app/output/solution/solve.py`, defines
 `def solve(env) -> None`, which the graded run calls once (Robot Interface). Everything else in the folder ships with it

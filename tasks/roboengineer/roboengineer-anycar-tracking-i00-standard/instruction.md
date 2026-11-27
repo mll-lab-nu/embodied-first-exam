@@ -40,9 +40,9 @@ as a service that you reach only through its client.
 
 ### Training
 Use the public nominal model and write fitting/optimization code locally. Submit the documented numeric controller
-parameters. This track evaluates adaptation within a fixed controller ABI; it does not deploy arbitrary controller
-Python. Run `python -m scripts.control_transfer.control_public.anycar_nominal --out /app/output/nominal` for local
-nominal rollouts. The public controller ABI is in `control_public.anycar`.
+parameters. You can change only the controller's numeric parameters, not its code. Run
+`python -m scripts.control_transfer.control_public.anycar_nominal --out /app/output/nominal` for local nominal rollouts.
+The controller's interface is in `control_public.anycar`.
 
 ### Feedback
 Each round reuses the same 3 development cases. An episode that crashes, leaves its course or arena, or makes the

@@ -4,10 +4,13 @@
 Scrub the bowl in the sink with the sponge for a while, then move your hand away.
 
 ## Goal
-Success: the sponge has been rubbed back and forth on the bowl for a second or more in all, and at the end the hand has
+Success: the sponge is rubbed back and forth on the bowl for about a second or more in all, and at the end the hand has
 moved well away from the bowl.
 
-When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
+The scrubbing counts as it happens.
+
+When you are done, send `/finish` to end the episode and get it graded. Everything else is judged on the state at that
+point.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

@@ -1,7 +1,7 @@
 # RoboCasa365 · OpenDishwasher (standard)
 
 ## Task
-Open the dishwasher door all the way.
+Open the dishwasher door all the way, or nearly.
 
 ## Goal
 Success: the dishwasher door is open all the way, or nearly.

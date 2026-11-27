@@ -20,7 +20,7 @@ episode, lets the service exit, writes `final.json` from the live episode's reco
 trajectory once (the video only); the verifier runs in a separate sandbox (`tests/Dockerfile`) over those artifacts.
 
 ## Difficulty
-The lever is spring-loaded back to perpendicular and heavily damped, and it has to be driven past 40 degrees, within 5 degrees of its end stop, from a free-flying, hovering base; its place on the wall changes per instance. Here without resets, object poses or a success measure (the episode just ends, reason `success`, when the check holds): The lever's pose and angle are not given: the lever on the concrete wall has to be found with the onboard cameras (its base is dark grey) and related to the robot through proprioception (base and end-effector poses). The lever's angle can only be judged visually. The end-effector camera starts rolled by 90 degrees with the wrist.
+The lever is spring-loaded back to perpendicular and heavily damped, and it has to be driven past 40 degrees, within 5 degrees of its end stop, from a free-flying, hovering base; its place on the wall changes per instance. Here without resets, object poses or a success measure (a success is never shown and does not end the episode; the agent ends it with `POST /finish`): The lever's pose and angle are not given: the lever on the concrete wall has to be found with the onboard cameras (its base is dark grey) and related to the robot through proprioception (base and end-effector poses). The lever's angle can only be judged visually. The end-effector camera starts rolled by 90 degrees with the wrist.
 
 ## Reference solution
 `solution/oracle_replay.py` streams the reference rows (`solution/oracle_qpos.npy`: AM-Bench's scripted expert for
@@ -32,8 +32,7 @@ step the service reports.
 Graded by the live episode, like every standard task: GPU PhysX does not replay it bit for bit (measured: the same rows, from identical states and identical controller outputs, resolve the first gripper contact differently in fresh processes), so `success` = the live episode's success, and no replay runs. The task is standard-only: an open-loop trajectory of it cannot be graded reproducibly. `tests/grade.py` reads `final.json` with no network and writes the reward fields (`graded_by_live` = 1,
 `replays` = 0, `infra_error`, the crash-recovery fields), plus `/logs/verifier/replay.mp4` (the recorded rows drawn by the
 render worker in one film pass after the verdict, an illustration: its failure costs the video only; here it usually reaches the
-live outcome in other last bits, `video_matches_live` = 0, and a film with another outcome is dropped). AM-Bench's success
-check is evaluated after every control step; the episode ends at the first step where it holds. Before serving, the
+live outcome in other last bits, `video_matches_live` = 0, and a film with another outcome is dropped). The episode ends at the agent's `POST /finish`, at the task's own time-out, when the agent's time is up, or on a simulator error (a success never ends it and is never shown); AM-Bench's success check is judged on the state it ends in. Before serving, the
 service checks the rebuilt scene's state hash against the frozen instance's (`instance_mismatch`: an infrastructure
 failure), and GPU faults in the live episode's physics (`live_gpu_faults`) make it no verdict on the agent
 (`infra_error`). Oracle: success at control step 899; the reference rows succeed in every fresh process measured but do not end in the same state (3 different end states in 6 fresh-process replays, all succeeding at control step 899): only the outcome is reproducible, which is why the live episode decides. `nop`: the episode ends at the
@@ -54,7 +53,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 | | |
 |---|---|
-| Episode | one episode, no reset, no step budget: it ends at the first control step where AM-Bench's success check holds, at the task's own time-out (episode length 20 s: control step 2399, reason `episode_timeout`), when the agent's time is up, or on a simulator error; simulated time advances only with the agent's calls |
+| Episode | one episode, no reset, no step budget: it ends at the agent's `POST /finish`, at the task's own time-out (episode length 20 s: control step 2399, reason `step_limit`), when the agent's time is up, or on a simulator error (a success never ends it); simulated time advances only with the agent's calls |
 | Action space | `submit` chunks of `ee_pose` (8: AM-Bench's own action, the tool frame's target pose + the gripper command, streamed at 120 Hz with the agent's `dt`, a multiple of 1/120 s, `hold` or `linear`); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); `/kinematics` (FK / IK of the arm on its airframe, stateless); binary RCB1 responses |
 | Cameras | `ee_camera` (on the end effector), `base_camera` (on the airframe, looking forward), 384×384 RGB, z-depth on request; drawn by a render-only Isaac process from the physics state |
 | Images | the `sim` sidecar runs efe-private:ambench (BUILD_ONLY, `images/ambench/BUILD_ONLY`); the agent container and the verifier run the shared client image with its pip pins (`embodied_first_exam/standard/client.env`) |

@@ -66,7 +66,7 @@ Every family names its rule book and lists each deviation with its reason in its
 
 **Reset budget 5** in standard and realtime: a sport is attempts, and 5 is about the trials a field event
 gives an athlete, enough to correct from the referee's call and too few to search for a plan by trial and error. The
-last attempt is graded and a success ends the trial. With resets the first attempt is kept (`trajectory.first.npz`,
+last attempt is graded; a success ends nothing, `POST /finish` ends the trial ("Agent-ended episodes" below). With resets the first attempt is kept (`trajectory.first.npz`,
 `replay.first.mp4`; `first_success` in `final.json` and `reward.json`): the no-reset view.
 
 ## Grading

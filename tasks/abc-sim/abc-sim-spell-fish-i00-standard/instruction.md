@@ -1,8 +1,8 @@
 # ABC Sim · spell fish (standard)
 
 ## Task
-Spell FISH with the letter blocks: lay F, I, S and H side by side in a straight row on the table, letters up, reading
-from left to right as the arms face the table.
+Spell FISH with the letter blocks: lay F, I, S and H side by side in a straight row on the table, each with a letter
+face up or down, reading from left to right as the arms face the table.
 
 ## Goal
 Success: the blocks F, I, S and H lie flat on the table side by side in a straight row, close together, in that order

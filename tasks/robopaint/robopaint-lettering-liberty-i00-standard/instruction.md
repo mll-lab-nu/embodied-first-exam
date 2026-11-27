@@ -133,8 +133,8 @@ right and Y towards the robot; the origin is the sheet's far-left corner as seen
 sheet's far edge (+x), image left = the robot's left (+y): the same orientation as `canvas_cam`.
 
 ### Process rules
-The grader checks the process rules in Goal on the episode with two numbers you can compute yourself; only inked strokes
-on the main sheet count (the practice sheet is free):
+These rules are checked on the episode; only inked strokes on the main sheet count (the practice sheet is free). They
+use two numbers you can compute yourself:
 - `path_mm`: the total length of the pen tip's path while it presses on the main sheet with ink (all strokes together,
   sampled at every physics step);
 - `mark_width_mm`: the average width of your marks. It is the area each stroke inks on its own, summed over the strokes

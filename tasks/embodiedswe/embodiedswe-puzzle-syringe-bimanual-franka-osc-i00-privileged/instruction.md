@@ -7,8 +7,9 @@ back down where it was on the shelf.
 ## Goal
 Success: the syringe was filled nearly full from the beaker; each of the three tubes got between about a quarter and two
 fifths of a full syringe; and the syringe now lies back at its starting spot on the shelf, roughly flat and at rest.
-What counts is how things stand when the graded run of your program ends. Only success counts as solved; partial
-progress (EmbodiedSWE's rubric for this task, `progress`) is recorded too and ranks your checkpoints.
+Filling the syringe and dosing the tubes count as they happen in the graded run of your program; everything else counts
+as it stands when that run ends. Only success counts as solved; partial progress (EmbodiedSWE's rubric for this task,
+`progress`) is recorded too and ranks your checkpoints.
 
 Deliverable: the folder `/app/output/solution/`. Its entry point, `/app/output/solution/solve.py`, defines
 `def solve(env) -> None`, which the graded run calls once (Robot Interface). Everything else in the folder ships with it

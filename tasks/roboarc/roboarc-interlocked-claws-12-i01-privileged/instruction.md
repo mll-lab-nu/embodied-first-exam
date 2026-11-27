@@ -5,9 +5,8 @@ Pull the two interlocked pieces completely apart and keep both still for a momen
 
 ## Goal
 Success: the two pieces are completely apart, with a clear gap between them, and both are still. Do not force pieces
-into each other: a success with pieces pushed into each other is reviewed instead of credited automatically. Dropping a
-piece off the table ends the episode as a failure. A replay ends, as a success, as soon as all of this has held for 0.5
-s; later rows are not run.
+into each other: a success reached that way may not count. Dropping a piece off the table ends the episode as a failure.
+A replay ends, as a success, as soon as all of this has held for 0.5 s; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 14) actions, one row
 per control step (1/40 s), at most 96000 rows (a longer trajectory is invalid). Leave the script that produced it at

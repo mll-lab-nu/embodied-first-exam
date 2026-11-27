@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/robocasa-pre-soak-pan-i00-privileged"
-description = "RoboCasa (PreSoakPan, a Franka Panda arm on an Omron mobile base (with a torso lift)): Put the pan and the sponge in the sink, turn the water fully on, and move your hand away. Produce one replayable trajectory of the robot's native controller commands on a frozen instance; graded on the state after the last action."
+description = "RoboCasa (PreSoakPan, a Franka Panda arm on an Omron mobile base (with a torso lift)): Put the pan and the sponge in the sink, turn the sink faucet on, nearly all the way, and move your hand away. Produce one replayable trajectory of the robot's native controller commands on a frozen instance; graded on the state after the last action."
 keywords = ["robotics", "robosuite", "robocasa", "mobile-manipulation", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

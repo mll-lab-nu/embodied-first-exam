@@ -6,14 +6,15 @@ itself.
 
 ## Goal
 Success: all five red objects are put on their places within the episode, one at a time, palest first, with the robot
-standing steadily and a hand at the object it is moving. Success is counted as it happens. What the robot does adds up
-over the episode (its full length is in Limits). Once that adds up to a pass, the episode is a success, unless it then
-ends as a failure (below). Putting the fifth object in its place also ends the episode.
+standing steadily and a hand at the object it is moving. Success counts as it happens: every moment the robot does this
+well adds to its score over the episode (its full length is in Limits), and once the score reaches the pass mark the
+episode is a success, even if it then ends as a failure (below). Putting the fifth object in its place also ends the
+episode.
 
 When you are done, send `/finish` to end the episode and get it graded.
 
 Any of these ends the episode at once as a failure:
-- The robot falls.
+- The robot falls: its pelvis drops below about 0.6 m, a little over half its standing height.
 - The object being moved drops below about knee height.
 
 Rules:
@@ -104,8 +105,8 @@ Time moves only inside calls: running your servo targets and holding the last on
 control steps. Between calls the robot waits, frozen, while you think; an observation is free.
 
 ## Others
-- The episode is not stopped if the robot falls in a way the Goal does not list (on its side, face down, sitting on the
-  floor). It goes on, so an episode that is still running does not mean the robot is still up.
+- A fall that leaves the pelvis above that height (slumped against something) does not end the episode. It goes on, so
+  an episode that is still running does not mean the robot is still up.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.

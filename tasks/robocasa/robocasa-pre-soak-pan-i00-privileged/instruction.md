@@ -1,7 +1,7 @@
 # RoboCasa · PreSoakPan (privileged)
 
 ## Task
-Put the pan and the sponge in the sink, turn the water fully on, and move your hand away.
+Put the pan and the sponge in the sink, turn the sink faucet on, nearly all the way, and move your hand away.
 
 ## Goal
 Success: the pan and the sponge are both all the way in the sink, the water is on with its handle turned nearly all the

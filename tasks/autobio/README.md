@@ -78,12 +78,13 @@ success rate), load rotor 14.7 / 1.0.
   an expert's run replays bit for bit. An agent that wants 50 Hz repeats a row ten times (privileged: `s.step(a, n=10)`;
   standard: `dt=0.02`).
 - **Success** is AutoBio's own `check()`, evaluated after every control step (the upstream's rule stays):
-  - rule `first`, AutoBio's `early_stop` tasks (eight families): the first step at which it holds ends the episode in
-    success. This is "success at any step": it is how AutoBio's evaluator scores these tasks.
+  - rule `first`, AutoBio's `early_stop` tasks (eight families): in privileged mode the first step at which it holds
+    ends the episode in success ("success at any step", how AutoBio's evaluator scores these tasks). Standard episodes
+    are agent-ended and judged on the end state with the `final` rule ("Agent-ended episodes" below).
   - rule `final`, the thermal mixer: `check()` is a score in [0, 1] (0.5 x temperature + 0.3 x time + 0.2 x speed, each
     the fraction of the way from the initial to the target setting), and AutoBio scores the state at the end. Here:
     success iff the score is 1 in the state in which the episode ends (privileged: after the last row; standard: at the
-    agent's `done`, or when its time is over); the score is reported as `progress`.
+    agent's `POST /finish` or `done`, or when its time is over); the score is reported as `progress`.
   - AutoBio's time limits (15 to 45 s of simulated time) are lifted: the wall clock is the budget. One technical cap
     bounds an episode: it ends after 600000 control steps (1200 s of simulated time), stated in the instructions and in
     `/spec` (`max_control_steps`).

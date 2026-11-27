@@ -40,7 +40,7 @@ obs = r.hold(1.0)                              # hold the last command for 1 s o
 obs = r.get_obs(last_s=1.0)                    # the frames recorded over the last 1 s (reading moves no time)
 r.fk(q)                                        # forward kinematics of the listed links (no physics)
 r.status()                                     # calls, control steps, done, reason, elapsed time, episode, resets_left
-obs = r._post("/reset", {"cameras": ["side_view"]}, [], 900)   # POST /reset: a new episode (the 2.2 client has no reset())
+# a new episode: POST /reset, or the MCP tool `reset` (this client has no reset() call)
 ```
 
 Simulated time only advances with your commands (and `hold(s)`, which holds the last command). A reset (`POST /reset`,

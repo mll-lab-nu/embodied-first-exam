@@ -40,11 +40,11 @@ as a service that you reach only through its client.
 ### Training
 Train the public terrain curriculum with
 `python -m control_public.g1_training --upstream /opt/control-assets/unitree_rl_mjlab --out /app/output/trained --gpu 0`.
-You may edit training code. Submit the exported `policy.npz` using `client.artifact(path)`. The fixed actor architecture
-and PD wrapper are the deployment ABI. Record actual training steps, logs and hardware. Your container has one NVIDIA
-GPU (`cuda:0`); measured on an L40S, the trainer's default 256 environments take about 2 GB of GPU memory and 1.1-1.4 s
-per PPO iteration, 1024 environments (its cap) about 5 GB and 1.4 s, 4096 environments about 17 GB and 2.0-2.5 s, at
-about one CPU core.
+You may edit training code. Submit the exported `policy.npz` using `client.artifact(path)`. The actor network's
+architecture and its PD wrapper are fixed: only the weights change. Record actual training steps, logs and hardware.
+Your container has one NVIDIA GPU (`cuda:0`); measured on an L40S, the trainer's default 256 environments take about 2
+GB of GPU memory and 1.1-1.4 s per PPO iteration, 1024 environments (its cap) about 5 GB and 1.4 s, 4096 environments
+about 17 GB and 2.0-2.5 s, at about one CPU core.
 
 ### Feedback
 Each round reuses the same 4 development cases. An episode that crashes, leaves its course or arena, or makes the

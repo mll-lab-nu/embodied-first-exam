@@ -225,6 +225,16 @@ recorded (`instance_ok`, `instance_same_gpu`, `instance_max_abs_diff`, `instance
 `reward.json`), never an error. A run on another GPU model may differ in its bits; a closed-loop solve that reads the
 state is robust to that, an open-loop action sequence may not be.
 
+## Before you run
+
+The base image may not be redistributed (Isaac Sim's licence and the asset bundle's mixed licences: `## Image` below),
+so every host builds it once from `images/embodiedswe/` before the first run, from the repository root:
+`docker build -t ghcr.io/mll-lab-nu/efe-private:embodiedswe-$(cat images/embodiedswe/VERSION) images/embodiedswe`.
+The build accepts NVIDIA's Isaac Sim terms, RoboLab's and EmbodiedSWE's Apache-2.0 licences and the licences of the
+assets in EmbodiedSWE's bundle (`images/embodiedswe/BUILD_ONLY` lists them); it needs no account or token, and RoboLab's
+recipe inside it needs about 60 GB of free disk and 20-60 min. The tasks name the image in their `FROM`; `harbor run`
+does not build it.
+
 ## Image
 
 `ghcr.io/mll-lab-nu/efe-private:embodiedswe-<VERSION>` (`images/embodiedswe/`, BUILD_ONLY): RoboLab's recipe plus

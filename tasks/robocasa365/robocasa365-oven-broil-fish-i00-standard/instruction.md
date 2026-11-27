@@ -4,10 +4,11 @@
 Put the fish on the oven's bottom rack, slide the rack back in and close the oven door.
 
 ## Goal
-Success: the fish is on the oven's bottom rack and the oven door is fully closed, and both have stayed that way for a
-moment.
+Success: the fish is on the oven's bottom rack and the oven door is fully closed, and both stay that way for a moment.
 
-When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
+This counts as it happens.
+
+When you are done, send `/finish` to end the episode and get it graded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

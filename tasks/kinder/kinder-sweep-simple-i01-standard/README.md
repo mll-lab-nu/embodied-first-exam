@@ -26,7 +26,7 @@ Nonprehensile, tool use: fifty small cubes spread over 2 m² of floor into a box
 None, and no positive example yet: the task is unvalidated (`validated = false`, docs/protocol/README.md §2, §4) until a human review records one.
 
 ## Verification
-The sidecar judges the episode as it runs (KinDER's goal check at every control step; the episode ends there) and,
+The sidecar runs the episode live: it ends at the agent's `POST /finish`, at the step cap, when the agent's time is up, or on a simulator error (a success never ends it and is never shown), and KinDER's goal check is judged on the state it ends in. The sidecar,
 when the collect hook ends the trial, writes that verdict to `/data/final.json` (`graded_by = "live"`): nothing is
 replayed to grade it (owner, 2026-10-17). The scene's start is checked against the frozen instance's
 recorded state (`scene_sha`) when the episode begins (a mismatch is `instance_mismatch`, infrastructure).

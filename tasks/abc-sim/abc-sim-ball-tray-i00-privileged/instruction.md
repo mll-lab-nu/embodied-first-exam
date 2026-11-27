@@ -4,9 +4,9 @@
 Hold the tray by both handles, one gripper on each, and keep the ball on the tray until the episode ends.
 
 ## Goal
-Success: you keep holding both handles, one gripper on each, with the ball on the tray, through the whole countdown that
-starts once both handles are gripped. The episode ends as soon as the countdown completes. It ends as a failure the
-moment the ball leaves the tray or a handle is let go during the countdown.
+Success: once both handles are gripped, an 11-second countdown starts; you keep holding both handles, one gripper on
+each, with the ball on the tray, until it completes. The episode ends as soon as the countdown completes. It ends as a
+failure the moment the ball leaves the tray or a handle is let go during the countdown.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: `(T, 14)` rows, one per
 control step, at most 20,000 rows. It is replayed open-loop from the same initial state and scores 1 if its episode ends

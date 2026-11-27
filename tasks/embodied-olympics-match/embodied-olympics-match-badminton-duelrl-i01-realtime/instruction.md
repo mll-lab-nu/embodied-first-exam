@@ -15,11 +15,12 @@ Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - One match, no reset: a point lost stays lost.
-- Use only the camera images, the service's replies and this text: no simulator internals or hidden state.
+- Play from the camera images and the service's replies; do not use the simulator's state or the opponent's code to
+  choose actions.
 - Reviews: after every point the world freezes. Within 300 s of real time (`timing.review_timeout_s` in `game spec`),
   send a short review with `game ready "WHY" "PLAN"`; otherwise your side loses the match (`ready_timeout`), even when
-  you are ahead. The world does not go on by itself: watch for the freeze (your program's log, `game status`) and review
-  at once.
+  you are ahead. After a stoppage the world stays frozen until you send `game ready`: watch for the freeze (your
+  program's log, `game status`) and review at once.
 - Start window: send `game start` within 1800 s of real time after the match service starts (`start.window_s` in
   `game spec`), or you lose the match (`no_show`). The match does not run before that: read `game spec` and prepare your
   program first.

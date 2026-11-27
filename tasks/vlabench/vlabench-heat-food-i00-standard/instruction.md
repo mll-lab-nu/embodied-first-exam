@@ -4,9 +4,11 @@
 Heat the cooked food from the tray in the microwave: put it inside, close the door and press the start button.
 
 ## Goal
-Success: the cooked food is inside the microwave, the door is closed and the start button is pressed.
+Success: the cooked food is inside the microwave, the door is closed and the start button is pressed, all at once.
 
-When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
+This counts as it happens.
+
+When you are done, send `/finish` to end the episode and get it graded.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions,
@@ -22,8 +24,8 @@ tools, as if it were real hardware: one live episode.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`. Its docstring is the full reference:
-`python -c "import rcb_client; help(rcb_client)"`. Its examples come from another benchmark; the numbers here and in
-`spec()` are this task's.
+`python -c "import rcb_client; help(rcb_client)"`. Where the docstring's example numbers differ, this page and `spec()`
+are right.
 
 | call | endpoint | what it does |
 |---|---|---|

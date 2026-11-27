@@ -5,9 +5,9 @@ Open the jam jar with the robot's right hand, then set the lid upright on the wo
 
 ## Goal
 Success: in this order, the lid is unscrewed counter-clockwise (seen from above) while it still sits on the jar, until
-it comes loose; it is lifted clear of the jar; then it stands upright on the worktop away from the jar, the hand off the
-lid and the jar, the jar upright on the worktop, and both are still for a second. A replay ends as soon as the task is
-done; later rows are not run.
+it comes loose; it is lifted clear of the jar; then it stands upright on the worktop, at least a lid's width away from
+the jar, the hand off the lid and the jar, the jar upright on the worktop, and both are still for a second. A replay
+ends as soon as the task is done; later rows are not run.
 
 Any of these ends the episode at once as a failure, which later actions cannot undo:
 - The jar tips, slides or is lifted.

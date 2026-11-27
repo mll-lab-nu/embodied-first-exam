@@ -24,9 +24,9 @@ Rules:
   program first. Until then you develop and test your team; the world waits.
 - Reviews: at every stoppage (a goal, half time, a dropped ball, full time, each shoot-out kick) the world freezes; send
   `game ready "WHY" "PLAN"`, a short review, within 300 s of real time (`timing.review_timeout_s` in `game spec`), or
-  your side loses the match (`ready_timeout`), even when you are ahead. The world does not go on by itself: watch for
-  the freeze (your program's log, `game status`) and review at once. You may use a review to improve your program
-  (practice matches run on) and restart it; the opponent does not review.
+  your side loses the match (`ready_timeout`), even when you are ahead. After a stoppage the world stays frozen until
+  you send `game ready`: watch for the freeze (your program's log, `game status`) and review at once. You may use a
+  review to improve your program (practice matches run on) and restart it; the opponent does not review.
 - You play through a program that observes, computes your robots' rows and sends them, without a new model response for
   each action; you stay in the loop (watch its log, stop, fix and restart it). Only you send `game start` and
   `game ready`.

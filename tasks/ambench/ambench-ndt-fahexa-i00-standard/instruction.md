@@ -118,8 +118,9 @@ Optional inputs (ask only for what you need):
 
 ### Inspection point
 The inspection point is not marked in the scene: it is at (1.77, 0.0, 7.0) m in the world frame, for the origin of the
-end-effector link `ee_link` (not the tool tip). It lies on the robot's side of the taped rectangle, opposite its centre,
-a little less than 20 cm from it. The end-effector link has to stay within a few centimetres of it.
+end-effector link `ee_link` (not the tool tip), which is the same frame as `tcp` in the action, `r.fk()` / `r.ik()` and
+the proprio `tcp_pose`. It lies on the robot's side of the taped rectangle, opposite its centre, a little less than 20
+cm from it. The end-effector link has to stay within a few centimetres of it.
 
 ### Episode
 One episode lasts 20 s of simulated time.

@@ -156,7 +156,7 @@ mtime match, and a checkout gives many files one mtime, so a task can silently r
 
 For a new simulator or family, also replay the oracle (or a positive example) twice in fresh processes and include
 the matching state hashes (the determinism check of a task's construction, PROTOCOL §4; the standard modes' video is
-rendered from the trajectory). Where fresh replays end in different states, the task declares `[metadata] replays = 3`
+rendered from the trajectory, or recorded live where the simulator does not replay bit-wise, PROTOCOL §4). Where fresh replays end in different states, the task declares `[metadata] replays = 3`
 and its grader stops at the first successful replay.
 
 ## Tasks without an oracle
@@ -207,7 +207,7 @@ The checklist is in PROTOCOL §4.
   pinned files-only image, the benchmark's `images/<folder>-files/` (sources under `embodied_first_exam/benchmarks/<folder>/`; the same image
   serves its agent and verifier images; besides it, a benchmark may have files images that hold only data, such as goal
   pictures or build inputs, and one per further simulator image it runs on, as RoboARC's IKEA suite),
-  or `images/standard-files/` for the 2.2 / 2.4 / realtime layers: the sidecar is built from its directory
+  or `images/standard-files/` for the 2.1 / 2.2 / 2.4 / realtime layers (the 2.1 clients and grader of `v2_1/` too): the sidecar is built from its directory
   (`build: context: sim`, its `Dockerfile`: `COPY . /srv/`, then `COPY --from=<image@digest>` of those files at their paths
   under `/srv`; `.dockerignore` keeps the two build files out). A private evaluator's own data (hidden plants, case banks)
   and files that may not be redistributed stay in the task dir.

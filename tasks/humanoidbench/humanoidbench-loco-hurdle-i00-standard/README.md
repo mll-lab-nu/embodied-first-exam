@@ -34,14 +34,14 @@ interesting tasks. What replaces it (docs/protocol/README.md §4): the floor abo
 pass), the evidence that the task has a solution (`oracle_evidence` in task.toml), and a human reviewer.
 
 ## Verification
-`success` = live success: the episode the sim service ran reached the pass mark (HumanoidBench's own rule,
-judged on the live simulator; the episode ends there), for the last episode (the one after the last reset;
-earlier episodes are in `trajectory_live.f64` and `episode.jsonl`, not graded). Nothing is replayed to grade
-it (owner, 2026-10-17). The scene's start is checked against the frozen instance's recorded state
-when an episode begins (a mismatch is `instance_mismatch`, infrastructure). `tests/grade.py` reads
-`/data/final.json` and copies the evidence to `/logs/verifier/`: `trajectory.npz` (the deliverable,
-replayable) and `replay.mp4`, rendered from it in one pass after the verdict (a lost video never changes the
-verdict). No oracle; human review in PR #9. `nop` scores 0.
+`success` = live success: the episode the sim service ran reached the pass mark at some step (HumanoidBench's own rule,
+judged on the live simulator as the episode ran: reaching it does not end the episode, and it still counts when a fall
+or another failure rule ends the episode afterwards), for the last episode (the one after the last reset; earlier
+episodes are in `trajectory_live.f64` and `episode.jsonl`, not graded). Nothing is replayed to grade it (owner,
+2026-10-17). The scene's start is checked against the frozen instance's recorded state when an episode begins (a
+mismatch is `instance_mismatch`, infrastructure). `tests/grade.py` reads `/data/final.json` and copies the evidence to
+`/logs/verifier/`: `trajectory.npz` (the deliverable, replayable) and `replay.mp4`, rendered from it in one pass after
+the verdict (a lost video never changes the verdict). No oracle; human review in PR #9. `nop` scores 0.
 
 ## Resources
 Caps per container (PROTOCOL §6).

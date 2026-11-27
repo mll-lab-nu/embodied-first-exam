@@ -1,7 +1,7 @@
 # RoboCasa · TurnOnSinkFaucet (standard)
 
 ## Task
-Turn the sink faucet fully on.
+Turn the sink faucet on, nearly all the way.
 
 ## Goal
 Success: the water is on, its handle turned nearly all the way.

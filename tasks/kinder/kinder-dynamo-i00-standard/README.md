@@ -26,7 +26,7 @@ Nonprehensile: three chairs stand between the robot and the floor square, and th
 `solution/oracle_replay.py` sends the privileged oracle's 101 moves, turned into the odometry frame (`solution/oracle_actions.npy`), through the client: success at step 101, no privileged information at run time.
 
 ## Verification
-The sidecar judges the episode as it runs (KinDER's goal check at every control step; the episode ends there) and,
+The sidecar runs the episode live: it ends at the agent's `POST /finish`, at the step cap, when the agent's time is up, or on a simulator error (a success never ends it and is never shown), and KinDER's goal check is judged on the state it ends in. The sidecar,
 when the collect hook ends the trial, writes that verdict to `/data/final.json` (`graded_by = "live"`): nothing is
 replayed to grade it (owner, 2026-10-17). The scene's start is checked against the frozen instance's
 recorded state (`scene_sha`) when the episode begins (a mismatch is `instance_mismatch`, infrastructure).

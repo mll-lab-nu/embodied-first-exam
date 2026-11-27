@@ -6,12 +6,13 @@ close together, anywhere you like.
 
 ## Goal
 Success: the six objects stand close together, anywhere in the room, for much of the episode, with the robot standing
-steadily. Success is counted as it happens. What the robot does adds up over the episode (its full length is in Limits).
-Once that adds up to a pass, the episode is a success, even if it then ends as a failure (below).
+steadily. Success counts as it happens: every moment the robot does this well adds to its score over the episode (its
+full length is in Limits), and once the score reaches the pass mark the episode is a success, even if it then ends as a
+failure (below).
 
 When you are done, send `/finish` to end the episode and get it graded.
 
-The episode ends at once as a failure if the robot falls.
+The episode ends at once as a failure if the robot falls: its pelvis drops below 0.3 m, close to the floor.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
@@ -131,8 +132,8 @@ the robot stays there depends on whether that pose is stable under gravity and c
   (the robot keeps executing its plan). `spec()["timing"]` states all this; `r.status()` shows `running` and `lag_s`.
 
 ## Others
-- The episode is not stopped if the robot falls in a way the Goal does not list (on its side, face down, sitting on the
-  floor). It goes on, so an episode that is still running does not mean the robot is still up.
+- A fall that leaves the pelvis above that height (kneeling, or slumped against something) does not end the episode. It
+  goes on, so an episode that is still running does not mean the robot is still up.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.

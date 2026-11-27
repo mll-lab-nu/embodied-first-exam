@@ -86,8 +86,8 @@ res.last["egocentric_mirrored_camera"]; res.proprio   # last frame per camera; f
   and nothing moves.
 - The Robotiq opens to 8.5 cm.
 
-When your session ends with the episode still running, your last command is held for about two seconds more while the
-task is still judged, so a release you sent last completes.
+When the episode ends (at `/finish` or when your session ends), your last command is held for about two seconds and the
+task is judged at the end of that hold, so a release you sent last completes.
 
 ### Observations
 - Cameras: `egocentric_mirrored_camera` (static, facing the robot across the table, 864×480),

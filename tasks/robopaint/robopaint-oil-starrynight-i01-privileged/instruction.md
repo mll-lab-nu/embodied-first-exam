@@ -107,8 +107,8 @@ frame that is x = -0.100 + 0.1136 - Y/1000, y = 0.1136 - X/1000 (m) (`s.geo.mm_t
 far edge (+x), image left = the robot's left (+y): the same orientation as `s.canvas()` and `canvas_cam`.
 
 ### Process rules
-The grader checks the process rules in Goal on the replayed trajectory with two numbers you can check yourself; only
-painted strokes on the main sheet count (the practice sheet is free):
+These rules are checked on the replayed trajectory; only painted strokes on the main sheet count (the practice sheet is
+free):
 - Paint path budget: `path_mm` ≤ 62300 mm. `path_mm` is the total length of the brush tip's path while it presses on the
   main sheet with paint (all strokes together, sampled at every physics step).
 - Strokes are sweeps: `scribble_share` ≤ 0.1. A stroke's scribble ratio is its length divided by the diagonal of its

@@ -6,9 +6,9 @@ it in the basket.
 
 ## Goal
 Success: the steering wheel was lifted off the near table and carried over, and it now rests inside the basket, let go
-of and still (not held, not on the rim). What counts is how things stand when the graded run of your program ends. Only
-success counts as solved; partial progress (EmbodiedSWE's rubric for this task, `progress`) is recorded too and ranks
-your checkpoints.
+of and still (not held, not on the rim). Lifting the wheel off the near table and carrying it over count as they happen
+in the graded run of your program; everything else counts as it stands when that run ends. Only success counts as
+solved; partial progress (EmbodiedSWE's rubric for this task, `progress`) is recorded too and ranks your checkpoints.
 
 Deliverable: the folder `/app/output/solution/`. Its entry point, `/app/output/solution/solve.py`, defines
 `def solve(env) -> None`, which the graded run calls once (Robot Interface). Everything else in the folder ships with it

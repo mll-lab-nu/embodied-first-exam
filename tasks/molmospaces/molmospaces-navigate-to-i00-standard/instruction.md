@@ -4,8 +4,8 @@
 Go to one of the two table lamps and stop close by, with the lamp in view of the head camera.
 
 ## Goal
-Success: the robot's base is within about two steps of the nearer table lamp, and that lamp shows in the head camera.
-The `done` action is the same as `/finish`.
+Success: the robot's base is within about 1.5 m of the nearer table lamp, and that lamp shows in the head camera. The
+`done` action is the same as `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -34,7 +34,7 @@ res = r.submit("joint_position", A, dt=0.2)   # A: (T, 25) rows dt apart; res.vi
 obs = r.hold(2.0)                              # hold the current targets for 2 s of robot time (whole control
                                                # steps: obs.meta["duration_s"] is what ran)
 obs = r.get_obs(last_s=1.0)                    # the frames recorded over the last 1 s (reading moves no time)
-r.fk(q); r.ik({"left_gripper": pose7}, seed=q)        # upstream's kinematic model, no physics: tcp poses <-> joint positions
+r.fk(q); r.ik({"left_gripper": pose7}, seed=q)        # the robot's kinematic model, no physics: tcp poses <-> joint positions
 r.submit("done", [])                           # end the episode now
 r.status()                                     # calls, control steps, done, reason, elapsed time
 ```
@@ -59,7 +59,7 @@ r.status()                                     # calls, control steps, done, rea
 - `joint_position` (25): `base_x`, `base_y`, `base_theta`, `torso_0`, `torso_1`, `torso_2`, `torso_3`, `torso_4`,
   `torso_5`, `left_arm_0`, `left_arm_1`, `left_arm_2`, `left_arm_3`, `left_arm_4`, `left_arm_5`, `left_arm_6`,
   `right_arm_0`, `right_arm_1`, `right_arm_2`, `right_arm_3`, `right_arm_4`, `right_arm_5`, `right_arm_6`,
-  `left_gripper`, `right_gripper`: the targets of upstream's joint-position controllers (base_x, base_y in m and
+  `left_gripper`, `right_gripper`: the targets of the robot's joint-position controllers (base_x, base_y in m and
   base_theta in rad (world frame); torso, arm joints in rad; grippers: the finger motor's force, -100 .. 100 (positive
   closes, negative opens, 0 exerts none)). Rows are `dt` apart (a whole multiple of the 0.2 s control period, at most
   0.5 s: up to 0.4 s), `interpolate="linear"` (default) or `"hold"` between rows; a chunk covers at most 10 s; values

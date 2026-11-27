@@ -34,7 +34,7 @@ res = r.submit("joint_position", A, dt=0.066)   # A: (T, 8) rows dt apart; res.v
 obs = r.hold(2.0)                              # hold the current targets for 2 s of robot time (whole control
                                                # steps: obs.meta["duration_s"] is what ran)
 obs = r.get_obs(last_s=1.0)                    # the frames recorded over the last 1 s (reading moves no time)
-r.fk(q); r.ik({"gripper": pose7}, seed=q)        # upstream's kinematic model, no physics: tcp poses <-> joint positions
+r.fk(q); r.ik({"gripper": pose7}, seed=q)        # the robot's kinematic model, no physics: tcp poses <-> joint positions
 r.submit("done", [])                           # end the episode now
 r.status()                                     # calls, control steps, done, reason, elapsed time
 ```
@@ -57,7 +57,7 @@ r.status()                                     # calls, control steps, done, rea
 
 ### Actions
 - `joint_position` (8): `fr3_joint1`, `fr3_joint2`, `fr3_joint3`, `fr3_joint4`, `fr3_joint5`, `fr3_joint6`,
-  `fr3_joint7`, `gripper`: the targets of upstream's joint-position controllers (fr3_joint1..7 in rad; gripper: the
+  `fr3_joint7`, `gripper`: the targets of the robot's joint-position controllers (fr3_joint1..7 in rad; gripper: the
   Robotiq command, 0 = open .. 255 = closed). At t = 0 the gripper is open and its target is 0. Rows are `dt` apart (a
   whole multiple of the 0.066 s control period, at most 0.5 s: up to 0.462 s). Between rows, use `interpolate="linear"`
   (default) or `"hold"`. A chunk covers at most 10 s. Values outside the limits

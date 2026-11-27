@@ -51,7 +51,8 @@ More than 2 crashes end the episode: `sim_crashed_on_call` if every crash happen
 `reason = instance_mismatch` with `infra_error = 1`.
 
 **Grading** (the live episode, PROTOCOL H.4; no grading replay). `success` is RoboTwin's `check_success` on the
-episode the sidecar ran: it is checked after every call that ran physics, the first success ends the episode, and when
+episode the sidecar ran: it is checked after every call that ran physics and only recorded (a success never ends the
+episode: "Agent-ended episodes" below); the episode ends at the agent's `POST /finish` or when
 the agent's time is up (the collect hook's SIGUSR1, after the monitor is sealed and the agent's container is stopped
 with `kill -9 -1`) the final state is checked once more. `final.json` gets the verdict at once (`graded_by = "live"`, `replays = 0`, `finalized`,
 the end state's hash `live_sha`, `video_pending: true`); `trajectory.npz` is saved as the deliverable. The frozen

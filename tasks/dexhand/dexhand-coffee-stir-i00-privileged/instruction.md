@@ -6,8 +6,8 @@ Mix the milk into the coffee: stir it six times with the teaspoon, then lay the 
 ## Goal
 Success: in this order, with the spoon held between the thumb and another finger and its bowl down in the coffee, the
 bowl circles the mug six full times (leaving the coffee before the sixth turn starts the count again); then the spoon
-lies roughly flat on the worktop beside the mug, clear of it and out of the hand, and spoon and mug are still for a
-second. A replay ends as soon as the task is done; later rows are not run.
+lies roughly flat on the worktop, at least a mug's width away from the mug and out of the hand, and spoon and mug are
+still for a second. A replay ends as soon as the task is done; later rows are not run.
 
 Any of these ends the episode at once as a failure, which later actions cannot undo:
 - The mug tips, slides or is lifted.

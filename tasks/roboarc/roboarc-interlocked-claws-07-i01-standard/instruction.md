@@ -6,8 +6,8 @@ behind, no closer to the goal than it was at the start.
 
 ## Goal
 Success: all of the brown key is inside the green dashed goal square and still, and the teal lock is no closer to the
-goal than at the start. Do not force pieces into each other: a success with pieces pushed into each other is reviewed
-instead of credited automatically. Dropping a piece off the table ends the episode as a failure.
+goal than at the start. Do not force pieces into each other: a success reached that way may not count. Dropping a piece
+off the table ends the episode as a failure.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts, and it must
 keep holding for a moment while your last command is held.

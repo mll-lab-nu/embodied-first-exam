@@ -21,7 +21,7 @@ trajectory once (the video only); the verifier runs in a separate sandbox (`test
 resets and privileged state.
 
 ## Difficulty
-That of `ambench-cabinet-pick-place-fahexa-i00-privileged` (its README), without resets, object poses or a success measure (the episode just ends, reason `success`, when the check holds): Neither the cabinet's pose, the sliding door's position nor the can's pose is given: the cabinet, the door and its handle have to be found with the forward-looking onboard cameras, the can is hidden behind the closed door at the start, and whether the can ended at the right height and at rest can only be judged from the images together with proprioception. Success is reported only by the episode's end (reason `success`).
+That of `ambench-cabinet-pick-place-fahexa-i00-privileged` (its README), without resets, object poses or a success measure (a success is never shown and does not end the episode; the agent ends it with `POST /finish`): Neither the cabinet's pose, the sliding door's position nor the can's pose is given: the cabinet, the door and its handle have to be found with the forward-looking onboard cameras, the can is hidden behind the closed door at the start, and whether the can ended at the right height and at rest can only be judged from the images together with proprioception. Success is reported only by the episode's end (reason `success`).
 
 ## Reference solution
 `solution/oracle_replay.py` streams the privileged oracle's rows (`solution/oracle_qpos.npy`: AM-Bench's scripted expert for
@@ -32,8 +32,7 @@ step the service reports.
 ## Verification
 Graded by the live episode (owner 2026-10-17): `success` = the live episode's success, judged by the sim service on the episode the agent ran, with no grading replay (until 2026-10-17: live success ∧ two fresh-process replays that succeed and agree on the outcome). The live service runs camera-free physics (its cameras are drawn by a separate render process), the same computation as a fresh-process replay of its rows. `tests/grade.py` reads `final.json` with no network and writes the reward fields (`graded_by_live` = 1,
 `replays` = 0, `infra_error`, the crash-recovery fields), plus `/logs/verifier/replay.mp4` (the recorded rows drawn by the
-render worker in one film pass after the verdict, an illustration: its failure costs the video only). AM-Bench's success
-check is evaluated after every control step; the episode ends at the first step where it holds. Before serving, the
+render worker in one film pass after the verdict, an illustration: its failure costs the video only). The episode ends at the agent's `POST /finish`, at the task's own time-out, when the agent's time is up, or on a simulator error (a success never ends it and is never shown); AM-Bench's success check is judged on the state it ends in. Before serving, the
 service checks the rebuilt scene's state hash against the frozen instance's (`instance_mismatch`: an infrastructure
 failure), and GPU faults in the live episode's physics (`live_gpu_faults`) make it no verdict on the agent
 (`infra_error`). Oracle: success at control step 2752; the live
@@ -55,7 +54,7 @@ Caps per container (PROTOCOL §6).
 ## Details
 | | |
 |---|---|
-| Episode | one episode, no reset, no step budget: it ends at the first control step where AM-Bench's success check holds, at the task's own time-out (episode length 60 s: control step 7199, reason `episode_timeout`), when the agent's time is up, or on a simulator error; simulated time advances only with the agent's calls |
+| Episode | one episode, no reset, no step budget: it ends at the agent's `POST /finish`, at the task's own time-out (episode length 60 s: control step 7199, reason `step_limit`), when the agent's time is up, or on a simulator error (a success never ends it); simulated time advances only with the agent's calls |
 | Action space | `submit` chunks of `ee_pose` (8: AM-Bench's own action, the tool frame's target pose + the gripper command, streamed at 120 Hz with the agent's `dt`, a multiple of 1/120 s, `hold` or `linear`); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); `/kinematics` (FK / IK of the arm on its airframe, stateless); binary RCB1 responses |
 | Cameras | `ee_camera` (on the end effector), `base_camera` (on the airframe, looking forward), 384×384 RGB, z-depth on request; drawn by a render-only Isaac process from the physics state |
 | Images | the `sim` sidecar runs efe-private:ambench (BUILD_ONLY, `images/ambench/BUILD_ONLY`); the agent container and the verifier run the shared client image with its pip pins (`embodied_first_exam/standard/client.env`) |

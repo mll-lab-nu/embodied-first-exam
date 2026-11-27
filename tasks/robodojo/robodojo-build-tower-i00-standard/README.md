@@ -17,8 +17,8 @@ robot only through the eai-standard/2.2 client (the simulator runs in the `sim` 
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 
 ## Difficulty
-A RoboDojo Precision task (rigid (stacking of rigid wooden pieces) objects), graded by RoboDojo's own success thresholds (its evaluation gives a policy 1050 actions; no step cap here, PROTOCOL §3). Here the agent sees only the three cameras (RGB, optional depth) and the arms' proprioception: no object
-poses, no success signal, no reset, one episode (no step cap; RoboDojo's own evaluation gives a policy 1050 actions).
+A RoboDojo Precision task (rigid (stacking of rigid wooden pieces) objects), graded by RoboDojo's own success thresholds (at most 1,050 steps here, one 25 Hz action each: RoboDojo's own step limit for this task). Here the agent sees only the three cameras (RGB, optional depth) and the arms' proprioception: no object
+poses, no success signal, no reset, one episode (at most 1,050 steps, RoboDojo's own step limit).
 
 ## Reference solution
 None (see the privileged twin): RoboDojo releases no expert or planner script, and its training demonstrations record no

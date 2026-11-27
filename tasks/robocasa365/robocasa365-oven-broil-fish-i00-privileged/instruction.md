@@ -4,8 +4,8 @@
 Put the fish on the oven's bottom rack, slide the rack back in and close the oven door.
 
 ## Goal
-Success: the fish is on the oven's bottom rack and the oven door is fully closed, and both have stayed that way for a
-moment. Your trajectory is replayed from the fixed start. What counts is the state after its last action.
+Success: the fish is on the oven's bottom rack and the oven door is fully closed, and both stay that way for a moment.
+Your trajectory is replayed from the fixed start. This counts as it happens in the replay.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 13)`
 with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave

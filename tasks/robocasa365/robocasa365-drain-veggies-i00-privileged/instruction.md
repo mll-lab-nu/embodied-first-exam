@@ -5,8 +5,9 @@ Dump the lettuce from the pot into the sink, rinse it under running water, then 
 back in the pot.
 
 ## Goal
-Success: the lettuce has been in the sink under running water for a moment, and at the end it is back in the pot and the
-water is off. Your trajectory is replayed from the fixed start. What counts is the state after its last action.
+Success: the lettuce is in the sink under running water for a moment, and at the end it is back in the pot and the water
+is off. Your trajectory is replayed from the fixed start. The rinse counts as it happens in the replay; everything else
+is judged on the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 13)`
 with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave
