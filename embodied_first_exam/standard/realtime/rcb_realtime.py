@@ -145,8 +145,9 @@ SECONDS_GONE = ("observe reads the recorder only and never waits (eai-standard/3
                 '{"type": <type>, "interpolate": "hold", "seconds": n} plans holding the current target')
 CAMERA_WORKER_START_S = 300.0    # the worker builds its own copy of the scene; no frames until it is up
 CAMERA_WORKER_RESPAWNS = 3       # a worker that dies is started again this many times, then the answers come without frames
-CAMERA_RENDER_TIMEOUT_S = float(os.environ.get("RCB_CAMERA_RENDER_TIMEOUT_S") or 120.0)   # one job's frames; longer: a hung
-                                 # worker, killed and started again (its frames are lost, the clock goes on)
+CAMERA_RENDER_TIMEOUT_S = max(5.0, float(os.environ.get("RCB_CAMERA_RENDER_TIMEOUT_S") or 120.0))   # one job's frames;
+                                 # longer: a hung worker, killed and started again (its frames are lost, the clock goes
+                                 # on); at least 5 s, so a small or zero setting never kills a healthy worker
 
 # The child process that parses a body with more than INLINE_JSON bytes of JSON text (argv: the most elements a valid
 # `actions` can have, INLINE_JSON, CHILD_MEM; stdin: the body). It answers with the fields the service reads and the

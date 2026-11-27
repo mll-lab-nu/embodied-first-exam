@@ -20,7 +20,8 @@ END_STATE_REASONS (a settle or hold window, where the task has one, runs from th
 final.json, builds its rcb_limited.Episode with persist=persist(...) and serves with
 serve(Service(..., finish=lambda: finish("finished"), end_step_limit=lambda: finish("step_limit"))) instead of
 rcb_limited's: the step limit's end is the same call with reason "step_limit", passed explicitly (a service without it does
-not start when RCB_STEP_LIMIT is set); the episode's control steps are its status()["control_steps"]. Tests:
+not start when RCB_STEP_LIMIT is set); the episode's control steps are its status()["control_steps"] (a service whose
+status() does not state them does not start with RCB_STEP_LIMIT either). Tests:
 agent_end_selftest.py.
 """
 from __future__ import annotations
@@ -90,6 +91,24 @@ def steps_left(used: int) -> dict:
     return {"step_limit": STEP_LIMIT, "steps_left": max(0, STEP_LIMIT - int(used))} if STEP_LIMIT is not None else {}
 
 
+def spec_limit(spec: dict) -> None:
+    """With RCB_STEP_LIMIT: /spec.max_control_steps and /spec.budget.steps state the episode's step limit, the lower of
+    RCB_STEP_LIMIT and the adapter's own max_control_steps (an adapter cap of its own still ends the episode)."""
+    own = spec.get("max_control_steps")
+    own = int(own) if isinstance(own, (int, float)) and not isinstance(own, bool) and own > 0 else None
+    cap = STEP_LIMIT if own is None else min(STEP_LIMIT, own)
+    spec["max_control_steps"] = cap
+    if not isinstance(spec.get("budget"), dict):
+        spec["budget"] = {}
+    spec["budget"]["steps"] = cap
+
+
+def control_steps(status: dict) -> int | None:
+    """status()["control_steps"] as an int, None if it is missing or not a number."""
+    n = status.get("control_steps") if isinstance(status, dict) else None
+    return int(n) if isinstance(n, (int, float)) and not isinstance(n, bool) else None
+
+
 class Service(L.Service):
     """rcb_limited.Service with finish() (the adapter ends the episode, reason "finished": POST /finish) and hidden_keys
     (meta / status keys that would tell the agent about the task's success or progress, dropped from every answer).
@@ -109,14 +128,12 @@ class Service(L.Service):
 
     def steps_used(self) -> int:
         """The episode's control steps as the adapter counts them (status()["control_steps"], per episode where the
-        adapter has resets), else the journal's rows."""
-        try:
-            n = self.status().get("control_steps")
-            if isinstance(n, (int, float)) and not isinstance(n, bool):
-                return int(n)
-        except Exception:  # noqa: BLE001
-            traceback.print_exc()
-        return int(self.episode.rows) if self.episode is not None else 0
+        adapter has resets). serve() checks that status() states them; a status() that fails or stops stating them
+        raises (a simulator error), never a silent count of something else."""
+        n = control_steps(self.status())
+        if n is None:
+            raise RuntimeError("RCB_STEP_LIMIT is set, but status() states no control_steps")
+        return n
 
     def at_step_limit(self) -> bool:
         """The lock held: end the episode (reason "step_limit") if its control steps reached RCB_STEP_LIMIT and nothing
@@ -175,6 +192,36 @@ def make_handler(svc: Service):
                     break
                 n -= len(got)
 
+        def _end(self, end: Callable):
+            """The lock held: an end of the episode by the service (end(): the adapter's finish(), or at_step_limit()),
+            journaled as a call. Its failure is a simulator error (§4.6): on_submit_error() ends the episode with
+            reason "error" (if that fails too, the episode is marked ended "error" here) and the answer is a 500; the
+            state is checkpointed either way. None, or the (500, JSON) to answer."""
+            E, ep = svc.state, svc.episode
+            cid = ep.call_begin(self.path) if ep else 0
+            err = None
+            try:
+                end()
+            except Exception as exc:  # noqa: BLE001
+                traceback.print_exc(); E["error"] = repr(exc)
+                svc.log({"ev": "error", "path": self.path, "error": repr(exc)})
+                try:
+                    svc.on_submit_error(exc)             # ends the episode, reason "error"
+                except Exception:  # noqa: BLE001
+                    traceback.print_exc()
+                if not E.get("done"):                    # last resort: the end failed and so did the error's end
+                    E["done"], E["reason"] = True, "error"
+                    E.setdefault("t_end", time.time())
+                err = (500, {"error": "simulator error", "detail": repr(exc)[:200]})
+            finally:
+                if ep:
+                    try:
+                        ep.checkpoint(E, svc.state_sha, svc.proprio)
+                    except Exception:  # noqa: BLE001
+                        traceback.print_exc()
+                    ep.call_end(cid, self.path)
+            return err
+
         def do_GET(self):
             if self.path == "/status":
                 st = svc.hide(svc.status())
@@ -187,10 +234,22 @@ def make_handler(svc: Service):
         def do_POST(self):
             E, ep = svc.state, svc.episode
             if STEP_LIMIT is not None and self.path == "/submit" and not E.get("done") and svc.lock.acquire(blocking=False):
-                try:                             # a limit reached without an end (a step outside a call): end it now,
-                    svc.at_step_limit()          # so the /submit is a 409 (never waits: a call in progress checks
-                finally:                         # the limit itself when it ends)
+                err = None                       # a limit reached without an end (a step outside a call): end it now,
+                try:                             # so the /submit is a 409 (never waits: a call in progress checks
+                    try:                         # the limit itself when it ends)
+                        due = not E.get("exiting") and svc.steps_used() >= STEP_LIMIT
+                    except Exception:  # noqa: BLE001   the count failed: at_step_limit() fails the same way, in _end
+                        due = True
+                    if due:
+                        err = self._end(svc.at_step_limit)
+                finally:
                     svc.lock.release()
+                if err is not None:
+                    try:
+                        self._drain()            # the request's body, unread (the answer is the error, not a 409)
+                    except Exception:  # noqa: BLE001
+                        pass
+                    return self._json(*err)
             if self.path not in ("/submit", "/observe", "/kinematics", "/finish") or not (
                     finished(E) or self.path == "/finish"):
                 return super().do_POST()
@@ -206,26 +265,8 @@ def make_handler(svc: Service):
             with svc.lock:                       # the agent ends the episode: the state it leaves is graded
                 if E.get("exiting") or E.get("done"):
                     return self._json(409, {"error": "episode finished", "reason": E.get("reason")})
-                cid = ep.call_begin(self.path) if ep else 0
-                err = None
-                try:
-                    E["finish_t"] = time.time()
-                    svc.finish()
-                except Exception as exc:  # noqa: BLE001   the adapter's end failed: as a simulator error (§4.6)
-                    traceback.print_exc(); E["error"] = repr(exc)
-                    svc.log({"ev": "error", "path": self.path, "error": repr(exc)})
-                    try:
-                        svc.on_submit_error(exc)         # ends the episode, reason "error"
-                    except Exception:  # noqa: BLE001
-                        traceback.print_exc()
-                    err = (500, {"error": "simulator error", "detail": repr(exc)[:200]})
-                finally:
-                    if ep:
-                        try:
-                            ep.checkpoint(E, svc.state_sha, svc.proprio)
-                        except Exception:  # noqa: BLE001
-                            traceback.print_exc()
-                        ep.call_end(cid, self.path)
+                E["finish_t"] = time.time()
+                err = self._end(svc.finish)
                 if err is not None:
                     return self._json(*err)
                 return self._json(200, {"ok": True, **svc.hide(svc.status())})
@@ -245,5 +286,10 @@ def serve(svc: Service, port: int = 8000) -> None:
         if STEP_LIMIT is not None and getattr(svc, "end_step_limit", None) is None:
             raise RuntimeError("RCB_STEP_LIMIT is set, but this service has no end_step_limit(): pass "
                                "Service(end_step_limit=lambda: finish(\"step_limit\"))")
+        if STEP_LIMIT is not None and control_steps(svc.status()) is None:
+            raise RuntimeError("RCB_STEP_LIMIT is set, but this service's status() states no control_steps: the "
+                               "step limit counts them")
+        if STEP_LIMIT is not None:           # /spec states the limit in force (PROTOCOL §3: budget.steps =
+            spec_limit(svc.spec)             # max_control_steps = N), whatever the adapter's own spec says
     L.check_spec(svc.spec)
     L.bind(port, make_handler(svc)).serve_forever()

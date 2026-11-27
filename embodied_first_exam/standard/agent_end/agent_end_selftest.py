@@ -65,15 +65,20 @@ PLAIN = [
 ]
 DROP_FINISH = (', **({"finish": lambda: finish("finished"),\n'
                '                                           "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})')
-# variants: a finish() that raises before it ends anything; an adapter without end_step_limit (it must not start
-# with RCB_STEP_LIMIT); an adapter with a step cap of its own (it ends the episode
-# itself at RCB_STEP_LIMIT, as RoboPaint or DexJoCo do: the layer must not end it again)
-VARIANT = {"raise_finish": ('{"finish": lambda: finish("finished"),', '{"finish": lambda: 1 / 0,'),
-           "no_end_step_limit": (',\n                                           "end_step_limit": lambda: finish("step_limit")}', '}'),
-           "own_cap": ('        AE.hidden_success(E, S.success(), EP.log, ctrl_steps())\n',
-                       '        AE.hidden_success(E, S.success(), EP.log, ctrl_steps())\n'
-                       '        if AE.STEP_LIMIT is not None and ctrl_steps() >= AE.STEP_LIMIT:\n'
-                       '            finish("step_limit")\n')}
+# variants (each a list of (old, new) replacements): a finish() that raises before it ends anything; an adapter without
+# end_step_limit (it must not start with RCB_STEP_LIMIT); an adapter whose status() states no control_steps (neither:
+# the step limit counts them); an adapter with a step cap of its own (it ends the episode itself at RCB_STEP_LIMIT, as
+# RoboPaint or DexJoCo do: the layer must not end it again; its end_step_limit logs "layer_end_step_limit" when called)
+VARIANT = {"raise_finish": [('{"finish": lambda: finish("finished"),', '{"finish": lambda: 1 / 0,')],
+           "no_end_step_limit": [(',\n                                           "end_step_limit": lambda: finish("step_limit")}', '}')],
+           "no_control_steps": [('def status() -> dict:\n    return {"step": E["step"], "calls": E["calls"], "control_steps": ctrl_steps(), ',
+                                 'def status() -> dict:\n    return {"step": E["step"], "calls": E["calls"], ')],
+           "own_cap": [('        AE.hidden_success(E, S.success(), EP.log, ctrl_steps())\n',
+                        '        AE.hidden_success(E, S.success(), EP.log, ctrl_steps())\n'
+                        '        if AE.STEP_LIMIT is not None and ctrl_steps() >= AE.STEP_LIMIT:\n'
+                        '            finish("step_limit")\n'),
+                       ('"end_step_limit": lambda: finish("step_limit")}',
+                        '"end_step_limit": lambda: (EP.log({"ev": "layer_end_step_limit"}), finish("step_limit"))}')]}
 
 
 def check(cond, what):
@@ -100,8 +105,7 @@ def adapter(patched: bool, drop_finish: bool = False, variant: str | None = None
     elif drop_finish:
         assert s.count(DROP_FINISH) == 1, "toy_server.py changed: update the selftest's DROP_FINISH"
         s = s.replace(DROP_FINISH, "")
-    if variant:
-        old, new = VARIANT[variant]
+    for old, new in VARIANT.get(variant, []) if variant else []:
         assert s.count(old) == 1, f"toy_server.py changed: update the selftest's VARIANT {variant}"
         s = s.replace(old, new)
     open(os.path.join(d, "toy_server.py"), "w").write(s)
@@ -194,7 +198,7 @@ def script(src, env=None):
 def main() -> None:
     plain, ae, ae_nofinish = adapter(False), adapter(True), adapter(True, drop_finish=True)
     ae_raise, ae_own = adapter(True, variant="raise_finish"), adapter(True, variant="own_cap")
-    ae_noend = adapter(True, variant="no_end_step_limit")
+    ae_noend, ae_nocs = adapter(True, variant="no_end_step_limit"), adapter(True, variant="no_control_steps")
     try:
         ref, fin_ref = script(plain)
         for env in (None, {"RCB_AGENT_END": "0"}):
@@ -248,8 +252,12 @@ def main() -> None:
             a = [t.call("POST", "/submit", sub(TO_BLOCK)), t.call("POST", "/submit", sub(PUSH * 2))]
             late = [t.call("POST", "/submit", sub(BACK)), t.call("POST", "/finish", {}), t.call("POST", "/observe", {}),
                     t.call("GET", "/status")]
-            ends = [e for e in events(t) if e.get("ev") == "end"]
+            ev = events(t)
+            ends = [e for e in ev if e.get("ev") == "end"]
+            layer_ends = sum(1 for e in ev if e.get("ev") == "layer_end_step_limit")
             fin = t.end()
+            if src is ae_own:
+                check(layer_ends == 0, f"step limit (the adapter's own cap): the layer's end_step_limit ran {layer_ends}x")
             check(a[0]["meta"]["steps_left"] == 18 and a[1]["meta"]["executed_rows"] == 18 and a[1]["meta"]["done"]
                   and a[1]["meta"]["reason"] == "step_limit" and a[1]["meta"]["steps_left"] == 0
                   and a[1]["meta"]["control_steps"] == 30 and a[1]["meta"].get("duration_s") == 0.9,
@@ -301,16 +309,24 @@ def main() -> None:
         check(a[0]["code"] == 200 and a[1]["code"] == 200 and a[2]["code"] == 409 and a[3]["code"] == 409,
               f"3.0: after /finish a last_s read and a hold chunk are 409s: {[x['code'] for x in a]}")
 
+        t = Toy(ae, {"RCB_AGENT_END": "1", "RCB_STEP_LIMIT": "30"})   # /spec states the limit in force
+        sp = t.call("GET", "/spec")["json"]
+        t.end()
+        check(sp.get("max_control_steps") == 30 and sp.get("budget", {}).get("steps") == 30,
+              f"step limit: /spec max_control_steps {sp.get('max_control_steps')}, budget {sp.get('budget')}")
+
         for src, env, what in ((ae_nofinish, {"RCB_AGENT_END": "1"}, "an adapter without finish()"),
                                (ae, {"RCB_STEP_LIMIT": "30"}, "RCB_STEP_LIMIT without RCB_AGENT_END"),
                                (ae_noend, {"RCB_AGENT_END": "1", "RCB_STEP_LIMIT": "30"},
-                                "RCB_STEP_LIMIT and an adapter without end_step_limit")):
+                                "RCB_STEP_LIMIT and an adapter without end_step_limit"),
+                               (ae_nocs, {"RCB_AGENT_END": "1", "RCB_STEP_LIMIT": "30"},
+                                "RCB_STEP_LIMIT and an adapter whose status() states no control_steps")):
             t = Toy(src, env)
             time.sleep(1.0)
             check(t.p.poll() is not None and t.p.returncode != 0, f"fail closed: {what} served")
             t.end()
     finally:
-        for d in (plain, ae, ae_nofinish, ae_raise, ae_own, ae_noend):
+        for d in (plain, ae, ae_nofinish, ae_raise, ae_own, ae_noend, ae_nocs):
             shutil.rmtree(d, ignore_errors=True)
     if fails:
         print(f"{len(fails)} failure(s)")

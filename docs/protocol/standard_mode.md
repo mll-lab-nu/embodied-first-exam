@@ -316,17 +316,20 @@ client that never calls `/finish` is served as before, its session's end ending 
 - `final.json` adds `success_signal = "hidden"`, `ended_by` (`finish`, `step_limit`, `session_end`, `failed`: the
   task's own failure rule, `error`), `hidden_success_seen`, `hidden_success_first_step`, `trial_hidden_success_seen`,
   `finish_time_s` and, with a step limit, `step_limit` and `steps_used`; `reward.json` adds `ended_finish`,
-  `ended_step_limit`, `ended_session_end` (evidence only; the shared 2.1 grader `v2_1/grade.py` and RoboDojo's copy
-  them, final.json is the record). Which limit ended a session (`session_end`) is the runner's record: Harbor's
-  `AgentTimeoutError` for the time limit, the gateway's `budget_stop` for the token budget; over the token budget an
-  agent-ended task is graded on its end state, not failed on top (`scripts/write_task_results.py`, by the task's mode).
+  `ended_step_limit`, `ended_session_end` (evidence only; every standard grader whose final.json has `ended_by`
+  copies them, its `agent_end_fields`; final.json is the record). Which limit ended a session (`session_end`) is the
+  runner's record: Harbor's `AgentTimeoutError` for the time limit, the gateway's `budget_stop` for the token
+  budget; over the token budget an agent-ended task is graded on its end state, not failed on top
+  (`scripts/write_task_results.py`, by the task's mode).
 - Implementation for the 2.2 and 2.4 layers: `embodied_first_exam/standard/agent_end/rcb_agent_end.py` (`Service`,
   `serve`, `hidden_success`, `final_fields`, `steps_left`; files-only image `agent-end-files`); an adapter without
   `finish()` refuses to start with the feature on. `Service` enforces `RCB_STEP_LIMIT` for every adapter: the call
   (a hold chunk too) stops at the step that reaches it (`Episode.row_cap`), the adapter's `finish("step_limit")` ends
   the episode there and the answer says so (`done`, `reason`, a `duration_s` of the steps run); an adapter with a cap
-  of its own that ends the episode first is not ended again. A `finish()` that raises is a simulator error (500, the
-  episode ends `error`). Tests `agent_end_selftest.py`.
+  of its own that ends the episode first is not ended again; `/spec.max_control_steps` and `/spec.budget.steps` state
+  the limit (the lower of `RCB_STEP_LIMIT` and the adapter's own cap), and an adapter whose `status()` states no
+  `control_steps` does not start with it. A `finish()` that raises is a simulator error (500, the episode ends `error`;
+  if the error's own end fails too, the episode is still marked ended `error`). Tests `agent_end_selftest.py`.
 - Implementation for the 2.1 sidecar and the 2.3 realtime layer: `rcb_service.py` (`AGENT_END`; the adapter's
   `end_judgement` = `"state"` or `"events"`, `end_window_steps` for a settle or hold window, `hidden_keys` for progress
   fields of `step()`'s info, `info["step_cap"]` for a done that is the episode's length) and `rcb_realtime.py` (the
