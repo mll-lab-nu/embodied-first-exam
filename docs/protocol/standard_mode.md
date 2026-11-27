@@ -71,8 +71,8 @@ reference services of 2.1–2.4 and checks their answers against it.
   `null` is the default; `video_fps` lies in [1, `max_video_fps`] (2.1/2.3: 30; 2.2/2.4: `/spec.max_video_fps` where
   the adapter declares it, else the larger of 30 and `control_hz`); `interpolate` is one the service knows (2.2/2.4:
   `linear` or `hold`); a chunk's rows × `dt` is at most `max_chunk_s` (a planner type such as `ee_pose`, whose duration
-  the service plans, is not counted so). Each is a 400 that leaves the episode as it was. A `/finish` body is read
-  only up to the 64 MB limit (more: 413, a negative `Content-Length`: 400) though it is ignored. After `/finish`
+  the service plans, is not counted so). Each is a 400 that leaves the episode as it was. Every layer reads a `/finish`
+  body and drops it unparsed; its `Content-Length` is checked as every POST's (over 64 MB: 413, negative: 400). After `/finish`
   `GET /operations/{id}` (2.4) is a 409 like every other call but `GET /spec` and `GET /status`, and `resets_left` is
   0. A hold chunk's `planned_duration_s` is the `seconds` it sent (what it declared); `duration_s` what ran (a hold the
   adapter stops early, blocked, is shorter). 2.3's hold answer carries `hold = true` and `executed_rows = 0` like the
@@ -193,8 +193,9 @@ request** to the service, whatever the endpoint (`GET /spec`, which the shipped 
 `meta.time_left_s` = `spec.budget.wall_clock_s` − `time_s`, never below 0. The clock does not start with the service,
 when the scene is ready, or with a probe that only connects to the port; the first request is logged in
 `episode.jsonl` (`first_request`) and a restarted service reads it back, so a restart never sets the clock back to
-full. `GET /status` `elapsed_s` and the `elapsed_s` of `final.json` are the episode's own time, from the service's
-start of the episode. Why: Harbor counts the agent's cutoff around the agent's run only, and the sidecar starts with
+full. `GET /status` `elapsed_s` and the `elapsed_s` of `final.json` count from the agent's first request too in the
+2.1 sidecar and the 2.3 layer; in the 2.2 and 2.4 services they are the episode's own time, from the service's start of
+the episode (the adapter's `E["t0"]`, `toy_server.py`). Why: Harbor counts the agent's cutoff around the agent's run only, and the sidecar starts with
 the environment, before the harness is installed, so a clock started with the service would run ahead of the agent's.
 With this rule `time_left_s` never runs out before the agent is
 stopped, and the agent's real time left is `time_left_s` minus what it spent before its first request. A service that
@@ -222,9 +223,12 @@ any settle or hold check; `graded_by` = `live`, `replays` = 0); nothing is
 replayed to grade it (PROTOCOL H.4). The video is a post-hoc replay of `trajectory.npz` after the verdict by default, and a live
 recording where the simulator is not verified bit-wise replayable (`video_source`, PROTOCOL §4); it never decides
 anything. With resets, the shared 2.1 sidecar service (`rcb_service.py`, one file copied into each benchmark that runs it,
-also under the 2.3 realtime layer; the copies behave the same on the wire, and a few differ only in comments) keeps the first episode as evidence too: `trajectory.first.npz` (its
+also under the 2.3 realtime layer; every copy is the same code, a few with differently worded comments,
+`ci_checks/check-tooling-identity.sh`) keeps the first episode as evidence too: `trajectory.first.npz` (its
 rows from the journal) and `replay.first.mp4`, rendered after the graded video; `final.json` says how it ended
-(`first_success`, `first_reason`; a success ends the trial, so after a reset `first_success` is 0) and decides nothing
+(`first_success`, `first_reason`; without agent-ended episodes a success ends the trial, so after a reset
+`first_success` is 0; with them it is the first episode's own end judgement, as its end recorded it, or null when that
+is not on record) and decides nothing
 with it. A separate verifier transcribes `final.json` into `reward.json` (`graded_by_live` = 1); the shared grader
 (`embodied_first_exam/standard/v2_1/grade.py`) also writes `first_success`, the first-attempt, no-reset result reported
 beside the graded one, and copies the first episode's files. A service of a benchmark's own keeps no first episode and

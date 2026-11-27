@@ -449,12 +449,6 @@ def realtime_23(t: Target) -> None:
     rec = tm.get("recorder", {})
     check({"cameras", "fps", "buffer_s", "records", "depth"} <= set(rec) and rec["fps"] == 10.0,
           f"2.3 spec timing.recorder (thread recorder: 10 fps) {rec}")
-    for _ in range(100):                                     # a 503 while the service publishes its first state
-        r = requests.post(t.base + "/observe", json={}, timeout=30)
-        if r.status_code != 503:
-            break
-        t.contract.response("POST", "/observe", r, "2.3 observe warming up")
-        time.sleep(0.1)
     _, m, p = t.post_json("/observe", {}, label="observe before the clock")
     check(m["running"] is False, "2.3 observe started the clock")
     _, m, p = t.post_json("/observe", {"cameras": []}, label="observe no images")
