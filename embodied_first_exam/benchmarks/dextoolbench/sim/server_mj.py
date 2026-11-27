@@ -384,7 +384,7 @@ def task_info() -> dict:
 
 PROPRIO_LAYOUT = [f"{n}_pos" for n in NAMES] + [f"{n}_vel" for n in NAMES] + [f"{n}_target" for n in NAMES]
 SPEC = {"protocol": PROTOCOL, "simulator": "mujoco", "task_text": S.inst.get("text", ""), "control_dt": CTRL_DT,
-        "max_chunk_s": MAX_CHUNK_S, "max_control_steps": MAX_CONTROL_STEPS or None,
+        "max_chunk_s": MAX_CHUNK_S, **({"max_control_steps": MAX_CONTROL_STEPS} if MAX_CONTROL_STEPS else {}),   # omitted when uncapped
         "max_video_fps": MAX_VIDEO_FPS, "max_frames_per_call": MAX_FRAMES_PER_CALL,
         "on_service_error": ("if a call fails with a connection error or 5xx, the service may have crashed and resumed the same "
                              "episode (never a reset): the state is the one after the last call that completed on the service, "
@@ -433,8 +433,15 @@ if AGENT_END:
 
 def _reset_counters() -> dict:
     if not RESET_BUDGET: return {}
-    return {"episode": E["resets"] + 1, "control_steps_total": E["journal_rows"],
-            "resets_left": 0 if E["stopping"] else RESET_BUDGET - E["resets"]}
+    return {"episode": E["resets"] + 1, "control_steps_total": E["journal_rows"], "resets_left": _resets_left()}
+
+
+def _resets_left() -> int:
+    """The resets /reset would still grant: 0 whenever check_reset() refuses it whatever the budget (the agent's /finish,
+    its time up, the session's end), as rcb_service._resets_left."""
+    if (AGENT_END and E["done"] and E["reason"] in ("finished", "timeout")) or E["stopping"] or E.get("finalizing"):
+        return 0
+    return max(0, RESET_BUDGET - E["resets"])
 
 
 def _agent_time() -> float:
@@ -583,7 +590,12 @@ def _hold_seconds(meta: dict, parts: dict):
     """A rows-free hold chunk (eai-standard/3.0): its `seconds`, or None for a chunk of rows."""
     if meta.get("seconds") is None:
         return None
-    if "actions" in parts or meta.get("actions") not in (None, []) or meta.get("rows") not in (None, []):
+    if "actions" in parts:   # an empty `actions` part is no rows (as rcb_service)
+        data = parts["actions"].get("data") if isinstance(parts["actions"], dict) else parts["actions"]
+        rows = data is not None and np.size(data) > 0
+    else:
+        rows = meta.get("actions") not in (None, []) or meta.get("rows") not in (None, [])
+    if rows:
         raise ValueError("a chunk has either rows or `seconds` (a hold chunk without rows), not both")
     if meta.get("interpolate") != "hold":
         raise ValueError('a chunk without rows is a hold chunk: {"type": <type>, "interpolate": "hold", "seconds": n}')
@@ -714,10 +726,12 @@ def do_submit(q: dict):
     A, dt, k, interp, cams, fps, video, depth = (q[x] for x in ("A", "dt", "k", "interp", "cams", "fps", "video", "depth"))
     before = len(RECORD)
     rec = Recorder(cams, fps, depth, ring=True); rec.tick(force=True); prev = np.asarray(S.targets, float).copy(); n_clip = 0; done = False
+    clipped: list = []   # [{row, index, reason}] of the rows executed; n_clip: how many of those rows had one
     executed = 0   # rows begun: fewer than the chunk's when the episode ends inside it (the step cap, a goal timeout)
-    for row in A.astype(np.float64):
+    for ri, row in enumerate(A.astype(np.float64)):
         executed += 1
-        tgt = np.clip(row, S.lower, S.upper); n_clip += int(np.any(tgt != row))
+        tgt = np.clip(row, S.lower, S.upper); bad = np.flatnonzero(tgt != row); n_clip += int(bad.size > 0)
+        clipped += [{"row": ri, "index": int(j), "reason": f"{NAMES[j] if j < len(NAMES) else j} outside [{S.lower[j]:g}, {S.upper[j]:g}]"} for j in bad]
         for j in range(1, k + 1):
             tg = tgt if interp == "hold" else prev + (tgt - prev) * (j / k)
             if _ctrl_step(tg, rec): done = True; break
@@ -725,11 +739,12 @@ def do_submit(q: dict):
         if done: break
     rec.tick(force=True); E["calls"] += 1; E["rows"] += executed; RECF.flush()
     if AGENT_END and KIND != "dtb": _hidden_success(S.check()["success"], len(RECORD))   # the state's success: never shown
-    out = {**meta_common(), "chunk_id": E["calls"], "type": "joint_position", "executed_rows": executed, "n_clipped_rows": n_clip,
+    out = {**meta_common(), "chunk_id": E["calls"], "type": "joint_position", "executed_rows": executed,
+           "control_steps_chunk": len(RECORD) - before, "clipped": clipped[:200], "n_clipped": len(clipped), "n_clipped_rows": n_clip,
            "duration_s": round((len(RECORD) - before) * CTRL_DT, 6), "planned_duration_s": round(int(A.shape[0]) * dt, 6),
            "frame_step": len(RECORD), "ok": True}   # frame_step: the control step its newest image shows (eai-standard/3.0)
     log({"ev": "submit", "call": E["calls"], "type": "joint_position", "rows": int(A.shape[0]), "dt": dt, "interpolate": interp, "cameras": cams,
-         "note": q["note"], "control_steps": len(RECORD), "n_clipped_rows": n_clip, "task": task_info(),
+         "note": q["note"], "control_steps": len(RECORD), "n_clipped": len(clipped), "n_clipped_rows": n_clip, "task": task_info(),
          "rows_total": E["rows"], **_journal_pos(), "state_sha": S.state_sha(), **_ae_state()})
     d = os.path.join(DATA, "calls", f"{E['calls']:06d}"); os.makedirs(d, exist_ok=True); np.save(os.path.join(d, "actions.npy"), A.astype(np.float32))
     return out, rec.parts(video, 1.0 / (RING_DT * rec.every))   # the capture's real frame rate
@@ -745,7 +760,8 @@ def do_hold(q: dict):
         if _ctrl_step(hold, rec): break
     rec.tick(force=True); E["calls"] += 1; RECF.flush()
     if AGENT_END and KIND != "dtb": _hidden_success(S.check()["success"], len(RECORD))   # the state's success: never shown
-    out = {**meta_common(), "chunk_id": E["calls"], "type": "joint_position", "hold": True, "executed_rows": 0, "n_clipped_rows": 0,
+    out = {**meta_common(), "chunk_id": E["calls"], "type": "joint_position", "hold": True, "executed_rows": 0,
+           "control_steps_chunk": len(RECORD) - before, "clipped": [], "n_clipped": 0, "n_clipped_rows": 0,
            "duration_s": round((len(RECORD) - before) * CTRL_DT, 6), "planned_duration_s": round(q["hold"], 6),
            "frame_step": len(RECORD), "ok": True}
     log({"ev": "submit", "call": E["calls"], "type": "joint_position", "rows": 0, "hold_s": q["hold"], "cameras": cams,
@@ -944,6 +960,8 @@ class Hd(BaseHTTPRequestHandler):
             finish("finished"); return self._json(200, {"ok": True, **_status()})
         if self.path == "/observe" and AGENT_END and E["done"] and E["reason"] == "finished":
             return self._json(409, {"error": "episode finished", "reason": E["reason"]})   # after /finish: only /spec, /status
+        if self.path == "/observe" and (E["stopping"] or E.get("finalizing")):   # after the session's end (as rcb_service)
+            return self._json(409, {"error": "trial finished: your time is up", "reason": E["reason"]})
         if self.path == "/submit" and E["done"]:
             return self._json(409, {"error": "episode finished", "reason": E["reason"], **({"resets_left": _reset_counters()["resets_left"]} if RESET_BUDGET else {})})
         if self.path == "/reset":
