@@ -1,5 +1,5 @@
-"""The live video of a standard-mode episode (owner 2026-10-17: the standard modes are graded by the live
-episode, so no replay films the trial any more): the sim service keeps frames of the episode it actually runs, from
+"""The live video of a standard-mode episode (the standard modes are graded by the live episode, and no replay
+films the trial): the sim service keeps frames of the episode it actually runs, from
 images its simulator renders anyway, and the collect hook encodes them into live.mp4 after the verdict is written.
 Nothing here decides anything: a frame that cannot be taken or written stops the video, never the control step, and an
 encode that fails or runs out of time costs the video only.
@@ -103,6 +103,21 @@ class LiveVideo:
             self.kept[slot] = step
         except Exception as exc:  # noqa: BLE001 -- a camera or disk problem ends the video, never the control step
             self._fail(exc)
+
+    def wants(self, step: int) -> bool:
+        """Whether offer(step) would keep a frame there: `step` opens a slot that has none yet (a service that renders
+        a frame only for the video asks this first)."""
+        if self.error is not None:
+            return False
+        try:
+            step, every = int(step), self.every
+            while step // every + 1 > self.max:
+                every *= 2
+            if every == self.every:
+                return step // every not in self.kept
+            return all(s // every != step // every for s in self.kept.values())
+        except Exception:  # noqa: BLE001
+            return False
 
     def truncate(self, step: int) -> None:
         """After a crash-recovery resume: the journal was replayed only up to the last checkpoint (the call in flight was
