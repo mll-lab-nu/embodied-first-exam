@@ -1,13 +1,13 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:roboarc-files-0.6.0@sha256:88d6d1f453b5135dc5979fd8e4cae4e71d3703ffb322e50cd68c3abb5343b36a",
+ "image": "ghcr.io/mll-lab-nu/efe:roboarc-files-0.7.0@sha256:ac0a5ee307d990c3f76c979f838799f25450a3c006e7d18de42992ddaa7d21a5",
  "source": "embodied_first_exam/benchmarks/roboarc",
  "files": {
   "nyx_direct.py": "4809c45a7a5cd7725f95f9e49e55a1dc9d184d2b2b59e780aac19cdaf98fac20",
   "rcb_topogym.py": "d8692e15964ac9f4c536d52b1c86d0418a4f4e37ec94f98e5d91d0b4ad0dd766",
   "render_bridge.py": "0e04db54feded2929769443e183e2db1e6138eaec62701070fbd462925d8a2b0",
-  "sim/run.sh": "8236c9fc99d3ae945918395431d4f649f4410b2cd34cc8d431734a29f9288808",
+  "sim/run.sh": "08e4659bf4adca636a47b432a4649ae89777e1d394dceb9afc9b8896cd158376",
   "standard/sim/finalize.sh": "314b073fcecc25d9b5a5806c367971cd98b47fecb8415ddb44c296e47feebcbe",
   "standard/sim/replay.py": "e47113baefede32dcd1ce0a72b08037e9e634de243849718ac03d57786404741",
-  "standard/sim/server.py": "4119a9fab6641a5d967e10bcc32dc34e37fcd76dae702e1615e392b6e2cf8ecd"
+  "standard/sim/server.py": "c7d92d03a9299cb9c5fef06bd9f455d2606ce2cf6e0345f6ef3355b1fe34804a"
  }
 }

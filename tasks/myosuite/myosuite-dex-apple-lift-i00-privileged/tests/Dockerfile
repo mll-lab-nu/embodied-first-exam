@@ -2,7 +2,7 @@
 # instance. Nothing the agent did in its container reaches this one: Harbor uploads only the declared artifacts.
 FROM ghcr.io/mll-lab-nu/efe:myosuite-0.1.1
 COPY instance.npz test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:myosuite-files-0.7.0@sha256:ac84502fc179d7b7a5217f7fa8894a9ecc97b7326584ef7a43655a77eeaf6cce /privileged/environment/rcb_myosuite.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:myosuite-files-0.8.0@sha256:1eabccb4e8a6dcd506062f12a79361f626dd9ac8babbc83401274335d8cd2fd2 /privileged/environment/rcb_myosuite.py /privileged/tests/grade.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests

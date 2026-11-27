@@ -208,11 +208,13 @@ class RcbTools:
             return {"reply": _jsonable(r.json())}
         return self._refusal(path, r)      # a 5xx too: the service answered (only a reply that never came is lost)
 
-    def post_json(self, path: str, body: dict):
+    FINISH_TIMEOUT_S = 900.0        # rcb_client.Robot.finish()'s: the end state's judgement (a settle window) may run long
+
+    def post_json(self, path: str, body: dict, timeout: float = 120.0):
         import requests
         self._log(path)
         try:
-            r = requests.post(self.base + path, json=body, timeout=(5, 120))
+            r = requests.post(self.base + path, json=body, timeout=(5, timeout))
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
             return self._lost(path, None, e)
         if r.status_code != 200:
@@ -367,7 +369,7 @@ class RcbTools:
         if not str((self.spec or {}).get("success_signal") or "").startswith("hidden"):
             raise ToolError("nothing sent: in this task the episode is not yours to end (its spec's success_signal "
                             "does not start with \"hidden\"); it ends as the task text says", "not_served")
-        return self.post_json("/finish", {}), []
+        return self.post_json("/finish", {}, timeout=self.FINISH_TIMEOUT_S), []
 
 
 TOOL_METHODS = {"spec": "spec_"}     # tool name -> method, where they differ

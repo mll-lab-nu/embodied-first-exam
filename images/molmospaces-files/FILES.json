@@ -1,11 +1,11 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:molmospaces-files-0.6.0@sha256:6f35d6920758485560cd7baeff10b75d86b28658b6e50bb761375a9ab2428a03",
+ "image": "ghcr.io/mll-lab-nu/efe:molmospaces-files-0.7.0@sha256:d3bf0ca2fad858799ca5c39206072d180db36421a76cd6f00596aefa46183b8e",
  "source": "embodied_first_exam/benchmarks/molmospaces",
  "files": {
   "privileged/environment/rcb_molmospaces.py": "4a305d6deb6dc12f8958cb8d5b8e1bcad7e7b4c011231469ccbe53e9e91a54f3",
   "privileged/tests/grade.py": "1ee53998e889b441a5b0c6eaeb55f66a9146a2d2c1010d94172c85fe4732c422",
   "sim/finalize.sh": "5b19d0e751c993abb8570998fba2990b96df55ef024062b5401dad450462b875",
-  "sim/server.py": "04a09a4c7bf60593cd3a14d000e27540f16cf46bd086123379e68ef85588d9a7",
+  "sim/server.py": "6f043ba0927982e30f8bd730de7fd84f1e172f23f33a0a7966711aa0b8d68666",
   "standard/tests/grade.py": "8917ee15126831e50b29ba06253fd1883e9e3187603252a978ec449f3da1d036"
  }
 }

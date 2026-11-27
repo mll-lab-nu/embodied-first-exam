@@ -4,7 +4,7 @@
 FROM ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1
 COPY . /srv/
 COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.7.0@sha256:127ba76f98a0ad602b378f1aff38c5defe668e74d46f637e3d0fdf26adf6bbef /rfo/tasks/trap_ball.py /srv/rfo_task.py
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.6.0@sha256:a5fa8a9d299f6027a84f45af38a297139ad8cf68231a911272064ee9c1edbb13 \
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.7.0@sha256:1ab8c16d4372a0b44f5c0ea7f819f6febafcfdc132013b1736a04f360375b28f \
      /rcb1.py \
      /realtime/rcb_realtime.py \
      /srv/
