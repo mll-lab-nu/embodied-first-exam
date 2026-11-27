@@ -51,8 +51,9 @@ Result (what get_obs / submit / hold return):
                              you spent before that request), proprio {"layout", "now"}, task {"instruction"}, cameras
                              {name: intrinsic_cv, cam2world_gl, width, height, fovy_deg} (current: they move), done,
                              reason (None while the episode runs; "timeout", "error", "step limit"); submit adds
-                             chunk_id, type, executed_rows and clipped = n_clipped_rows (the number of rows that had a
-                             value outside [lower, upper]); get_obs adds obs_id, last_s
+                             chunk_id, type, executed_rows, control_steps_chunk, clipped [{row, index, reason}] (the
+                             values outside [lower, upper], clipped, not refused; at most 200 listed) and n_clipped (how
+                             many there were); get_obs adds obs_id, last_s
     res.last[cam]            uint8 H x W x 3: the last frame, always
     res.frames[cam]          uint8 N x H x W x 3 (video="frames"/"both")     res.video[cam]   mp4 bytes
     res.depth[cam]           float16 N x H x W, metres (include_depth)
