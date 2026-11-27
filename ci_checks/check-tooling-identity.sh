@@ -28,8 +28,9 @@
 #    2.0. Every file shared by the tasks of a mode is byte-identical
 #    within the benchmark and mode (FAMILY_SHARED: service, client, graders, tests/test.sh, Dockerfiles, the oracle's
 #    runner; the Playground ALOHA and Panda standard tasks count as DexToolBench's, their privileged twins as a
-#    benchmark each), the tooling module is one version in every mode, and the service is the one under images/ (MetaWorld+:
-#    unchanged; the MuJoCo service: as scripts/task_conventions.py replace_words spells it). RoboTwin's privileged
+#    benchmark each), the tooling module is one version in every mode, and the service is its one source,
+#    embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py (the MuJoCo Playground copy is the same file) or
+#    embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py. RoboTwin's privileged
 #    tests/test.sh and solution/solve.sh differ by the task's name only and are compared with the name replaced.
 #    Not covered here: the per-task texts of these benchmarks (instruction.md, README.md, task.toml).
 # 5. The shared 2.1 sidecar service rcb_service.py (docs/protocol/standard_mode.md Part 1; under the 2.3 layer too): every
@@ -67,15 +68,10 @@ FAMILY = {"dextoolbench_": ("dextoolbench", "rcb_dtb.py"), "metaworldplus-": ("m
 FAMILY_SHARED = SHARED | {"environment/Dockerfile", "tests/Dockerfile", "tests/test.sh", "solution/solve.sh", "solution/oracle_replay.py",
                           "environment/sim/server_mj.py", "environment/sim/server_mw.py", "environment/sim/rcb_live.py"}
 BY_NAME = {("robotwin_2_0", "privileged"): {"tests/test.sh", "solution/solve.sh"}}   # the same but for the task's own name
-from task_conventions import replace_words  # noqa: E402  (what normalize rewrites in a task's text files)
 images = os.path.join(ROOTD, "images")
-FAMILY_SOURCE = {"environment/sim/server_mj.py": ("images/mujoco/limited/server_mj.py", replace_words),
-                 "environment/sim/server_mw.py": ("images/metaworld/standard/server_mw.py", lambda x: x)}
-src_sha = {}
-for rel, (f, spell) in FAMILY_SOURCE.items():
-    p = os.path.join(os.path.dirname(images), f)
-    if os.path.isfile(p):
-        src_sha[rel] = hashlib.sha256(spell(open(p, encoding="utf-8").read()).encode()).hexdigest()[:16]
+FAMILY_SOURCE = {"environment/sim/server_mj.py": "embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py",
+                 "environment/sim/server_mw.py": "embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py"}
+src_sha = {rel: sha(os.path.join(ROOTD, f)) for rel, f in FAMILY_SOURCE.items() if os.path.isfile(os.path.join(ROOTD, f))}
 V24 = {"rcb_limited.py", "rcb_client.py"}   # the 2.4 layer's own files (embodied_first_exam/standard/v2_4/); the rest is 2.2's
 src22 = lambda f: f  # noqa: E731  (each layer: its file's path under embodied_first_exam/standard/)
 src24 = lambda f: f"v2_4/{f}" if f in V24 else f  # noqa: E731
@@ -189,14 +185,14 @@ for t in sorted(TDIR):
                     h = hashlib.sha256(open(os.path.join(dp, f), "rb").read().replace(own.encode(), b"@TASK@")).hexdigest()[:16]
                 seen[fam][role].setdefault(h, f"{t}/{rel}")
                 if rel in src_sha and h != src_sha[rel]:
-                    bad.append(f"{t}: {rel} differs from {FAMILY_SOURCE[rel][0]} (the service has one source: change it there and regenerate)")
+                    bad.append(f"{t}: {rel} differs from {FAMILY_SOURCE[rel]} (the service has one source: change it there and regenerate)")
         for rel, h in sorted(img.items()):     # the copies the image builds put in place (a sidecar's from its Dockerfile)
             if module and os.path.basename(rel) == module:
                 seen[own_fam][module].setdefault(h, f"{t}/{rel} (files image)")
             elif rel in FAMILY_SHARED and rel not in BY_NAME.get((fam, mode), ()):
                 seen[fam][f"{mode} {rel}"].setdefault(h, f"{t}/{rel} (files image)")
                 if rel in src_sha and h != src_sha[rel][:16]:
-                    bad.append(f"{t}: {rel} (from a files-only image) differs from {FAMILY_SOURCE[rel][0]} (the service has one source)")
+                    bad.append(f"{t}: {rel} (from a files-only image) differs from {FAMILY_SOURCE[rel]} (the service has one source)")
     if bench not in MODULE:
         continue
     module = MODULE[bench]
