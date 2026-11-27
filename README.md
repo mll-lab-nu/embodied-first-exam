@@ -97,13 +97,14 @@ Nine of the suites were written for this exam:
 - **Disk:** a benchmark's public images take 1-30 GB, pulled on its first run; a benchmark that builds its image needs the free disk its row below states.
 - **API keys** for the agent's model in `.env` (step 1), or a subscription (step 3).
 
-These benchmarks need a step by hand, or build their image on their first run because it may not be redistributed. That build accepts the licences of what it installs on your behalf: read them in the linked section. Organization members logged in to ghcr.io pull the prebuilt layers instead (on podman, after `podman login ghcr.io`, `harbor run -e podman` pulls the prebuilt image and uses it in place of the recipe; [docs/protocol/running.md](docs/protocol/running.md#without-docker-rootless-podman-eg-a-slurm-cluster)).
+These benchmarks need a step by hand, or build their image on their first run because it may not be redistributed. Running that build means you accept the licences of what it installs; the linked section lists them. Organization members logged in to ghcr.io pull the prebuilt layers instead (on podman, after `podman login ghcr.io`, `harbor run -e podman` pulls the prebuilt image and uses it in place of the recipe; [docs/protocol/running.md](docs/protocol/running.md#without-docker-rootless-podman-eg-a-slurm-cluster)).
 
 | Benchmark | By hand, once | First run |
 |---|---|---|
 | [AM-Bench](tasks/ambench/README.md#before-you-run) | - | Builds its image (accepts NVIDIA's Isaac Sim terms): about 25 min, 60 GB free disk. |
 | [AutoBio](tasks/autobio/README.md#before-you-run) | - | Builds its image from AutoBio's repository, which states no licence (CPU only): a few minutes, 3 GB free disk. |
 | [BEHAVIOR-1K](tasks/behavior-1k/README.md#before-you-run) | Download the BEHAVIOR dataset (its downloader asks you to accept the BEHAVIOR Data Bundle licence; about 32 GB, 40 GB on disk) and export `RCB_BEHAVIOR_DATA`. | Builds its image (accepts NVIDIA's Isaac Sim terms): about 20 min, 30 GB free disk. |
+| [EmbodiedSWE](tasks/embodiedswe/README.md#before-you-run) | Build its image from `images/embodiedswe/` (it accepts NVIDIA's Isaac Sim terms and the licences of its assets, some CC BY-NC): 20-60 min, 60 GB free disk. | - |
 | [HumanCLAW](tasks/humanclaw/README.md#before-you-run) | Without access to the organization's packages: request access to the gated Hugging Face dataset `HumanCLAW/HumanCLAW-HSSD`, accept the `hssd/hssd-hab` terms, export `HF_TOKEN` and build its image once (HSSD is CC BY-NC 4.0; the body model and motion weights carry SMPL-X / AMASS research terms): about 30 min, 40 GB free disk. | - |
 | [iSpatialGym](tasks/ispatialgym/README.md#before-you-run) | The BEHAVIOR-1K dataset, `RCB_BEHAVIOR_DATA` (the same directory). | Builds its image (accepts NVIDIA's Isaac Sim terms): about 20 min, 31 GB free disk. |
 | [LabUtopia](tasks/labutopia/README.md#before-you-run) | - | Builds its image (accepts NVIDIA's Isaac Sim terms; LabUtopia's assets are CC BY-NC 4.0): about 25 min, 90 GB free disk. |
@@ -157,7 +158,7 @@ harbor run -d embodied-first-exam@all -p tasks/roboarc -a codex -m openai/gpt-6-
 ```
 
 ```bash
-# one task (-y skips Harbor's confirmation prompt, e.g. in a script)
+# one task (add -y to skip Harbor's confirmation prompt, e.g. in a script)
 harbor run -d embodied-first-exam@all -p tasks/<benchmark>/<task> -a oracle
 ```
 

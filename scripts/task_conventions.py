@@ -1916,6 +1916,9 @@ BEFORE_YOU_RUN = {
                   "`HumanCLAW/HumanCLAW-HSSD`, accept the `hssd/hssd-hab` terms, export `HF_TOKEN` and build its "
                   "image once (HSSD is CC BY-NC 4.0; the body model and motion weights carry SMPL-X / AMASS research "
                   "terms): about 30 min, 40 GB free disk.", ""),
+    "EmbodiedSWE": ("Before you run",
+                    "Build its image from `images/embodiedswe/` (it accepts NVIDIA's Isaac Sim terms and the licences of "
+                    "its assets, some CC BY-NC): 20-60 min, 60 GB free disk.", ""),
     "AutoBio": ("Before you run", "",
                 "Builds its image from AutoBio's repository, which states no licence (CPU only): a few minutes, 3 GB free disk."),
 }
@@ -2004,8 +2007,8 @@ def readme_quick_start(tasks_dir: Path | None = None) -> str:
         "image needs the free disk its row below states.",
         "- **API keys** for the agent's model in `.env` (step 1), or a subscription (step 3).", "",
         "These benchmarks need a step by hand, or build their image on their first run because it may not be "
-        "redistributed. That build accepts the licences of what it installs on your behalf: read them in the linked "
-        "section. Organization members logged in to ghcr.io pull the prebuilt layers instead (on podman, after "
+        "redistributed. Running that build means you accept the licences of what it installs; the linked section "
+        "lists them. Organization members logged in to ghcr.io pull the prebuilt layers instead (on podman, after "
         "`podman login ghcr.io`, `harbor run -e podman` pulls the prebuilt image and uses it in place of the recipe; "
         "[docs/protocol/running.md](docs/protocol/running.md#without-docker-rootless-podman-eg-a-slurm-cluster)).", "",
         "| Benchmark | By hand, once | First run |", "|---|---|---|", *rows, "",
@@ -2027,7 +2030,7 @@ def readme_quick_start(tasks_dir: Path | None = None) -> str:
               f"leaderboard count {len({base_of(p) for p in paper})} tasks / {len(paper)} tests / "
               f"{len({p.parent.name for p in paper})} suites, without HumanCLAW", f"{d}@all {m}"),
         block(f"# one benchmark, here RoboARC ({arc} task dirs)", f"{d}@all -p tasks/roboarc {m}"),
-        block("# one task (-y skips Harbor's confirmation prompt, e.g. in a script)",
+        block("# one task (add -y to skip Harbor's confirmation prompt, e.g. in a script)",
               f"{d}@all -p tasks/<benchmark>/<task> -a oracle"),
         "### 3. Or use a subscription instead of an API key", "",
         block("# ChatGPT: log in once", "codex login", f"CODEX_FORCE_AUTH_JSON=1 {d} {m}"),
