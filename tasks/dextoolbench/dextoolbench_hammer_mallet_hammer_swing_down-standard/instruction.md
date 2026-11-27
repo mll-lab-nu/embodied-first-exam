@@ -28,7 +28,22 @@ hardware.
 
 ### Client
 `/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`:
-```python from rcb_client import Robot r = Robot() # connects (waits while the service starts) spec = r.spec() # control_dt, action layout + limits, cameras, proprio layout, budget cams = list(spec["cameras"]) # camera names obs = r.get_obs(cameras=cams, include_depth=True) # obs.last[cam] -> uint8 (240, 320, 3); obs.depth[cam] -> float16 metres obs.meta["proprio"] # {"layout": [...], "now": [...]}: joint positions, velocities, current targets obs.meta["cameras"] # per camera: intrinsic_cv, cam2world_gl (OpenGL: looks along -z) obs.meta["task"] # see below obs = r.hold(2.0, cameras=cams[:1]) # hold the targets for 2 s of robot time obs = r.get_obs(last_s=1.0) # the frames recorded over the last 1 s (reading moves no time) res = r.submit("joint_position", A, dt=spec["control_dt"], cameras=cams[:1], video="mp4") # A: (T, 29) rows dt apart res.meta["done"], res.meta["reason"], res.meta["task"], res.meta["control_steps"] res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio obs = r.reset(cameras=cams) # a new episode from the starting state; obs.meta["resets_left"] ```
+```python
+from rcb_client import Robot
+r = Robot()                                   # connects (waits while the service starts)
+spec = r.spec()                               # control_dt, action layout + limits, cameras, proprio layout, budget
+cams = list(spec["cameras"])                  # camera names
+obs = r.get_obs(cameras=cams, include_depth=True)   # obs.last[cam] -> uint8 (240, 320, 3); obs.depth[cam] -> float16 metres
+obs.meta["proprio"]                           # {"layout": [...], "now": [...]}: joint positions, velocities, current targets
+obs.meta["cameras"]                           # per camera: intrinsic_cv, cam2world_gl (OpenGL: looks along -z)
+obs.meta["task"]                              # see below
+obs = r.hold(2.0, cameras=cams[:1])           # hold the targets for 2 s of robot time
+obs = r.get_obs(last_s=1.0)                   # the frames recorded over the last 1 s (reading moves no time)
+res = r.submit("joint_position", A, dt=spec["control_dt"], cameras=cams[:1], video="mp4")   # A: (T, 29) rows dt apart
+res.meta["done"], res.meta["reason"], res.meta["task"], res.meta["control_steps"]
+res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio
+obs = r.reset(cameras=cams)                   # a new episode from the starting state; obs.meta["resets_left"]
+```
 After the step limit (`spec()["max_control_steps"]`) `submit` raises `EpisodeOver` (409) until you reset, and after
 `/finish` every call but `spec` and `status` is refused. `r.reset(cameras=None, include_depth=False)` (`POST /reset`): a
 new episode from the same starting state; it returns the start's frames, and `meta` (also `r.status()`) carries

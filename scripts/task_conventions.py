@@ -1263,6 +1263,7 @@ def _sub_prose(s: str, pat: "re.Pattern", new: str, wrap_headed: bool = True) ->
         head = re.match(r"\n*(?:#[^\n]*\n)*", q).group(0)        # a heading over the paragraph stays as it is
         body = q[len(head):]
         if not body.strip() or re.match(r"\s*(- |\d+\. |\||```|#)", body.strip("\n")) \
+                or re.search(r"(?m)^\s*(?:```|\|)", body) \
                 or (not wrap_headed and q.lstrip("\n").startswith("#")):
             paras[i] = q
             continue
