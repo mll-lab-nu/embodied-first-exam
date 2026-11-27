@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:kinder-files-0.7.0@sha256:57c2433e95239e521948d1067f65f5f38fea6d0d724b541c98e20ff7790f63ba",
+ "image": "ghcr.io/mll-lab-nu/efe:kinder-files-0.7.0@sha256:9651a01210fe723a230e2f003914de933e295aef225238e61ce001df40f7fb3d",
  "source": "embodied_first_exam/benchmarks/kinder",
  "files": {
   "privileged/environment/rcb_kinder.py": "3ea76496fe64a3b2c670a0688fdb44f5ff59c76ddc900accf02ffc02d14fa8d2",

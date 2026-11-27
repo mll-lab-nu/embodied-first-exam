@@ -87,15 +87,15 @@ WORKDIR /app
 # their paths under /srv the files it shares with other tasks, from pinned files-only images (images/<name>/
 # FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
 COPY . /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:yamlab-files-0.9.0@sha256:36e86358ee34980c47dda75770fca3b28afb2f2751559e58faac13ec9a82720e \
+COPY --from=ghcr.io/mll-lab-nu/efe:yamlab-files-0.9.0@sha256:f04f5d6f80723de90f93dcec40e1462fd1cd0af25ceaa61911155e456dc066cf \
      /sim/finalize.sh \
      /privileged/environment/rcb_yamlab.py \
      /sim/server.py \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /live_video.py /srv/live_video.py
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 \
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:6bf677373ff69d440d4640253caed50067929b8bf4a5d3a9c5f7315cd2752470 /live_video.py /srv/live_video.py
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:6bf677373ff69d440d4640253caed50067929b8bf4a5d3a9c5f7315cd2752470 \
      /rcb1.py \
      /rcb_limited.py \
      /run.sh \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /agent_end/rcb_agent_end.py /srv/rcb_agent_end.py
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:6bf677373ff69d440d4640253caed50067929b8bf4a5d3a9c5f7315cd2752470 /agent_end/rcb_agent_end.py /srv/rcb_agent_end.py

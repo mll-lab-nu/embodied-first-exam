@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:maniguard-files-0.9.0@sha256:6891d422f0d0eb88fa57642476ad4ffc143f7a0cfa0385b81b12175923713421",
+ "image": "ghcr.io/mll-lab-nu/efe:maniguard-files-0.9.0@sha256:ac2641f370ec1f35386f1936a4e009021d7061054a6ab954cd64f56e31aa030a",
  "source": "embodied_first_exam/benchmarks/maniguard",
  "files": {
   "privileged/environment/rcb_maniguard.py": "d7995d7c890863722751effad5c759cc73f3e40873ea94a5bbdd9382b662591f",

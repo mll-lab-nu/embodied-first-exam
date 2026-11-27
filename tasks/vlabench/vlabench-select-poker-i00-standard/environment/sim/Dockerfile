@@ -19,7 +19,7 @@ RUN cp /etc/apt/sources.list.d/debian.sources /tmp/debian.sources \
     && apt-get -o Acquire::Check-Valid-Until=false update && apt-get install -y --no-install-recommends \
     git git-lfs libosmesa6 libgl1 libglib2.0-0 libgomp1 ffmpeg \
     && mv /tmp/debian.sources /etc/apt/sources.list.d/debian.sources && rm -rf /var/lib/apt/lists/*
-COPY --from=ghcr.io/mll-lab-nu/efe:vlabench-files-0.8.0@sha256:98eaa794134b7259ca6340f24e4c14bee200dd496232a40638f5c1d8949e17e5 /image/requirements.txt /tmp/requirements.txt
+COPY --from=ghcr.io/mll-lab-nu/efe:vlabench-files-0.8.0@sha256:128c01162e0eda2c455eef678619bab1d63050f11dd4825e9439ce12407aed4b /image/requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt && pip check
 RUN git clone https://github.com/OpenMOSS/VLABench.git /opt/VLABench \
     && cd /opt/VLABench && git checkout cf588fe60c0c7282174fe979f5913170cfe69017
@@ -35,7 +35,7 @@ RUN GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/datasets/lerobot/vlab
     && rm -rf /tmp/assets
 RUN printf '%s\n' 'cf588fe60c0c7282174fe979f5913170cfe69017' > /opt/vlabench-commit \
     && printf '%s\n' '08d7a4479a55c8fbb89ac0fd6fcf06e53d65b4a4' > /opt/vlabench-assets-commit
-COPY --from=ghcr.io/mll-lab-nu/efe:vlabench-files-0.8.0@sha256:98eaa794134b7259ca6340f24e4c14bee200dd496232a40638f5c1d8949e17e5 /image/strip_experts.py /tmp/strip_experts.py
+COPY --from=ghcr.io/mll-lab-nu/efe:vlabench-files-0.8.0@sha256:128c01162e0eda2c455eef678619bab1d63050f11dd4825e9439ce12407aed4b /image/strip_experts.py /tmp/strip_experts.py
 RUN python /tmp/strip_experts.py /opt/VLABench/VLABench \
     && rm -rf /opt/VLABench/.git /opt/VLABench/scripts /tmp/strip_experts.py \
     && python -c "import importlib.util as u; assert u.find_spec('VLABench.evaluation') is None"
@@ -46,9 +46,9 @@ WORKDIR /app
 # their paths under /srv the files it shares with other tasks, from pinned files-only images (images/<name>/
 # FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
 COPY . /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /rcb1.py /srv/rcb1.py
-COPY --from=ghcr.io/mll-lab-nu/efe:vlabench-files-0.8.0@sha256:98eaa794134b7259ca6340f24e4c14bee200dd496232a40638f5c1d8949e17e5 \
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:6bf677373ff69d440d4640253caed50067929b8bf4a5d3a9c5f7315cd2752470 /rcb1.py /srv/rcb1.py
+COPY --from=ghcr.io/mll-lab-nu/efe:vlabench-files-0.8.0@sha256:128c01162e0eda2c455eef678619bab1d63050f11dd4825e9439ce12407aed4b \
      /sim/server.py \
      /privileged/environment/vlb_tool.py \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /sidecar/rcb_service.py /srv/rcb_service.py
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:6bf677373ff69d440d4640253caed50067929b8bf4a5d3a9c5f7315cd2752470 /sidecar/rcb_service.py /srv/rcb_service.py

@@ -3,10 +3,10 @@
 # FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
 FROM ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0
 COPY . /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /rcb1.py /srv/rcb1.py
-COPY --from=ghcr.io/mll-lab-nu/efe:humanoidbench-files-0.7.0@sha256:e59319022949b9fdbeb2354c2c3721ab65391b1668289b5a03d77c2060bde761 \
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:6bf677373ff69d440d4640253caed50067929b8bf4a5d3a9c5f7315cd2752470 /rcb1.py /srv/rcb1.py
+COPY --from=ghcr.io/mll-lab-nu/efe:humanoidbench-files-0.7.0@sha256:c01acde889afa98b292c8cbdff0a61023a317ce68662681841026a67748ed1bd \
      /privileged/environment/rcb_hb.py \
      /privileged/tests/rcb_rewards.py \
      /sim/server.py \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /sidecar/rcb_service.py /srv/rcb_service.py
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:6bf677373ff69d440d4640253caed50067929b8bf4a5d3a9c5f7315cd2752470 /sidecar/rcb_service.py /srv/rcb_service.py

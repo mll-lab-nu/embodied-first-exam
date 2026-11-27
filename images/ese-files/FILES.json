@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:ese-files-0.10.0@sha256:3535af32c3e336d5119a36e139585f2cd2019c3a24b78d4480404bdf28733954",
+ "image": "ghcr.io/mll-lab-nu/efe:ese-files-0.10.0@sha256:14f04151adc6ca852b353a8e5ea769225b94c25337fa86c23bc8d06923c9748a",
  "source": "embodied_first_exam/benchmarks/embodied-safety-exam",
  "files": {
   "realtime/grade.py": "096e3f4310ad5ba1cdfd7ccc44be40a867a3acd3f31ce30baebb6beaf8d1e018",

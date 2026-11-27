@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:vlabench-files-0.8.0@sha256:98eaa794134b7259ca6340f24e4c14bee200dd496232a40638f5c1d8949e17e5",
+ "image": "ghcr.io/mll-lab-nu/efe:vlabench-files-0.8.0@sha256:128c01162e0eda2c455eef678619bab1d63050f11dd4825e9439ce12407aed4b",
  "source": "embodied_first_exam/benchmarks/vlabench",
  "files": {
   "image/requirements.txt": "8573472cbe67e8eb9cb78316d1f4adfec9fed153a2b082d6b72810dd97d02d68",

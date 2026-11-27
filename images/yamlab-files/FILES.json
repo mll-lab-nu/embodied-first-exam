@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:yamlab-files-0.9.0@sha256:36e86358ee34980c47dda75770fca3b28afb2f2751559e58faac13ec9a82720e",
+ "image": "ghcr.io/mll-lab-nu/efe:yamlab-files-0.9.0@sha256:f04f5d6f80723de90f93dcec40e1462fd1cd0af25ceaa61911155e456dc066cf",
  "source": "embodied_first_exam/benchmarks/yamlab",
  "files": {
   "privileged/environment/rcb_yamlab.py": "e833c553219e632fff038fba7cfcfe8dfcfdbb24d853015febbf62c01b2e5c95",

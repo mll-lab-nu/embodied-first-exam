@@ -3,12 +3,12 @@
 # FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
 FROM ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0
 COPY . /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 \
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:6bf677373ff69d440d4640253caed50067929b8bf4a5d3a9c5f7315cd2752470 \
      /rcb1.py \
      /realtime/rcb_realtime.py \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:pandadyn-files-0.8.0@sha256:dde1a1540ea67565e1c8031b87b356c708f59e4e9276a59b8cffac7f9e409f1f \
+COPY --from=ghcr.io/mll-lab-nu/efe:pandadyn-files-0.8.0@sha256:2aa10cd376d829a5365ab2f5caf82d592401a238686dfe4b5bef6b8efc7a0df5 \
      /privileged/environment/rcb_pandadyn.py \
      /sim/server.py \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /sidecar/rcb_service.py /srv/rcb_service.py
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:6bf677373ff69d440d4640253caed50067929b8bf4a5d3a9c5f7315cd2752470 /sidecar/rcb_service.py /srv/rcb_service.py

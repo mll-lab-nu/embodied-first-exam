@@ -174,7 +174,7 @@ WORKDIR /app
 # the shared RCB1 codec. .dockerignore keeps the build's own two files out of /srv.
 FROM humanclaw-base
 COPY . /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /rcb1.py /srv/rcb1.py
-COPY --from=ghcr.io/mll-lab-nu/efe:humanclaw-files-0.4.0@sha256:66052030ca9c609bac486e2f3f43bc6e63b003de0a323877ea67e99d0ed92009 /hc_core.py /server.py /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /sidecar/rcb_service.py /srv/rcb_service.py
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:6bf677373ff69d440d4640253caed50067929b8bf4a5d3a9c5f7315cd2752470 /rcb1.py /srv/rcb1.py
+COPY --from=ghcr.io/mll-lab-nu/efe:humanclaw-files-0.4.0@sha256:e771c43c5d5b21bdeaea33799696fd9ee45b9ff165730f188309b9e683b43b39 /hc_core.py /server.py /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:6bf677373ff69d440d4640253caed50067929b8bf4a5d3a9c5f7315cd2752470 /sidecar/rcb_service.py /srv/rcb_service.py
 WORKDIR /srv

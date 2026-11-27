@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:bigym2-files-0.8.0@sha256:dc58e642868b987ec37f4cb96ea91447c28e210f2c2954cde133afe6ca89977f",
+ "image": "ghcr.io/mll-lab-nu/efe:bigym2-files-0.8.0@sha256:b2cc706cb325a0676f1c66c8476638d9560c82460a43e5a03c58b18c5241b649",
  "source": "embodied_first_exam/benchmarks/bigym2",
  "files": {
   "privileged/environment/rcb_bigym2.py": "c34cfc32e62a08c4a4b7f297d14773f2f01680b8556b24efc03853dc3963eac5",

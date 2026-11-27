@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:embodiedswe-files-0.3.1@sha256:ef309a60a26d8813914d4c5284eb9a1008d58f3123871491535f7cf11bbc743e",
+ "image": "ghcr.io/mll-lab-nu/efe:embodiedswe-files-0.4.0@sha256:39e678fbc46858843efd77c27fd11fe57d6bd768af11e0c6ce37ad3a84f52351",
  "source": "embodied_first_exam/benchmarks/embodiedswe",
  "files": {
   "esw_proxy.py": "4481f808beaf323aaf6aa02de9c859434e8d614a53e132ab9fc28318d68d271e",

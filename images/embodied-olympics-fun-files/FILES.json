@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.8.0@sha256:2586f42b2d63892c9a09bf77320a404d49c24171fd6a999a6672a25074843cf7",
+ "image": "ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.8.0@sha256:d9c06edb0e5eb9a5c72a90fd971ae469b1758feb8a3ec76722b7f7df80013e46",
  "source": "embodied_first_exam/benchmarks/embodied-olympics-fun",
  "files": {
   "grade.py": "711d818b010325b2370958f376137b533e2bf56be119e104f7c15ca4bc0c3e79",
