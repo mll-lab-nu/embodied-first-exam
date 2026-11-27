@@ -298,7 +298,7 @@ from collections import defaultdict
 jobs, batch, R = pathlib.Path(sys.argv[1]), sys.argv[2], pathlib.Path(sys.argv[3])
 sys.path.insert(0, str(R / "scripts"))
 import task_conventions as tc, write_task_results as wtr  # noqa: E402
-# docs/protocol/running.md "Results" (PROTOCOL v2.1): results are compared only within one configuration (task_conventions.config_key:
+# docs/protocol/running.md "Results" (PROTOCOL §2): results are compared only within one configuration (task_conventions.config_key:
 # protocol version, mode, cutoff, reset budget, S, network); validated and unvalidated tasks (task_conventions.validated_of)
 # are ranked together, the unvalidated ones marked; a trial that is not a result (infrastructure, voided) never counts in a
 # success rate. Tasks outside the core set (docs/core_set.toml, task_conventions.set_of) are listed, marked, and left out

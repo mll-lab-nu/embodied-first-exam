@@ -156,7 +156,7 @@ def write(jobs: Path, job: str, out: Path) -> subprocess.CompletedProcess:
 
 
 def test_config_and_attempts():
-    """PROTOCOL v2.1 / docs/protocol/running.md: every result records its effective configuration (config.json); an infrastructure
+    """PROTOCOL §2 / docs/protocol/running.md: every result records its effective configuration (config.json); an infrastructure
     failure (not a result) is voided and never counted, a rerun replaces it, a voided attempt never replaces a counted
     one, an attempt after a result is flagged; a trial of another task version is legacy."""
     infra = {"success": 0, "infra_error": 1}

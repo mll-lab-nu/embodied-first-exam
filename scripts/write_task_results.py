@@ -5,7 +5,7 @@ attempts.json). One folder per agent+model; the privileged and standard twins
 each get their own.
 usage: write_task_results.py <jobs_dir> <job_name> <run-id> "<agent label>" --out <dir>
 
-config.json (docs/protocol/running.md "Results", PROTOCOL v2.1): the trial's effective configuration (scripts/task_conventions.py
+config.json (docs/protocol/running.md "Results", PROTOCOL §2): the trial's effective configuration (scripts/task_conventions.py
 effective_config: protocol version, mode, cutoff, reset budget, slowdown S, seed, network, validated flag, digest), its
 result (`success`, `fail` or `not_a_result` with the reason), whether it is counted and, in the standard modes, the
 first-attempt result `first_success` (PROTOCOL §4: the no-reset performance, reported beside the graded one). Results are ranked only within
