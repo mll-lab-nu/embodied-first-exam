@@ -229,14 +229,14 @@ decides when and where, your skill turns each decision into the robot's commands
   your shots.
 
 ## Limits
-- Time: 14400 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
-  the end you are stopped without warning and graded on what stands, as Goal says. Time left:
-  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the clocks the service reports are the game's own. Calls
-  into a long-running process can block for their whole wait time: use short waits or one-shot scripts.
+- Time: 14400 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning and graded on the state at that moment, as Goal says. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). The clocks the service reports are the game's own. A
+  call into a long-running process can block for its whole wait time. Use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
-  and read anything in your container, the simulator's and the benchmark's source included.
+  and read anything in your container, including the simulator's and the benchmark's source.
 - Resources: 2 CPUs, 5 GiB memory, 2048 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
-  GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
-  slows you down); usage: `/run/rcb-limits/usage.json`.
+  GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one match.

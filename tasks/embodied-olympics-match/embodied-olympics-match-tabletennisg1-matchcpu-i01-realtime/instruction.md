@@ -43,8 +43,8 @@ plan):
 Table tennis between two Unitree G1 humanoids (29 actuated joints each: arms 2 × 7, waist 3, legs 2 × 6; held to the
 real robot's limits), each holding a racket. You control seat `A`'s G1 at the joint level, with no skill commands,
 against a G1 the platform drives at level 4 of four (the BOSS). The world runs in real time (S = 1). The robot runs as a
-service you reach through its client or its MCP tools, as if it were real hardware, on a clock that does not stop while
-you think: one live episode.
+service you reach only through its client, as if it were real hardware, on a clock that does not stop while you think:
+one live episode.
 
 ### Client
 The `game` command (the seat protocol; `game spec` gives the exact command formats, observation fields, frames, limits
@@ -56,15 +56,6 @@ and timing; `game rules` the complete rules):
   reaches about 70 calls per second. Commanding at the control-step rate takes a long-running program that uses the
   client library `ro_client` (its documentation: `python3 -m pydoc ro_client`); the match accepts one command in flight
   per robot.
-
-### MCP tools
-- The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
-  `observe`, `submit`, `start`, `ready`. A tool takes its endpoint's request fields (any other field in `fields`) and
-  returns the service's reply `meta` unchanged; images are written as files under `/app/obs/` (`.png`, `.npy`) and the
-  result lists them. There is no `finish` tool: the match's rules end it.
-- `observe` returns at once; `submit` answers at once, as the endpoint does.
-- A call still running after 45 s returns `pending` with an `operation` id; `observe(operation=id)` collects its reply.
-- The client, the `game` command and the tools play the same seat in the same match; use any of them.
 
 ### Actions
 - You drive your robot with actuator-level (joint-level) commands, `joints` and `toss`, sent with `game act`
@@ -131,14 +122,14 @@ and timing; `game rules` the complete rules):
   commands take effect at the next control step after the world state they answer, as yours do.
 
 ## Limits
-- Time: 7200 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
-  the end you are stopped without warning and graded on what stands, as Goal says. Time left:
-  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the clocks the service reports are the game's own. Calls
-  into a long-running process can block for their whole wait time: use short waits or one-shot scripts.
+- Time: 7200 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning and graded on the state at that moment, as Goal says. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). The clocks the service reports are the game's own. A
+  call into a long-running process can block for its whole wait time. Use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
-  and read anything in your container, the simulator's and the benchmark's source included.
+  and read anything in your container, including the simulator's and the benchmark's source.
 - Resources: 8 CPUs, 16 GiB memory, 2048 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
   no GPU; the simulator (`sim`) and `practice` and `practice_player` run in containers of their own and do not count.
-  Over a cap a process can be killed (the CPU cap only slows you down); usage: `/run/rcb-limits/usage.json`.
+  Going over a cap can get a process killed (the CPU cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one match.

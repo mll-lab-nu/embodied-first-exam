@@ -3,7 +3,7 @@
 # the shared realtime layer from the pinned files-only image. .dockerignore keeps the build's own two files out of /srv.
 FROM ghcr.io/mll-lab-nu/efe:abc-sim-0.4.0
 COPY . /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.5.0@sha256:d0f4045938a9683719f71de2342464216b53c49a87711923fb4afd551c081d82 \
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.6.0@sha256:5e5e605d9f3cc2a4a0efc4ffb1f277278f8f77f225cc6ff60d00d15b4cb3b515 \
      /rcb1.py \
      /realtime/rcb_realtime.py \
      /srv/

@@ -1,10 +1,10 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:pandadyn-files-0.6.0@sha256:f40dc0fd3023bcf841ff9db5b590bdd4619a47692f6aa43fdb22694c3663147f",
+ "image": "ghcr.io/mll-lab-nu/efe:pandadyn-files-0.7.0@sha256:7d9c059045056fceb36b483831f119961406083af30c83a3ed1fb1420fdd31ac",
  "source": "embodied_first_exam/benchmarks/pandadyn",
  "files": {
   "privileged/environment/rcb_pandadyn.py": "4e038eb8b8a3ce0f01911b5364c9a3c8ebbe133c84cfa591d866e0df00c86838",
   "privileged/tests/grade.py": "3e2c4ef4470d4d72e29a63291acb484ae8e3e0c237fb974daf597705d937acae",
-  "sim/rcb_service.py": "89e289a4bea87f4b7f500b3dfded2f94d63cd89cf6f09ed8a8fdb6393e915bad",
+  "sim/rcb_service.py": "fcb9e3a68747f3e0c00d884d5bd8bd8eb00679cc5ec74e57edb60f8c72c53aab",
   "sim/server.py": "914293f79bedb20f2cc5b8c9d90c6c11a822513ba4cf80c42bbbfccc3fbd65f8"
  }
 }

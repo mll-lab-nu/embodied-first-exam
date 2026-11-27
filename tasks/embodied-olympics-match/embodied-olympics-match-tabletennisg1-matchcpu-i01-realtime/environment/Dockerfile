@@ -6,6 +6,4 @@ ENV SIM_URL=http://localhost:8000 PRACTICE_URL=http://localhost:8100 SEAT=A
 # Embodied First Exam: the verdict ends the session (match_end.sh, the container's entrypoint).
 COPY match_end.sh /opt/efe/match_end.sh
 ENTRYPOINT ["/opt/efe/match_end.sh"]
-# the robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): the server Harbor starts, efe-robot
-COPY efe_mcp /opt/tools/efe_mcp
 WORKDIR /app

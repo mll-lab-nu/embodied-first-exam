@@ -1,12 +1,12 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:standard-files-0.5.0@sha256:d0f4045938a9683719f71de2342464216b53c49a87711923fb4afd551c081d82",
+ "image": "ghcr.io/mll-lab-nu/efe:standard-files-0.6.0@sha256:5e5e605d9f3cc2a4a0efc4ffb1f277278f8f77f225cc6ff60d00d15b4cb3b515",
  "source": "embodied_first_exam/standard",
  "files": {
   "rcb1.py": "d8c6ceabdad914afd39ac4a93904e486039c69c14ec5ae140b33aa653ff7979f",
   "rcb_client.py": "7d4c3a68cc348a7166cbf2760af2cf81d93145624542ddfc58bd9914a4283ebc",
-  "rcb_limited.py": "9dd144654d7b5b439f279bf569ffcb62da680b1d15f35e93ee4d4b4c431cbfbf",
+  "rcb_limited.py": "e4da9e0d928c82b304ef4dd5f5b1df74a89d657e3e87dc388f8f2580b1210817",
   "realtime/rcb_client.py": "6a657fa341e0a6ba22d36021d754838ed1f0f28806b2bee9644964c6cef2883f",
-  "realtime/rcb_realtime.py": "f82982ae6a3ad7bca203662568554cb369c038e91cfadfb5641d0b4cc9343440",
+  "realtime/rcb_realtime.py": "b90a36998900aa9985e640b9c2b4e61dd48da6aeabdaebef4b071f56cabe5505",
   "run.sh": "5a3fb29ea050a005cb0e441f9129b347fa0af5d536d9d210178b1398df032f64",
   "v2_1/grade.py": "ff863225171ee723d8b40ac13f17190dfc908f7f1683681b19f40d6dec3980b4",
   "v2_1/rcb_client.py": "b811d736b07b3a13ceecf1cbd85a51bfe1cc666adbc59e4021982007382f8231",
@@ -16,6 +16,6 @@
   "v2_1/variants/cf4073a8f3/rcb_client.py": "cf4073a8f3478efa9b17661b777fefc1feac48593133bacfe895259928dd37c5",
   "v2_1/variants/dbda20b2c2/rcb_client.py": "dbda20b2c2a48d1613a978e0c225c3953c661e0d8c940be2c220cadea599053b",
   "v2_4/rcb_client.py": "ff411b18a848ed0a6a500d8d96ad72529ae4ce8cbf5191285664f0c301b500a3",
-  "v2_4/rcb_limited.py": "1860c9eb16cc69aad7ce1f9b069ccf508217c5297320fb669af5aa64ea454cfe"
+  "v2_4/rcb_limited.py": "2ea05fc667a00d34bf4c164b7120de05080813c26c2685205aeb2ef1ebecde59"
  }
 }

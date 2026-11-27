@@ -231,7 +231,7 @@
     },
     {
       "name": "finish",
-      "description": "POST /finish: end the episode now, in a task whose episode you end yourself (`spec` success_signal: \"hidden\"); after it every action is refused. In a task whose episode ends by itself the tool says so and sends nothing.",
+      "description": "POST /finish: end the episode now, in a task whose episode you end yourself (`spec` success_signal starting with \"hidden\"); after it every action is refused. In a task whose episode ends by itself the tool says so and sends nothing.",
       "inputSchema": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",

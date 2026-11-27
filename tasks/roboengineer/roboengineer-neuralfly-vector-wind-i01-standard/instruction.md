@@ -55,17 +55,17 @@ frames and noisy telemetry, then revise.
   aerodynamics. Per-axis residual force cap remains 12 N.
 
 ## Limits
-- Time: 14400 s of wall-clock time from the start of your session; everything counts (waiting for the deployment service
-  too, deployments included). At the end you are stopped without warning and the evaluator takes the round you sealed
-  or, if you sealed none, the latest deployment that completed before then; a deployment still running is not graded.
-  Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the service's own deadline counts the same
-  limit from your first request to it. Calls into a long-running process can block for their whole wait time: use short
-  waits or one-shot scripts.
+- Time: 14400 s of wall-clock time from the start of your session. Everything counts, including waiting for the
+  deployment service and the deployments. At the end you are stopped without warning. The evaluator then takes the round
+  you sealed; if you sealed none, it takes the latest deployment that finished before then. A deployment still running
+  is not graded. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). The service's own deadline
+  counts the same limit from your first request to it. A call into a long-running process can block for its whole wait
+  time. Use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
-  and read anything in your container, the simulator's and the benchmark's source included.
+  and read anything in your container, including the simulator's and the benchmark's source.
 - Resources: 2 CPUs, 6 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
-  GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
-  slows you down); usage: `/run/rcb-limits/usage.json`.
+  GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
 - Resets: none: deployments are your only runs, each starting its development cases afresh.
 - Rounds: at most three deployment rounds (`Client().describe()` has what is left).

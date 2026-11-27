@@ -3,8 +3,8 @@
 # FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
 FROM ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0
 COPY . /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.5.0@sha256:d0f4045938a9683719f71de2342464216b53c49a87711923fb4afd551c081d82 /rcb1.py /srv/rcb1.py
-COPY --from=ghcr.io/mll-lab-nu/efe:pandadyn-files-0.6.0@sha256:f40dc0fd3023bcf841ff9db5b590bdd4619a47692f6aa43fdb22694c3663147f \
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.6.0@sha256:5e5e605d9f3cc2a4a0efc4ffb1f277278f8f77f225cc6ff60d00d15b4cb3b515 /rcb1.py /srv/rcb1.py
+COPY --from=ghcr.io/mll-lab-nu/efe:pandadyn-files-0.7.0@sha256:7d9c059045056fceb36b483831f119961406083af30c83a3ed1fb1420fdd31ac \
      /privileged/environment/rcb_pandadyn.py \
      /sim/rcb_service.py \
      /sim/server.py \

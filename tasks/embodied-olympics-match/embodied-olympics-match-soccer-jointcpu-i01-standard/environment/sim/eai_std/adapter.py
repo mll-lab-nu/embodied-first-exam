@@ -834,7 +834,7 @@ class Adapter:
 
     def submit_hold(self, req, cid):
         """A rows-free hold chunk (eai-standard/3.0). Lockstep: n game seconds pass with the commands in force (the core's
-        wait), answered after them; turn-based: a wait of at most n real seconds for your turn; realtime: answered at
+        wait: max(1, round(n / control_dt)) control steps, as the layers' hold), answered after them; turn-based: a wait of at most n real seconds for your turn; realtime: answered at
         once, the entity's plan from `at` (default now) is cleared for n seconds, the command in force kept."""
         svc, n = self.svc, req["hold"]
         k0, t0 = int(svc.m.k), time.monotonic()
@@ -879,7 +879,8 @@ class Adapter:
                 return code, self.meta(self.now_of(out), error=out.get("error"), chunk_id=cid), []
             now, watch = self.now_of(out), {"waited_for": "your turn", "waited_s": round(time.monotonic() - t0, 3)}
         else:
-            code, now, watch = self.watch(n, req.get("team_since"))
+            # max(1, round(n / control_dt)) control steps, as every layer's hold chunk (rcb_service, rcb_limited)
+            code, now, watch = self.watch(max(1, int(round(n / self.dt))) * self.dt, req.get("team_since"))
             if code != 200:
                 return code, self.meta(now, error=watch.get("error"), chunk_id=cid), []
         parts, info = [], {}

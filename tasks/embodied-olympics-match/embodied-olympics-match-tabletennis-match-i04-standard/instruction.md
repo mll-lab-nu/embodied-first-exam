@@ -76,16 +76,15 @@ client is installed (`from rcb_client import Robot`).
 | `POST /ready {"why": "...", "plan": "..."}` | your review when the world freezes |
 
 `/submit` returns after its last row: each row takes effect at the current step, then the world advances DT (default:
-one control step). An action the match refuses gets a 400. If a later row is refused, its entry in `meta.effects` shows
-`code` 400. Where an action names a robot (`entity`), each chunk commands one robot: set `"entity": E` in the chunk, or
-use the type `T@E`. Every answer's `meta` has `score`, `review_due` (send `/ready` now), `match_over`, `step`, `phase`
-and your `state`. A `/submit` while the world is frozen or before the start executes nothing (`ok: false`, `not_now`);
-after the match is over requests are a
+one control step). An action the match refuses is a 400 (a later row's: `code` 400 in `meta.effects`). Where an action
+names a robot (`entity`), one chunk commands one: `"entity": E` in the chunk, or the type `T@E`. Every answer's `meta`
+has `score`, `review_due` (send `/ready` now), `match_over`, `step`, `phase` and your `state`. A `/submit` while the
+world is frozen or before the start executes nothing (`ok: false`, `not_now`); after the match is over requests are a
 409. `/finish` and `/reset` are not offered (404): the match's rules end it, and there is one match. What differs from
 the plain standard: `timing.deviations` in `/spec`.
 
-The same match also answers the `game` command, and the same calls as HTTP with JSON under
-`http://localhost:8000/<SEAT>/` (your seat is `$SEAT`; the paths below are under it). You may use both:
+The same match also answers the `game` command, or the same calls as HTTP with JSON under
+`http://localhost:8000/<SEAT>/` (the paths below are under it; your seat is `$SEAT`); you may use both:
 
 | `game` command | HTTP | |
 | --- | --- | --- |
@@ -214,14 +213,14 @@ and the start window are real time. One act and one observation per seat in flig
   library of legal serves, returns every ball it can reach, and finds wide, fast and short balls harder to return.
 
 ## Limits
-- Time: 7200 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
-  the end you are stopped without warning and graded on what stands, as Goal says. Time left:
-  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the clocks the service reports are the game's own. Calls
-  into a long-running process can block for their whole wait time: use short waits or one-shot scripts.
+- Time: 7200 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning and graded on the state at that moment, as Goal says. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). The clocks the service reports are the game's own. A
+  call into a long-running process can block for its whole wait time. Use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
-  and read anything in your container, the simulator's and the benchmark's source included.
+  and read anything in your container, including the simulator's and the benchmark's source.
 - Resources: 2 CPUs, 5 GiB memory, 2048 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
-  GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
-  slows you down); usage: `/run/rcb-limits/usage.json`.
+  GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one match.

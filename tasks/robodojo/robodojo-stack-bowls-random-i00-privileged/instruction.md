@@ -72,14 +72,14 @@ with this command; run it to self-check (it stops at the first success):
   your trajectory the same way.
 
 ## Limits
-- Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
-  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
-  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
-  whole wait time: use short waits or one-shot scripts.
+- Time: 3600 s of wall-clock time from the start of your session. Everything counts, including the simulator's start-up.
+  At the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). A call into a long-running process can block for its
+  whole wait time. Use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
-  and read anything in your container, the simulator's and the benchmark's source included.
+  and read anything in your container, including the simulator's and the benchmark's source.
 - Resources: 8 CPUs, 39 GiB memory, 8192 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
-  one GPU (16 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
+  one GPU (16 GiB of its memory). Going over a cap can get a process killed (the CPU cap only slows you down). Usage:
   `/run/rcb-limits/usage.json`.
 - Resets: as many as you like (`s.reset()`).

@@ -1,6 +1,6 @@
 FROM docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f
 COPY test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:dexhand-files-0.7.0@sha256:1397f5ba078dbbb9cff655c1ed962b72c3f42282d3bb5f2002f72209401249d2 /standard/tests/grade.py /tests/grade.py
+COPY --from=ghcr.io/mll-lab-nu/efe:dexhand-files-0.8.0@sha256:7e1625b83685f06e53482f03cad922515b63c3e2d80749844be1f19786e4fd5d /standard/tests/grade.py /tests/grade.py
 RUN chmod +x /tests/test.sh
 WORKDIR /tests
 # resources (PROTOCOL §6) # rcb-monitor

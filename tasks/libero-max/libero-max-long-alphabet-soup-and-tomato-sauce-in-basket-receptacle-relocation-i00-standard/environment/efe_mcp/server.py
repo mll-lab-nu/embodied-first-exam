@@ -8,8 +8,11 @@ task's robot service -- spec, observe, submit, finish, reset (where the task has
 service offers it) -- the request fields and the reply as the service's client sends and receives them
 (docs/protocol/standard_mode.md "MCP tools"); a service with calls of its own adds their tools (suites.py: an
 Embodied Olympics match's start, ready, say, team). Images, depth and video are written under /app/obs; results carry
-paths and the service's meta, and `tool_s` (the wall time the call took in this server, the request included). A call that runs longer than
---max-block-s returns {"pending": true, "operation": id}; `observe(operation=id)` waits for it. Realtime mode: no tool
+paths and the service's meta, and `tool_s` (the wall time the call took in this server, the request included). A call
+answers within --max-block-s of its arrival (default 45, under Codex's 60 s tool timeout), any wait for an earlier call
+included: one still running then returns {"pending": true, "operation": id} and `observe(operation=id)` waits for it;
+a call that arrives while an earlier one is still running at that deadline is not sent ({"sent": false, "operation":
+the running one's id}, an error result). Realtime mode: no tool
 holds the clock (submit answers at once, as the service does). A tool the manifest does not list but /spec shows the
 service has (kinematics, reset) is added at the first call, with a tools/list_changed notification.
 
@@ -48,8 +51,21 @@ PROTOCOLS = ("2025-06-18", "2025-03-26", "2024-11-05")
 METHODS = {"spec": "spec_"}       # tool -> adapter method, where they differ (RcbTools.spec is the /spec it read)
 
 
+class BusyError(Exception):
+    """A call not sent: an earlier call (operation `oid`) is still running."""
+
+    def __init__(self, oid: str, tool: str, collect: str):
+        super().__init__(f"nothing sent: operation {oid} ({tool}) is still running; call {collect}(operation=\"{oid}\") "
+                         "for its result, then call again")
+        self.oid, self.tool = oid, tool
+
+
 class Ops:
-    """Runs one tool call at a time in a worker thread; a call longer than max_block returns as pending."""
+    """Runs one tool call at a time in a worker thread. A call answers within max_block seconds of its arrival, the
+    wait for an earlier call still running included (one deadline: the harness's own timeout, Codex's 60 s, must not
+    cut a call whose operation id the agent then never sees): with its result, or as pending with its operation id.
+    A call that arrives while an earlier one is still running at that deadline is not sent: BusyError names the
+    running operation (collect it with observe(operation=id), then call again)."""
 
     def __init__(self, max_block: float, collect: str = "observe"):
         self.max_block = max_block
@@ -61,7 +77,7 @@ class Ops:
         if not self.cur:
             return True
         oid, th, box = self.cur
-        th.join(timeout)
+        th.join(max(0.0, timeout))
         if th.is_alive():
             return False
         self.done[oid] = box
@@ -69,10 +85,10 @@ class Ops:
         return True
 
     def run(self, name, fn, kwargs):
-        if not self._finish_cur(self.max_block):
-            oid = self.cur[0]
-            return {"pending": True, "operation": oid, "busy": True,
-                    "note": f"operation {oid} ({self.cur[2]['tool']}) is still running; call {self.collect}(operation=\"{oid}\")"}, []
+        deadline = time.monotonic() + self.max_block
+        if not self._finish_cur(deadline - time.monotonic()):
+            oid, tool = self.cur[0], self.cur[2]["tool"]
+            raise BusyError(oid, tool, self.collect)
         oid = uuid.uuid4().hex[:8]
         box = {"tool": name, "t0": time.time()}
 
@@ -86,7 +102,7 @@ class Ops:
         th = threading.Thread(target=work, daemon=True)
         th.start()
         self.cur = (oid, th, box)
-        if self._finish_cur(self.max_block):
+        if self._finish_cur(deadline - time.monotonic()):
             return self.take(oid)
         return {"pending": True, "operation": oid,
                 "note": f"{name} is still executing after {self.max_block:.0f} s; call {self.collect}(operation=\"{oid}\") for its result"}, []
@@ -242,6 +258,10 @@ class Server:
             return {"content": content, "isError": False}
         except ToolError as e:
             return {"content": [{"type": "text", "text": json.dumps({"error": str(e), "failure": {"category": e.category}})}],
+                    "isError": True}
+        except BusyError as e:       # this call was not sent: the agent collects the running one and calls again
+            return {"content": [{"type": "text", "text": json.dumps({"error": str(e), "sent": False, "operation": e.oid,
+                                                                      "failure": {"category": "busy"}})}],
                     "isError": True}
         except Exception as e:      # an unexpected failure: the message, the call can be retried
             if type(e).__name__ == "EpisodeOver":   # the client's: the episode has ended (success, time, error)

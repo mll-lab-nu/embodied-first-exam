@@ -155,17 +155,17 @@ r.ik({"left_tcp": pose}, seed=q)             # inverse kinematics -> {"ok", "q",
   `left_base_riser`, `right_base_riser`.
 
 ## Limits
-- Time: 10800 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
-  the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the
-  service's `time_left_s` (in every reply) starts at your first request, so the file is the one to trust. Calls into a
-  long-running process can block for their whole wait time: use short waits or one-shot scripts.
+- Time: 10800 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`).
+  Trust this file: the `time_left_s` in the service's replies starts only at your first request. A call into a
+  long-running process can block for its whole wait time. Use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
-  and read anything in your container, the simulator's and the benchmark's source included.
+  and read anything in your container, including the simulator's and the benchmark's source.
 - Resources: 4 CPUs, 16 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
-  no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
-  only slows you down); usage: `/run/rcb-limits/usage.json`.
-- Resets: none: one episode.
+  no GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
+- Resets: none. You get one episode.
 - Steps: no step budget. A technical cap ends the episode after 200,000 control steps, holds included. The episode is
   then graded on its state at that point.
 - Finish: if you never send `/finish`, the episode is graded when your session ends.

@@ -107,16 +107,16 @@ response carries each frame's pose. Proprioception (`spec["proprio_groups"]`): `
 (`effort_<joint>`, the actuators' generalized force on each joint).
 
 ## Limits
-- Time: 3600 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At
-  the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`); the
-  service's `time_left_s` (in every reply) starts at your first request, so the file is the one to trust. Calls into a
-  long-running process can block for their whole wait time: use short waits or one-shot scripts.
+- Time: 3600 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
+  At the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`).
+  Trust this file: the `time_left_s` in the service's replies starts only at your first request. A call into a
+  long-running process can block for its whole wait time. Use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install packages
-  and read anything in your container, the simulator's and the benchmark's source included.
+  and read anything in your container, including the simulator's and the benchmark's source.
 - Resources: 4 CPUs, 7 GiB memory, 2048 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`), no
-  GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
-  slows you down); usage: `/run/rcb-limits/usage.json`.
+  GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
+  cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 10 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
 - Steps: the episode ends after 10 s of robot time.
-- Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.
+- Finish: if you never send `/finish`, the last episode is graded when your session ends.

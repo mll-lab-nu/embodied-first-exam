@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.6.0@sha256:d5ee6b967a58e92b4ea3b7833ac5aaefa02f061e32d0c4981fca9a534366ebb0",
+ "image": "ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.7.0@sha256:c874478c11ee71ad10506a63176949b65168c757a45a2af6ebdc93e43dd2fdf4",
  "source": "embodied_first_exam/benchmarks/embodied-olympics-fun",
  "files": {
   "grade.py": "711d818b010325b2370958f376137b533e2bf56be119e104f7c15ca4bc0c3e79",
@@ -32,7 +32,7 @@
   "rfo/tasks/volleyball_set.py": "3fd325545565b1ee299e7b217f83238739f919580e149a8630ee2f2fdb2b6839",
   "rfo/tasks/volleyball_spike.py": "f677e85cbe6d89d0563ba549f7388fead5eeffe1a1397680bd8b3cd6e95a0350",
   "rfo/world.py": "81b354c7dd396d844623226e2c07d6a910a146d2e88bb8a523af47624fe7f8d9",
-  "standard/rcb_service.py": "89e289a4bea87f4b7f500b3dfded2f94d63cd89cf6f09ed8a8fdb6393e915bad",
+  "standard/rcb_service.py": "fcb9e3a68747f3e0c00d884d5bd8bd8eb00679cc5ec74e57edb60f8c72c53aab",
   "standard/server.py": "ce24223df662abfbf1ff29b3152f865395e7239667d5463558e4a75d005f9a87"
  }
 }

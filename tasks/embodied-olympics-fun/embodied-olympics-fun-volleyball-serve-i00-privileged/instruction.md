@@ -130,14 +130,15 @@ Joint order everywhere (Unitree's SDK order): `left_hip_yaw`, `left_hip_pitch`, 
   failure: "the simulation became unstable".
 
 ## Limits
-- Time: 7200 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At
-  the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
-  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). Calls into a long-running process can block for their
-  whole wait time: use short waits or one-shot scripts.
+- Time: 7200 s of wall-clock time from the start of your session. Everything counts, including the simulator's start-up.
+  At the end you are stopped without warning and only what is in `/app/output/` at that moment is graded. Time left:
+  `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`). A call into a long-running process can block for its
+  whole wait time. Use short waits or one-shot scripts.
 - Tokens: no separate limit.
 - Network: open. You may install packages and search for, download and use public tools, robot models and pretrained
   controllers (say in your notes what you used); you may read anything in your container, the benchmark's source
   included.
 - Resources: 8 CPUs, 16 GiB memory, 1024 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
-  no GPU. Over a cap a process can be killed (the CPU cap only slows you down); usage: `/run/rcb-limits/usage.json`.
+  no GPU. Going over a cap can get a process killed (the CPU cap only slows you down). Usage:
+  `/run/rcb-limits/usage.json`.
 - Resets: as many as you like (`s.reset()`, instant), all while you develop.
