@@ -419,7 +419,7 @@ TEXT_ERRATA = {
         "Move the steak from the pan to the middle of the plate, and move your hand away.",
     ("PreSoakPan",
      "Pick the pan and sponge and place them into the sink. Then turn on the water."):
-        "Put the pan and the sponge in the sink, turn the water fully on, and move your hand away.",
+        "Put the pan and the sponge in the sink, turn the sink faucet on, nearly all the way, and move your hand away.",
     ("PrepareCoffee",
      "Pick the mug from the cabinet, place it under the coffee machine dispenser, and press the start button."):
         "Take the mug from the cabinet, put it under the coffee machine's spout, press the start button, and move"
@@ -442,7 +442,7 @@ TEXT_ERRATA = {
         "Press the start button on the microwave, then move your hand away.",
     ("TurnOnSinkFaucet",
      "turn on the sink faucet"):
-        "Turn the sink faucet fully on.",
+        "Turn the sink faucet on, nearly all the way.",
     ("TurnOnStove",
      "turn on the front left burner of the stove"):
         "Turn on the front left burner of the stove.",

@@ -46,9 +46,8 @@ A (blue) against a scripted team B (red) at level 2. The world waits for you: it
 hardware: one live episode.
 
 ### Client
-The service at `http://localhost:8000` speaks eai-standard/2.x with the match extension (`eai-standard/2.1+match/1.0`;
-docs/protocol/standard_mode.md Part 5): the endpoints of every standard task, plus `/start` and `/ready`. The shared
-client is installed (`from rcb_client import Robot`).
+The service at `http://localhost:8000` speaks eai-standard/2.x with the match extension (`eai-standard/2.1+match/1.0`): the endpoints
+of every standard task, plus `/start` and `/ready`. The shared client is installed (`from rcb_client import Robot`).
 
 | HTTP | |
 | --- | --- |

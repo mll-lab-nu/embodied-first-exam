@@ -97,9 +97,8 @@ ENTITY = ("Where an action names a robot (`entity`), one chunk commands one: `\"
           "type `T@E`.")
 CLIENT_HEAD = """\
 ### Client
-The service at `http://localhost:8000` speaks eai-standard/2.x with the match extension (`{proto}`;
-docs/protocol/standard_mode.md Part 5): the endpoints of every standard task, plus `/start` and `/ready`. The shared
-client is installed (`from rcb_client import Robot`).
+The service at `http://localhost:8000` speaks eai-standard/2.x with the match extension (`{proto}`): the endpoints
+of every standard task, plus `/start` and `/ready`. The shared client is installed (`from rcb_client import Robot`).
 
 """
 CLIENT_TAIL = (

@@ -92,4 +92,5 @@ steps (6 s) per episode.
   GPU; the simulator runs in its own container and does not count. Going over a cap can get a process killed (the CPU
   cap only slows you down). Usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 10 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
+- Steps: at most 300 control steps (6 s of robot time), then the episode ends.
 - Finish: if you never send `/finish`, the last episode is graded when your session ends.

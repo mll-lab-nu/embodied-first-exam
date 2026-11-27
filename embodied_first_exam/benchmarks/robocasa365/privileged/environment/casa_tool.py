@@ -449,7 +449,7 @@ TEXT_ERRATA = {
         " the door and press start, then move your hand away.",
     ("OpenDishwasher",
      "Open the dishwasher door."):
-        "Open the dishwasher door all the way.",
+        "Open the dishwasher door all the way, or nearly.",
     ("OrganizeCoffeeCondiments",
      "Pick the syrup bottle and honey bottle from the cabinet and place them next to the mug."):
         "Put the syrup bottle and the honey bottle from the cabinet on the counter next to the mug, and move your"

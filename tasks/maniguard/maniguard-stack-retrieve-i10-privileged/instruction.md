@@ -94,5 +94,5 @@ long fin-ray fingers.
   one GPU (18 GiB of its memory). Going over a cap can get a process killed (the CPU cap only slows you down). Usage:
   `/run/rcb-limits/usage.json`.
 - Resets: as many as you like (`s.reset()`).
-- Steps: an episode ends after 50,000 control steps (41.7 min of simulated time) as a failure, with
-  `s.status()["reason"]` = `runaway_guard`. There is no other step budget.
+- Steps: an episode ends after 50,000 control steps (41.7 min of simulated time) as a failure. There is no other step
+  budget.
