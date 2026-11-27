@@ -1,7 +1,7 @@
-"""Reference solution of a standard-mcp task: with EFE_MCP_ORACLE=1 (solution/solve.sh), `import rcb_client` gives
-rcb_client_mcp (the same Robot API through the efe-robot MCP tools) and `import ro_client` (an Embodied Olympics
-match's seat client) the task's own ro_client with its calls sent through the tools (ro_client_mcp), whatever
-sys.path the oracle sets up."""
+"""A standard or realtime task's reference solution through the MCP tools: with EFE_MCP_ORACLE=1 (solution/solve.sh),
+`import rcb_client` gives rcb_client_mcp (the same Robot API through the efe-robot MCP tools) and `import ro_client`
+(an Embodied Olympics match's seat client) the task's own ro_client with its calls sent through the tools
+(ro_client_mcp), whatever sys.path the oracle sets up."""
 import importlib.abc
 import importlib.util
 import os
