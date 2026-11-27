@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CPU-only self-test of what the eai-standard/2.4 layer adds to 2.2's crash recovery (operations/rcb_limited.Episode): the call
+"""CPU-only self-test of what the operations layer adds to the shared layer's crash recovery (operations/rcb_limited.Episode): the call
 watchdog's evidence and the physics-tick ledger, and of the HTTP layer's answer to malformed bodies (400, never a 500).
 No simulator, no GPU, no Docker; needs numpy. About 15 seconds.
 
@@ -97,7 +97,7 @@ def case_crash_between_calls_after_a_resume():
     assert child(d, "ok3,crash5")[0] == 139
     assert child(d, "crash_idle", RCB_MAX_RESUMES=5)[0] == 139      # resumed, then died between calls
     assert files(d) == set(), f"the marker outlived the resume: {files(d)}"
-    stale = os.path.join(d, "call-watchdog.json")                   # (the 2.4 layer before this test kept it: as if its
+    stale = os.path.join(d, "call-watchdog.json")                   # (the operations layer before this test kept it: as if its
     if os.path.exists(stale):                                       # deadline had passed by the time of the next start)
         json.dump({**json.load(open(stale)), "deadline": time.time() - 3600}, open(stale, "w"))
     rc, out = child(d, "ok3", RCB_MAX_RESUMES=5)
@@ -203,7 +203,7 @@ def case_malformed_bodies_are_400():
 
 
 def case_give_up_is_answered_and_a_repeated_camera_is_one():
-    """What the 2.4 layer shares with 2.2 (embodied_first_exam/standard/selftest.py has the full cases): a service that gave up
+    """What the operations layer shares with the shared layer (embodied_first_exam/standard/selftest.py has the full cases): a service that gave up
     answers 409 to every request and the client raises EpisodeOver at once (before: nothing listened, and Robot() waited
     out its timeout, an hour by default); the recorder renders and returns a camera named N times once, not N * N times."""
     import socket
@@ -240,7 +240,7 @@ def case_give_up_is_answered_and_a_repeated_camera_is_one():
 
 
 def case_standard_3_0_observe_hold_ring():
-    """eai-standard/3.0 in the 2.4 HTTP layer, on an in-process adapter: observe seconds > 0 is a 400, last_s reads the
+    """eai-standard/3.0 in the operations layer's HTTP layer, on an in-process adapter: observe seconds > 0 is a 400, last_s reads the
     frames recorded during submits (the time-based Recorder feeds the ring), a rows-free hold chunk runs the adapter's
     watch and answers as a submit with duration_s; rows + seconds is a 400."""
     import threading, urllib.request, urllib.error
@@ -281,7 +281,7 @@ def case_standard_3_0_observe_hold_ring():
         except urllib.error.HTTPError as exc:
             return exc.code, json.loads(exc.read())
     try:
-        assert spec["standard"] == "eai-standard/3.0" and spec["timing"]["recorder"]["fps"] == 10.0, spec.get("timing")
+        assert spec["operations"] is True and spec["timing"]["recorder"]["fps"] == 10.0, spec.get("timing")
         code, body = post("/observe", {"seconds": 2})
         assert code == 400 and "hold chunk" in body["error"] and st["step"] == 0, (code, body, st)
         code, (m, p) = post("/submit", {"type": "joint_position", "actions": [[0, 0]] * 20, "dt": 0.05})

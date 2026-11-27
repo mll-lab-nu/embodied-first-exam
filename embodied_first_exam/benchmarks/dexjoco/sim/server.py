@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for DexJoCo (docs/protocol/standard_mode.md): the adapter of the shared layer rcb_limited.py;
+"""eai-standard/3.0 sim service for DexJoCo (docs/protocol/standard_mode.md): the adapter of the shared layer rcb_limited.py;
 the simulator is rcb_dexjoco.Session (DexJoCo on MuJoCo 3.4, CPU physics, OSMesa rendering).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to
 /data/episode.jsonl.
@@ -49,7 +49,7 @@ MAX_FPS = 50
 # Images one call may return (cameras x frames, per-frame depth counted again), checked before anything is executed:
 # every frame is held until the response is sent. Measured on the layer's Recorder with 640x480 frames: 2.7 GB per
 # 1000 RGB frames and 5.1 GB per 1000 images of one camera with per-frame depth, on top of the simulator's 1.9 GB,
-# under the sidecar's 8 GiB cap (tasks/dexjoco/README.md, "frames per call"). The 2.1 services' 3000 would need more than the cap.
+# under the sidecar's 8 GiB cap (tasks/dexjoco/README.md, "frames per call"). The sidecar services' 3000 would need more than the cap.
 MAX_FRAMES = 1000
 CAM_W, CAM_H = 640, 480
 CTRL_HZ = 50.0
@@ -350,7 +350,6 @@ except OSError:
     TASK_TEXT = f"DexJoCo {TASK}"
 SPEC = {
     "protocol": L.PROTOCOL,
-    "protocol_compat": list(L.COMPAT),
     "simulator": "DexJoCo @ 8d23b0f on MuJoCo 3.4.0 (CPU physics, OSMesa rendering)",
     "robot": ROBOT_NAME,
     "task_text": TASK_TEXT,
@@ -426,7 +425,7 @@ SPEC = {
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0,
               "max_m": L.DEPTH_MAX_M, "frames_encoding": "uint16 mm, zlib", "noise": L.DEPTH_NOISE},
 }
-L.check_spec(SPEC)  # a spec that misses a 2.2 field or names a forbidden one never starts the episode
+L.check_spec(SPEC)  # a spec that misses a required field or names a forbidden one never starts the episode
 EP.scene_built()
 
 

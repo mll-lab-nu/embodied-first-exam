@@ -1,4 +1,4 @@
-"""eai-standard/2.3 sim service for Embodied Safety Exam's realtime tasks: the sidecar's entry point
+"""eai-standard/3.0 sim service for Embodied Safety Exam's realtime tasks: the sidecar's entry point
 (`python /srv/rcb_ese_rt.py`; tasks/embodied-safety-exam/README.md, "Realtime tasks").
 
 The standard tasks' adapter (server.py, rcb_ese.py) and the shared realtime layer (rcb_realtime.py, byte-identical to

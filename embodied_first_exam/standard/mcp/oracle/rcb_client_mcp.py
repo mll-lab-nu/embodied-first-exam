@@ -97,7 +97,7 @@ def _tool(name, **args):
         body = {k: v for k, v in out.items() if k not in ("episode_over", "http_status", "path", "tool_s")}
         return None, _json(409, body)
     if isinstance(out, dict) and out.get("reply_lost"):
-        # no reply reached the tool server: the client sees what it would have seen, the request failing (and, on 2.4,
+        # no reply reached the tool server: the client sees what it would have seen, the request failing (and, on the operations layer,
         # GET /operations/<id> answers from the record the server fetched)
         op = out.get("operation")
         if isinstance(op, dict) and (op.get("operation_id") or op.get("id")):

@@ -8,12 +8,12 @@
   `tasks/<benchmark>/<task>/`.
 - `standard/`: the standard-mode client and service layers (docs/protocol/standard_mode.md). Tasks do not carry copies
   of them: their Dockerfiles take the files from the files-only image `standard-files` (`images/standard-files/`).
-  - the top level: the eai-standard/2.2 layer (`rcb_limited.py`, `rcb_client.py`, `rcb1.py`, `run.sh`) and its tests;
-  - `sidecar/`: the 2.1 client and the standard grader most 2.1 and realtime tasks share; `sidecar/clients/<name>/`: older
-    2.1 clients some benchmarks still use, each named by the start of its sha256;
-  - `operations/`: the 2.4 layer (`rcb_limited.py`, `rcb_client.py`, `selftest.py`);
-  - `realtime/`: the 2.3 realtime layer (`rcb_realtime.py`, its client);
-  - `agent_end/`: the agent-ended episode layer of 2.2 and 2.4 (`rcb_agent_end.py`, files-only image `agent-end-files`)
+  - the top level: the shared layer (`rcb_limited.py`, `rcb_client.py`, `rcb1.py`, `run.sh`) and its tests;
+  - `sidecar/`: the sidecar client and the standard grader most sidecar and realtime tasks share;
+    `sidecar/clients/<name>/`: the clients some benchmarks use (`robocasa`, `kinder`, `compact`);
+  - `operations/`: the operations layer (`rcb_limited.py`, `rcb_client.py`, `selftest.py`);
+  - `realtime/`: the realtime layer (`rcb_realtime.py`, its client);
+  - `agent_end/`: the agent-ended episode layer of the shared and the operations layers (`rcb_agent_end.py`, files-only image `agent-end-files`)
     and the tests of agent-ended episodes on every layer;
   - `mcp/`: the `efe-robot` MCP server that offers each standard and realtime task's robot service as tools, and
     `inject.py`, which `normalize` uses to write it into each task.

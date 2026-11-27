@@ -1,6 +1,6 @@
-"""The efe-robot MCP server on the toy eai-standard/2.1 (standard) and 2.3 (realtime) services (CPU, ~40 s):
+"""The efe-robot MCP server on the toy sidecar (standard) and realtime services (CPU, ~40 s):
 
-0. 2.1, standard mode (a benchmark's own rcb_service.py): a closed-loop oracle over HTTP and through the tools leaves
+0. The sidecar layer, standard mode (a benchmark's own rcb_service.py): a closed-loop oracle over HTTP and through the tools leaves
    the same record and verdict.
 
 1. API path vs MCP path: an oracle written for the realtime rcb_client (a plan with `at`, the robot's own
@@ -27,7 +27,7 @@ ORACLE = textwrap.dedent('''
     import time
     import numpy as np
     r = Robot(); spec = r.spec()
-    assert spec["protocol"] == "eai-standard/2.3", spec["protocol"]
+    assert spec["protocol"] == "eai-standard/3.0" and spec["timing"]["realtime"], spec["protocol"]
     o = r.get_obs(cameras=[])
     print("now", o.meta["proprio"]["now"])
     dx = 1 / 64                             # exact in binary: x reaches 1 at the 64th row in both runs
@@ -48,7 +48,7 @@ ORACLE_21 = textwrap.dedent('''
     from rcb_client import Robot
     import numpy as np
     r = Robot(); spec = r.spec()
-    assert spec["protocol"] == "eai-standard/2.1", spec["protocol"]
+    assert spec["protocol"] == "eai-standard/3.0" and not spec.get("timing", {}).get("realtime"), spec["protocol"]
     o = r.get_obs(cameras=["top"])
     x = o.meta["proprio"]["now"][0]
     print("now", x, int(o.last["top"].sum()))
@@ -78,7 +78,7 @@ def tools_dir(tmp):
 
 def manifest(tmp):
     m = {"manifest": "efe-mcp-manifest/1", "kind": "rcb", "suite": "toy", "task": "toy-realtime",
-         "protocol": "eai-standard/2.3", "realtime": True, "tools": ["spec", "observe", "submit", "finish"]}
+         "protocol": "eai-standard/3.0", "realtime": True, "tools": ["spec", "observe", "submit", "finish"]}
     p = tmp / "manifest.json"; p.write_text(json.dumps(m)); return p
 
 
@@ -97,11 +97,11 @@ def equivalence(tmp, tools, man):
 
 
 def standard_21(tmp):
-    """The same toy robot behind the 2.1 service itself (a benchmark's own 2.1 service, standard mode)."""
+    """The same toy robot behind the sidecar service itself (a benchmark's own sidecar service, standard mode)."""
     d = tmp / "v21"; d.mkdir()
     shutil.copy(STD / "sidecar/rcb_client.py", d / "rcb_client.py"); shutil.copy(STD / "rcb1.py", d / "rcb1.py")
     m = {"manifest": "efe-mcp-manifest/1", "kind": "rcb", "suite": "toy", "task": "toy-standard",
-         "protocol": "eai-standard/2.1", "realtime": False, "tools": ["spec", "observe", "submit", "finish"]}
+         "protocol": "eai-standard/3.0", "realtime": False, "tools": ["spec", "observe", "submit", "finish"]}
     (d / "manifest.json").write_text(json.dumps(m))
     (d / "oracle.py").write_text(ORACLE_21)
     cmd = [sys.executable, str(HERE / "equivalence.py"),
@@ -193,7 +193,7 @@ def rules_v3(tmp):
     req = lambda path, body: call(svc, path, body)  # noqa: E731
 
     sp = svc.spec
-    assert sp["standard"] == "eai-standard/3.0" and sp["timing"]["recorder"]["cameras"] == ["top"], sp["timing"]
+    assert sp["protocol"] == "eai-standard/3.0" and sp["timing"]["recorder"]["cameras"] == ["top"], sp["timing"]
     assert "first submit" in sp["timing"]["clock"], sp["timing"]["clock"]
     code, m, _ = req("/observe", {"seconds": 1.0})
     assert code == 400 and "never waits" in m["error"], (code, m)
@@ -220,7 +220,7 @@ def rules_v3(tmp):
     assert code == 409, (code, m)
     svc.on_sigusr1(); svc.poll()
 
-    # depth with last_s > 0 only for cameras the recorder keeps depth for (as 2.1 and 2.2/2.4): mixed cameras are a 400
+    # depth with last_s > 0 only for cameras the recorder keeps depth for (as every layer): mixed cameras are a 400
     t2 = toy.Toy(); t2.cameras = ["top", "side"]; t2.depth_cameras = ["top"]
     t2.spec = lambda: {"cameras": {"top": {"shape": [8, 8, 3]}, "side": {"shape": [8, 8, 3]}},
                        "action_types": {"joint_position": {"dim": 2, "layout": ["dx", "unused"]}}}
@@ -255,7 +255,7 @@ def main():
     print("ok realtime eai-standard/3.0 rules:", json.dumps(v3))
     tools, man = tools_dir(tmp), manifest(tmp)
     s21 = standard_21(tmp)
-    print("ok eai-standard/2.1 (standard): API path = MCP path:", ", ".join(s21["same"]), "identical; verdicts",
+    print("ok sidecar layer (standard): API path = MCP path:", ", ".join(s21["same"]), "identical; verdicts",
           s21["verdict"], "; evidence", s21["out"])
     s = equivalence(tmp, tools, man)
     lat = latency(tmp, tools, man)

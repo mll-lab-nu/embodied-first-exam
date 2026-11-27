@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for the RoboPaint brush tasks (ManiSkill 3.0.1 Panda with a brush; the mark is the task's
+"""eai-standard/3.0 sim service for the RoboPaint brush tasks (ManiSkill 3.0.1 Panda with a brush; the mark is the task's
 brush model in rcb_brush.py; see docs/protocol/standard_mode.md). Owns the scene and the sheets. HTTP surface (rcb_limited.py, the
 services' shared layer): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies, RCB1 responses: videos / frames / depth /
 proprio as raw blobs, never base64), POST /kinematics (stateless FK / IK of the robot's model). Logs every call to /data/episode.jsonl.
@@ -265,7 +265,7 @@ TIP = M.TOOL_FRAME
 PROPRIO = (LAYOUT + ["tip_x", "tip_y", "tip_z", "tip_qw", "tip_qx", "tip_qy", "tip_qz"]          # the 2.0 columns, unchanged
            + [f"{j}_vel" for j in LAYOUT] + [f"{j}_effort" for j in LAYOUT])                      # 2.2
 SPEC = {
-    "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "maniskill 3.0.1 (SAPIEN 3.0.3, PhysX CPU) + a virtual brush",
+    "protocol": PROTOCOL, "simulator": "maniskill 3.0.1 (SAPIEN 3.0.3, PhysX CPU) + a virtual brush",
     "robot": ROBOT_TEXT,
     "task_text": TASK_TEXT,
     "control_hz": CTRL_HZ, "max_video_fps": MAX_VIDEO_FPS, "physics_substeps": SUBSTEPS, "physics_hz": CTRL_HZ * SUBSTEPS, "max_chunk_s": MAX_CHUNK_S,
@@ -577,7 +577,7 @@ def _end_from_signal():
     os._exit(0)          # run.sh keeps the container up for the collect hook
 
 
-L.check_spec(SPEC)                     # a spec that misses a 2.2 field or names a forbidden one never serves
+L.check_spec(SPEC)                     # a spec that misses a required field or names a forbidden one never serves
 EP.scene_built()                       # the startup watchdog stands down: a long resume replay is not a hang
 S.record_start()                       # before begin(): a resume's journal replay is part of the recorded trajectory
 resumed = EP.begin(state=E, step=S.step, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC,

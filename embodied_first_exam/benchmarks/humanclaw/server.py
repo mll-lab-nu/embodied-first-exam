@@ -1,4 +1,4 @@
-"""eai-standard/2.1 sim service for HumanCLAW -- the standard-mode sidecar's entry point (`python /srv/server.py`).
+"""eai-standard/3.0 sim service for HumanCLAW -- the standard-mode sidecar's entry point (`python /srv/server.py`).
 
 The simulator-specific half only: `HumanClaw` implements rcb_service.Sim for one frozen episode (hc_core.Session).
 The protocol, the episode, crash recovery and the finalize live in rcb_service.py, which imports no simulator.

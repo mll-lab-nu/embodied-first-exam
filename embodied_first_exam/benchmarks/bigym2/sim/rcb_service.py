@@ -1,4 +1,4 @@
-"""eai-standard/2.1 sim service: the simulator-agnostic half of a standard-mode sidecar (docs/protocol/README.md §4,
+"""eai-standard/3.0 sim service: the simulator-agnostic half of a standard-mode sidecar (docs/protocol/README.md §4,
 docs/protocol/standard_mode.md).
 
 The robot as a service: the agent reaches a simulator it cannot open over HTTP. GET /spec, GET /status, POST /observe
@@ -98,7 +98,7 @@ import numpy as np
 
 import rcb1
 
-PROTOCOL = "eai-standard/2.1"
+PROTOCOL = "eai-standard/3.0"
 MAX_BODY = 64 * 1024 * 1024           # request bodies above this are refused (413)
 MAX_RESPONSE = 256 * 1024 * 1024      # responses above this drop frames/ and depth/ (meta.degraded says so)
 MAX_VIDEO_FPS = 30
@@ -140,8 +140,7 @@ SUCCESS_SIGNAL_NOTE = ("hidden: the service never tells you whether you have suc
                        "episode; POST /finish (JSON {}) ends it (if you never call it, the end of your session does) and "
                        "the episode is judged then, as the instruction's Goal says: on how things stand at that moment, "
                        "and on any steps the Goal says count as they happen; after /finish every call is refused (409)")
-# eai-standard/3.0 (module docstring): the rules on top of every 2.x layer, the standard recorder's rate and length
-EAI_STANDARD = "eai-standard/3.0"
+# the standard recorder's rate and length (module docstring)
 CAMERA_FPS = float(os.environ.get("RCB_CAMERA_FPS") or 10.0)    # the recorder: frames per robot second (all cameras)
 LOOKBACK_S = float(os.environ.get("RCB_LOOKBACK_S") or 3.0)     # robot seconds the recorder's ring keeps
 DEPTH_PAST = ("depth with last_s > 0: the recorder keeps no depth for these cameras (spec timing.recorder.depth lists "
@@ -537,7 +536,7 @@ class Service:
     # ------------------------------------------------------------------ spec and status
     def _spec(self) -> dict:
         own = self.sim.spec()
-        core = {"protocol": PROTOCOL, "standard": EAI_STANDARD, "control_dt": self.sim.control_dt, "max_control_steps": self.cap,
+        core = {"protocol": PROTOCOL, "control_dt": self.sim.control_dt, "max_control_steps": self.cap,
                 "max_chunk_s": self.max_chunk_s, "max_video_fps": MAX_VIDEO_FPS,
                 "max_frames_per_call": self.max_frames, "proprio_layout": list(self.sim.proprio_layout),
                 "budget": {"reset": self.reset_budget, "wall_clock_s": self.wall_clock_s},

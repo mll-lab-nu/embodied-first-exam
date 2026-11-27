@@ -1,4 +1,4 @@
-"""Embodied Safety Exam realtime verifier (eai-standard/2.3): the standard tasks' grader (grade_ese.py, byte-identical
+"""Embodied Safety Exam realtime verifier (eai-standard/3.0): the standard tasks' grader (grade_ese.py, byte-identical
 to their tests/grade.py: the same verdict, the same reward.json fields) plus the clock's record. Needs only Python.
 
 success is decided exactly as in the standard tasks (the live episode's verdict, graded_by "live", no infrastructure

@@ -1,4 +1,4 @@
-"""Standard-mode verifier (eai-standard/2.2): reads what the sim service (which the agent could not touch) wrote:
+"""Standard-mode verifier (eai-standard/3.0): reads what the sim service (which the agent could not touch) wrote:
 /data/final.json (the live episode's verdict, crash recovery), /data/trajectory.npz, /data/replay.mp4. success = the
 live episode's success: the settle window that ended the episode passed on the service's simulator (final.json
 "graded_by": "live"; nothing is replayed: docs/protocol/README.md H.4), and no infrastructure

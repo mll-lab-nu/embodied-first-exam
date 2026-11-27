@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for the ABC Sim tasks (docs/protocol/standard_mode.md): the adapter of the shared layer
+"""eai-standard/3.0 sim service for the ABC Sim tasks (docs/protocol/standard_mode.md): the adapter of the shared layer
 rcb_limited.py (/srv/rcb_limited.py, from the shared standard files); the simulator is rcb_abc.Session (abc_sim on
 MuJoCo 3.6.0, CPU physics, EGL rendering). HTTP surface: GET /spec, GET /status, POST /observe, POST /submit,
 POST /kinematics, and POST /reset when the run grants resets (RCB_RESET_BUDGET; the standard tasks' default is 0).
@@ -235,7 +235,6 @@ def _link_T_site(site: str) -> list:
     return T.tolist()
 SPEC = {
     "protocol": L.PROTOCOL,
-    "protocol_compat": list(L.COMPAT),
     "simulator": "ABC Sim (abc_sim) on MuJoCo 3.6.0 (CPU physics; cameras rendered over EGL)",
     "robot": "two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) at a table",
     "task_text": TASK_TEXT,
@@ -312,7 +311,7 @@ if RESET_BUDGET:
         "/status and every meta add `episode`, `resets_left` and `control_steps_total` (all episodes); `control_steps` "
         "counts the current episode's."
     )
-L.check_spec(SPEC)  # a spec that misses a 2.2 field or names a forbidden one never starts the episode
+L.check_spec(SPEC)  # a spec that misses a required field or names a forbidden one never starts the episode
 EP.scene_built()
 
 

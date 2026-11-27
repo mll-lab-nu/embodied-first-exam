@@ -1,4 +1,4 @@
-"""eai-standard/2.x client (formerly rcb-limited/2.x) — the only thing a standard-mode agent gets (installed at /opt/tools/rcb_client.py).
+"""eai-standard/3.0 client — the only thing a standard-mode agent gets (installed at /opt/tools/rcb_client.py).
 
     from rcb_client import Robot
     r = Robot()                                   # finds the service (sim:8000, then localhost:8000), waits for warm-up
@@ -21,7 +21,7 @@ import numpy as np
 import requests
 import rcb1
 
-PROTOCOL = "eai-standard/2.1"
+PROTOCOL = "eai-standard/3.0"
 # the dtype of the action rows sent: float64 (MuJoCo replays bit-exactly) unless the task's image sets RCB_ACTION_DTYPE
 ACTION_DTYPE = np.dtype(os.environ.get("RCB_ACTION_DTYPE", "float64"))
 
@@ -92,7 +92,7 @@ class Robot:
                     r = requests.get(b + "/spec", timeout=(5, 30))
                     if r.status_code == 503: last = "warming up"; break
                     r.raise_for_status(); self.base = b; self._spec = r.json()
-                    assert str(self._spec.get("protocol", "")).startswith(("eai-standard/2.", "rcb-limited/2.")), self._spec.get("protocol")
+                    assert self._spec.get("protocol") == PROTOCOL, self._spec.get("protocol")
                     return
                 except requests.exceptions.RequestException as e:
                     last = e
@@ -109,7 +109,7 @@ class Robot:
         r = requests.post(self.base + path, data=body, headers={"Content-Type": "application/x-rcb1"}, timeout=(5, timeout))
         if r.status_code == 409:
             raise EpisodeOver(r.json().get("reason") if r.headers.get("Content-Type", "").startswith("application/json") else "episode finished")
-        if r.status_code == 500:   # a simulator error ends the episode (eai-standard/2.1 §4.6)
+        if r.status_code == 500:   # a simulator error ends the episode
             raise EpisodeOver("error")
         if r.status_code >= 400:
             try: err = r.json()

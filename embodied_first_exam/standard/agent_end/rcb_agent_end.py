@@ -1,4 +1,4 @@
-"""Agent-ended episodes for the eai-standard/2.2 layer (rcb_limited.py): an optional task feature (PROTOCOL §3 "Agent-ended
+"""Agent-ended episodes for the shared layer (rcb_limited.py): an optional task feature (PROTOCOL §3 "Agent-ended
 episodes", docs/protocol/standard_mode.md "Agent-ended episodes"). A task opts in in its `sim` service's environment:
 
   RCB_AGENT_END: "1"     the service never shows the task's success, a success never ends the episode, POST /finish (JSON {})
@@ -226,7 +226,7 @@ def make_handler(svc: Service):
             if self.path == "/status":
                 st = svc.hide(svc.status())
                 return self._json(200, {**st, "resumes": svc.episode.resumes} if svc.episode else st)
-            if self.path.startswith("/operations/") and finished(svc.state):   # 2.4: after /finish every call but
+            if self.path.startswith("/operations/") and finished(svc.state):   # operations: after /finish every call but
                 E = svc.state                                                  # GET /spec and /status is a 409
                 return self._json(409, {"error": "episode finished", "reason": E.get("reason")})
             return super().do_GET()

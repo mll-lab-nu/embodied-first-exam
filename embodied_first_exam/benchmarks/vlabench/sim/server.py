@@ -1,4 +1,4 @@
-"""eai-standard/2.1 sim service for VLABench -- the sidecar's entry point (`python /srv/server.py`).
+"""eai-standard/3.0 sim service for VLABench -- the sidecar's entry point (`python /srv/server.py`).
 
 The simulator-specific half only: `VLABench` implements rcb_service.Sim for one frozen instance (vlb_tool.Session).
 The protocol, the episode, crash recovery and the finalize live in rcb_service.py (copied from main's HumanoidBench

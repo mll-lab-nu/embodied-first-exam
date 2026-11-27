@@ -1,10 +1,10 @@
-"""eai-standard/2.3 sim service for ABC Sim's standard-realtime tasks -- the adapter behind the shared realtime layer
+"""eai-standard/3.0 sim service for ABC Sim's standard-realtime tasks -- the adapter behind the shared realtime layer
 (`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/README.md §3,
 docs/protocol/standard_mode.md Part 3).
 
 The simulator-specific half only: `AbcSim` implements rcb_service.Sim (the contract documented in rcb_service.py, a
 byte-identical copy of the other realtime benchmarks') for one frozen instance, on the benchmark's tooling module
-rcb_abc.Session -- the same scene, action and success rule as the standard twin's eai-standard/2.2 service. The
+rcb_abc.Session -- the same scene, action and success rule as the standard twin's eai-standard/3.0 service. The
 protocol, the clock, the plan, the episode, crash recovery and the finalize are rcb_realtime.py's and rcb_service.py's.
 
 Grading: the verdict is the live episode's, judged by the layer from step(): the task's rule as Session.step applies it

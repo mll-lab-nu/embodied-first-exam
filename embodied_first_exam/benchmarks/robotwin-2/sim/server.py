@@ -1,4 +1,4 @@
-"""eai-standard/2.1 sim service for RoboTwin 2.0 (see docs/protocol/standard_mode.md).
+"""eai-standard/3.0 sim service for RoboTwin 2.0 (see docs/protocol/standard_mode.md).
 Owns the scene and the seed. HTTP surface: GET /spec, GET /status, POST /observe, POST /submit (both RCB1 bodies,
 RCB1 responses: videos / frames / depth / proprio as raw blobs, never base64). Logs every call to /data/episode.jsonl,
 keeps /data/final.json current, and on episode end grades the live episode: success = RoboTwin's check_success on the
@@ -20,7 +20,7 @@ os.environ["RCB_AGENT_TRACE_DIR"] = ""  # the service records the episode itself
 import rcb1  # noqa: E402
 import rcb_live  # noqa: E402
 
-PROTOCOL = "eai-standard/2.1"
+PROTOCOL = "eai-standard/3.0"
 DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)   # RCB_DATA / RCB_PORT: test hooks (never set in tasks)
 TASK = os.environ.get("RCB_TASK", "stack_blocks_two"); INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.json"))
 TASK_TEXT = json.load(open(INSTANCE)).get("text", TASK)
@@ -497,8 +497,7 @@ class Recorder:
 # (a rows-free hold chunk too) it keeps every camera's RGB frame every 1 / RCB_CAMERA_FPS of robot time, with the proprio
 # row and the step, in a ring of the last RCB_LOOKBACK_S robot seconds; an image the call's own Recorder grabbed at that
 # step is reused, not rendered again. A rows-free hold chunk {"type", "interpolate": "hold", "seconds": n} holds the
-# current target for n seconds (what /observe with seconds > 0 did before).
-EAI_STANDARD = "eai-standard/3.0"
+# current target for n seconds.
 HOLD_HINT = ('observe never lets time pass (eai-standard/3.0): to let n seconds pass, submit a hold chunk {"type": <type>, '
              '"interpolate": "hold", "seconds": n} with no rows; last_s = n returns the frames recorded in the last n seconds')
 DEPTH_PAST = ("depth with last_s > 0: the recorder keeps no depth for these cameras (spec timing.recorder.depth lists "
@@ -588,7 +587,6 @@ def _last_s(meta: dict) -> float:
     return v
 
 
-SPEC["standard"] = EAI_STANDARD
 SPEC["timing"] = {"recorder": {"cameras": RING_CAMS, "fps": round(1.0 / (RING_DT * RING_EVERY), 3), "buffer_s": RING_S,
                                "records": "during /submit", "depth": []}}
 

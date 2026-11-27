@@ -1,4 +1,4 @@
-"""Standard-mode sim service for the RoboCasa-series tasks (eai-standard/2.1): robot as a service.
+"""Standard-mode sim service for the RoboCasa-series tasks (eai-standard/3.0): robot as a service.
 
 Derived from the MuJoCo service (embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py, via
 embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py) and identical to it in protocol and lifecycle: GET /spec, GET /status, POST /observe, POST /submit, binary RCB1 responses,
@@ -10,8 +10,7 @@ from the collect hook ends the episode, /data evidence. Differences, all from ro
 - a hold chunk (/submit {"interpolate": "hold", "seconds": n}, no rows; eai-standard/3.0) holds the robot still
   (S.hold_targets(): delta channels zero, the rest kept); /observe only reads (seconds > 0 is a 400);
 - cameras are the robot's own (they move with its base), so every response carries their current calibration;
-- protocol v1.0 items the MuJoCo service gets in the migration (docs/protocol/README.md §7): the eai-standard/2.1 name, a
-  simulator error (500) ends the episode with reason "error", an oversized body is answered with 413.
+- as the MuJoCo service: a simulator error (500) ends the episode with reason "error", an oversized body is answered with 413.
 
 What the agent gets: camera RGB (+ depth) with each camera's calibration, the robot's own joints, end-effector
 positions and last command, and the task's instruction. Never an object's pose, the scene layout or the success check.
@@ -58,7 +57,7 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb1  # noqa: E402
 
-PROTOCOL = "eai-standard/2.1"
+PROTOCOL = "eai-standard/3.0"
 DATA = os.environ.get("RCB_DATA", "/data")  # the evidence directory (the variable is for tests; tasks use /data)
 os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
 TOOL = importlib.import_module(os.environ.get("RCB_TOOL", "casa_tool"))
@@ -225,7 +224,7 @@ def _give_up(reason: str, infra: bool) -> None:
 
 def _refuse_forever(reason: str, infra: bool) -> None:
     """After a give-up: answer every request 409 {"error", "reason", "gave_up": true, "infra_error"} until the container is
-    removed (as the MuJoCo service's and the 2.2 layer's refuse_forever), so the agent's client stops at once
+    removed (as the MuJoCo service's and the shared layer's refuse_forever), so the agent's client stops at once
     (EpisodeOver) instead of waiting out its timeout for a service that will never serve. The verdict is on disk
     already; this never changes it."""
     body = json.dumps({"error": "the sim service gave up on this episode and will not serve it", "reason": reason,
@@ -594,8 +593,7 @@ class Recorder:
 # (a rows-free hold chunk too) it keeps every camera's RGB frame every 1 / RCB_CAMERA_FPS of robot time, with the proprio
 # row and the step, in a ring of the last RCB_LOOKBACK_S robot seconds; an image the call's own Recorder grabbed at that
 # step is reused, not rendered again. A rows-free hold chunk {"type", "interpolate": "hold", "seconds": n} holds the
-# current target for n seconds (what /observe with seconds > 0 did before).
-EAI_STANDARD = "eai-standard/3.0"
+# current target for n seconds.
 HOLD_HINT = ('observe never lets time pass (eai-standard/3.0): to let n seconds pass, submit a hold chunk {"type": <type>, '
              '"interpolate": "hold", "seconds": n} with no rows; last_s = n returns the frames recorded in the last n seconds')
 DEPTH_PAST = ("depth with last_s > 0: the recorder keeps no depth for these cameras (spec timing.recorder.depth lists "
@@ -700,7 +698,6 @@ def _last_s(meta: dict) -> float:
     return v
 
 
-SPEC["standard"] = EAI_STANDARD
 SPEC["timing"] = {"recorder": {"cameras": RING_CAMS, "fps": round(1.0 / (RING_DT * RING_EVERY), 3), "buffer_s": RING_S,
                                "records": "during /submit", "depth": []}}
 

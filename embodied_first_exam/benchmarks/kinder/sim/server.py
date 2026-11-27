@@ -1,4 +1,4 @@
-"""eai-standard/2.1 sim service for KinDER -- the sidecar's entry point (`python /srv/server.py`).
+"""eai-standard/3.0 sim service for KinDER -- the sidecar's entry point (`python /srv/server.py`).
 
 The simulator-specific half only: one adapter per KinDER robot implements rcb_service.Sim for one frozen instance
 (`make` picks it by the robot in the scene); the protocol, the episode, crash recovery and the finalize live in

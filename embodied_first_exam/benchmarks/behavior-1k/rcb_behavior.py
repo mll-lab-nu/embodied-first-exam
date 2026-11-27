@@ -839,7 +839,7 @@ class PrimitiveError(RuntimeError):
     """A primitive could not be planned or executed (the episode is still alive unless said otherwise)."""
 
 
-# --------------------------------------------------------------------------- rcb-limited/2.2 inputs: geometry helpers
+# --------------------------------------------------------------------------- shared-layer inputs: geometry helpers
 GL2CV = np.diag([1.0, -1.0, -1.0, 1.0])   # camera frame, OpenGL axes (x right, y up, z back) -> OpenCV (x right, y down, z forward)
 DEPTH_MAX_M = 65.535                      # z-depth beyond this reads 0 (as the limited service's uint16-millimetre encoding)
 KIN_TOL_POS_M, KIN_TOL_ROT_RAD, KIN_MAX_ITERS = 0.001, 0.01, 200   # IK defaults
@@ -1910,7 +1910,7 @@ class Session:
         imageio.imwrite(str(path.with_suffix(".last.png")), frames[-1])
         return {**self.status(), "n_frames": len(frames), "video": str(path)}
 
-    # ---- rcb-limited/2.2 inputs, the same in both modes (the limited service imports this module): camera calibration and
+    # ---- shared-layer inputs, the same in both modes (the limited service imports this module): camera calibration and
     # mounting, depth, the robot's spec sheet, its measured state, stateless kinematics. Nothing here steps physics or
     # changes the simulator state: cameras and depth read what the renderer produced, kinematics is math on the robot model.
     TCP_FRAMES = {"left": "left_tcp", "right": "right_tcp"}

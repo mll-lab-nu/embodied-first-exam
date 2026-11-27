@@ -1,5 +1,4 @@
-"""eai-standard/2.2 client (formerly rcb-limited/2.x) — the only thing a standard-mode agent gets (installed at
-/opt/tools/rcb_client.py).
+"""eai-standard/3.0 client — the only thing a standard-mode agent gets (installed at /opt/tools/rcb_client.py).
 
     from rcb_client import Robot
     r = Robot()                                  # finds the service (sim:8000, then localhost:8000), waits for warm-up
@@ -42,8 +41,7 @@ import numpy as np
 import requests
 import rcb1
 
-PROTOCOL = "eai-standard/2.2"         # also talks to 2.0 / 2.1 services (they ignore depth and send no frame metadata)
-ACCEPTED = ("eai-standard/2.", "rcb-limited/2.")   # every 2.x service, under the protocol's current and former name
+PROTOCOL = "eai-standard/3.0"
 
 
 class EpisodeOver(RuntimeError):
@@ -99,7 +97,7 @@ class Result:
             elif name.startswith("last/") and kind == "array": self.last[name[5:]] = data
             elif name.startswith("last_depth/") and kind == "array": self.last_depth[name[11:]] = np.asarray(data, dtype=np.float32)
             elif name.startswith("depth_frames/") and p.get("codec") == "zlib": self.depth[name[13:]] = _decode_depth_frames(p)
-            elif name.startswith("depth/") and kind == "array": self.depth[name[6:]] = np.asarray(data, dtype=np.float32)   # 2.1 form
+            elif name.startswith("depth/") and kind == "array": self.depth[name[6:]] = np.asarray(data, dtype=np.float32)   # the sidecar layer's form
             elif name.startswith("extrinsic_cv/") and kind == "array": self.extrinsic_cv[name[13:]] = data
             elif name == "proprio": self.proprio = data
             elif name == "frame_step": self.frame_step = data
@@ -156,8 +154,8 @@ class Robot:
                     if r.status_code == 503: last = "warming up"; break
                     if r.status_code == 409: raise EpisodeOver(_over(r))   # it gave up for good: no wait brings it back
                     r.raise_for_status(); self.base = b; self._spec = r.json()
-                    if not str(self._spec.get("protocol", "")).startswith(ACCEPTED):
-                        raise RuntimeError(f"not a 2.x service: protocol {self._spec.get('protocol')!r}")
+                    if self._spec.get("protocol") != PROTOCOL:
+                        raise RuntimeError(f"not an {PROTOCOL} service: protocol {self._spec.get('protocol')!r}")
                     return
                 except requests.exceptions.RequestException as e:
                     last = e

@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for NVIDIA RoboLab (Isaac Lab 2.3 / Isaac Sim 5.1, Franka + Robotiq 2F-85; see
+"""eai-standard/3.0 sim service for NVIDIA RoboLab (Isaac Lab 2.3 / Isaac Sim 5.1, Franka + Robotiq 2F-85; see
 docs/protocol/standard_mode.md). Owns the scene. HTTP surface (rcb_limited): GET /spec, GET /status, POST /observe,
 POST /submit, POST /kinematics (RCB1 bodies, RCB1 responses: videos / frames / depth / proprio as raw blobs, never base64).
 Logs every call to /data/episode.jsonl and keeps /data/final.json current. Nothing about objects ever leaves this process.
@@ -71,7 +71,7 @@ def dump() -> None:
     E["dumped"] = True
     try:
         acts = S.record_stop(); E["live_sha"] = S.state_sha(); E["n_actions"] = int(len(acts))
-        S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "steps": E["step"],
+        S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/3.0)", "steps": E["step"],
                                                                             "reason": E["reason"], "resumes": EP.resumes})
     except Exception as exc:  # noqa
         traceback.print_exc(); log({"ev": "dump_error", "error": repr(exc)})
@@ -177,7 +177,7 @@ PROPRIO_LAYOUT = JOINTS8 + ["x", "y", "z", "qw", "qx", "qy", "qz", "gripper_cmd"
     [f"{j}_effort" for j in LAYOUT[:7]]
 
 SPEC = {
-    "protocol": PROTOCOL, "protocol_compat": list(L.COMPAT), "simulator": "robolab (Isaac Lab 2.3 / Isaac Sim 5.1)", "robot": "franka-robotiq-2f85",
+    "protocol": PROTOCOL, "simulator": "robolab (Isaac Lab 2.3 / Isaac Sim 5.1)", "robot": "franka-robotiq-2f85",
     "task_text": S.spec["text"], "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT.get(c, "static"), "resolution": [int(FIRST[c].shape[1]), int(FIRST[c].shape[0])],
                     "calibration_in_obs": OBS_CALIBRATION, "intrinsic_cv": CAM0[c]["intrinsic_cv"], "mount": CAM0[c]["mount"],
@@ -231,7 +231,7 @@ SPEC = {
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
               "frames_encoding": "uint16 mm, zlib", "noise": L.DEPTH_NOISE},
 }
-L.check_spec(SPEC)       # a spec that misses a 2.2 field or names a forbidden one never starts the episode
+L.check_spec(SPEC)       # a spec that misses a required field or names a forbidden one never starts the episode
 EP.scene_built()         # the watchdog stands down: a long resume replay below is not a hung build
 
 
@@ -260,7 +260,7 @@ def extrinsics(cams) -> dict:
 
 
 def video_fps(meta: dict) -> int:
-    """The request's frame rate (default 5): outside [1, 30] it is a 400 (2.1's rule), never a failed encode that would end
+    """The request's frame rate (default 5): outside [1, 30] it is a 400 (the sidecar layer's rule), never a failed encode that would end
     the episode."""
     fps = meta.get("video_fps")
     if fps is None:

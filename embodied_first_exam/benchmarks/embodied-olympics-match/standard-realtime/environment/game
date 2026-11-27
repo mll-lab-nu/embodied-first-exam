@@ -76,7 +76,7 @@ def arg(name, x):
 
 
 def main(a):
-    turn = call("spec").get("protocol", "").startswith("eai-standard-turn") if a[:1] == ["wait"] else None
+    turn = bool(call("spec").get("turn_based")) if a[:1] == ["wait"] else None
     if a == ["spec"]:
         show(call("spec"))
     elif a == ["status"]:

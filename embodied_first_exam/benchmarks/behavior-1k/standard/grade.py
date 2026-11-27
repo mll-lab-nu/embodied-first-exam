@@ -68,7 +68,7 @@ try:
            "sim_error": int(reason == "error"), "sim_crashed_on_call": int(reason == "sim_crashed_on_call"),
            "q_score": num("q_score"),   # progress (the challenge's q_score of the live episode's end state), 2026-09-27
            "goal_first_step": int(d.get("goal_first_step") or 0),   # the first step the bare BDDL goal held (re-grades)
-           # crash recovery (eai-standard/2.2): service starts, resumes, whether a resumed state differed and by how much,
+           # crash recovery (eai-standard/3.0): service starts, resumes, whether a resumed state differed and by how much,
            # and a give-up after too many crashes
            "sim_startups": int(d.get("sim_startups") or 0), "resumes": int(d.get("resumes") or 0),
            "resume_state_mismatch": int(bool(d.get("resume_state_mismatch"))), "resume_max_tcp_dev_m": num("resume_max_tcp_dev_m"),

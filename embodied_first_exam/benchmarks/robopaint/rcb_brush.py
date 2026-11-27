@@ -1419,7 +1419,7 @@ class Session:
         """Brush pointing straight down, rotated by `yaw` (rad) about the vertical axis relative to the start orientation."""
         return quat_mul([math.cos(yaw / 2), 0.0, 0.0, math.sin(yaw / 2)], self._down_quat)
 
-    # ---- the robot's spec sheet and a stateless kinematics query (eai-standard/2.2; the standard sidecar serves the same answers)
+    # ---- the robot's spec sheet and a stateless kinematics query (eai-standard/3.0; the standard sidecar serves the same answers)
     def _frame_index(self, frame: str) -> int:
         return self._tcp_idx if frame == TOOL_FRAME else self._links.index(frame)
 

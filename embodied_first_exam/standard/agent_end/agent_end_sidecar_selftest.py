@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Agent-ended episodes (PROTOCOL §3) in the 2.1 sidecar (every distinct rcb_service.py: embodied_first_exam/benchmarks/
-and the abc-sim realtime copy) and in the 2.3 realtime layer on top of it (rcb_realtime.py), in process on a toy
+"""Agent-ended episodes (PROTOCOL §3) in the sidecar layer (every distinct rcb_service.py: embodied_first_exam/benchmarks/
+and the abc-sim realtime copy) and in the realtime layer on top of it (rcb_realtime.py), in process on a toy
 simulator (numpy only, CPU, a few seconds):
 
   - feature off: POST /finish is a 404 and a success ends the episode as before;
@@ -330,12 +330,12 @@ for p in sorted([*(ROOT / "embodied_first_exam/benchmarks").glob("*/rcb_service.
 for h, path in copies.items():
     suite_21(load(path, f"rcb_service_{h[:8]}"), str(path.relative_to(ROOT)))
 
-# 2.3: the realtime layer on each distinct copy that realtime tasks use (the layer imports `rcb_service`)
+# the realtime layer on each distinct copy that realtime tasks use (the layer imports `rcb_service`)
 for h, path in copies.items():
     sys.modules["rcb_service"] = load(path, "rcb_service")
     R = load(STD / "realtime/rcb_realtime.py", "rcb_realtime")
     rcb1_max = R.MAX_BODY
-    tag = f"2.3 on {path.relative_to(ROOT)}"
+    tag = f"realtime on {path.relative_to(ROOT)}"
     for want, rows in ((True, [[0.5, 0], [0.5, 0]]), (False, [[1.0, 0], [-0.5, 0]])):
         d = tempfile.mkdtemp()
         try:
@@ -414,7 +414,7 @@ for h, path in copies.items():
 if fails:
     print(f"{len(fails)} failure(s)")
     sys.exit(1)
-print(f"ok agent-ended episodes in {len(copies)} distinct rcb_service.py (2.1) and the 2.3 realtime layer on each: "
+print(f"ok agent-ended episodes in {len(copies)} distinct rcb_service.py (sidecar) and the realtime layer on each: "
       "oracle + /finish 1, nop 0, undone 0, failure after success 0, step cap / limit, session end, events, events + "
       "failure (the event stands), settle "
       "window, resets, resume, realtime /finish stops the clock")

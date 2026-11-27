@@ -1,4 +1,4 @@
-"""Standard-mode verifier (eai-standard/2.1): grades what the sim service -- which the agent could not touch -- wrote.
+"""Standard-mode verifier (the sidecar layer): grades what the sim service -- which the agent could not touch -- wrote.
 
 /data/final.json holds the verdict of the live episode (docs/protocol/README.md H.4; owner, 2026-10-17): the sim
 service judged the episode it ran by the task's rule, after the agent's container was stopped; nothing is replayed.
@@ -11,7 +11,7 @@ infra_error = 1: no verdict on the agent (no or an unreadable final.json, the se
 finalize, it gave up after crashes not all inside the agent's calls, or the scene did not start at the frozen instance:
 instance_mismatch). Every branch writes success, live_success, graded_by_live = 1, replays = 0, infra_error and
 grader_error (PROTOCOL §4); sim_error = 1 when the graded episode ended on a simulator error (reason "error").
-A realtime service's final.json (eai-standard/2.3) also says how well its clock was kept; reward.json repeats
+A realtime service's final.json (/spec.timing.realtime) also says how well its clock was kept; reward.json repeats
 it (REALTIME below; PROTOCOL §3), and none of it decides the verdict.
 The first attempt (PROTOCOL §4, the no-reset performance), reported beside the verdict and never deciding it:
 first_success = the verdict when no reset was made, else final.json's first_success (0 when the service does not write
@@ -57,7 +57,7 @@ REALTIME = {"slowdown": float, "clock_s": float, "max_lag_s": float, "stalls": i
 
 
 def realtime_fields(d: dict) -> dict:
-    if not (d.get("realtime") or str(d.get("protocol")) == "eai-standard/2.3"):
+    if not d.get("realtime"):
         return {}
     return {"realtime": 1, **{k: kind(num(d.get(k))) for k, kind in REALTIME.items()}}
 

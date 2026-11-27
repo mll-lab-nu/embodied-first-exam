@@ -1,4 +1,4 @@
-"""eai-standard/2.1 sim service for HumanoidBench -- the sidecar's entry point (`python /srv/server.py`).
+"""eai-standard/3.0 sim service for HumanoidBench -- the sidecar's entry point (`python /srv/server.py`).
 
 The simulator-specific half only: `HumanoidBench` implements rcb_service.Sim for one frozen instance. The protocol,
 the episode, crash recovery and the finalize live in rcb_service.py, which imports no simulator. The verdict is the live

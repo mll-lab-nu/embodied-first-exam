@@ -1,4 +1,4 @@
-"""Embodied Safety Exam standard-mode verifier (eai-standard/2.1): grades what the sim service -- which the agent could not
+"""Embodied Safety Exam standard-mode verifier (eai-standard/3.0): grades what the sim service -- which the agent could not
 touch -- wrote. Needs only Python (the pinned client image); nothing here runs a simulator.
 
 /data/final.json   the live episode's verdict (owner, 2026-10-17: graded by the live episode, nothing

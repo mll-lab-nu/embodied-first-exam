@@ -1,4 +1,4 @@
-"""eai-standard/2.4 sim service for TopoGym (Genesis 1.2.1 on CUDA, Nyx RGB; docs/protocol/standard_mode.md): the TopoGym
+"""eai-standard/3.0 sim service for TopoGym (Genesis 1.2.1 on CUDA, Nyx RGB; docs/protocol/standard_mode.md): the TopoGym
 adapter of the shared layer rcb_limited.py (scripts/eai_standard/, copied unchanged into every standard task). Adapted from
 Embodied First Exam's RoboWits service. HTTP surface (rcb_limited.py): GET /spec, GET /status, POST /observe, POST /submit
 (RCB1 bodies, RCB1 responses), POST /kinematics (stateless FK / IK on the robot's own model). Logs every call to
@@ -391,7 +391,7 @@ WORLD_FRAME = (f"RoboARC's world frame: origin at the robot's root link ({BASE_L
 SPEC = {
     "gripper_space": S.gripper_space,
     "instance_binding_id": (S.runtime_binding or {}).get("binding_id"),
-    "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": f"topogym ({S.engine_name(True)}, Nyx RGB)", "robot": R_SPEC["name"],
+    "protocol": PROTOCOL, "simulator": f"topogym ({S.engine_name(True)}, Nyx RGB)", "robot": R_SPEC["name"],
     "task_text": S.spec["text"], "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S,
     "max_frames_per_call": MAX_FRAMES, "max_video_fps": CTRL_HZ,   # request_fields: video_fps an integer in [1, control_hz]
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT[c], "resolution": list(CAM_INFO[c]["image_size"]), "calibration_in_obs": OBS_CALIBRATION,

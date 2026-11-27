@@ -1,7 +1,7 @@
-"""eai-standard/2.2 (formerly rcb-limited/2.2): the HTTP layer, the protocol helpers and the crash recovery that every
-2.2 sim service shares (docs/protocol/standard_mode.md, Part 2; the 2.1 base is its Part 1).
+"""The shared layer of eai-standard/3.0: the HTTP layer, the protocol helpers and the crash recovery that every sim service
+on it shares (docs/protocol/standard_mode.md, Part 2; the sidecar layer is its Part 1).
 
-The source is embodied_first_exam/standard/rcb_limited.py; every 2.2 task's sim image takes it unchanged from the
+The source is embodied_first_exam/standard/rcb_limited.py; every task's sim image on this layer takes it unchanged from the
 files-only image standard-files (`COPY --from`, images/standard-files/FILES.json, scripts/files_image.py;
 ci_checks/check-tooling-identity.sh checks the pin).
 A service keeps its simulator to itself (scene, action execution, cameras, kinematic model) and hands
@@ -30,7 +30,7 @@ this module plain callables:
     clock()                -> int, control steps since the episode start (the frame's step index)
     do_kinematics(req)     -> dict; `req` is parse_kinematics(body, spec["kinematics"]); it must never step physics
 
-None of the callables may step physics. check_spec(SPEC) runs in serve(): a service whose /spec misses a 2.2 field, or
+None of the callables may step physics. check_spec(SPEC) runs in serve(): a service whose /spec misses a required field, or
 carries a field the protocol forbids (segmentation, object identities or sizes, physical parameters), does not start.
 Crash recovery (class Episode; PROTOCOL §4.7): every executed control step is journaled, every completed call
 checkpointed (rows, state hash, the robot's proprio row); after a crash compose restarts the container and the service
@@ -58,12 +58,11 @@ import numpy as np
 
 import rcb1
 
-PROTOCOL = "eai-standard/2.2"
-COMPAT = ["rcb-limited/2.0", "rcb-limited/2.1", "eai-standard/2.1"]   # requests written for these are served unchanged
+PROTOCOL = "eai-standard/3.0"
 MAX_BODY = 64 * 1024 * 1024
 MAX_RESP = 256 * 1024 * 1024
 DEPTH_MODES = ("none", "last", "frames")
-MAX_FRAMES_PER_CALL = 3000   # images one response may carry (cameras x frames, per-frame depth counted again): the 2.1 services' bound
+MAX_FRAMES_PER_CALL = 3000   # images one response may carry (cameras x frames, per-frame depth counted again): the sidecar layer's bound
 
 
 def check_frames(n_cameras: int, n_frames: int, depth_frames: bool = False, limit: int = MAX_FRAMES_PER_CALL) -> int:
@@ -86,7 +85,7 @@ def frames_per_call(steps: int, every: int) -> int:
     stride the Recorder is given (round(control_hz / video_fps)), not the requested fps: the count is of real captures."""
     return int(steps) // max(1, int(every)) + 2
 DEPTH_MAX_M = 65.535                                        # uint16 millimetres; a farther surface reads 0 (no reading)
-DEPTH_NOISE = os.environ.get("RCB_DEPTH_NOISE", "off").strip().lower()   # off | realsense (as rcb-limited/2.1)
+DEPTH_NOISE = os.environ.get("RCB_DEPTH_NOISE", "off").strip().lower()   # off | realsense
 _RNG = np.random.default_rng(int(os.environ.get("RCB_DEPTH_NOISE_SEED", "0")))
 PROPRIO_GROUPS_REQUIRED = ("joint_pos", "joint_vel", "gripper_opening", "tcp_pose", "joint_effort")
 PART_PREFIXES = ("video/", "frames/", "last/", "last_depth/", "depth_frames/", "depth/", "extrinsic_cv/")
@@ -95,8 +94,8 @@ PART_NAMES = ("proprio", "frame_step", "frame_time_s")
 
 # ---------------------------------------------------------------- depth
 def depth_mode(meta: dict) -> str:
-    """The request's depth mode: "none" | "last" | "frames" (2.2 field `depth`), or "legacy" for a 2.0/2.1 request that
-    sets `include_depth: true` and no `depth` (answered as 2.1 did: `depth/<cam>` float16 (N,H,W) metres)."""
+    """The request's depth mode: "none" | "last" | "frames" (field `depth`), or "legacy" for a request that
+    sets `include_depth: true` and no `depth` (answered as the sidecar layer does: `depth/<cam>` float16 (N,H,W) metres)."""
     d = meta.get("depth")
     if d is None or d is False:
         return "legacy" if meta.get("include_depth") is True else "none"
@@ -439,7 +438,7 @@ def static_positions(obj: Any, path: str = "static") -> list[str]:
     return out
 
 
-SPEC_REQUIRED = ("protocol", "protocol_compat", "simulator", "robot", "task_text", "control_hz", "cameras", "default_cameras",
+SPEC_REQUIRED = ("protocol", "simulator", "robot", "task_text", "control_hz", "cameras", "default_cameras",
                  "action_types", "proprio_layout", "proprio_groups", "static", "world", "budget", "robot_spec", "kinematics", "depth")
 
 
@@ -461,7 +460,7 @@ def forbidden_keys(obj: Any, path: str = "", skip: tuple = ()) -> list[str]:
 
 
 def check_spec(spec: dict) -> None:
-    """Raise if /spec is not a complete 2.2 spec or names anything forbidden (run at startup, before binding :8000)."""
+    """Raise if /spec is not a complete spec or names anything forbidden (run at startup, before binding :8000)."""
     miss = [k for k in SPEC_REQUIRED if k not in spec]
     if miss:
         raise RuntimeError(f"/spec misses {miss}")
@@ -968,8 +967,7 @@ def parse_request(path: str, meta, parts: dict):
     return A
 
 
-# ---------------------------------------------------------------- eai-standard/3.0: observe reads, hold chunks, the recorder
-EAI_STANDARD = "eai-standard/3.0"          # the semantics every layer serves (docs/protocol/standard_mode.md); /spec.standard
+# ---------------------------------------------------------------- observe reads, hold chunks, the recorder
 CAMERA_FPS = float(os.environ.get("RCB_CAMERA_FPS") or 10.0)       # the standard recorder's frame rate (robot time)
 LOOKBACK_S = float(os.environ.get("RCB_LOOKBACK_S") or 3.0)        # robot seconds of recorded frames kept (the ring)
 OBSERVE_SECONDS_GONE = ('observe never lets time pass (eai-standard/3.0): to let n seconds pass, submit a hold chunk '
@@ -977,7 +975,7 @@ OBSERVE_SECONDS_GONE = ('observe never lets time pass (eai-standard/3.0): to let
                         'recorded in the last n seconds')
 VIDEO_MODES = ("mp4", "frames", "both", "none")
 INTERPOLATIONS = ("linear", "hold")
-MAX_VIDEO_FPS = 30           # video_fps in [1, 30] (2.1's bound); an adapter with a faster control rate may go up to it,
+MAX_VIDEO_FPS = 30           # video_fps in [1, 30] (the sidecar layer's bound); an adapter with a faster control rate may go up to it,
                              # and one that declares /spec.max_video_fps is held to that instead
 PLANNER_TYPES = ("ee_pose",)  # rows the benchmark's planner executes (their dt is the planner's): no rows x dt cap here
 NUMBER_FIELDS = ("dt", "seconds", "video_fps", "last_s")
@@ -993,7 +991,7 @@ def _num(v) -> float | None:
 
 def _real(meta: dict, key: str) -> float | None:
     """meta[key] as a float: a JSON number (not a boolean, not a string), finite; None when absent or null. ValueError
-    (400) otherwise -- what every layer answers (the 2.1 sidecar, the 2.3 layer)."""
+    (400) otherwise -- what every layer answers (the sidecar layer, the realtime layer)."""
     v = meta.get(key)
     if v is None:
         return None
@@ -1133,12 +1131,11 @@ RING = StandardRing()
 
 
 def configure_standard(spec: dict, record_frames: bool = True) -> None:
-    """/spec.standard and /spec.timing.recorder (the standard recorder), once, when the handler is built. record_frames
+    """/spec.timing.recorder (the standard recorder), once, when the handler is built. record_frames
     False (Service(record_frames=False): an adapter whose rendering has effects of its own) turns the recorder off, as
-    the 2.1 sidecar's record_frames: /spec says it records nothing and last_s answers the current frame."""
+    the sidecar layer's record_frames: /spec says it records nothing and last_s answers the current frame."""
     RING.configure(spec)
     RING.enabled = bool(record_frames)
-    spec["standard"] = EAI_STANDARD
     timing = spec.get("timing")
     if not isinstance(timing, dict):
         timing = spec["timing"] = {}
@@ -1233,7 +1230,7 @@ def _observe_view(svc, meta: dict, last_s: float):
     parts = []
     hz = RING.hz or 1.0
     gap = (sel[-1][0] - sel[0][0]) / (len(sel) - 1) if len(sel) > 1 else 0
-    rate = hz / gap if gap and RING.hz else float(max(1, int(round(fps))))   # the frames' real rate, as 2.1's
+    rate = hz / gap if gap and RING.hz else float(max(1, int(round(fps))))   # the frames' real rate, as the sidecar layer's
     for c in cams:
         good = [f[1][c] for f in sel if f[1].get(c) is not None]
         hw = good[-1].shape[:2] if good else (1, 1)
@@ -1356,7 +1353,7 @@ class Service:
 def make_handler(svc: Service):
     configure_standard(svc.spec, getattr(svc, "record_frames", True))   # /spec.standard, timing.recorder; the ring
     if isinstance(svc.spec.get("budget"), dict):
-        svc.spec["budget"].setdefault("clock", CLOCK_NOTE)   # what time_s / time_left_s count from, in every 2.2 /spec
+        svc.spec["budget"].setdefault("clock", CLOCK_NOTE)   # what time_s / time_left_s count from, in every shared-layer /spec
 
     class H(BaseHTTPRequestHandler):
         def _send(self, code: int, ctype: str, body: bytes) -> None:
@@ -1378,7 +1375,7 @@ def make_handler(svc: Service):
         def parse_request(self):             # every request, of any method and path (a subclass's endpoints too)
             ok = super().parse_request()
             if ok:
-                self.path = urlparse(self.path).path   # a query string is ignored, as by 2.1 and 2.3
+                self.path = urlparse(self.path).path   # a query string is ignored, as by the sidecar and the realtime layers
                 svc.touch()
             return ok
 

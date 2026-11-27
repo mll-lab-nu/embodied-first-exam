@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for BEHAVIOR-1K v3.9.2 (OmniGibson on Isaac Sim, the 2026 challenge stack; R1Pro; see
+"""eai-standard/3.0 sim service for BEHAVIOR-1K v3.9.2 (OmniGibson on Isaac Sim, the 2026 challenge stack; R1Pro; see
 docs/protocol/standard_mode.md): the benchmark's adapter of the shared layer rcb_limited.py. Owns the scene. HTTP surface
 (rcb_limited.serve): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies and responses: videos / frames /
 depth / proprio as raw blobs, never base64), POST /kinematics. Logs every call to /out/episode.jsonl and keeps
@@ -92,7 +92,7 @@ def dump() -> None:
     E["dumped"] = True
     try:
         acts = E["acts"] if E.get("acts") is not None else S.record_stop(); E["n_actions"] = int(len(acts))
-        S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "steps": E["step"], "reason": E["reason"]})
+        S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/3.0)", "steps": E["step"], "reason": E["reason"]})
         # the settle window ran before this (end_live, on the request thread), never here: dump may run in the end
         # signal's thread, and Isaac steps only on the thread that serves the requests (a step from there deadlocked)
         if S.breakdown is not None and E["reason"] != S.end_reason:
@@ -338,7 +338,7 @@ def cam_spec(c: str) -> dict:
 
 
 SPEC = {
-    "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "behavior-1k 3.9.2 (OmniGibson / Isaac Sim)", "robot": "r1pro", "task_text": S.spec["text"],
+    "protocol": PROTOCOL, "simulator": "behavior-1k 3.9.2 (OmniGibson / Isaac Sim)", "robot": "r1pro", "task_text": S.spec["text"],
     "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
     "max_control_steps": int(M.MAX_STEPS),   # the tooling's runaway guard (PROTOCOL §4.5): the episode ends there, reason "step_guard" (agent-ended: "step_limit")
     "cameras": {c: cam_spec(c) for c in CAMS},

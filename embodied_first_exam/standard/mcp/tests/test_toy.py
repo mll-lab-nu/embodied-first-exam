@@ -1,4 +1,4 @@
-"""End-to-end test of the efe-robot MCP server against the toy eai-standard/2.2 service (CPU, ~10 s), run without
+"""End-to-end test of the efe-robot MCP server against the toy service on the shared layer (CPU, ~10 s), run without
 RCB_AGENT_END (the toy is an agent-ended adapter; without the feature a success ends its episode): the endpoint
 tools' request and reply, a hold chunk (no rows), a refusal, the end of the episode, finish refused where the success is not hidden (and sent where it is: test_agent_end.py, run at the end), a tool added from /spec (kinematics: tools/list after the first call), a pending call collected with
 observe(operation=...), one deadline per call (the wait for an earlier call included) and a call that finds an earlier
@@ -46,7 +46,7 @@ def main():
             pass
         sp = c.call("spec")
         spec = json.loads(pathlib.Path(sp["spec_file"]).read_text())
-        assert spec["protocol"].startswith("eai-standard/2."), spec
+        assert spec["protocol"] == "eai-standard/3.0", spec
         # a tool added from /spec: the toy serves /kinematics (spec `kinematics`), the manifest does not list it
         listed = {t["name"] for t in c.request("tools/list")["tools"]}
         assert "kinematics" in listed and "kinematics" in spec, listed

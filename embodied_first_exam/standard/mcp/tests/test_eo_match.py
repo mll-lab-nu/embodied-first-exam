@@ -42,7 +42,7 @@ class Fake:
                 "step": self.k, "t_sim": round(self.k * 0.1, 3)}
 
     def meta(self, **extra):
-        return {"protocol": "eai-standard/2.1+match/1.0", "step": self.k, "done": self.phase == "over",
+        return {"protocol": "eai-standard/3.0", "step": self.k, "done": self.phase == "over",
                 "score": [self.units, 0], "review_due": self.phase == "review", "match_over": self.phase == "over",
                 "phase": self.phase, "state": self.state(), **extra}
 
@@ -62,10 +62,10 @@ class Fake:
         """-> (code, meta or JSON, parts or None: None answers JSON)"""
         with self.lock:
             if ep == "spec":
-                return 200, {"protocol": "eai-standard/2.1+match/1.0", "standard": "eai-standard/3.0",
+                return 200, {"protocol": "eai-standard/3.0",
                              "action_types": {"hit": {"kind": "command", "fields": {"x": [0, 1]}}, "not_yet": []},
                              "timing": {"realtime": False}, "finish": "not offered (404)",
-                             "match": {"protocol": "eai-standard-turn/1" if self.turn else "eai-standard/2.2",
+                             "match": {"protocol": "eai-standard/3.0", "turn_based": self.turn,
                                        "actions": {"hit": {"x": [0, 1]}}, "big": "x" * 30000}}, None
             if ep in ("finish", "reset", "kinematics"):
                 return 404, {"error": f"unknown endpoint /{ep}"}, None

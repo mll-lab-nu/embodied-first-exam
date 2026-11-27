@@ -1,4 +1,4 @@
-"""Standard-mode sim service for the MetaWorld+ tasks (wire protocol eai-standard/2.1): robot as a service.
+"""Standard-mode sim service for the MetaWorld+ tasks (wire protocol eai-standard/3.0): robot as a service.
 
 Derived from the MuJoCo service (embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py) and identical to it in
 protocol and lifecycle: GET /spec, GET /status, POST /observe, POST /submit, binary RCB1 responses, no reset, crash
@@ -9,7 +9,7 @@ hook ends the episode, /data evidence. Differences, all from Meta-World:
 - a hold chunk (eai-standard/3.0: /submit {"interpolate": "hold", "seconds": n}, no rows) holds the hand still
   (S.hold_targets()), since actions are deltas; /observe only reads (`last_s`, the recorder);
 - cameras and proprioception come from the tool module (mw_tool.CAMERA_VIEWS, mw_tool.PROPRIO_LAYOUT);
-- like the MuJoCo service since the migration (docs/protocol/README.md §7): a simulator error (500) ends the episode with
+- like the MuJoCo service: a simulator error (500) ends the episode with
   reason "error", an oversized body is answered with 413. Requests are validated in full before any physics runs: a
   malformed one (`dt` / `seconds` / `video_fps` / `last_s` not a finite JSON number, `cameras` not a list of names, ...)
   is a 400 that changes nothing. A /finish body is never parsed (only its size is checked).
@@ -60,7 +60,7 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb1  # noqa: E402
 
-PROTOCOL = "eai-standard/2.1"
+PROTOCOL = "eai-standard/3.0"
 DATA = os.environ.get("RCB_DATA", "/data")  # RCB_DATA / RCB_PORT: test hooks (never set in tasks)
 os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
 TOOL = importlib.import_module(os.environ.get("RCB_TOOL", "mw_tool"))
@@ -537,8 +537,7 @@ class Recorder:
 # (a rows-free hold chunk too) it keeps every camera's RGB frame every 1 / RCB_CAMERA_FPS of robot time, with the proprio
 # row and the step, in a ring of the last RCB_LOOKBACK_S robot seconds; an image the call's own Recorder grabbed at that
 # step is reused, not rendered again. A rows-free hold chunk {"type", "interpolate": "hold", "seconds": n} holds the
-# current target for n seconds (what /observe with seconds > 0 did before).
-EAI_STANDARD = "eai-standard/3.0"
+# current target for n seconds.
 HOLD_HINT = ('observe never lets time pass (eai-standard/3.0): to let n seconds pass, submit a hold chunk {"type": <type>, '
              '"interpolate": "hold", "seconds": n} with no rows; last_s = n returns the frames recorded in the last n seconds')
 DEPTH_PAST = ("depth with last_s > 0: the recorder keeps no depth for these cameras (spec timing.recorder.depth lists "
@@ -622,7 +621,6 @@ def _last_s(meta: dict) -> float:
     return v
 
 
-SPEC["standard"] = EAI_STANDARD
 SPEC["timing"] = {"recorder": {"cameras": RING_CAMS, "fps": round(1.0 / (RING_DT * RING_EVERY), 3), "buffer_s": RING_S,
                                "records": "during /submit", "depth": []}}
 

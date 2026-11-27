@@ -1,8 +1,8 @@
-"""eai-standard/2.3, the realtime mode's protocol: the sim service of the `-realtime` tasks built on rcb_service.py
+"""The realtime layer of eai-standard/3.0: the sim service of the `-realtime` tasks built on rcb_service.py
 (docs/protocol/README.md §3, docs/protocol/standard_mode.md "Part 3 — Realtime mode"). Entry
-point of the sidecar: `python /srv/rcb_realtime.py` (the adapter is server.py's, unchanged). 2.3 is 2.2 plus the realtime
-capability, every 2.2 addition optional: this service is rcb_service's 2.1 service with the capability, and reports
-eai-standard/2.3.
+point of the sidecar: `python /srv/rcb_realtime.py` (the adapter is server.py's, unchanged). This service is
+rcb_service's sidecar service with the realtime capability (/spec.timing.realtime); the shared layer's optional
+capabilities (/kinematics, depth modes) are not served.
 
 It extends rcb_service.Service: the same endpoints, RCB1 frames, budgets (reset, wall clock), evidence, crash recovery
 and finalize. Only the time model differs. In standard mode time moves only inside calls; here the episode has a clock:
@@ -12,7 +12,7 @@ and finalize. Only the time model differs. In standard mode time moves only insi
   on one control step runs every control_dt x slowdown seconds of wall time, whether or not the agent sends anything,
   until the episode ends; the clock stops there.
 - The service keeps a plan: one target row per coming control step. /submit expands its chunk (rows dt apart, `linear`
-  or `hold`, exactly as 2.1 does) into control steps and writes it into the plan from control step `at` (default: the
+  or `hold`, exactly as the sidecar layer does) into control steps and writes it into the plan from control step `at` (default: the
   next one), replacing whatever was planned from there on, and answers at once. A chunk that arrives after its `at`
   loses the rows whose steps are gone (`late_steps`). When the plan runs out the last target is held (zero-order
   hold): a slow agent's robot keeps its last servo targets.
@@ -27,7 +27,7 @@ and finalize. Only the time model differs. In standard mode time moves only insi
   Every /submit answer adds duration_s (the robot seconds its plan covers), planned_duration_s and end_step.
 - /observe is a pure read (eai-standard/3.0): it answers at once, never waits and never moves time; `seconds` > 0 is
   refused (400). It never changes the plan.
-- `cameras = []` asks for no images at all (in 2.1 an empty list means every camera): a controller's proprio-only call.
+- `cameras = []` asks for no images at all (in the sidecar layer an empty list means every camera): a controller's proprio-only call.
 
 Cameras (the recorder; docs/protocol/standard_mode.md Part 3, "Cameras"). Every realtime service records: an adapter
 without the two hooks below is recorded on the simulator's thread (_ThreadCameras: the same ring, filled every
@@ -45,7 +45,7 @@ waits: last_s = 0 the current frame, last_s = n the last n seconds recorded; `se
 reaches the simulator thread and never starts the clock (the first /submit does). A /submit answers with the newest
 recorded frames. Answers with images carry frame_step (the control step the newest image shows).
 
-Grading is 2.1's: the verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17), judged by
+Grading is the sidecar layer's: the verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17), judged by
 this service, nothing replayed. Every executed control step's sim row is journaled (trajectory_live.f64) and the graded
 episode's rows are saved as the trajectory: the rows the simulator applied, not what was submitted, so the trajectory
 reproduces the live run however the timing went (the video is rendered from it). Evidence added (never visible to the agent):
@@ -86,7 +86,7 @@ seconds added to stalled_s).
 A crash resumes the same episode from its last checkpoint (one per second of robot time while the clock runs), paused.
 Whose failure it is (owner, 2026-10-17; docs/protocol/standard_mode.md Part 3): once the agent's first command has run (the first
 control step that runs a row the agent sent: the "first_command" event), the robot is executing the agent's commands, as inside a
-call in 2.1.
+call in the sidecar layer.
 - A simulator error raised by a control step after the first command ends the episode "error": the agent's 0
   (sim_error, no infra_error). Before the first command, a request's own failure (a render) and a reset whose scene
   does not rebuild are infrastructure (infra_error = 1).
@@ -118,7 +118,7 @@ import rcb1
 import rcb_service
 from rcb_service import MAX_BODY, Recorder, Refused, Service, bad_request
 
-PROTOCOL = "eai-standard/2.3"   # the realtime mode's protocol (PROTOCOL §3); rcb_service.py itself serves 2.1
+PROTOCOL = rcb_service.PROTOCOL   # eai-standard/3.0; the realtime capability is /spec.timing.realtime
 MAX_LAG_S = 0.5          # behind the clock by more than this: drop the debt (a stall) instead of catching up
 CHECKPOINT_S = 1.0       # robot time between checkpoints while the clock runs (the most a crash loses)
 HELD = (None, None, -1)  # a plan entry for a step with nothing planned: the simulator's hold row, taken at that step
@@ -406,7 +406,7 @@ class _ThreadCameras:
     """The recorder of an adapter without render_state() / render_from() (module docstring, "Cameras"): the simulator
     thread renders the cameras itself every `every` control steps (and at an episode's start and end) into the same
     ring of LOOKBACK_S robot seconds that _Cameras fills, so /observe is the same pure read for every realtime task.
-    Each render costs the clock its time, as the 2.3 watch did; THREAD_CAMERA_FPS sets how often."""
+    Each render costs the clock its time, as a watch did; THREAD_CAMERA_FPS sets how often."""
 
     def __init__(self, svc: "RealtimeService"):
         sim = svc.sim
@@ -507,7 +507,6 @@ class RealtimeService(Service):
     # ------------------------------------------------------------------ spec, status, evidence
     def _spec(self) -> dict:
         spec = super()._spec()
-        spec["protocol"] = PROTOCOL
         cdt = self.sim.control_dt
         spec["timing"] = {
             "realtime": True, "slowdown": self.slowdown, "control_dt": cdt,
@@ -525,7 +524,7 @@ class RealtimeService(Service):
                        "frame, meta.last_s = 0); `seconds` > 0 is refused",
             "max_ahead_steps": self.max_ahead,
             "no_images": "cameras = [] returns no images, only proprioception (the fastest call)",
-            # declared also without a recorder (as the 2.1 sidecar's record_frames = False): nothing is recorded
+            # declared also without a recorder (as the sidecar layer's record_frames = False): nothing is recorded
             "recorder": {"cameras": [], "fps": round(1.0 / (cdt * max(1, int(round(1.0 / (cdt * THREAD_CAMERA_FPS))))), 3),
                          "buffer_s": LOOKBACK_S,
                          "records": "nothing: last_s returns the current frame", "depth": []}}
@@ -652,7 +651,7 @@ class RealtimeService(Service):
     def _agent_crashes(self, ev: list[dict], died: list[dict], in_calls: int) -> int:
         """The deaths since the episode began that were simulator crashes inside a control step (a fatal signal's
         record whose crashing thread is in _step: not building the scene, resuming, resetting, rendering, finalizing)
-        after the agent's first command: the robot was running its commands, as inside a call in 2.1 (owner,
+        after the agent's first command: the robot was running its commands, as inside a call in the sidecar layer (owner,
         2026-10-17). A GPU or driver fault outside the step stays infrastructure too."""
         first = [e["ts"] for e in ev if e["ev"] == "first_command"]
         return sum(1 for d in died if d["fatal_signal"] and d["in_step"] and first and first[0] < d["restart_ts"])
@@ -972,7 +971,7 @@ class RealtimeService(Service):
             if not 0.0 <= last_s:
                 raise ValueError("last_s must be >= 0")
             view = self._view_rt(meta, "frames")
-            # depth with last_s > 0 (as 2.1 and 2.2/2.4): only for cameras the recorder keeps depth for
+            # depth with last_s > 0 (as every layer): only for cameras the recorder keeps depth for
             # (timing.recorder.depth); a service without a recorder answers last_s with the current frame
             if last_s > 0 and view[3] and self.recording:
                 keep = set(getattr(self.sim, "depth_cameras", ()) or ())
@@ -1024,7 +1023,7 @@ class RealtimeService(Service):
 
     def _ring_answer(self, pub: dict, cams: list[str], video: str, depth: bool, frames: list[dict], k0: int,
                      window: bool) -> tuple[dict, list]:
-        """The answer's meta and RCB1 parts from rendered frames (2.1's layout: frames/, video/, last/, depth/, proprio).
+        """The answer's meta and RCB1 parts from rendered frames (the sidecar layer's layout: frames/, video/, last/, depth/, proprio).
         Proprioception: the rows of the frames' steps (a window), else now's."""
         cdt, epoch = self.sim.control_dt, pub["epoch"]
         meta = dict(pub["meta"])
@@ -1034,13 +1033,13 @@ class RealtimeService(Service):
         if cams and frames:
             last = frames[-1]
             gap = (frames[-1]["step"] - frames[0]["step"]) / (len(frames) - 1) if len(frames) > 1 else 0
-            rate = 1.0 / (cdt * max(gap or self.cameras.every, 1e-9))   # the frames' real rate, as 2.1's
+            rate = 1.0 / (cdt * max(gap or self.cameras.every, 1e-9))   # the frames' real rate, as the sidecar layer's
             for c in cams:
                 rgbs = [f["rgb"][c] for f in frames]
                 if window and video in ("mp4", "both"):
                     parts.append((f"video/{c}", "mp4", rcb_service.encode_mp4(rgbs, rate),
                                   {"fps": round(rate, 3), "n": len(rgbs)}))
-                if video in ("frames", "both") or (not window and video == "mp4"):   # no time, no video: frames (2.1)
+                if video in ("frames", "both") or (not window and video == "mp4"):   # no time, no video: frames (as the sidecar layer)
                     parts.append(rcb1.frames_part(f"frames/{c}", rgbs))
                 parts.append(rcb1.array_part(f"last/{c}", last["rgb"][c]))
                 if depth and c in last["dep"]:
@@ -1098,7 +1097,7 @@ class RealtimeService(Service):
                 job.finish("raw", *self._reply_json(500, {"error": "service error", "detail": repr(exc)[:200]}))
 
     def _view_rt(self, meta: dict, default_video: str) -> tuple[list[str], int, str, bool]:
-        """2.1's _view, plus cameras = [] for no images."""
+        """The sidecar layer's _view, plus cameras = [] for no images."""
         none = isinstance(meta.get("cameras"), list) and not meta["cameras"]
         cams, fps, video, depth = self._view(meta, default_video)
         return ([], fps, "none", False) if none else (cams, fps, video, depth)
@@ -1254,7 +1253,7 @@ class RealtimeService(Service):
 
     def _rt_reset(self, meta: dict, job: _Job) -> None:
         self._reset_view(meta)                       # a refused reset (409, 400) changes nothing
-        out, prts = self._reset(meta, {})            # 2.1's reset: abandons the episode, a new one (paused)
+        out, prts = self._reset(meta, {})            # the sidecar layer's reset: abandons the episode, a new one (paused)
         self._stop_clock("reset")
         self._publish(True)                          # the new episode's start, for the readers and the cameras
         job.finish("rcb1", {**out, **self._realtime_counters()}, prts)
@@ -1411,10 +1410,9 @@ class RealtimeService(Service):
 
 def main(build, port: int = 8000) -> None:
     """rcb_service.main -- the start count, back-off, startup watchdog, resume -- with this service in place of
-    Service (RCB_SLOWDOWN: 1 = real time), and eai-standard/2.3 in everything it logs and writes."""
+    Service (RCB_SLOWDOWN: 1 = real time)."""
     RealtimeService.build_ref = (build.__module__, build.__name__)   # the camera worker builds its own copy
     rcb_service.Service = RealtimeService
-    rcb_service.PROTOCOL = PROTOCOL
     rcb_service.main(build, port)
 
 

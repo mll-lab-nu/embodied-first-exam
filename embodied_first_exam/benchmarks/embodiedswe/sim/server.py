@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for EmbodiedSWE (robobench on Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX; see
+"""eai-standard/3.0 sim service for EmbodiedSWE (robobench on Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX; see
 docs/protocol/standard_mode.md and tasks/embodiedswe/README.md "Standard mode"). Owns the scene. HTTP surface
 (rcb_limited): GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics (RCB1 bodies and responses).
 
@@ -185,7 +185,7 @@ if KIN_DEV > 0.002:
     raise RuntimeError(f"kinematic model: FK of the measured joints is {KIN_DEV * 1000:.2f} mm from the simulator's wrist/hand")
 STEP_S = 1.0 / CTRL_HZ
 SPEC = {
-    "protocol": PROTOCOL, "protocol_compat": list(L.COMPAT), "simulator": "embodiedswe (robobench on Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX)",
+    "protocol": PROTOCOL, "simulator": "embodiedswe (robobench on Isaac Lab 2.3.2 / Isaac Sim 5.1, GPU PhysX)",
     "robot": RIG.robot_spec()["name"], "task_text": TASK["text"] + ("\n\n" + TASK["success"] if TASK.get("success") else ""), "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "physics_hz": 1.0 / env.dt,
     "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: {"rgb": True, "depth": True, "mounted": v["what"], "resolution": [X.W, X.H], "calibration_in_obs": True,

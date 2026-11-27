@@ -1,10 +1,10 @@
-"""eai-standard/2.2 sim service for ManiGuard (BEHAVIOR-1K v3.7.2: OmniGibson on Isaac Sim 4.5; a fixed Franka Panda with
+"""eai-standard/3.0 sim service for ManiGuard (BEHAVIOR-1K v3.7.2: OmniGibson on Isaac Sim 4.5; a fixed Franka Panda with
 long fin-ray fingers; see docs/protocol/standard_mode.md): the benchmark's adapter of the shared layer rcb_limited.py. Owns the
 scene. HTTP surface (rcb_limited.serve): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies and responses:
 videos / frames / depth / proprio as raw blobs, never base64), POST /kinematics. Logs every call to /out/episode.jsonl and
 keeps /out/final.json current. Nothing about objects, the goal sphere's position or the safety verdicts leaves this process.
 
-Differences from the other 2.2 services, all from the simulator and the benchmark:
+Differences from the other shared-layer services, all from the simulator and the benchmark:
 - rows are streamed at the 20 Hz CONTROL rate (ManiGuard's evaluator: 20 Hz control and rendering, 120 Hz physics); the
   joint action is upstream's own 8-D action (7 arm joint targets + the binary gripper command, switched at the row); the
   tooling's Session feeds every row through upstream's own binarisation and clipping, exactly as its evaluator does;
@@ -90,7 +90,7 @@ def dump() -> None:
     live = {}
     try:
         acts = S.record_stop(); E["live_sha"] = S.state_sha(); E["n_actions"] = int(len(acts)); live = live_verdict()
-        S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "steps": E["step"], "reason": E["reason"]})
+        S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/3.0)", "steps": E["step"], "reason": E["reason"]})
     except Exception as exc:  # noqa
         traceback.print_exc(); log({"ev": "dump_error", "error": repr(exc)})
     n = int(E.get("episode_control_steps") or 0)
@@ -193,7 +193,7 @@ def cam_spec(c: str) -> dict:
 
 
 SPEC = {
-    "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "maniguard (BEHAVIOR-1K 3.7.2: OmniGibson on Isaac Sim 4.5)",
+    "protocol": PROTOCOL, "simulator": "maniguard (BEHAVIOR-1K 3.7.2: OmniGibson on Isaac Sim 4.5)",
     "robot": "franka-panda-longfinger", "task_text": os.environ.get("RCB_TASK_TEXT", S.prompt),
     "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: cam_spec(c) for c in CAMS},

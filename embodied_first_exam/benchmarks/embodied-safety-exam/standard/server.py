@@ -1,4 +1,4 @@
-"""eai-standard/2.1 sim service for Embodied Safety Exam -- the sidecar's entry point (`python /srv/server.py`).
+"""eai-standard/3.0 sim service for Embodied Safety Exam -- the sidecar's entry point (`python /srv/server.py`).
 
 The simulator-specific half only: `SafetyExam` implements rcb_service.Sim for one frozen instance through rcb_ese.Session
 (a Embodied Safety Exam episode and its control API). The protocol, the episode bookkeeping, crash recovery and the finalize

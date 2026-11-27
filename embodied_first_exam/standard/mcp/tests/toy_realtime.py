@@ -1,6 +1,6 @@
 """Toy services for the MCP tests around a two-number toy robot (x moves by each row's first number; success when x
-reaches 1): eai-standard/2.3 (realtime; realtime/rcb_realtime.py over a 2.1 rcb_service.py copy) or, with --standard,
-eai-standard/2.1 (that rcb_service.py itself, a benchmark's own 2.1 service).
+reaches 1): the realtime layer (realtime/rcb_realtime.py over an rcb_service.py copy) or, with --standard, the
+sidecar layer (that rcb_service.py itself, a benchmark's own sidecar service).
 
     RCB_DATA=/tmp/d python3 toy_realtime.py 8000 [--standard]
 """

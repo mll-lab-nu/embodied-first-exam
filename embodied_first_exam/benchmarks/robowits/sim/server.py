@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for RoboWits (Genesis 0.4.7, bimanual Marvin; docs/protocol/standard_mode.md): the RoboWits
+"""eai-standard/3.0 sim service for RoboWits (Genesis 0.4.7, bimanual Marvin; docs/protocol/standard_mode.md): the RoboWits
 adapter of the shared layer rcb_limited.py (embodied_first_exam/standard/). Served from the robowits-files image at
 /srv/server.py in every RoboWits standard task's sim sidecar.
 Owns the scene. HTTP surface (rcb_limited.py): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies, RCB1
@@ -98,7 +98,7 @@ def finalize() -> None:
         try:
             acts = S.record_stop(); E["live_sha"] = S.state_sha(); E["n_actions"] = int(len(acts))
             try:
-                S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "steps": E["step"],
+                S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/3.0)", "steps": E["step"],
                                                                                    "reason": E["reason"], "resumes": EP.resumes,
                                                                                    "final_window": E.get("final_window")})
             except Exception as exc:  # noqa — journal.f64 holds the same rows; the verdict does not depend on this file
@@ -280,7 +280,7 @@ PROPRIO_GROUPS = {   # name: [first column, count, meaning]
                              "clamped at the drives' force range: a motor-current analogue that rises when the arm pushes against something"],
 }
 SPEC = {
-    "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "robowits (Genesis 0.4.7)", "robot": "marvin-bimanual", "task_text": S.spec["text"],
+    "protocol": PROTOCOL, "simulator": "robowits (Genesis 0.4.7)", "robot": "marvin-bimanual", "task_text": S.spec["text"],
     "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S,
     "max_frames_per_call": MAX_FRAMES,
     # not a step budget (budget.steps stays null: the wall clock is the budget) but the technical cap of one episode

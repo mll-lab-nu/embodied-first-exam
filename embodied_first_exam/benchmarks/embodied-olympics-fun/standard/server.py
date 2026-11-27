@@ -1,4 +1,4 @@
-"""eai-standard/2.1 sim service for Embodied Olympics - Fun -- the sidecar's entry point (`python /srv/server.py`).
+"""eai-standard/3.0 sim service for Embodied Olympics - Fun -- the sidecar's entry point (`python /srv/server.py`).
 
 The simulator-specific half only: `RoboFun` implements rcb_service.Sim for one frozen instance, through rcb_rfo.Episode
 (the Unitree G1 or H1-2 in the family's venue, with the family's referee). The protocol, the episode, crash recovery

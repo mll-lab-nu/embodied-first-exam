@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for MuJoCo Playground's quadruped tasks (docs/protocol/standard_mode.md): the adapter of the
+"""eai-standard/3.0 sim service for MuJoCo Playground's quadruped tasks (docs/protocol/standard_mode.md): the adapter of the
 shared layer rcb_limited.py; the simulator is rcb_quadruped.Session (plain MuJoCo on the CPU).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics, and POST /reset when the run grants
 resets (RCB_RESET_BUDGET, the optional reset capability of docs/protocol/standard_mode.md / PROTOCOL §4.5; the quadrupeds'
@@ -218,7 +218,6 @@ _ctl = {"type": "joint position actuators (PD)", "kp_nm_per_rad": float(M.actuat
         "kd_nms_per_rad": float(M.dof_damping[6] - M.actuator_biasprm[0, 2])}
 SPEC = {
     "protocol": L.PROTOCOL,
-    "protocol_compat": list(L.COMPAT),
     "simulator": "MuJoCo 3.3.7 (MuJoCo Playground's scene, plain MuJoCo on the CPU)",
     "robot": S.robot["name"],
     "task_text": S.inst["text"],
@@ -284,7 +283,7 @@ if RESET_BUDGET:
         + ", and when your time is up the episode then running is the one graded. The wall clock never restarts. /status and every meta add `episode`, `resets_left` "
         "and `control_steps_total` (all episodes); `control_steps` counts the current episode's."
     )
-L.check_spec(SPEC)  # a spec that misses a 2.2 field or names a forbidden one never starts the episode
+L.check_spec(SPEC)  # a spec that misses a required field or names a forbidden one never starts the episode
 EP.scene_built()
 
 _RENDER = {}

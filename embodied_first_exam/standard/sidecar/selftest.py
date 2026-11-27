@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The eai-standard/2.1 service's first-attempt record (docs/protocol/standard_mode.md "Evidence and grading"; PROTOCOL
+"""The sidecar service's first-attempt record (docs/protocol/standard_mode.md "Evidence and grading"; PROTOCOL
 §4), on a toy simulator (numpy only, no image, a few seconds), for every distinct rcb_service.py in
 embodied_first_exam/benchmarks/ (the copies are byte-identical; a copy without the record is reported, not failed):
 
@@ -188,7 +188,7 @@ def test_v3(path: Path) -> None:
             return code, m, p
 
         sp = svc.spec
-        check(sp.get("standard") == "eai-standard/3.0" and sp["timing"]["recorder"]["cameras"] == ["c"]
+        check(sp.get("protocol") == "eai-standard/3.0" and sp["timing"]["recorder"]["cameras"] == ["c"]
               and sp["timing"]["recorder"]["fps"] == 10.0 and sp["timing"]["recorder"]["records"] == "during /submit"
               and sp["timing"]["recorder"]["depth"] == [] and "max_watch_s" not in sp,
               f"{tag}: /spec standard / timing.recorder: {sp.get('timing')}")

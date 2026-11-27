@@ -1,5 +1,5 @@
 """Standard-mode sim service of the IKEA MuJoCo tasks (robot as a service; the shared layer rcb_limited.py of
-embodied_first_exam/standard/operations/, serves eai-standard/2.4 and answers 2.1 / 2.2 requests unchanged).
+embodied_first_exam/standard/operations/, serves eai-standard/3.0 with the operations capability).
 Adapted from the RoboTangle / RoboARC standard services.
 
 Physics: the scene's own runtime (rcb_ikea.Session, the privileged twin's tooling, copied unchanged): MuJoCo 3.14.0 on
@@ -355,7 +355,7 @@ for c in CAMS:
                    "rgb_renderer": ("Nyx path tracer (RoboARC's renderer and look: 32 samples per pixel, denoised, Reinhard tone "
                                     "mapping, SMAA, studio HDRI and point lights)" if NYX is not None else "MuJoCo raster (EGL)")}
 SPEC = {
-    "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "mujoco 3.14.0 (CPU, float64; the scene's own runtime and mechanism)",
+    "protocol": PROTOCOL, "simulator": "mujoco 3.14.0 (CPU, float64; the scene's own runtime and mechanism)",
     "robot": R_SPEC["name"], "task_text": TEXTS["task_text"],
     "control_hz": CTRL_HZ, "control_dt": CTRL_DT, "physics_substeps": int(R.SUBSTEPS), "physics_dt": float(s.timestep),
     "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES, "max_video_fps": MAX_VIDEO_FPS,

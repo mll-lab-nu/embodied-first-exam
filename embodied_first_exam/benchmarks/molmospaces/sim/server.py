@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for MolmoSpaces (docs/protocol/standard_mode.md, tasks/molmospaces/README.md): the adapter
+"""eai-standard/3.0 sim service for MolmoSpaces (docs/protocol/standard_mode.md, tasks/molmospaces/README.md): the adapter
 of the shared layer rcb_limited.py; the simulator is rcb_molmospaces.Episode (upstream MolmoSpaces, MuJoCo on the CPU).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to
 /data/episode.jsonl; nothing about objects ever leaves this process.
@@ -85,7 +85,6 @@ for _g, _names, _meaning in GROUPS:
 
 SPEC = {
     "protocol": L.PROTOCOL,
-    "protocol_compat": list(L.COMPAT),
     "simulator": "molmospaces (molmo-spaces 0.2.9, MuJoCo 3.5.0)",
     "robot": INST["episode"]["robot"]["robot_name"],
     "task_text": INST["facts"]["goal"],
@@ -153,7 +152,7 @@ SPEC = {
         "noise": L.DEPTH_NOISE,
     },
 }
-L.check_spec(SPEC)  # a spec that misses a 2.2 field or names a forbidden one never starts the episode
+L.check_spec(SPEC)  # a spec that misses a required field or names a forbidden one never starts the episode
 EP.scene_built()
 
 

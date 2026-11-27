@@ -60,7 +60,7 @@ def grade(d):
            # the episode ended at the technical cap (max_control_steps; reason "runaway_guard") or by a simulator error
            "step_cap_reached": int(d.get("reason") == "runaway_guard"), "sim_error": int(sim_error),
            "sim_stopped": int(d.get("reason") == "sim_stopped"),
-           # crash recovery (eai-standard/2.2): service starts, resumes, whether a resumed state differed and by how much, a give-up
+           # crash recovery (eai-standard/3.0): service starts, resumes, whether a resumed state differed and by how much, a give-up
            "sim_startups": int(d.get("sim_startups") or 0), "resumes": int(d.get("resumes") or 0),
            "resume_state_mismatch": int(bool(d.get("resume_state_mismatch"))), "resume_max_tcp_dev_m": num("resume_max_tcp_dev_m"),
            "resume_max_joint_dev": num("resume_max_joint_dev"), "gave_up": int(gave_up),

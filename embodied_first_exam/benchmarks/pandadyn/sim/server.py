@@ -1,8 +1,8 @@
-"""Sim service adapter of Panda Dynamic Scenes' standard (eai-standard/2.1) and realtime (eai-standard/2.3) tasks: one
+"""Sim service adapter of Panda Dynamic Scenes' standard and realtime tasks (eai-standard/3.0): one
 file for both modes. A standard task runs it behind the shared standard service layer (`python /srv/server.py`:
 rcb_service.main(build); docs/protocol/standard_mode.md Part 1); a realtime task runs the shared realtime layer
 (`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/standard_mode.md Part 3,
-tasks/pandadyn/README.md "Realtime (eai-standard/2.3)").
+tasks/pandadyn/README.md "Realtime").
 
 The simulator-specific half only: `PandaDyn` implements rcb_service.Sim (the contract documented in rcb_service.py) for
 one frozen instance, on the benchmark's own tooling rcb_pandadyn.Session (ManiSkill 3.0.1 / SAPIEN 3.0.3, CPU PhysX at

@@ -834,7 +834,7 @@ class Episode:
     def plan_chunk(self, typ: str, rows, m: int = 1, at: int | None = None) -> dict:
         """Realtime, control interface: rows of one motion type, `m` control steps apart (each reached on a straight
         line from the target before it), become the plan from control step `at` (a tick of the world; absent: the
-        next one), as RCB's eai-standard/2.3 `/submit`: what was planned before `at` is kept, what was planned from
+        next one), as RCB's realtime `/submit`: what was planned before `at` is kept, what was planned from
         `at` on is replaced (preempted); a gap between the end of the plan and `at` is held; rows for steps that have
         already run are dropped (`late_steps`). The first row is interpolated from the plan's last target of the same
         type before `at`, else from the command in force."""
@@ -2080,7 +2080,7 @@ TWO_ARM_TOOLS: dict[str, Callable] = {"hold": t_hold, "twist": t_twist}   # two 
 
 # ---- the control interface ---------------------------------------------------------------------------------------------
 MAX_CHUNK_S = 10.0          # s: one `act` call runs at most this much robot time (500 control steps)
-# s: rows of one `act` call are at most this far apart (RCB's RoboTwin and eai-standard 2.2 services cap a row's `dt` at
+# s: rows of one `act` call are at most this far apart (RCB's RoboTwin and shared-layer services cap a row's `dt` at
 # 0.5 s); a slower motion is sent as more rows
 MAX_ROW_DT_S = 0.5
 

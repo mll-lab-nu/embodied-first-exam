@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for the MyoSuite tasks (docs/protocol/standard_mode.md): the adapter of the shared layer
+"""eai-standard/3.0 sim service for the MyoSuite tasks (docs/protocol/standard_mode.md): the adapter of the shared layer
 rcb_limited.py; the simulator is rcb_myosuite.Session (MyoSuite 2.12.2 on MuJoCo, CPU). HTTP surface: GET /spec,
 GET /status, POST /observe, POST /submit, POST /kinematics, and POST /reset when the run grants resets (RCB_RESET_BUDGET,
 the optional reset capability of docs/protocol/standard_mode.md; MyoSuite's standard tasks default to 10 in their compose
@@ -59,7 +59,7 @@ W, H = 640, 480
 # Images one call may return (cameras x frames, per-frame depth counted again), checked before anything runs: every
 # frame is held until the response is sent. Measured on the layer's Recorder with 640x480 frames: 2.7 GB per 1000 RGB
 # frames and 5.1 GB per 1000 images of one camera with per-frame depth, on top of the simulator's 1.4 GB, under the
-# sidecar's 8 GiB cap (tasks/myosuite/README.md). The 2.1 services' 3000 would need more than the cap.
+# sidecar's 8 GiB cap (tasks/myosuite/README.md). The sidecar services' 3000 would need more than the cap.
 MAX_FRAMES = 1000
 LOCK = threading.Lock()
 PID_FILE = os.path.join(DATA, "server.pid")
@@ -380,7 +380,6 @@ EPISODE_STEPS = int(S.track_steps if S.rule == "track" else
                     (len(getattr(S.base, "goal", ())) or S.max_steps) if TASK == "baoding" else S.max_steps)
 SPEC = {
     "protocol": L.PROTOCOL,
-    "protocol_compat": list(L.COMPAT),
     "simulator": "MyoSuite 2.12.2 on MuJoCo 3.6.0 (CPU)",
     "robot": f"{ROBOT[0]}: {ROBOT[1]}, {len(MUSCLES)} muscles" + (f" and {len(OTHER)} other actuators" if OTHER else ""),
     "task_text": TASK_TEXT,
@@ -495,7 +494,7 @@ if RESET_BUDGET:
         ", and when your time is up the episode then running is the one graded. The wall clock never restarts. /status and every meta add `episode`, `resets_left` "
         "and `control_steps_total` (all episodes); `control_steps` counts the current episode's."
     )
-L.check_spec(SPEC)  # a spec that misses a 2.2 field or names a forbidden one never starts the episode
+L.check_spec(SPEC)  # a spec that misses a required field or names a forbidden one never starts the episode
 EP.scene_built()
 
 

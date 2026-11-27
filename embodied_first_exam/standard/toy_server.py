@@ -1,4 +1,4 @@
-"""A toy eai-standard/2.2 sim service: the smallest complete adapter of the shared layer (rcb_limited.py), on a numpy
+"""A toy sim service: the smallest complete adapter of the shared layer (rcb_limited.py), on a numpy
 "simulator" (a 3-joint point robot pushing a block on a plane), CPU only. selftest.py drives it to test the layer's crash
 recovery; it is also the reference for how a benchmark's environment/sim/server.py uses Episode (docs/protocol/standard_mode.md)
 and agent-ended episodes (agent_end/rcb_agent_end.py, PROTOCOL §3): with RCB_AGENT_END=1 a success is only recorded
@@ -65,7 +65,7 @@ S = Toy()
 EP.scene_built()
 LAYOUT = [f"j{i}" for i in range(N)]
 SPEC = {
-    "protocol": L.PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "toy (numpy)", "robot": "toy-3dof", "task_text": "push the block to x > 0.9",
+    "protocol": L.PROTOCOL, "simulator": "toy (numpy)", "robot": "toy-3dof", "task_text": "push the block to x > 0.9",
     "control_hz": CTRL_HZ, "physics_substeps": 1, "max_chunk_s": 10.0,
     "cameras": {"top": {"rgb": True, "depth": True, "mounted": "static", "resolution": [8, 8], "intrinsic_cv": [[8, 0, 4], [0, 8, 4], [0, 0, 1]],
                         "mount": {"type": "static", "extrinsic_cv": np.eye(4)[:3].tolist(), "cam2world_gl": np.eye(4).tolist()}}},

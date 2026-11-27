@@ -1,4 +1,4 @@
-"""eai-standard/2.1 sim service for the MuJoCo tasks (DexToolBench, MuJoCo Playground): robot as a service.
+"""eai-standard/3.0 sim service for the MuJoCo tasks (DexToolBench, MuJoCo Playground): robot as a service.
 
 The sidecar owns the simulator (the task's tooling module, RCB_TOOL = rcb_dtb | rcb_aloha | rcb_panda, with the task's
 frozen instance) and serves the same wire protocol as the RoboTwin limited tasks (docs/protocol/standard_mode.md), so
@@ -43,7 +43,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.environ["RCB_SESSION_LOG"] = ""; os.environ["RCB_AGENT_TRACE_DIR"] = ""
 import rcb1  # noqa: E402
 
-PROTOCOL = "eai-standard/2.1"
+PROTOCOL = "eai-standard/3.0"
 DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)   # RCB_DATA / RCB_PORT: test hooks (never set in tasks)
 TOOL = importlib.import_module(os.environ.get("RCB_TOOL", "rcb_dtb"))
 INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.json"))
@@ -188,7 +188,7 @@ def _give_up(reason: str, infra: bool, **extra) -> None:
 
 def _refuse_forever(reason: str, infra: bool) -> None:
     """After a give-up: answer every request 409 {"error", "reason", "gave_up": true, "infra_error"} until the container is
-    removed (as the 2.2 layer's rcb_limited.refuse_forever), so the agent's client stops at once (EpisodeOver) instead of
+    removed (as the shared layer's rcb_limited.refuse_forever), so the agent's client stops at once (EpisodeOver) instead of
     waiting out its timeout for a service that will never serve. The verdict is on disk already; this never changes it."""
     body = json.dumps({"error": "the sim service gave up on this episode and will not serve it", "reason": reason,
                        "gave_up": True, "infra_error": int(bool(infra))}).encode()
@@ -531,8 +531,7 @@ class Recorder:
 # (a rows-free hold chunk too) it keeps every camera's RGB frame every 1 / RCB_CAMERA_FPS of robot time, with the proprio
 # row and the step, in a ring of the last RCB_LOOKBACK_S robot seconds; an image the call's own Recorder grabbed at that
 # step is reused, not rendered again. A rows-free hold chunk {"type", "interpolate": "hold", "seconds": n} holds the
-# current target for n seconds (what /observe with seconds > 0 did before).
-EAI_STANDARD = "eai-standard/3.0"
+# current target for n seconds.
 HOLD_HINT = ('observe never lets time pass (eai-standard/3.0): to let n seconds pass, submit a hold chunk {"type": <type>, '
              '"interpolate": "hold", "seconds": n} with no rows; last_s = n returns the frames recorded in the last n seconds')
 DEPTH_PAST = ("depth with last_s > 0: the recorder keeps no depth for these cameras (spec timing.recorder.depth lists "
@@ -616,7 +615,6 @@ def _last_s(meta: dict) -> float:
     return v
 
 
-SPEC["standard"] = EAI_STANDARD
 SPEC["timing"] = {"recorder": {"cameras": RING_CAMS, "fps": round(1.0 / (RING_DT * RING_EVERY), 3), "buffer_s": RING_S,
                                "records": "during /submit", "depth": []}}
 

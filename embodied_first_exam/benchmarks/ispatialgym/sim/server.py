@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for iSpatialGym (tasks/ispatialgym/README.md; docs/protocol/standard_mode.md): the benchmark's
+"""eai-standard/3.0 sim service for iSpatialGym (tasks/ispatialgym/README.md; docs/protocol/standard_mode.md): the benchmark's
 adapter of the shared layer rcb_limited.py. Owns the scene. HTTP surface (rcb_limited.serve): GET /spec, GET /status,
 POST /observe, POST /submit (RCB1 bodies and responses), POST /kinematics. Logs every call to /out/episode.jsonl and keeps
 /out/final.json current. Nothing about objects, targets or the world frame ever leaves this process.
@@ -136,7 +136,7 @@ def dump() -> None:
     E["dumped"] = True
     try:
         E["live_sha"] = S.state_sha(); E["n_actions"] = len(S.rows)
-        S.save_trajectory(os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "reason": E["reason"]})
+        S.save_trajectory(os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/3.0)", "reason": E["reason"]})
     except Exception as exc:  # noqa
         traceback.print_exc(); log({"ev": "dump_error", "error": repr(exc)})
     st = S.status()
@@ -189,7 +189,7 @@ def cam_spec(c: str) -> dict:
 
 
 SPEC = {
-    "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "iSpatialGym eval v1.0 (OmniGibson / Isaac Sim, BEHAVIOR-1K fork)",
+    "protocol": PROTOCOL, "simulator": "iSpatialGym eval v1.0 (OmniGibson / Isaac Sim, BEHAVIOR-1K fork)",
     "robot": "r1pro", "task_text": TASK_TEXT, "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS,
     "max_chunk_s": MAX_CHUNK_S, "max_control_steps": S.max_steps, "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: cam_spec(c) for c in CAMS},

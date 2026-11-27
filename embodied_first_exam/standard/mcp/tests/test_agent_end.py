@@ -1,4 +1,4 @@
-"""finish through the efe-robot tools in an agent-ended episode (CPU, ~20 s): the toy eai-standard/2.2 service, an
+"""finish through the efe-robot tools in an agent-ended episode (CPU, ~20 s): the toy service on the shared layer, an
 agent-ended adapter, run with RCB_AGENT_END=1 (/spec success_signal is the sentence SUCCESS_SIGNAL_NOTE, which starts
 with "hidden"):
 
