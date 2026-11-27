@@ -192,8 +192,8 @@ Final-state hashes of some references (live = replay 1 = replay 2):
   (PROTOCOL §4).
 - **Privileged difficulty.** With VLABench's skills as planning primitives the privileged mode is largely solved;
   the standard twin carries the difficulty.
-- **eai-standard/3.0 or 2.2.** The standard twins serve 2.1 with main's HumanoidBench layer (byte copies); moving to the
-  shared 2.2 layer (`embodied_first_exam/standard/`) would add its optional capabilities (depth as uint16, `robot_spec`,
+- **The sidecar or the shared layer.** The standard twins serve the sidecar layer with main's HumanoidBench layer (byte copies); moving to the
+  shared layer (`embodied_first_exam/standard/`) would add its optional capabilities (depth as uint16, `robot_spec`,
   `/kinematics`, a per-call wall-clock bound) and its CI identity check.
 
 ## Screening

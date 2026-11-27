@@ -147,7 +147,7 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   the verifier books a missing, unreadable or never-finalized `final.json` as `infra_error = 1`;
   `finalize.sh` writes `final.json` atomically. One call returns at most 1000 images (cameras x frames, per-frame depth
   counted again; `/spec` `max_frames_per_call`), checked before anything runs (400): every frame is held until the
-  response is sent (2.7 GB per 1000 640 x 480 RGB frames). The default camera at 10 fps needs 102 images for the longest chunk or hold chunk (10 s, `max_chunk_s`). One gap is left in the shared 2.2 layer (`embodied_first_exam/standard/
+  response is sent (2.7 GB per 1000 640 x 480 RGB frames). The default camera at 10 fps needs 102 images for the longest chunk or hold chunk (10 s, `max_chunk_s`). One gap is left in the shared layer (`embodied_first_exam/standard/
   rcb_limited.py`, not MyoSuite's): JSON `actions` holding an object is a TypeError there, still a 500.
 - **Reset budget: 10** (PROTOCOL §2: the task's own budget). MyoSuite's own termination ends most standard episodes
   within one or two seconds of simulated time, so a single episode would be one blind attempt at muscle-level control.
@@ -159,7 +159,7 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   wall clock never restarts; `/status`, every `meta` and `final.json` count `episode`, `resets_left`,
   `control_steps_total`, and `reward.json` adds `episodes`, `resets`, `reset_budget` and `sim_steps_total`. Crash
   recovery replays the whole journal and resets at the journal rows where the committed resets happened (they are
-  checkpointed), so a resume after a reset is exact. The 2.2 client has no `reset()`: the instruction calls
+  checkpointed), so a resume after a reset is exact. The shared client has no `reset()`: the instruction calls
   `r._post("/reset", {...}, [], 900)`. Checked against a live key_turn service: resets, a `kill -9` of the service
   mid-episode (resumed exact), the oracle's success graded on the last episode only, 409 on a further reset.
 
@@ -263,7 +263,7 @@ every other family's objects start at rest, and chase_tag's opponent stands stil
   implements `rcb_service.Sim` on `rcb_myosuite.Session`: the standard twin's frozen instance, action (`actuators`: 273
   muscles and the two pelvis slides, nothing clipped), success rule (the challenge's own event), proprioception
   (`q_`, `qd_`, `act_`, `len_`, `effort_`) and cameras (images and depth; no pose of a camera that rides on a body of
-  the scene). Not served: the 2.2 additions (`/kinematics`, per-frame camera poses, depth modes), all MAYs in 2.3. The
+  the scene). Not served: the shared layer's additions (`/kinematics`, per-frame camera poses, depth modes), every MAY of the realtime capability. The
   grade is the live episode's (see "Grading"); the clock's record is evidence only.
 - **Rendering on the GPU.** On a clock that does not stop, a render is time the simulator thread cannot step, and an
   OSMesa frame of this scene takes 1.3 s (1373 visual geoms, 207k mesh vertices; 640 x 480 or 320 x 240 alike) against
@@ -336,4 +336,4 @@ outside this repository.
 
 ## Standard-mode service details
 
-Serves `eai-standard/3.0` (MuJoCo on the CPU, resume class `exact`); `max_frames_per_call` = 1000. Its service implements the optional reset capability (docs/protocol/standard_mode.md Part 1); the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`.
+Serves `eai-standard/3.0` (MuJoCo on the CPU, resume class `exact`); `max_frames_per_call` = 1000. Its service implements the optional reset capability (docs/protocol/standard_mode.md Part 1); the shared client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`.

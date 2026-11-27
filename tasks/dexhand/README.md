@@ -944,7 +944,7 @@ The standard wall time is the whole trial as measured with the collect hook's fo
 hand, every family ends an episode at the first failure (a dropped, slipped or knocked object, a bound exceeded), and
 the agent has no simulator of its own in standard mode, so with one episode the first slip decided the trial. The
 capability is the one of docs/protocol/standard_mode.md ("Optional reset capability"), implemented in the DexHand adapter
-`environment/sim/server.py` the way the MyoSuite 2.2 service implements it (the shared 2.2 layer has
+`environment/sim/server.py` the way the MyoSuite service implements it (the shared layer has
 no reset): `POST /reset` (JSON or RCB1 `{cameras, video_fps, depth}`, no physics) calls the family's
 `Session.reset()` and returns the new episode's first frames; 409 after `/finish`, once the budget is spent and after
 the agent's time; `/status` and every meta add `episode`, `resets_left` and `control_steps_total`. Only the last
@@ -1026,4 +1026,4 @@ rigid. In the wave-2 families coffee, batter, air, the liquid in a glass are not
 
 ## Standard-mode service details
 
-Serves `eai-standard/3.0`. Resume class `exact` (MuJoCo 3.4.0, CPU physics, one thread; a frozen scene rebuilt from its pinned model files; one control row is one or more fixed physics steps). Its service implements the optional reset capability (docs/protocol/standard_mode.md Part 1); the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`.
+Serves `eai-standard/3.0`. Resume class `exact` (MuJoCo 3.4.0, CPU physics, one thread; a frozen scene rebuilt from its pinned model files; one control row is one or more fixed physics steps). Its service implements the optional reset capability (docs/protocol/standard_mode.md Part 1); the shared client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`.

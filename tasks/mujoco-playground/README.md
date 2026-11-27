@@ -74,7 +74,7 @@ Every image is public: Harbor pulls it.
 |---|---|---|---|
 | privileged | the simulator (`rcb_quadruped.Session`) and its full state | unlimited | its `trajectory.npz`, replayed in one fresh process |
 | standard (2.2) | cameras (Go1, Spot: four that follow the robot; Barkour: one that follows it and its head camera; RGB, optional depth), joints, IMU (gyro, accelerometer, gravity's direction, velocimeter), foot contacts; the feet's FK/IK in the trunk frame | 10 (`RCB_RESET_BUDGET`) | the live episode's verdict: the task's check on the last episode as the service ran it |
-| realtime (2.3; BarkourJoystick only) | as standard, minus FK/IK, plus the joystick command in force in the proprioception; time does not stop (S = 1) | 10 (`RCB_RESET_BUDGET`) | the live episode's verdict, as standard |
+| realtime (BarkourJoystick only) | as standard, minus FK/IK, plus the joystick command in force in the proprioception; time does not stop (S = 1) | 10 (`RCB_RESET_BUDGET`) | the live episode's verdict, as standard |
 
 ## Reference solutions
 - **Go1 joystick:** MuJoCo Playground's own Go1 joystick policy (`experimental/sim2sim/onnx/go1_policy.onnx`, the one its
@@ -177,7 +177,7 @@ Outside Harbor, the standard service run on each reference (`std_local` check): 
 ### Agent-ended episodes
 
 Every standard and realtime task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3; ALOHA and Panda:
-`server_mj.py`; the quadrupeds' standard tasks: `sim/server.py` with the 2.2 layer `rcb_agent_end.py`; realtime:
+`server_mj.py`; the quadrupeds' standard tasks: `sim/server.py` with the shared layer `rcb_agent_end.py`; realtime:
 `rcb_service.py`). A success never ends the episode and is never shown: the task's check is still run (after every call,
 or for the quadrupeds after every control step) and only recorded. The agent ends the episode with `POST /finish`
 (reason `finished`; a quadruped's `done` action is the same end); the end of its session (`timeout`) and the horizon
@@ -195,7 +195,7 @@ frozen moments: an external force that is neither the robot's nor gravity).
   `embodied_first_exam/standard/realtime/`; `rcb_service.py` and `grade.py`, byte-identical to HumanoidBench's realtime
   tasks' copies; `check-tooling-identity.sh`), with the twin's `environment/sim/server.py`, which implements `rcb_service.Sim` on `rcb_quadruped.Session`: the standard twin's
   instance, schedule, pushes, termination rule, check and replay; the proprioception adds `cmd_vx`, `cmd_vy`, `cmd_wz`
-  (the command in force; standard mode has it in `meta["command_now"]`). Not served: the 2.2 additions (`/kinematics`,
+  (the command in force; standard mode has it in `meta["command_now"]`). Not served: the shared layer's additions (`/kinematics`,
   per-frame camera poses, depth modes) and the `done` action. Graded on the live episode; the clock's record is
   evidence only. The `sim` service reserves a GPU for EGL
   rendering (`server.py` writes the NVIDIA EGL ICD manifest when the image has none and `rcb_quadruped` probes EGL).
@@ -211,8 +211,8 @@ frozen moments: an external force that is neither the robot's nor gravity).
 |---|---|
 | the privileged task's `environment/instance.json` and `tests/instance.json`, a standard or realtime twin's `environment/sim/instance.json` | the frozen instance (byte-identical copies) |
 | privileged and standard `solution/` (`oracle.npy`, `oracle_replay.py`, `solve.sh`) | the reference rows and their replay (privileged: into `trajectory.npz`; standard: through the client) |
-| the realtime twin's `environment/sim/server.py`, `solution/` | its service (the 2.3 adapter) and its reference (`oracle.npy`, `oracle_plan.py`, `solve.sh`) |
-| `embodied_first_exam/benchmarks/mujoco-playground/` (files-only image `efe:mujoco-playground-files-<images/mujoco-playground-files/VERSION>`, copied by digest) | `privileged/environment/rcb_quadruped.py` (the tooling, the verifier's replay CLI and the services' simulator), `privileged/tests/grade.py`, `standard/tests/grade.py`, `sim/server.py` (the standard 2.2 adapter on `embodied_first_exam/standard/rcb_limited.py`), `sim/video.py`, `sim/finalize.sh` (the collect hook), `sim/rcb_service.py` (the realtime twin's simulator service); the manipulation tasks' `rcb_aloha.py`, `rcb_panda.py` and `sim/server_mj.py` |
+| the realtime twin's `environment/sim/server.py`, `solution/` | its service (the realtime adapter) and its reference (`oracle.npy`, `oracle_plan.py`, `solve.sh`) |
+| `embodied_first_exam/benchmarks/mujoco-playground/` (files-only image `efe:mujoco-playground-files-<images/mujoco-playground-files/VERSION>`, copied by digest) | `privileged/environment/rcb_quadruped.py` (the tooling, the verifier's replay CLI and the services' simulator), `privileged/tests/grade.py`, `standard/tests/grade.py`, `sim/server.py` (the standard adapter on `embodied_first_exam/standard/rcb_limited.py`), `sim/video.py`, `sim/finalize.sh` (the collect hook), `sim/rcb_service.py` (the realtime twin's simulator service); the manipulation tasks' `rcb_aloha.py`, `rcb_panda.py` and `sim/server_mj.py` |
 
 The task directories are the deliverable; the tooling that built them is kept outside this repository.
 
@@ -239,4 +239,4 @@ run to the end of the agent phase and the final state is graded. The service jou
 layer (journal `record.f64`; startup watchdog `RCB_STARTUP_TIMEOUT_S`, default 300 s) and grades the live episode
 (Grading, above). It implements the optional reset capability.
 
-**Quadrupeds (`eai-standard/3.0`).** MuJoCo Playground's quadruped tasks serve the shared 2.2 layer. Their service implements the optional reset capability; the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`. One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call"), in the realtime twin too.
+**Quadrupeds (`eai-standard/3.0`).** MuJoCo Playground's quadruped tasks serve the shared layer. Their service implements the optional reset capability; the shared client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`. One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call"), in the realtime twin too.

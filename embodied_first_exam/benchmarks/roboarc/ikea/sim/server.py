@@ -807,7 +807,7 @@ def infra_exception(exc: BaseException) -> bool:
 
 
 def recorded_frames(steps: int, fps: int) -> int:
-    """The frames per camera the 2.4 recorder takes over a call of `steps` control steps (the count of real captures):
+    """The frames per camera the operations layer's recorder takes over a call of `steps` control steps (the count of real captures):
     one at the start, one at the first control step at or after each k/fps of sim time (k = 1 .. floor(steps x fps /
     control_hz)), and the last unless the last of those is taken at the call's last step."""
     m = int(steps * fps / CTRL_HZ + 1e-9)

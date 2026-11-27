@@ -45,7 +45,7 @@ instances and spread over the placement schedule.
 
 ## Tasks
 - Every YAMLab task dir carries the tooling (`rcb_yamlab.py`), its instance's `instance.json` and its reference
-  (privileged: `solution/oracle_actions.npy`; standard: `solution/oracle_qpos.npy`), and the standard twin the 2.2 layer
+  (privileged: `solution/oracle_actions.npy`; standard: `solution/oracle_qpos.npy`), and the standard twin the shared layer
   and the standard client of `embodied_first_exam/standard/`. The task directories are the deliverable; the tooling that
   built them is kept outside this repository.
 - Selection and freezing (in the image, on a GPU host):

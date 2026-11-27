@@ -7,7 +7,10 @@ names another protocol id of this family or keeps a list of accepted old ids:
   - `eai-standard/2.<n>` (any 2.x id, with or without `+match/...`);
   - `eai-standard-lockstep`, `eai-standard-realtime` (the match services' former ids);
   - `rcb-limited/` (the former name);
-  - a list of accepted protocol ids: `COMPAT = [...]` / `COMPAT = (...)`, `protocol_compat`, `ACCEPTED = (...)`.
+  - a list of accepted protocol ids: `COMPAT = [...]` / `COMPAT = (...)`, `protocol_compat`, `ACCEPTED = (...)`;
+  - a layer called by a former version number (`the 2.2 layer`, `a 2.4 service`, `2.1's keys`, `2.2/2.4`,
+    `protocol 2.2`) or a note on what changed at 3.0 (`before 3.0`, `from 3.0`): a layer has a name (sidecar, shared,
+    realtime, operations) and the rules are the current ones.
 
 Nothing is allowlisted but this file. A benchmark's own runtime of another family (roboEngineer's `eai-policy/1.x`)
 is not this family and is not flagged. Before the repository, the patterns run on built-in good and bad lines (each
@@ -32,11 +35,22 @@ PATTERNS = [
     ("a match service's former id", re.compile(r"eai-standard-(?:lockstep|realtime)\b")),
     ("the former name rcb-limited", re.compile(r"\brcb-limited/")),
     ("a list of accepted protocol ids", re.compile(r"(?m)^\s*(?:COMPAT|ACCEPTED|PROTOCOLS_ACCEPTED)\s*=\s*[\[(]|\bprotocol_compat\b")),
+    ("a layer called by a former version number", re.compile(
+        r"\b2\.[1-4x](?:/2\.[0-4])*(?:'s)? (?:layer|layers|adapter|adapters|handler|additions?|extras|client|clients|service|"
+        r"services|server|servers|sidecar|recorder|stride|benchmarks?|tasks?|tooling|inputs|proprio|requests?|behaviou?r|"
+        r"keys|rule|columns)\b|\(2\.x: |\bprotocol v?2\.[0-4]\b|\b2\.[0-4] ?\u2013 ?2\.[0-4]\b(?! ?(?:m|cm|mm|s|kg|N|GB|GiB|%)\b)|"
+        r"\b2\.[0-4]/2\.[0-4]\b|"
+        r"\b2\.x (?:task|client|service)|\b(?:the|a|every) 2\.0 (?:client|service|columns)\b")),
+    ("a note on what changed at 3.0", re.compile(r"\bbefore v?3\.0\b|\b[Ff]rom v?3\.0\b")),
 ]
 BAD = [OLD + "1", OLD + "4+match/1.0", "eai-standard-" + "lockstep/1.0", "eai-standard-" + "realtime/1.0",
-       "rcb-" + "limited/2.2", "COMPAT" + ' = ["x"]', "ACCEPTED" + ' = ("a", "b")', '"protocol' + '_compat": L.X']
+       "rcb-" + "limited/2.2", "COMPAT" + ' = ["x"]', "ACCEPTED" + ' = ("a", "b")', '"protocol' + '_compat": L.X',
+       "the shared 2." + "2 layer", "a 2." + "4 service", "2." + "1's keys", "(2." + "2/2.4 answer them)", "protocol 2." + "2",
+       "(2." + "x: 200)", "every 2." + "x service", "the 2." + "0 client's default", "before " + "3.0 a success ended it",
+       "From " + "3.0: last_s", "From " + "v3.0 every episode"]
 GOOD = ['PROTOCOL = "eai-standard/3.0"', 'protocol = "eai-policy/1.1"', 'COMPAT = "v0.1-toplevel-aliases"',
-        "the eai-standard client", "eai-standard/3.0+match", "unlimited/2.2"]
+        "the eai-standard client", "eai-standard/3.0+match", "unlimited/2.2", "the BiGym 2.0 adapter", "Wuji Hand 2.2",
+        "memory 2.2 GiB", "2.2-2.6 cores", "PROTOCOL \u00a72.1", "Isaac Lab 2.3 / Isaac Sim 5.1", "FIVB 11.2.2:", "3.0 m", "(2.0\u2013" + "2.1 m)"]
 
 
 def selftest() -> list[str]:
@@ -96,9 +110,11 @@ def main() -> int:
     if len(findings) > 80:
         print(f"  ... {len(findings) - 80} more")
     if findings:
-        print(f"check-protocol-strings.py: {len(findings)} line(s) name another protocol id than eai-standard/3.0")
+        print(f"check-protocol-strings.py: {len(findings)} line(s) name another protocol id than eai-standard/3.0, "
+              "a layer by a former version number or what changed at 3.0")
         return 1
-    print(f"ok check-protocol-strings.py: {len(files)} tracked files name no protocol id but eai-standard/3.0")
+    print(f"ok check-protocol-strings.py: {len(files)} tracked files name no protocol id but eai-standard/3.0 and no "
+          "layer by a former version number")
     return 0
 
 

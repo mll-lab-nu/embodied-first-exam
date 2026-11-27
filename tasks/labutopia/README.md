@@ -329,6 +329,6 @@ other hosts. The three `lab_003` tasks (press, shake, heat-liquid) peaked at 22-
 ## Files
 Every task directory is self-contained: `environment/rcb_labutopia.py` (privileged; the verifier's own copy in
 `tests/`) or `environment/sim/` (standard: the adapter `server.py`, `rcb_labutopia.py`, the collect
-hook), `instance.json`, `solution/oracle.npz`; the standard tasks take the shared 2.2 layer and the agent's client
+hook), `instance.json`, `solution/oracle.npz`; the standard tasks take the shared layer and the agent's client
 (`rcb_limited.py`, `run.sh`, `rcb1.py`, `rcb_client.py`) from the pinned `standard-files` image. `images/labutopia/` has the image recipe (Dockerfile, VERSION,
 BUILD_ONLY, requirements.txt, nvidia_assets.sha256, strip_solutions.py).

@@ -106,11 +106,11 @@ add python3 ci_checks/check-realtime.py"$pargs"
 # docs/protocol/standard_mode.md "MCP tools": every standard / realtime task has the robot's MCP tools (or a stated
 # exception), and every agent-facing endpoint the layers and adapters serve has a tool
 add python3 ci_checks/check-mcp-tools.py"$pargs"
-# docs/protocol/standard_mode.md "Version 3.0": the reference services of 2.1–2.4 answer as
+# docs/protocol/standard_mode.md: the reference services of every layer answer as
 # docs/protocol/eai-standard-3.0.openapi.yaml says (paths, status codes, bodies against the schemas); in CI the
 # unit-tests job runs it with its modules installed (RCB_SKIP_UNIT_TESTS=1 here)
 [ "${RCB_SKIP_UNIT_TESTS:-0}" = 1 ] || add python3 ci_checks/check-openapi-contract.py
-# the same document against the benchmarks' own 2.1 servers (their own HTTP layer, no shared layer), read from
+# the same document against the benchmarks' own servers (their own HTTP layer, no shared layer), read from
 # their source: the keys /status, every answer meta and /spec must carry (static: no simulator)
 add python3 ci_checks/check-protocol-strings.py             # one protocol id, eai-standard/3.0, in code, tasks and docs
 add python3 ci_checks/check-own-servers.py

@@ -15,7 +15,7 @@ stands' 100-step hold are inside it; a joystick episode passes only at the horiz
 recorded episode applied, so no live_verdict() is needed. `start_sha` is the frozen instance's recorded state hash:
 rcb_service refuses a fresh episode that does not start there (instance_mismatch, an infrastructure failure).
 
-What the agent gets is what the standard twin gives, minus the 2.2 additions the realtime layer does not serve
+What the agent gets is what the standard twin gives, minus the shared layer's additions the realtime layer does not serve
 (`/kinematics`, per-frame camera poses, depth modes, the `done` action): the cameras (RGB and depth), the robot's own
 proprioception (joint positions, velocities and torques, the IMU's gyro, accelerometer, gravity direction and
 velocimeter, the feet's contacts) with the joystick command in force (the standard twin's `meta["command_now"]`) and joint position targets (clipped to the actuator ranges and reported). The joystick

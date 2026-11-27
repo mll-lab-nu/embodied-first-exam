@@ -102,7 +102,7 @@ The rule is PROTOCOL Appendix H.5; how the runner applies it:
   gives no verdict on the agent: no, an unreadable or an unfinalized `final.json` (`finalized`: the verdict is on
   disk, written before any video); the sidecar gave up after crashes that were not all inside the agent's calls
   (`sim_crashed`), could not restore the episode after a crash (`resume_failed`, whatever crashed) or ended a native
-  call still unfinished 60 s (by default) past the service's own per-call cap, `max_call_wall_s` (`call_watchdog`, 2.4; never counted
+  call still unfinished 60 s (by default) past the service's own per-call cap, `max_call_wall_s` (`call_watchdog`, operations layer; never counted
   from the request's deadline); the scene did not start from the frozen instance, at the start or
   after a reset (`instance_mismatch`). Only what the service itself records as `infra_error = 1` (or a missing,
   unreadable or unfinalized record) is one; a grader never infers it from missing fields. What the agent's commands
@@ -218,7 +218,7 @@ Codex session (`agent/sessions/`). Run Codex with `--ak reasoning_summary=detail
   recording where the benchmark's simulator is not verified bit-wise replayable (PROTOCOL §4). Either way the verdict is on
   disk first (`final.json` `finalized`; `video_pending` while the video is made) and `final.json` says `video_source`
   (`live` / `render`). Published videos follow the same rule and keep the label.
-- **First attempt (standard modes with resets):** only benchmarks on the shared 2.1 sidecar service (`rcb_service.py`,
+- **First attempt (standard modes with resets):** only benchmarks on the shared sidecar service (`rcb_service.py`,
   standard_mode.md "Evidence and grading") graded by the shared grader (`embodied_first_exam/standard/sidecar/grade.py`)
   keep the first episode (`trajectory.first.npz`, `replay.first.mp4`) and how it ended: `first_success` is the graded
   success when `resets` = 0; after a reset it is 0 without agent-ended episodes (a success ends the trial) and, with

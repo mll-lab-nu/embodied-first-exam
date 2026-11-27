@@ -173,7 +173,7 @@ if not S.render_enabled:
     raise SystemExit("the sim service needs a Vulkan-capable GPU for its cameras")
 LAYOUT = [f"panda_joint{i}" for i in range(1, 8)]
 CAMS = list(M.VIDEO_CAMERAS)
-DEFAULT_CAMS = ["canvas_cam", "scene_cam", "side_cam"]           # what the 2.0 client asked for when a call named no camera
+DEFAULT_CAMS = ["canvas_cam", "scene_cam", "side_cam"]           # the cameras a call that names none gets
 MOUNT = {"canvas_cam": "static, straight above the main sheet, looking down; image top = the sheet's far edge (+x), image left = +y",
          "practice_cam": "static, straight above the practice sheet, looking down; image top = +x, image left = +y (portrait)",
          "scene_cam": "static, across the table facing the robot (from +x), looking down at the board",
@@ -262,7 +262,7 @@ CALIB = calib(CAMS)                     # static cameras: computed once (meta["c
 EXT = {c: np.asarray(CALIB[c]["extrinsic_cv"], np.float64) for c in CAMS}
 NEAR_FAR = {c: [float(S.u.scene.human_render_cameras[c].config.near), float(S.u.scene.human_render_cameras[c].config.far)] for c in CAMS}
 TIP = M.TOOL_FRAME
-PROPRIO = (LAYOUT + ["tip_x", "tip_y", "tip_z", "tip_qw", "tip_qx", "tip_qy", "tip_qz"]          # the 2.0 columns, unchanged
+PROPRIO = (LAYOUT + ["tip_x", "tip_y", "tip_z", "tip_qw", "tip_qx", "tip_qy", "tip_qz"]          # the base columns, unchanged
            + [f"{j}_vel" for j in LAYOUT] + [f"{j}_effort" for j in LAYOUT])                      # 2.2
 SPEC = {
     "protocol": PROTOCOL, "simulator": "maniskill 3.0.1 (SAPIEN 3.0.3, PhysX CPU) + a virtual brush",

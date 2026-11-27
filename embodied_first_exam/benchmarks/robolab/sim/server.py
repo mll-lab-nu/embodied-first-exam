@@ -182,7 +182,7 @@ SPEC = {
     "proprio_layout": PROPRIO_LAYOUT,
     "proprio_groups": {
         "joint_pos": [0, 8, "measured joint positions (rad): panda_joint1..7, then finger_joint (the Robotiq's driven knuckle: 0 open .. pi/4 closed)"],
-        "tcp_pose": [8, 7, "measured fingertip-centre (tcp) pose: x y z (m) + quaternion wxyz, world frame (the 2.0 columns)"],
+        "tcp_pose": [8, 7, "measured fingertip-centre (tcp) pose: x y z (m) + quaternion wxyz, world frame (the base columns)"],
         "gripper_cmd": [15, 1, "the gripper command in force: 0 open, 1 closed"],
         "joint_vel": [16, 8, "measured joint velocities (rad/s), the joints of joint_pos"],
         "gripper_opening": [24, 1, "measured distance between the Robotiq finger pads (m): ~0.085 fully open, ~0.002 closed on nothing; "

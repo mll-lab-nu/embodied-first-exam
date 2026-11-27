@@ -428,7 +428,7 @@ SPEC = {
     # that many control steps, /observe watches included
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "10800")),
                "clock": "time_s and elapsed_s count from your first request to the service; time_left_s is wall_clock_s minus "
-                        "that, so it never runs out before the harness's limit does"},   # docs/protocol/standard_mode.md §5 (the 2.2 layer's key)
+                        "that, so it never runs out before the harness's limit does"},   # docs/protocol/standard_mode.md §5 (the shared layer's key)
     "max_control_steps": int(S.max_steps),
     "episode": ("one episode, no reset. It ends when you call POST /finish (reason finished), when the wall-clock budget is used "
                  "up (budget.wall_clock_s, counted from your first request to this service, any endpoint; meta time_s / time_left_s; "
@@ -488,7 +488,7 @@ def frames_ok(cams: list, steps: int, fps: int, meta: dict) -> None:
 
 
 def recorded_frames(steps: int, fps: int) -> int:
-    """The frames per camera the 2.4 recorder takes over a call of `steps` control steps (the count of real captures):
+    """The frames per camera the operations layer's recorder takes over a call of `steps` control steps (the count of real captures):
     one at the start, one at the first control step at or after each k/fps of sim time (k = 1 .. floor(steps x fps /
     control_hz)), and the last unless the last of those is taken at the call's last step."""
     m = int(steps * fps / CTRL_HZ + 1e-9)

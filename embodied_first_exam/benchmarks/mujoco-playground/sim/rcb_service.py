@@ -1073,7 +1073,7 @@ class Service:
         return out, rec.parts()
 
     def _hold_chunk(self, typ: str, seconds: float, meta: dict) -> tuple[dict, list]:
-        """A hold chunk: the current target (sim.hold(), what the 2.x watch held) for round(seconds / control_dt)
+        """A hold chunk: the current target (sim.hold()) for round(seconds / control_dt)
         control steps, answered as a /submit (the video of the hold, duration_s)."""
         cdt = self.sim.control_dt
         with bad_request():

@@ -1024,7 +1024,7 @@ class Session:
         self._tool_setup()
         self._reset_ee_quat = self.ee_pose()[1]                 # the Franka's reset pose points the gripper straight down
         self.reset_closing_dir = self.finger_closing_dir()      # measured, not assumed
-        self._model, self._cams = None, {}                      # the 2.2 extras never break a Session (replays and grading need none)
+        self._model, self._cams = None, {}                      # the shared layer's extras never break a Session (replays and grading need none)
         try:
             self._kin_setup()                                   # reads the USD and the current link poses; writes nothing
         except Exception as exc:  # noqa: BLE001

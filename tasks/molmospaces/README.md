@@ -143,7 +143,7 @@ Per-simulator notes:
 | cameras | Franka: wrist and shoulder (moving), three randomised static; RB-Y1: head + two wrist cameras (moving) |
 | depth | MuJoCo depth buffer |
 | `/kinematics` | upstream's `MlSpacesKinematics` on the robot's MuJoCo model (Franka 7, RB-Y1 23 with the base) |
-| proprio columns | 2.2: 29 (Franka), 85 (RB-Y1) |
+| proprio columns | 29 (Franka), 85 (RB-Y1) |
 | grading replays | none (graded live); one video-only render pass |
 | resume class (docs/protocol/standard_mode.md) | `exact` |
 

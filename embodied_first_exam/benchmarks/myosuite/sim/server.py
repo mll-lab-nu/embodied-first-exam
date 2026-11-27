@@ -944,7 +944,7 @@ print(
 
 
 def make_handler(svc: L.Service):
-    """The shared 2.2 handler, plus POST /reset when the run grants resets (the shared layer has no reset)."""
+    """The shared layer's handler, plus POST /reset when the run grants resets (the shared layer has no reset)."""
     base = AE.make_handler(svc)   # rcb_limited's handler, with POST /finish when agent-ended episodes are on
 
     class H(base):

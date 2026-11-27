@@ -51,5 +51,5 @@ Caps per container (PROTOCOL §6).
 | | |
 |---|---|
 | Upstream | MuJoCo Playground @ 4057c14 (Apache-2.0): `locomotion/go1/xmls/scene_mjx_feetonly_rough_terrain.xml`; MuJoCo Menagerie @ 1b86ece (`unitree_go1`); MuJoCo 3.3.7 on the CPU |
-| Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`embodied_first_exam/standard/`); cameras `track`, `side`, `back`, `top` (they follow the robot) (320 x 240), the feet's kinematics in the trunk frame |
+| Service | `environment/sim/server.py` (the adapter) on the shared layer `rcb_limited.py` (`embodied_first_exam/standard/`); cameras `track`, `side`, `back`, `top` (they follow the robot) (320 x 240), the feet's kinematics in the trunk frame |
 | Resources | 4 CPUs, no GPU (CPU physics, EGL or OSMesa rendering); the collect hook replays nothing, its video pass takes well under a minute (at most the horizon, ~150 frames) |

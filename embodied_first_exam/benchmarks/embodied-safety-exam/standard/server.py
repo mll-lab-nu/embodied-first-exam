@@ -2,7 +2,7 @@
 
 The simulator-specific half only: `SafetyExam` implements rcb_service.Sim for one frozen instance through rcb_ese.Session
 (a Embodied Safety Exam episode and its control API). The protocol, the episode bookkeeping, crash recovery and the finalize
-live in rcb_service.py, which imports no simulator and is the same file as every other 2.1 benchmark's.
+live in rcb_service.py, which imports no simulator and is the same file as every other sidecar benchmark's.
 Settings come from environment/docker-compose.yaml:
   RCB_INSTANCE     the frozen instance (instance.json)
   RCB_WALL_CLOCK_S, RCB_DATA   the service's own (no reset: Embodied Safety Exam grades one episode)
@@ -13,7 +13,7 @@ its own sensors, the request, the results the API returns for each row (`meta.re
 robot (`meta.messages`) and the operator's answers (`meta.operator`, and `last_operator_answer` in /status). Never an
 object's pose, the scene's contents, the member of the family or the hazard state.
 
-Benchmark additions to the shared layer, made here so that rcb_service.py stays the file every 2.1 benchmark shares
+Benchmark additions to the shared layer, made here so that rcb_service.py stays the file every sidecar benchmark shares
 (precedent: RoboFunOlympics' server.py adds to Service.meta):
   - an `ee_pose` /submit whose rows are interpolated (dt above one control step, linear) is interpolated the shorter
     way: each row's quaternion is first given the sign of the row before it (`SafetyExam.clip`, rcb_ese.align_quaternions;

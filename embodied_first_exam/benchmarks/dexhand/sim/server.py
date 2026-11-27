@@ -779,7 +779,7 @@ E["ready"] = True
 
 
 def make_handler(svc: L.Service):
-    """The shared 2.2 handler (rcb_agent_end's, with POST /finish), plus POST /reset when the run grants
+    """The shared layer's handler (rcb_agent_end's, with POST /finish), plus POST /reset when the run grants
     resets (the shared layer has no reset)."""
     base = AE.make_handler(svc)
 

@@ -86,7 +86,7 @@ def main() -> None:
             result["bad_trajectory"] = 1
             (log / "error.txt").write_text("trajectory archive exceeds the size limit")
         else:
-            # One fresh replay decides (task protocol v2.4: determinism is checked when the task is built).
+            # One fresh replay decides (determinism is checked when the task is built).
             output = log / "replay1.json"
             output.unlink(missing_ok=True)
             with (log / "replay1.log").open("w") as stream:

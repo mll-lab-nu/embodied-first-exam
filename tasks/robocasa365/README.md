@@ -95,7 +95,7 @@ it bit for bit). The toaster ovens and electric kettles of other tasks move by t
   infrastructure). The video is rendered from the trajectory after the verdict (the live session rebuilt, one pass);
   the collect hook waits up to 840 s for the verdict and 870 s for the video. The robot's cameras move with it:
   their intrinsics are in `/spec`, their current poses in every proprioception row (`cam_<camera>_*`, the standard
-  twin's `cam2world_gl`). Not served: the 2.1 service's per-response calibration dictionary.
+  twin's `cam2world_gl`). Not served: the sidecar's per-response calibration dictionary.
 - **Episode.** On a clock that does not stop, an episode as long as the agent's time would run for up to an hour, so
   the realtime twin also caps it: an episode ends at the agent's `POST /finish`, after 3000 control steps (150 s of
   robot time, the privileged deliverable's cap; `RCB_MAX_CONTROL_STEPS`), when the agent's time is up, or on a

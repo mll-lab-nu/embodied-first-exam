@@ -37,7 +37,7 @@ RUN mkdir -p /app/output
 WORKDIR /app
 # <<< images/autobio/Dockerfile
 # The rest of the `sim` sidecar's image (environment/docker-compose.yaml builds it): the image above, this directory at
-# /srv, and the shared 2.2 layer from the pinned files-only image. .dockerignore keeps the build's own two files out
+# /srv, and the shared layer from the pinned files-only image. .dockerignore keeps the build's own two files out
 # of /srv.
 COPY . /srv/
 COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:8a712f54d69d3fb089573d962c0756ef1026119a4337be28785e4a14410d20b3 \

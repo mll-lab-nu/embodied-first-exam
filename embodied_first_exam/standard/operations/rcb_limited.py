@@ -171,7 +171,7 @@ def depth_frames_part(name: str, stack) -> tuple[str, str, bytes, dict]:
 
 def encode_mp4(frames, fps: float) -> bytes:
     """H.264 mp4 (yuv420p, faststart) of uint8 (N,H,W,3) frames (an array or a list of (H,W,3) frames): the same
-    encoding every 2.0 service used."""
+    encoding every service uses."""
     import imageio.v2 as imageio
     with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as tf:
         path = tf.name
@@ -1570,7 +1570,7 @@ def make_handler(svc: Service):
 
 
 def serve(svc: Service, port: int = 8000) -> None:
-    """Check the spec, then serve forever (one request at a time, as every 2.x service)."""
+    """Check the spec, then serve forever (one request at a time, as every service)."""
     svc.spec.setdefault("on_service_error", ON_SERVICE_ERROR)
     if svc.episode is not None:
         svc.spec.setdefault("max_call_wall_s", svc.episode.max_call_wall_s)

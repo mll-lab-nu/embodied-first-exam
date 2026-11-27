@@ -7,11 +7,11 @@ invariants of Appendix H bind and no task value overrides them), `docs/protocol/
   does not stop, the realtime capability of `eai-standard/3.0`), PROTOCOL §3. Task directories end in `-privileged`, `-standard` or `-realtime`.
   Base images are `ghcr.io/mll-lab-nu/efe:<name>-<version>` (private: `efe-private:<name>-<version>`), one image per
   benchmark (PROTOCOL §1). No `results/` in task dirs.
-- From v3.0 every standard and realtime episode is agent-ended (PROTOCOL §3): the service never shows the success,
+- Every standard and realtime episode is agent-ended (PROTOCOL §3): the service never shows the success,
   `POST /finish` ends the episode, and the state it ends in is judged. `normalize` writes `RCB_AGENT_END` and the
   instruction's Finish line; `ci_checks/check-agent-end.py` checks them. The layers that implement it: `rcb_service.py`
   (sidecar), `rcb_realtime.py` (realtime), `embodied_first_exam/standard/agent_end/` (shared, operations).
-- The rules of `eai-standard/3.0` (standard_mode.md "Version 3.0"; `EAI_STANDARD` in `scripts/task_conventions.py`)
+- The rules of `eai-standard/3.0` (standard_mode.md "Rules on every layer"; `EAI_STANDARD` in `scripts/task_conventions.py`)
   hold on every layer: `/observe` only reads (`last_s`; `seconds > 0` is a 400); a hold chunk (`/submit` with
   `interpolate = "hold"` and `seconds`, no rows) lets time pass; `/submit` replies carry `duration_s`; the realtime
   clock starts at the first `/submit`. The clients have `get_obs(last_s=)`, `hold()` and `finish()`.

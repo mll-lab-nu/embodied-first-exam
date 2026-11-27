@@ -206,7 +206,7 @@ builds in 5-15 s and runs ~40-150 control steps per second, so the budget is the
 ## Standard mode (eai-standard/3.0)
 Standard and realtime differ only in the clock. Both run
 the same adapter (each twin's `environment/sim/server.py`: the same code, each copy with its own docstring) on the same
-shared service layer (`rcb_service.py`, with `grade.py` and the 2.1 client: the same files as HumanoidBench's, BiGym
+shared service layer (`rcb_service.py`, with `grade.py` and the sidecar client: the same files as HumanoidBench's, BiGym
 2.0's and Embodied Olympics - Fun's), with the same reset budget ("Reset budget" below). The static families (D05, D08, D11, D12, D13, S06) have
 only the standard twin and get the same rules.
 - **Action.** `joint_position` only (8 per arm: 7 joint targets + the total aperture, the environment's own action;
@@ -233,7 +233,7 @@ them moves by itself) get a `-realtime` twin, sharing the standard twin's adapte
   `environment/sim/server.py`, an `rcb_service.Sim` adapter on `rcb_pandadyn.Session`: the standard
   twin's frozen instance, `joint_position` action (clipped to the limits, executed as float64), success check, cameras
   (`overview`, `closeup`, RGB and z-depth, with their calibration in `/spec`) and proprioception columns. Not served: the
-  2.2 additions (`/kinematics`, per-frame camera poses, depth modes), all MAYs in 2.3. Resets: `Session.reset()`, the
+  shared layer's additions (`/kinematics`, per-frame camera poses, depth modes), every MAY of the realtime capability. Resets: `Session.reset()`, the
   scene rebuilt and reset with the instance's seed (exact, about 1 s); 3 per trial ("Reset budget" below).
 - **Grading.** The live episode: success = the task's own check as the last episode ended
   (rcb_service's `_finalize`; the adapter's `live_verdict` adds the phase and the end reason and takes nothing away), with

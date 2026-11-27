@@ -128,7 +128,7 @@ with the instance's recorded one; a mismatch gives up before the agent is served
 
 ### Agent-ended episodes
 
-Every standard and realtime task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3; standard: the 2.2 layer
+Every standard and realtime task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3; standard: the shared layer
 `rcb_agent_end.py`, realtime: `rcb_service.py`'s generic fields). `rcb_abc.Session` runs in its `agent_end` mode: a
 success never ends the episode and is never shown (it is recorded after every control step,
 `hidden_success_first_step`). The agent ends the episode with `POST /finish` (reason `finished`); the end of its session
@@ -240,5 +240,5 @@ repository.
 
 ## Standard-mode service details
 Serves `eai-standard/3.0` (MuJoCo on the CPU, EGL rendering, resume class `exact`); `max_frames_per_call` = 1000. The
-optional reset capability is implemented with a budget of 0 by default; the 2.2 client has no `reset()`, so a run that
+optional reset capability is implemented with a budget of 0 by default; the shared client has no `reset()`, so a run that
 grants resets calls `POST /reset` through `Robot._post`. The scene builds in 1-5 s (`RCB_STARTUP_TIMEOUT_S` 300).

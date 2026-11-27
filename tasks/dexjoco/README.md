@@ -116,7 +116,7 @@ and `infra_error` = 1.
   video stops 2700 s after the grader started.
 
 ## Standard mode (`eai-standard/3.0`)
-The 2.2 adapter (each standard task's `environment/sim/server.py`) on the shared layer (`embodied_first_exam/standard/`, copied
+The adapter (each standard task's `environment/sim/server.py`) on the shared layer (`embodied_first_exam/standard/`, copied
 unchanged), resume class `exact`:
 - **actions:** `ee_pose` (DexJoCo's own row) and `joint_position` (per arm 7 arm + 16 hand joint targets; the arm part
   becomes a tcp target by forward kinematics, the same controller tracks it). The service journals and records the
@@ -169,7 +169,7 @@ unchanged), resume class `exact`:
   under `checked`): a field of the wrong JSON type (a number or an object as `note`, a string or
   a list as `dt` / `seconds` / `video_fps`, a string as `cameras`), a number too large for a float, NaN, a bad `depth`
   is a 400, no physics, the episode goes on; `null` for `dt`, `seconds`, `video_fps`, `cameras` or `note` is the
-  default (what the 2.2 client sends for an argument left out).
+  default (what the shared client sends for an argument left out).
 - `ci_checks/check-standard-protocol.py` passes against a live service of a single-arm and a bimanual task (velocity limits are null:
   WARN only). Crash recovery: the service killed between calls and inside a call resumes the same episode
   (`resumes = 2`, exact hash) and the oracle still ends in success.

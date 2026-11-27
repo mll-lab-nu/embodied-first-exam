@@ -67,7 +67,7 @@ One manual step, the dataset; the simulator image builds itself.
   image `images/behavior-files/`. The task Dockerfiles take them with `COPY --from=<image@digest>`: the privileged agent
   image at `/opt/tools/`, both modes' verifier images at `/tests/` (`grade.py`, and the privileged one's tooling and robot
   config), and the standard sidecar's image, built from `environment/sim/` (its `Dockerfile`), at `/srv` from
-  the same `images/behavior-files/` (it also carries the sidecar's shared files: this tooling and the service; the 2.2 layer
+  the same `images/behavior-files/` (it also carries the sidecar's shared files: this tooling and the service; the shared layer
   comes from `images/standard-files/`); the task dirs carry no copy.
   A changed file needs a new image version (`VERSION`, `python3 scripts/files_image.py build behavior-files`, push, `pin`
   the digest) and the new digest in every task's `COPY --from` lines; `files_image.py check` holds the source to
@@ -348,7 +348,7 @@ that window counts. A fall or a simulator breakdown, also in that window, is a 0
 |---|---|
 | `environment/rcb_traj.py` (privileged tooling, `Session`) | `/opt/tools/rcb_behavior.py` (`Session`: the frozen instance, thin primitives, the robot's cameras, recording, replay), from the files image |
 | `tests/rcb_traj.py` | `/tests/rcb_behavior.py`, from the files image |
-| standard sidecar | `environment/sim/server.py` (2.2 adapter), `finalize.sh`, `rcb_behavior.py`, the robot config; `rcb_limited.py`, `rcb1.py`, `run.sh` from `embodied_first_exam/standard/` |
+| standard sidecar | `environment/sim/server.py` (the adapter), `finalize.sh`, `rcb_behavior.py`, the robot config; `rcb_limited.py`, `rcb1.py`, `run.sh` from `embodied_first_exam/standard/` |
 | reference tooling | `solution/rcb_behavior_ref.py` (frozen; the oracle agent only) |
 | `rcb_client.py`, `rcb1.py` | the same names (`embodied_first_exam/standard/`); the agent container and the verifier are FROM the shared digest-pinned client image (`embodied_first_exam/standard/client.env`), the agent's pip pins are `environment/client-requirements.txt` |
 

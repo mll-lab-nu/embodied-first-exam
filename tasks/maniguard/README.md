@@ -352,7 +352,7 @@ last command held. The runaway guard is the step limit (`RCB_STEP_LIMIT` 50,000,
 |---|---|
 | privileged tooling (`Session`) | `/opt/tools/rcb_maniguard.py` in the agent's container (`Session`: the frozen task as upstream loads it, thin primitives, privileged state, the live monitor and goal checks, cameras, recording, replay), from `privileged/environment/rcb_maniguard.py` of the files image |
 | the verifier's copy | `/tests/rcb_maniguard.py` and `/tests/grade.py` (privileged), `/tests/grade.py` (standard), from the files image |
-| standard sidecar | `/srv/server.py` (2.2 adapter), `finalize.sh`, `live_video.py`, `rcb_maniguard.py` from the files image; the task dir's `environment/sim/instance/`; `rcb_limited.py`, `rcb1.py`, `run.sh` from the `standard-files` image (`embodied_first_exam/standard/`) |
+| standard sidecar | `/srv/server.py` (the adapter), `finalize.sh`, `live_video.py`, `rcb_maniguard.py` from the files image; the task dir's `environment/sim/instance/`; `rcb_limited.py`, `rcb1.py`, `run.sh` from the `standard-files` image (`embodied_first_exam/standard/`) |
 
 The tooling records (T, 8) actions at 20 Hz. Every entry point was exercised in the simulator: FK of the
 measured joints equals the simulator's end-effector pose to 0.2 µm, an IK round trip is within 0.6 mm. `s.reset()` loads

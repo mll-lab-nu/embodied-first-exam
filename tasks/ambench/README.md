@@ -115,7 +115,7 @@ cannot be fetched during a trial.
 `Session` (frozen instance, reset, step, `hold_action`, status, `actions`, replay, `save_trajectory`), the privileged state
 (`state()`, `objects()`, `proprio()`), the two onboard cameras on request (`Session(cameras=True, depth=True)`:
 `render_frame`, `render_depth`, `camera_info`, `start_video` / `stop_video`) and `env` (the Isaac Lab environment itself).
-No motion primitives. For standard mode the same module provides the 2.2 proprio groups, the robot's spec sheet and a
+No motion primitives. For standard mode the same module provides the shared layer's proprio groups, the robot's spec sheet and a
 stateless numpy model of the arm on its airframe (`/kinematics`; checked against the simulator's link poses to 2e-7 m).
 - **Actions**: AM-Bench's absolute end-effector pose action of the `Abs-PID` profile, 8 per control step: the ee_link
   target position (x, y, z, m, relative to the environment's origin), its orientation (qw, qx, qy, qz; for the FA-Hexa the

@@ -12,8 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:ikea-mujoco-sim-0.4.0` |
 
 ## Task
-IKEA SVALLET work lamp (AA-2140039-1), unpowered steps 1-2 in plain MuJoCo 3.14.0 (CPU, float64) with two 6-DoF ViperX 300 s arms (MuJoCo Menagerie ALOHA), each with its own parallel gripper, through the robot service (eai-standard/3.0; 2.1 / 2.2
-requests are served unchanged): RGB from four ALOHA-style cameras (optional depth), proprioception, `joint_position`
+IKEA SVALLET work lamp (AA-2140039-1), unpowered steps 1-2 in plain MuJoCo 3.14.0 (CPU, float64) with two 6-DoF ViperX 300 s arms (MuJoCo Menagerie ALOHA), each with its own parallel gripper, through the robot service (eai-standard/3.0): RGB from four ALOHA-style cameras (optional depth), proprioception, `joint_position`
 chunks, stateless kinematics, every pose in the robot's frame; no reset and no privileged state. Snap the lamp shade onto the socket on top of the stand, then screw the bulb into the shade's socket until it seats. Leave the lamp standing upright. Then let go of everything and move both arms clear.
 
 ## Difficulty

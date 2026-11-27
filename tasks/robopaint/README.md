@@ -120,7 +120,7 @@ their current files, the others to the release validation and the process-rule v
   every target in both modes (kaishu 70, xingshu 32, lettering 20 (on other words), acrylic 20, oil 22). Under the
   registered scoring (the success rule in `instance.json`, `rcb_brush_score.py`) every saved oracle trajectory re-scores
   as a pass and the scorer's tooling re-scores bit-identically; Harbor oracle + nop were re-run on two pairs per family.
-  The release runs predate the 2.2 inputs and rated limits in `rcb_brush.py` (tooling queries only) and the standard
+  The release runs predate the shared layer's inputs and rated limits in `rcb_brush.py` (tooling queries only) and the standard
   twins' current service, collect hook, grader and client.
 - **Process rules**, on the built task images (`ghcr.io/mll-lab-nu/efe:robopaint-0.2.0`, each task's verifier image run as Harbor runs it):
   every pair's reference trajectory succeeds in the privileged verifier and through the standard path (82 of 82); Harbor
@@ -412,7 +412,7 @@ it counts once (Luna's genuine 2.98 × retrace sets that margin), unless its bac
 - **Process rules.** A recorded colour-in fill passes the Starry Night picture rule (ΔE 5.48, SSIM 0.722), but its sweep
   share is 0.37, so the process rules decide it.
 
-**Standard mode.** The reference's stream through the current 2.2 server:
+**Standard mode.** The reference's stream through the current server:
 - Natively (the image's runtime, an idle 128-thread host): Starry Night's 60797 steps take 598 s, 102 control steps/s with
   `video="none"` (the standard oracle's setting). The client's defaults (every camera, mp4) run at 51 control steps/s.
 - On a loaded host (1-min load 75–180): 645–906 s per pair, 67–88 control steps/s.
@@ -483,7 +483,7 @@ One reference execution therefore takes 10–15 minutes of the time limit, or ab
 | `environment/rcb_traj.py` (privileged tooling, `Session`) | `/opt/tools/rcb_brush.py` (from the files-only image) |
 | `tests/rcb_traj.py` | `/tests/rcb_brush.py` + `/tests/rcb_brush_score.py` (from the files-only image) |
 | — | `environment/scorer/` (privileged `s.score()`: `rcb_scorer.py` + the scoring module) |
-| standard sidecar | `environment/sim/server.py` (the 2.2 adapter), `finalize.sh` (the collect hook), the brush tooling and its scorer, and from `embodied_first_exam/standard/`: `rcb_limited.py`, `rcb1.py`, `run.sh` |
+| standard sidecar | `environment/sim/server.py` (the adapter), `finalize.sh` (the collect hook), the brush tooling and its scorer, and from `embodied_first_exam/standard/`: `rcb_limited.py`, `rcb1.py`, `run.sh` |
 | `rcb_client.py`, `rcb1.py` | the same names (`embodied_first_exam/standard/`) |
 | — | `rcb_brush_strict.py` (the process rules, graders' side only): `/tests/` (privileged, from the files-only image), `environment/scorer/` (privileged), `environment/sim/` (standard) |
 
@@ -493,7 +493,7 @@ One reference execution therefore takes 10–15 minutes of the time limit, or ab
 `/opt/tools/`, the privileged verifier image the four graders' files at `/tests/`, the standard verifier image `grade.py`
 at `/tests/`; no task dir carries them. The sidecars are built from `environment/scorer/` and `environment/sim/` (their
 `Dockerfile`: the directory at `/srv`) and take their shared files, these among them, from the same `images/robopaint-files/`
-(`ci_checks/check-tooling-identity.sh` counts those copies). The 2.2 layer is byte-identical to `embodied_first_exam/standard/`
+(`ci_checks/check-tooling-identity.sh` counts those copies). The shared layer is byte-identical to `embodied_first_exam/standard/`
 (`ci_checks/check-tooling-identity.sh`).
 
 ## Declarations

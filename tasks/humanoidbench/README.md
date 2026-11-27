@@ -126,14 +126,14 @@ chunks loses nothing. A real H1 does not wait. The realtime mode (PROTOCOL §3;
 `tasks/humanoidbench/humanoidbench-*-i00-realtime`, 10 tasks, one per family, `mode = "realtime"`) is standard mode with the same
 instance, sensors, success rule, reset budget (50), wall clock (each task's own `[agent] timeout_sec`, stated by the Time line of every instruction's closing `## Limits`, PROTOCOL §2) and client, on a
 clock that does not stop (each task's `environment/sim/rcb_realtime.py`, which extends `rcb_service.py`; the
-wire protocol is `eai-standard/3.0`, 2.2 plus the realtime capability, docs/protocol/standard_mode.md "Realtime mode"):
+wire protocol is `eai-standard/3.0`, the shared layer plus the realtime capability, docs/protocol/standard_mode.md "Realtime mode"):
 
 - **Clock.** An episode starts paused at the frozen start, its servos holding their starting targets. Its clock starts
   at its first `submit` and runs one control step every 20 ms of wall time
   (`RCB_SLOWDOWN` = S: every S × 20 ms; 1 by default, other values reported separately) until the episode ends. Each
   episode after a reset starts paused again; so does an episode resumed after a crash.
 - **Actions.** The service keeps a plan, one target row per coming control step. `submit` expands its chunk exactly as
-  in 2.1 (rows `dt` apart, `linear` or `hold`) and writes it into the plan from control step `at` (default: the next
+  on the sidecar layer (rows `dt` apart, `linear` or `hold`) and writes it into the plan from control step `at` (default: the next
   one), replacing what was planned from there, and answers at once with the robot as it is now. A row whose step has
   already run when the request arrives is dropped (`late_steps`). When the plan runs out, the last target is held
   (zero-order hold): a slow agent's robot keeps its last servo targets, as a position-controlled H1 would. (The layer

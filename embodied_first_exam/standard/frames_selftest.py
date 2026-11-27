@@ -353,5 +353,5 @@ finally:
 if fails:
     print(f"{len(fails)} failure(s)")
     sys.exit(1)
-print(f"ok per-call image budget: rcb1 frames_part/size, 2.2 stride count + max_images + depth as sent, "
-      f"{len(copies)} distinct rcb_service.py (at the budget / one over), 2.3 unsent answers in flight, submit / observe now never refused, the thread recorder's reads")
+print(f"ok per-call image budget: rcb1 frames_part/size, shared-layer stride count + max_images + depth as sent, "
+      f"{len(copies)} distinct rcb_service.py (at the budget / one over), realtime unsent answers in flight, submit / observe now never refused, the thread recorder's reads")

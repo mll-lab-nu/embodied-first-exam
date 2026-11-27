@@ -790,7 +790,7 @@ class Adapter:
             raise BadRequest("last_s: a finite number >= 0")
         k0 = int(self.svc.m.k)
         code, info, parts, now = self.observation(args)
-        if code == 409 and self.over():                 # the match is over: the final state, no images (2.x: 200)
+        if code == 409 and self.over():                 # the match is over: the final state, no images
             code, info, parts = 200, {}, []
         elif code == 409 and self.clock == "turn":       # before the start: the state, no images
             code, info = 200, {"not_now": info.get("error")}

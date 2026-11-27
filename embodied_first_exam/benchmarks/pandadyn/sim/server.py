@@ -9,7 +9,7 @@ one frozen instance, on the benchmark's own tooling rcb_pandadyn.Session (ManiSk
 1000 Hz, one or two Franka Pandas behind their Ruckig + torque servos). The two modes share the scene, the action, the
 cameras, the proprioception, the success rule, the reset and the trajectory, and differ only in the clock: in standard
 mode the world is frozen between the agent's calls; in realtime mode rcb_realtime.py's clock runs on top of the same
-service layer, which does not serve the 2.2 additions (`/kinematics`, per-frame camera poses, depth modes). The
+service layer, which does not serve the shared layer's additions (`/kinematics`, per-frame camera poses, depth modes). The
 protocol, the clock, the episode, the resets, crash recovery and the finalize are rcb_service.py's and rcb_realtime.py's,
 unchanged copies of the shared sources (ci_checks/check-tooling-identity.sh).
 

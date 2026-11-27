@@ -199,7 +199,7 @@ SPEC = {
         "noise": L.DEPTH_NOISE,
     },
 }
-L.check_spec(SPEC)  # a spec that misses a 2.2 field or names a forbidden one never starts the episode
+L.check_spec(SPEC)  # a spec that misses a required field or names a forbidden one never starts the episode
 EP.scene_built()
 
 

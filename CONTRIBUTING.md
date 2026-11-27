@@ -208,7 +208,7 @@ The checklist is in PROTOCOL §4.
   pinned files-only image, the benchmark's `images/<folder>-files/` (sources under `embodied_first_exam/benchmarks/<folder>/`; the same image
   serves its agent and verifier images; besides it, a benchmark may have files images that hold only data, such as goal
   pictures or build inputs, and one per further simulator image it runs on, as RoboARC's IKEA suite),
-  or `images/standard-files/` for the 2.1 / 2.2 / 2.4 / realtime layers (the 2.1 clients and grader of `sidecar/` too): the sidecar is built from its directory
+  or `images/standard-files/` for the sidecar / shared / operations / realtime layers (the sidecar clients and grader of `sidecar/` too): the sidecar is built from its directory
   (`build: context: sim`, its `Dockerfile`: `COPY . /srv/`, then `COPY --from=<image@digest>` of those files at their paths
   under `/srv`; `.dockerignore` keeps the two build files out). A private evaluator's own data (hidden plants, case banks)
   and files that may not be redistributed stay in the task dir.

@@ -57,7 +57,7 @@ configuration (`config_key`; running.md "Results").
 | Modes offered (§3): any subset; a task without its privileged twin says why in its README Twin row | the task directories it ships | — |
 | Cutoff: the agent's wall-clock time, decided by the task's author | `[agent] timeout_sec` (a whole number of seconds) | 3600 s; at most 14400 s; equal in a task's privileged and standard versions (H.7) |
 | Reset budget N (standard modes) | the `sim` service's `RCB_RESET_BUDGET` default (`/spec.budget.reset`), the instruction | 0 in both standard and realtime (a task that grants resets declares its own N) |
-| Agent-ended episode and its step limit (standard and realtime mode, §3; required from v3.0) | the `sim` service's `RCB_AGENT_END` (written by `normalize`) and `RCB_STEP_LIMIT` (`/spec.success_signal`, `/spec.budget.steps`), the instruction's Goal, its `## Robot Interface` finish line and its `## Limits` Finish line (both rendered by `normalize`) | on: the agent ends the episode (`POST /finish`); no step limit beyond the service's own step cap |
+| Agent-ended episode and its step limit (standard and realtime mode, §3; required) | the `sim` service's `RCB_AGENT_END` (written by `normalize`) and `RCB_STEP_LIMIT` (`/spec.success_signal`, `/spec.budget.steps`), the instruction's Goal, its `## Robot Interface` finish line and its `## Limits` Finish line (both rendered by `normalize`) | on: the agent ends the episode (`POST /finish`); no step limit beyond the service's own step cap |
 | Slowdown S (realtime) | the `sim` service's `RCB_SLOWDOWN` default (`/spec.timing.slowdown`), the instruction (`S = <S>`) | S = 1 when the service's real-time factor is ≥ 3, else ⌈1.5 / RTF⌉ |
 | Observation and action extensions | `/spec`, the instruction, the benchmark doc | the `eai-standard` core |
 | Grading kind | the instruction, the frozen instance, `reward.json` (`replays`, `graded_by_live`) | privileged: one fresh replay, or up to `[metadata] replays` where the simulator does not replay bit-wise, any success counting (§4); standard modes: the live episode (H.4) |
@@ -84,7 +84,7 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
   shipped client (`rcb_client.py`, `rcb1.py`); resets within the declared budget; the wall clock is the hard budget,
   with the task's step limit or the service's own step cap where it has one (below). Time passes only through
   `/submit` (Gym's `env.step`): a chunk, or a hold chunk that keeps the command in force for a number of seconds;
-  `/observe` only reads. The agent ends the episode (agent-ended episodes, below; required from v3.0). Graded by the
+  `/observe` only reads. The agent ends the episode (agent-ended episodes, below; required). Graded by the
   live episode the sidecar ran (H.4).
 - **realtime** (`-realtime`; `eai-standard/3.0` with the realtime capability): standard mode on a clock that does not stop: once
   an episode starts (its first `/submit`) the robot runs at 1/S of real speed whatever the agent does, holds its last targets while the agent
@@ -150,7 +150,7 @@ of an eai-standard service (EO Match, RoboEngineer) are outside this rule.
 | Recommended | Notes |
 |---|---|
 | `/logs/verifier/reward.txt` `1` or `0`; `reward.json` numbers only: `success`, `replays`, `replays_succeeded` and `deterministic` (privileged trajectory tasks; with one replay nothing is compared and `deterministic` is 1), `live_success`, `graded_by_live` and `first_success` (standard modes: the trial's first episode ended in success, the no-reset performance; without a reset it is `success`; where the service keeps no first episode it is derived from `resets`, running.md "Results"), `infra_error`, `sim_error`, `grader_error`, `progress`, the resource fields, cost fields (`n_actions`, `sim_steps`) | the same names wherever the concept applies |
-| Every graded trial leaves a playable video (`replay.mp4` in `/logs/verifier/` or the sim sidecar's collected directory) and the replayable trajectory it was graded on (privileged: the deliverable; standard: the sidecar's journal or `trajectory.npz`). The one expected exception: a privileged trial whose agent submitted no trajectory, or none that replays (`missing_trajectory`, `bad_trajectory`, no actions). By default a video is a post-hoc replay (rendered afterwards from the trajectory, `replay.mp4`). Where the simulator is not verified bit-wise replayable (the replay must reach the live final-state hash), the video must be a live recording instead (captured by the sim sidecar during the episode, `live.mp4`). Privileged videos are always post-hoc replays. Each benchmark declares which one its standard modes use, and every video, a published one included, is labelled with its source (`video_source`). The verdict is written before the video is rendered and never depends on it; the video's time bound covers the longest episode the cutoff allows. With resets, a service that keeps the first episode (the shared 2.1 sidecar service, standard_mode.md "Evidence and grading") also leaves its trajectory and video beside the graded ones (`trajectory.first.npz`, `replay.first.mp4`): evidence only | `check-video.py`; the runner flags a graded trial without a video and renders it from the trajectory (running.md "Recordings") |
+| Every graded trial leaves a playable video (`replay.mp4` in `/logs/verifier/` or the sim sidecar's collected directory) and the replayable trajectory it was graded on (privileged: the deliverable; standard: the sidecar's journal or `trajectory.npz`). The one expected exception: a privileged trial whose agent submitted no trajectory, or none that replays (`missing_trajectory`, `bad_trajectory`, no actions). By default a video is a post-hoc replay (rendered afterwards from the trajectory, `replay.mp4`). Where the simulator is not verified bit-wise replayable (the replay must reach the live final-state hash), the video must be a live recording instead (captured by the sim sidecar during the episode, `live.mp4`). Privileged videos are always post-hoc replays. Each benchmark declares which one its standard modes use, and every video, a published one included, is labelled with its source (`video_source`). The verdict is written before the video is rendered and never depends on it; the video's time bound covers the longest episode the cutoff allows. With resets, a service that keeps the first episode (the shared sidecar service, standard_mode.md "Evidence and grading") also leaves its trajectory and video beside the graded ones (`trajectory.first.npz`, `replay.first.mp4`): evidence only | `check-video.py`; the runner flags a graded trial without a video and renders it from the trajectory (running.md "Recordings") |
 | Privileged: success judged on the end state of one fresh replay of the deliverable (the default). A task whose simulator does not replay bit-wise declares a replay count N (`[metadata] replays`): its grader replays the deliverable up to N times, each in a fresh process, stopping at the first success, and the attempt succeeds if any replay succeeds (`replays`, `replays_succeeded`; `deterministic` is evidence only). Bit-wise determinism is checked when a task is built, not in every graded trial: its author makes sure that fresh replays of a positive example end on the same final-state hash on the hardware used for evaluation (the evidence goes in the pull request: CONTRIBUTING.md, REVIEWING.md). A scene build does not depend on the host (sorted listings, no wall clock); an instance rebuilt with another state hash gives no verdict (`instance_mismatch`, an infrastructure failure). Standard modes: success judged by the sidecar on the live episode, with the task's own rule (a settle or hold window it declares is run on the live simulator); `reward.json` says `graded_by_live = 1`, `replays = 0` | within H.4; `check-live-verdict.py` |
 | An infrastructure failure is `infra_error = 1`: not a result, neither a success nor the agent's 0 (H.5) | `scripts/write_task_results.py` |
 | A simulator error is a failure: an episode that ended in `error`, or in which the simulator raised an error on the agent's actions, scores 0 (`success = 0`, `sim_error = 1`) whatever it had reached before, and is the agent's result, not an infrastructure failure (unless the service records `infra_error = 1`: the agent had not acted yet) | `check-live-verdict.py` |
@@ -267,7 +267,7 @@ fields: running.md "Resources".
 ## 7. Versions
 
 This text is **v3.0**, and `eai-standard/3.0` (`EAI_STANDARD` in `scripts/task_conventions.py`) names the wire protocol
-every standard and realtime task declares (standard_mode.md "Version 3.0"). What 3.0 changed:
+every standard and realtime task declares (standard_mode.md "Rules on every layer"). Its rules:
 - Agent-ended episodes (§3) are required in the standard and realtime modes: the service never shows the success, the
   agent ends the episode with `POST /finish`, and the end state is graded.
 - Standard mode is Gym's `env.step`: the world stands still between calls, and `/submit` answers with the chunk's video
@@ -278,12 +278,7 @@ every standard and realtime task declares (standard_mode.md "Version 3.0"). What
 - Every agent-facing endpoint is also an MCP tool (`efe-robot`).
 
 Every task's `metadata.protocol` and every service's `/spec.protocol` is `eai-standard/3.0`; what a layer serves
-beyond the base is said by its `/spec` capabilities (standard_mode.md). Earlier versions of this text: 2.4 made one fresh replay the default privileged grading, or up to
-N with any success where the simulator does not replay bit-wise (bit-wise determinism is checked when the task is
-built, not in every trial, §4); 2.3 renamed the third mode `standard-realtime` to `realtime`, its task directories
-`<base>-realtime`, with no other change to the mode, and made its default reset budget 0 as in standard mode; 2.2 added
-the optional agent-ended episodes of §3, required since 3.0. Like the wire protocol's, its minor versions otherwise
-only add (a recommended field, an optional feature, evidence). A
+beyond the base is said by its `/spec` capabilities (standard_mode.md). A
 result's `config.json` records `protocol_version`: `PROTOCOL_VERSION` in `scripts/task_conventions.py` of the checkout
 that writes the result (`"legacy"` for a trial of another version of the task), one of the keys results are compared
 by (`CONFIG_KEYS`, running.md "Results"). The wire protocol's layers: the base (`/spec`, `/status`, `/observe`,
@@ -334,7 +329,7 @@ seed and the success predicate run in the `sim` sidecar; the agent's image holds
 the protocol's endpoints; every other path is 404 (no `/state`, no `/success`). The service exposes no object poses,
 scene files, seed, success predicate or its parameters beyond what the instruction states, segmentation or object
 contact forces, except telemetry the benchmark's doc declares field by field, which never gives an object's pose. Nor
-does it show the task's success or progress toward it: from v3.0 every standard and realtime task served by an
+does it show the task's success or progress toward it: every standard and realtime task served by an
 `eai-standard` service of its mode has agent-ended episodes (§3; `RCB_AGENT_END` on in its `sim` service), so no answer
 depends on the success and the agent ends the episode. The
 agent's controller runs in the agent's own container; no agent code runs next to the simulator. *CI:*

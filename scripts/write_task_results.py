@@ -85,7 +85,7 @@ def classify(trial, r, rw, agent_ended=False):
     # the verifier never graded, or that Harbor or the model account ended (not_a_result). A verdict of success with no
     # infrastructure flag stands; over the token budget is the agent's failure unless the verifier flagged infrastructure.
     infra = bool(rw.get("infra_error") or rw.get("grader_error"))
-    # an agent-ended episode (PROTOCOL §3: every standard and realtime task from v3.0, tc.agent_end_required, for a trial
+    # an agent-ended episode (PROTOCOL §3: every standard and realtime task, tc.agent_end_required, for a trial
     # of the task's current version; else reward.json's ended_session_end) is graded on the state its session ended in,
     # the token budget's end included: over the budget it is not failed on top
     fails = over and not agent_ended and "ended_session_end" not in rw
@@ -96,7 +96,7 @@ def classify(trial, r, rw, agent_ended=False):
 
 def agent_ended_trial(tdir, cfg):
     """Whether the trial's episode was agent-ended by the rule of the checkout: only for a trial of the task's current
-    version (its digest matches, trial_config `digest_match`); a trial of an older version (a 2.x task before v3.0)
+    version (its digest matches, trial_config `digest_match`); a trial of an older version
     keeps the rules it ran under, known from its reward.json (classify: `ended_session_end`)."""
     return cfg.get("digest_match") is True and tc.agent_end_required(tdir)
 

@@ -652,7 +652,7 @@ print(f"{L.PROTOCOL} MuJoCo Playground quadruped sim ready ({S.env}; startup {EP
 
 
 def make_handler(svc: L.Service):
-    """The shared 2.2 handler (with POST /finish when the task's episodes are agent-ended), plus POST /reset when the run
+    """The shared layer's handler (with POST /finish when the task's episodes are agent-ended), plus POST /reset when the run
     grants resets (the shared layer has no reset)."""
     base = AE.make_handler(svc)
 

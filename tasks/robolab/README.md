@@ -34,7 +34,7 @@ The first task builds the simulator image from public sources (below); later tas
 - The task directories are the deliverable; the tooling that built them is kept outside this repository. Each family's
   frozen instance is in its task dir (`tasks/robolab/robolab-<family>-i00-privileged/environment/instance.json`); the code
   the tasks share has its one source in `embodied_first_exam/benchmarks/robolab/` (the tooling `rcb_robolab.py`, the oracles' skills
-  `ref_primitives.py`) and `embodied_first_exam/standard/` (the 2.2 layer and the standard client).
+  `ref_primitives.py`) and `embodied_first_exam/standard/` (the shared layer and the standard client).
 - A family is RoboLab's benchmark task of that name, its success predicate RoboLab's own `success` termination term.
   The 53 families that have tasks are the 2 with a reference solution and the 51 with
   a graded positive example. 35 further RoboLab tasks were frozen but have no positive yet (one is needed before
@@ -204,7 +204,7 @@ iterations cost more than in the other simulators.
 |---|---|
 | `environment/rcb_traj.py` (privileged tooling, `Session`) | `/opt/tools/rcb_robolab.py` in the agent's image (`Session`: the frozen scene state, thin primitives, rendering, recording, replay), from the files-only image below |
 | `tests/rcb_traj.py` | `/tests/rcb_robolab.py` in the verifier's image, from the same files-only image |
-| standard sidecar | `environment/sim/server.py` (the 2.2 adapter), `finalize.sh`, `rcb_robolab.py`; `run.sh`, `rcb_limited.py`, `rcb1.py` from `embodied_first_exam/standard/` |
+| standard sidecar | `environment/sim/server.py` (the adapter), `finalize.sh`, `rcb_robolab.py`; `run.sh`, `rcb_limited.py`, `rcb1.py` from `embodied_first_exam/standard/` |
 | `rcb_client.py`, `rcb1.py` | the same names (`embodied_first_exam/standard/`) |
 
 The privileged tasks carry no copy of the tooling: their `environment/Dockerfile` and `tests/Dockerfile` take

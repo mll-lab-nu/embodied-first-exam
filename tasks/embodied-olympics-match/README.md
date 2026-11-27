@@ -68,7 +68,7 @@ match above except the low-level ones (`matchlow`: the agent's in-loop skill ser
 tennis (core 0.5, its own image) speaks eai-standard/3.0: `/spec`, `/status`, `/observe`, `/submit`, plus the match's
 own calls as extension endpoints, `/start`, `/ready` (the review after every unit) and, in team formats, `/say` and
 `/team`; every answer's `meta` carries `score`, `review_due` and `match_over`. The real-time matches declare
-`eai-standard/3.0` and follow 2.3's realtime clock: `/submit` answers at once and its rows become a plan from
+`eai-standard/3.0` and follow the realtime layer's clock: `/submit` answers at once and its rows become a plan from
 control step `at` (a new chunk replaces it from `at` on, passed rows are dropped, the last command holds). As in every
 eai-standard/3.0 task, `/observe` answers at once and never lets time pass (`seconds > 0` is a 400); time passes only
 through `/submit`, and a rows-free hold chunk `{"type": T, "interpolate": "hold", "seconds": S}` lets it pass without a
@@ -89,8 +89,8 @@ instruction, and runs again after a re-export). The sim runs `python3 -m eai_std
 (`core/serve.py`, `core/lockstep.py`) builds and runs the match unchanged and the extension only wraps its HTTP server, on
 the same port as the core's seat API, which stays in place: the `game` command and `/<SEAT>/<call>` work as before,
 side by side with the standard endpoints (one request budget for both; `game` does not go through the new endpoints).
-The agent's image gets the shared client from the pinned `standard-files` image (`/opt/tools/rcb_client.py`: 2.3's for
-the real-time matches, 2.2's otherwise). The core and the sport (`core/`, `sport/`: `source_sha`) and the pinned
+The agent's image gets the shared client from the pinned `standard-files` image (`/opt/tools/rcb_client.py`: the realtime layer's for
+the real-time matches, the shared layer's otherwise). The core and the sport (`core/`, `sport/`: `source_sha`) and the pinned
 files-only image (`embodied-olympics-match-files-0.3.0`) are unchanged: the extension lives in each task's own build
 context, so no files-only image is rebuilt and a match's record is the one its core writes. Checked against the oracles
 without a model: the turn-based bout and a lockstep twin play identically through the standard endpoints and through the

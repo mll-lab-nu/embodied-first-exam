@@ -230,7 +230,7 @@ No task directory carries a copy of the tooling: the task Dockerfiles copy it fr
 |---|---|
 | `environment/rcb_traj.py` (privileged tooling, `Session`) | `/opt/tools/rcb_robowits.py` (`Session`: the frozen instance in `instance.json`, thin primitives, rendering, recording, replay; source `privileged/tests/rcb_robowits.py`) |
 | `tests/rcb_traj.py` (the verifier's copy) | `/tests/rcb_robowits.py` and the grader `/tests/grade.py` (sources `privileged/tests/`) |
-| standard sidecar (`environment/sim/server.py`) | `/srv/server.py` (the 2.2 adapter, source `sim/server.py`) + `/srv/rcb_robowits.py`; the standard grader `/tests/grade.py` (source `standard/tests/grade.py`) |
+| standard sidecar (`environment/sim/server.py`) | `/srv/server.py` (the adapter, source `sim/server.py`) + `/srv/rcb_robowits.py`; the standard grader `/tests/grade.py` (source `standard/tests/grade.py`) |
 | `rcb_client.py`, `rcb1.py` | the same names in `/opt/tools/` (from `standard-files`, `embodied_first_exam/standard/`) |
 
 The tooling records (T, 16) JOINT_ABS rows (per arm 7 joints + gripper width) at the 30 Hz control rate. Every task

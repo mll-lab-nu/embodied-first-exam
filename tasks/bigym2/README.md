@@ -119,7 +119,7 @@ resume are infrastructure. Standard mode keeps its rule: a crash is the agent's 
 logged as evidence). A simulator that fails inside `POST /reset` ends the episode `error` (`infra_error = 1`: the
 agent's reset was legitimate), not `reset`. A negative `Content-Length` is refused unread (400).
 
-Realtime (the shared 2.3 layer): a gap before `at` is the plan's last row, walking velocity included; the
+Realtime (the realtime layer): a gap before `at` is the plan's last row, walking velocity included; the
 agent's requests cannot slow the clock -- bodies are read, decoded and checked off the simulator's thread, waiting
 requests are served once the clock has caught up, the cameras are rendered once per control step
 (`docs/protocol/standard_mode.md`, "What a request can cost the clock") -- and `final.json` / `reward.json` carry the clock's

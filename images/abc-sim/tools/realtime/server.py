@@ -19,7 +19,7 @@ the verdict is the end state's: `end_window_steps` = HOLD_STEPS (about a second 
 for all of it at the window's end) for the hold rule, none for the ball tray (the countdown completed and the ball still
 on the tray).
 
-What the agent gets is what the standard twin gives, minus the 2.2 additions the realtime layer does not serve
+What the agent gets is what the standard twin gives, minus the shared layer's additions the realtime layer does not serve
 (`/kinematics`, per-frame camera poses, depth modes): the cameras (RGB and depth), the robot's own proprioception and the
 14-number joint-position action. Nothing about the scene leaves this process.
 

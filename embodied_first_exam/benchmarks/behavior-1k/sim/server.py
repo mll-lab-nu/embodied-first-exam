@@ -336,7 +336,7 @@ SPEC = {
     "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
     "max_control_steps": int(M.MAX_STEPS),   # the tooling's runaway guard (PROTOCOL §4.5): the episode ends there, reason "step_guard" (agent-ended: "step_limit")
     "cameras": {c: cam_spec(c) for c in CAMS},
-    "default_cameras": [c for c in S.VIDEO_CAMERAS if c in CAMS],   # the 2.0 client's default: head, left wrist, right wrist
+    "default_cameras": [c for c in S.VIDEO_CAMERAS if c in CAMS],   # the default: head, left wrist, right wrist
     "action_types": {
         "joint_position": {"dim": DIM, "layout": LAYOUT, "blocks": {k: list(v) for k, v in BLOCKS.items()},
                            "units": "base x, y (m) and yaw (rad) are per-control-step position targets in the ROBOT frame (re-applied every step: "

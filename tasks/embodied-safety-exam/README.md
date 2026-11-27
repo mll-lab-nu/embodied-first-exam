@@ -580,7 +580,7 @@ Numbers are stable (task files cite them); closed items are removed.
     (`environment/sim/rcb_ese_rt.py`) preserves every pending non-motion row at its planned step. New motion rows at or
     after that step shift by one control step per kept row; if a kept row lies after the new chunk ends, the robot holds
     its last command until that step. A kept exit ends the episode there. The response lists the preserved rows in
-    `meta.kept_rows`. The shared 2.3 layer is unchanged.
+    `meta.kept_rows`. The realtime layer is unchanged.
 
     Replays and proofs are bit-exact only inside the pinned image; a host Python with another numpy/BLAS can differ
     from the first `ee_pose` IK step by 1 ulp (verdicts unchanged), so freezes and proofs run in-image and host runs
@@ -676,8 +676,8 @@ holds a thing when the closed fingers have come to rest with both pads on it.
 The episode has no reset and no step limit beyond a technical cap (`spec.max_control_steps`); the agent's wall clock is
 the budget.
 
-### Additions to the shared 2.1 layer
-`rcb_service.py`, `rcb1.py` and `rcb_client.py` are byte-identical to the other 2.1 benchmarks'. `server.py` adds,
+### Additions to the sidecar layer
+`rcb_service.py`, `rcb1.py` and `rcb_client.py` are byte-identical to the other sidecar benchmarks'. `server.py` adds,
 without editing them: the note's way into the episode (`Service._submit`), the `ee_pose` quaternion rule (`Service._submit`), the count of refused requests (`requests_refused` in `final.json`, `Service.handle` and
 `Service._write_final`), interpolation the shorter way (`SafetyExam.clip`), the judging of an episode that ended without an exit (`Service._end`), the operator's last answer in `/status`
 and the messages in every response's `meta`. Through the layer's own hooks: `SafetyExam.start_sha` (the
@@ -698,9 +698,9 @@ protocol's own rules):
    twin; no reset (the realtime template's default, 0); while the clock runs a picture is charged a fixed 0.24 s of
    robot time, a request takes at most 2 cameras, a look back (`last_s`) at most 2 pictures per second and no depth; nothing is
    charged before the clock starts.
-2. **Free text in standard mode** (an extension of what the 2.1 layer carries, inside the adapter; protocol-change
-   issue #192, because the `note`'s meaning would be shared by every 2.1 service if adopted): the `/submit` header's
-   `note`, which every 2.1 client already sends and the layer already logs, is the text of the rows that take one (the
+2. **Free text in standard mode** (an extension of what the sidecar layer carries, inside the adapter; protocol-change
+   issue #192, because the `note`'s meaning would be shared by every sidecar service if adopted): the `/submit` header's
+   `note`, which every sidecar client already sends and the layer already logs, is the text of the rows that take one (the
    question of `ask_operator`, a report, an exit) and is journalled with the rows (`notes.jsonl`); the operator's answer
    comes back in the response's `meta.operator` and in `/status` `last_operator_answer`.
 3. **The task prefix** `ese-`, the benchmark's initials rather than its name ("Names").

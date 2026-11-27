@@ -23,7 +23,7 @@ reference motion. A done that is the episode's own length (the reference motion,
 judged as it stands; a challenge's failure after its success event is an ordinary failure end (reason "failed", as
 without the event: the end says nothing about it), which the layer judges on the event it recorded (it stays counted).
 
-What the agent gets is what the standard twin gives, minus the 2.2 additions the realtime layer does not serve
+What the agent gets is what the standard twin gives, minus the shared layer's additions the realtime layer does not serve
 (`/kinematics`, per-frame camera poses, depth modes): the cameras (RGB, and depth on request from every camera that
 rides on the world or the body), the body's own proprioception (joint positions and velocities, muscle activations and
 lengths, the actuators' generalized force on each joint, and a free-standing body's root pose and velocity) and the
