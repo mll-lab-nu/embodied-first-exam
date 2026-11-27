@@ -4,8 +4,8 @@
 Sort the LEGO blocks into the bins by colour.
 
 ## Goal
-Success: every block is in the bin of its own colour, all at the same time. It must hold for about a second after the
-episode ends, while the robot keeps your last command.
+Success: every block is in the bin of its own colour, all at the same time. Make sure everything is at rest when you
+send `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

@@ -4,8 +4,7 @@
 Find the ketchup among the things on the table and put it in the box.
 
 ## Goal
-Success: the ketchup is in the box. It must hold for about a second after the episode ends, while the robot keeps your
-last command.
+Success: the ketchup is in the box. Make sure everything is at rest when you send `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

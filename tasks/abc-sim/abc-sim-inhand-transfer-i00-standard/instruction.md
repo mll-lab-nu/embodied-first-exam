@@ -6,7 +6,7 @@ down there.
 
 ## Goal
 Success: the cream cheese stick lies on the table on the left arm's side, at least a hand's width past the middle line
-between the arms. It must hold for about a second after the episode ends, while the robot keeps your last command.
+between the arms. Make sure everything is at rest when you send `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

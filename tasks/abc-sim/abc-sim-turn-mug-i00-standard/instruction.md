@@ -4,8 +4,8 @@
 Turn both mugs right side up and set them down.
 
 ## Goal
-Success: both mugs stand right side up, set down rather than held up. It must hold for about a second after the episode
-ends, while the robot keeps your last command.
+Success: both mugs stand right side up, set down rather than held up. Make sure everything is at rest when you send
+`/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

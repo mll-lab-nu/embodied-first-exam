@@ -5,8 +5,7 @@ Set the soap dispenser down a short way to the right of the boxed food, as the a
 
 ## Goal
 Success: the soap dispenser stands on the table a short way to the right of the boxed food as the arms face the table,
-in line with it rather than off to its front or back. It must hold for about a second after the episode ends, while the
-robot keeps your last command.
+in line with it rather than off to its front or back. Make sure everything is at rest when you send `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

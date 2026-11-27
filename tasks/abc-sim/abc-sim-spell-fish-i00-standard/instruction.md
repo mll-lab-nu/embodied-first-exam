@@ -6,8 +6,8 @@ face up or down, reading from left to right as the arms face the table.
 
 ## Goal
 Success: the blocks F, I, S and H lie flat on the table side by side in a straight row, close together, in that order
-from left to right as the arms face the table, each with a letter face up or down. It must hold for about a second after
-the episode ends, while the robot keeps your last command.
+from left to right as the arms face the table, each with a letter face up or down. Make sure everything is at rest when
+you send `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

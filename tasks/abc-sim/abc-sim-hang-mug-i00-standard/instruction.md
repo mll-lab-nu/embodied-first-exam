@@ -4,8 +4,8 @@
 Hang the mug on the mug tree and let go of it.
 
 ## Goal
-Success: the mug hangs on the mug tree, clear of the table, and neither gripper touches it. It must hold for about a
-second after the episode ends, while the robot keeps your last command.
+Success: the mug hangs on the mug tree, clear of the table, and neither gripper touches it. Make sure everything is at
+rest when you send `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

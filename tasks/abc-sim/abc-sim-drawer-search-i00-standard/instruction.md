@@ -4,8 +4,8 @@
 Find the measuring cup in the drawers and put it in the bin, then do the same with the dish brush.
 
 ## Goal
-Success: the measuring cup has been put in the bin first, and then the dish brush. It must hold for about a second after
-the episode ends, while the robot keeps your last command.
+Success: the measuring cup has been put in the bin first, and then the dish brush. Make sure everything is at rest when
+you send `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
