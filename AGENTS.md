@@ -3,14 +3,14 @@
 Read `README.md`, `docs/protocol/README.md` (v3.0: recommended conventions, each task declares its own settings, §2; the eight
 invariants of Appendix H bind and no task value overrides them), `docs/protocol/running.md` (official runs) and `CONTRIBUTING.md` first.
 
-- Modes: **privileged**, **standard** (wire protocol `eai-standard/2.x`) and **realtime** (standard mode on a clock that
-  does not stop, `eai-standard/2.3`), PROTOCOL §3. Task directories end in `-privileged`, `-standard` or `-realtime`.
+- Modes: **privileged**, **standard** (wire protocol `eai-standard/3.0`) and **realtime** (standard mode on a clock that
+  does not stop, the realtime capability of `eai-standard/3.0`), PROTOCOL §3. Task directories end in `-privileged`, `-standard` or `-realtime`.
   Base images are `ghcr.io/mll-lab-nu/efe:<name>-<version>` (private: `efe-private:<name>-<version>`), one image per
   benchmark (PROTOCOL §1). No `results/` in task dirs.
 - From v3.0 every standard and realtime episode is agent-ended (PROTOCOL §3): the service never shows the success,
   `POST /finish` ends the episode, and the state it ends in is judged. `normalize` writes `RCB_AGENT_END` and the
   instruction's Finish line; `ci_checks/check-agent-end.py` checks them. The layers that implement it: `rcb_service.py`
-  (2.1), `rcb_realtime.py` (2.3), `embodied_first_exam/standard/agent_end/` (2.2, 2.4).
+  (sidecar), `rcb_realtime.py` (realtime), `embodied_first_exam/standard/agent_end/` (shared, operations).
 - The rules of `eai-standard/3.0` (standard_mode.md "Version 3.0"; `EAI_STANDARD` in `scripts/task_conventions.py`)
   hold on every layer: `/observe` only reads (`last_s`; `seconds > 0` is a 400); a hold chunk (`/submit` with
   `interpolate = "hold"` and `seconds`, no rows) lets time pass; `/submit` replies carry `duration_s`; the realtime
@@ -86,7 +86,7 @@ invariants of Appendix H bind and no task value overrides them), `docs/protocol/
   Unattended batches: `scripts/run_agent_batch.sh` (lanes with per-job claims; configured by environment variables,
   docs/protocol/running.md); its runner-side tools (`log_mirror.py`, `mem_guard.py`, `scan_secrets.py`, `account_failure_check.py`)
   are not task code.
-- `eai-standard/2.2` (docs/protocol/standard_mode.md Part 2; which benchmarks serve it: docs/TAXONOMY.md `protocol`):
+- The shared layer (docs/protocol/standard_mode.md Part 2; task_conventions.service_layer says which tasks are on it):
   the layer is `rcb_limited.py`, `rcb_client.py`, `rcb1.py` and `run.sh`, with one source, `embodied_first_exam/standard/`.
   Tasks carry no copies: their Dockerfiles take these files from the files-only image `standard-files`
   (`COPY --from=<image@digest>`, `images/standard-files/FILES.json`; `check-tooling-identity.sh` checks the pin). Each
@@ -95,15 +95,15 @@ invariants of Appendix H bind and no task value overrides them), `docs/protocol/
   the smallest adapter). `rcb_limited.py` restarts a crashed service inside
   the trial; that is an implementation detail, and the protocol's rule is the runner's infrastructure rerun (Appendix
   H.5). `python3 embodied_first_exam/standard/selftest.py` tests that crash recovery on the CPU in about two minutes.
-- `eai-standard/2.4` (docs/protocol/standard_mode.md Part 4, RoboARC): 2.3 plus the operations capability. Its layer is
-  `embodied_first_exam/standard/operations/rcb_limited.py` and `rcb_client.py` with 2.2's `rcb1.py` and `run.sh`, taken from
+- The operations layer (docs/protocol/standard_mode.md Part 4, RoboARC): the shared layer plus the operations capability. Its layer is
+  `embodied_first_exam/standard/operations/rcb_limited.py` and `rcb_client.py` with the shared layer's `rcb1.py` and `run.sh`, taken from
   the same `standard-files` image (`check-tooling-identity.sh`); `python3 embodied_first_exam/standard/operations/selftest.py`
-  tests what 2.4 adds (about 15 seconds).
+  tests what the operations layer adds (about 15 seconds).
 - MCP tools (docs/protocol/standard_mode.md "MCP tools"): every standard and realtime task also offers its robot service
   as the `efe-robot` MCP server, one tool per agent-facing endpoint; source `embodied_first_exam/standard/mcp/`, written
   into each task by `normalize` (`inject.py`: `environment/efe_mcp/`, a Dockerfile line, a task.toml
   `[[environment.mcp_servers]]` entry, `### MCP tools` in Robot Interface); `ci_checks/check-mcp-tools.py` checks it.
-- The match extension `eai-standard/2.x+match/1.0` (docs/protocol/standard_mode.md Part 5, Embodied Olympics - Match):
+- The match extension (docs/protocol/standard_mode.md Part 5, Embodied Olympics - Match):
   `embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/`, copied unchanged into each such task's
   `environment/sim/eai_std/` by `apply_eai_std.py` there (`ci_checks/benchmarks/embodied-olympics-match/invariant-eai-std.py`);
   the match's `core/` stays as exported.

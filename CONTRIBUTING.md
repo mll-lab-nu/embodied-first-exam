@@ -68,7 +68,7 @@ has its own prefix (`task_conventions.py benchmarks --check`, `ci_scope.py --che
    dynamics = "static"                   # or "dynamic" (docs/TAXONOMY.md "Dynamics")
    oracle = "full"                       # "partial" / "none" also need oracle_evidence = "..."
    instance_seed = 0                     # the default seed; [metadata.seeds] only for other seeds (PROTOCOL §2)
-   expert_time_estimate_hours = 0.5      # a standard task adds protocol = "eai-standard/2.x"
+   expert_time_estimate_hours = 0.5      # a standard task adds protocol = "eai-standard/3.0"
 
    [verifier]
    timeout_sec = 1800

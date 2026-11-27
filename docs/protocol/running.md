@@ -228,7 +228,7 @@ Codex session (`agent/sessions/`). Run Codex with `--ak reasoning_summary=detail
 - **Standard mode (RoboTwin):** the sim service records `live.mp4` (six views, frames only while physics runs and something moves,
   each stamped with the agent's call and wall/sim time; rendered from the trajectory after the verdict, in the same pass
   as `replay.mp4`, so it costs the agent nothing; `RCB_LIVE=realtime` captures during the episode instead), the exact actions of every call,
-  and a crash-safe trajectory. Details: `standard_mode.md` (Live recording). The wire protocol `eai-standard/2.1` also gives the
+  and a crash-safe trajectory. Details: `standard_mode.md` (Live recording). The wire protocol `eai-standard/3.0` also gives the
   agent measured proprioception (encoders, gripper opening, TCP pose, drive effort) and optional depth noise.
 - **Privileged mode:** the agent owns the simulator, so nothing it produces is evidence. `rcb_traj.Session` still dumps every
   rollout's per-step drive targets to `/app/output/rcb_trace/` (`RCB_AGENT_TRACE_DIR`, capped at 300 files / 400 MB),

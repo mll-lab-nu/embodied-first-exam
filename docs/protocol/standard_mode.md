@@ -1,12 +1,13 @@
-# Standard-mode wire protocol `eai-standard/2.x` (robot as a service)
+# Standard-mode wire protocol `eai-standard/3.0` (robot as a service)
 
 Part of the task protocol ([README](README.md)): the wire format of the standard modes.
 
-**Version: `eai-standard/3.0`** is the current version. Its rules ("Version 3.0" below) hold on every layer: 2.1–2.4
-and the match extension. Each layer keeps its own version string. This document is the interoperability
-specification of every 2.x version a task declares today: what a service answers and a client may send. Minor
-versions only add, so each part holds for the versions after it unless a later part says otherwise, and the shipped
-clients accept every 2.x service. What a task of the standard modes is, and which rules bind it, is in
+**Version: `eai-standard/3.0`**, the one protocol every standard and realtime task declares and every service
+answers in `/spec.protocol`. Its rules ("Version 3.0" below) hold on every layer: the base, the shared layer, the
+realtime and the operations capabilities and the match extension. This document is the interoperability
+specification: what a service answers and a client may send. What a service serves beyond the base is said by its
+`/spec` capabilities (the table below), never by a version string; each part holds for the capabilities after it
+unless a later part says otherwise. What a task of the standard modes is, and which rules bind it, is in
 the [README](README.md) (§3 Modes); the binding rules on the trust boundary (no simulator, state or success
 predicate in the agent's reach; the verdict from a trusted record) are stated once, in
 its [Appendix H](README.md#appendix-h-invariants-binding) (H.3, H.4), and are not repeated here. How a runner handles a trial that failed
@@ -14,48 +15,44 @@ for infrastructure reasons is in [running.md](running.md). What a benchmark's ow
 types, cameras, proprioception columns, resume class, measured start-up times, known issues) is in its
 `tasks/<benchmark>/README.md`.
 
-| Version | Content | Part | Implementation |
+| Capability (`/spec`) | Content | Part | Implementation |
 |---|---|---|---|
-| `eai-standard/2.1` | the base: `/submit` and `/observe`, RCB1 responses, measured proprioception, optional depth noise; the optional reset capability | Part 1 | each benchmark's own service |
-| `eai-standard/2.2` | 2.1 + optional capabilities: depth `last` / `frames`, per-frame steps, times and extrinsics, camera intrinsics and mounting, `robot_spec`, `world`, `POST /kinematics`, a per-call wall-clock bound; one shared service layer | Part 2 (§1–§18) | [`embodied_first_exam/standard/`](../../embodied_first_exam/standard/) |
-| `eai-standard/2.3` | 2.2 + the realtime capability: a clock that does not stop | Part 3 | `embodied_first_exam/standard/realtime/rcb_realtime.py` |
-| `eai-standard/2.4` | 2.3 + the operations capability: operation ids, request deadlines, `GET /operations/<id>`, a call watchdog, a physics-tick ledger | Part 4 (§19–§25) | [`embodied_first_exam/standard/operations/`](../../embodied_first_exam/standard/operations/) |
-| `eai-standard/2.x+match/1.0` | an extension, not a version: 2.1 (lockstep, turn-based) or 2.3 (realtime) in front of a match service, plus the match's own calls `/start`, `/ready`, `/say`, `/team` and its score in `meta` | Part 5 (§26–§31) | [`embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/`](../../embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/) |
+| base | `/submit` and `/observe`, RCB1 responses, measured proprioception, optional depth noise; the optional reset capability | Part 1 | the sidecar `rcb_service.py`, each benchmark's own service |
+| shared layer (`kinematics`, `robot_spec`, `world`, `max_call_wall_s`) | the base + optional capabilities: depth `last` / `frames`, per-frame steps, times and extrinsics, camera intrinsics and mounting, `robot_spec`, `world`, `POST /kinematics`, a per-call wall-clock bound; one shared service layer | Part 2 (§1–§18) | [`embodied_first_exam/standard/`](../../embodied_first_exam/standard/) |
+| `timing.realtime = true` | the realtime capability: a clock that does not stop | Part 3 | `embodied_first_exam/standard/realtime/rcb_realtime.py` |
+| `operations = true` | the shared layer + the operations capability: operation ids, request deadlines, `GET /operations/<id>`, a call watchdog, a physics-tick ledger | Part 4 (§19–§25) | [`embodied_first_exam/standard/operations/`](../../embodied_first_exam/standard/operations/) |
+| `match` | an extension: the base (lockstep, turn-based) or the realtime capability in front of a match service, plus the match's own calls `/start`, `/ready`, `/say`, `/team` and its score in `meta` | Part 5 (§26–§31) | [`embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/`](../../embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/) |
 
-Which version a task serves is its `[metadata] protocol` (= `/spec.protocol`); which benchmarks serve which version is
-in their docs, not listed here. Every version is also offered as MCP tools, one per endpoint, in the same task ("MCP
-tools", the last section).
-
-**Spelling.** Services and tasks report `eai-standard/2.x`; the shipped clients also accept `rcb-limited/2.x`. No task
-declares a version before 2.1.
+Every task's `[metadata] protocol` (= `/spec.protocol`) is `eai-standard/3.0`; which benchmarks serve which
+capabilities is in their docs, not listed here. Every layer is also offered as MCP tools, one per endpoint, in the same
+task ("MCP tools", the last section).
 
 ### Version 3.0
 
-`eai-standard/3.0` is a set of rules every layer follows (`/spec.standard = "eai-standard/3.0"`); a layer's own
-version string (`/spec.protocol`, `[metadata] protocol`) says which capabilities it has. Where a part below says
-otherwise about `/observe`, `/submit` or the clock, this section wins; the older text stays as the history of 2.1–2.4.
+`eai-standard/3.0` is a set of rules every layer follows; a layer's `/spec` capabilities say what it serves beyond
+the base. Where a part below says otherwise about `/observe`, `/submit` or the clock, this section wins.
 The HTTP interface of every layer is written out as OpenAPI 3.1 in
 [`eai-standard-3.0.openapi.yaml`](eai-standard-3.0.openapi.yaml); `ci_checks/check-openapi-contract.py` runs the
-reference services of 2.1–2.4 and checks their answers against it.
+reference services of every layer and checks their answers against it.
 
 - **Standard mode is Gym's `env.step`.** The world stands still between calls. `/submit` blocks until its chunk has run
   and answers with the chunk's video (as asked), its proprioception and `meta.duration_s`, the robot seconds it ran
   (`planned_duration_s`: what it declared, rows × `dt`; a planner type such as `ee_pose`: the planned duration where the
   service knows it).
 - **A hold chunk lets time pass.** `/submit` with `{"type": <type>, "interpolate": "hold", "seconds": n}` and no rows
-  holds the target in force (the last command, as 2.1's watch held it) for n seconds of robot time (whole control steps,
+  holds the target in force (the last command) for n seconds of robot time (whole control steps,
   at least one; at most `max_chunk_s`) and answers as any `/submit` (`meta.hold = true`, `executed_rows = 0`,
-  `duration_s`). `max_chunk_s` is the one cap of a chunk and of a hold chunk in every layer (2.1–2.4 and the match
-  extension; `max_watch_s` is gone). Rows and `seconds` together (any value, 0 too), or no rows without a hold, are a
+  `duration_s`). `max_chunk_s` is the one cap of a chunk and of a hold chunk in every layer (the match extension
+  too). Rows and `seconds` together (any value, 0 too), or no rows without a hold, are a
   400 in every layer. In realtime mode it answers at once and plans the target in force for n seconds from `at`.
 - **`/observe` only reads.** It never lets time pass, never waits and never changes the plan. `last_s = 0` (the default)
   returns the current frame and the proprioception of now; `last_s = n` the frames recorded in the last n robot seconds
   (at most `buffer_s`), `video_fps` apart, with the proprioception of their steps (`meta.last_s`: what they cover; none
-  recorded yet: the current frame). Every answer with images (`/observe`, `/submit` and `/reset`, every layer; in 2.3
-  also a service without a recorder) adds `meta.frame_step`, the control step its newest image shows. `seconds > 0` is
-  a 400 that names the hold chunk. Per-frame depth with `last_s > 0` (`include_depth`; 2.2/2.4 `depth: "frames"`) is
+  recorded yet: the current frame). Every answer with images (`/observe`, `/submit` and `/reset`, every layer; on the
+  realtime layer also a service without a recorder) adds `meta.frame_step`, the control step its newest image shows. `seconds > 0` is
+  a 400 that names the hold chunk. Per-frame depth with `last_s > 0` (`include_depth`; shared/operations `depth: "frames"`) is
   served only when every requested camera is one whose depth the recorder keeps (`/spec.timing.recorder.depth`);
-  otherwise it is a 400 that says to ask for depth with `last_s = 0` (the current frame's depth), in every layer. 2.2/2.4
+  otherwise it is a 400 that says to ask for depth with `last_s = 0` (the current frame's depth), in every layer. Shared/operations
   `depth: "last"` with `last_s > 0` is not refused: it returns the current frame's depth (`last_depth/<cam>`), which is
   not the recorder's.
 - **The recorder.** `/spec.timing.recorder` declares `cameras` (every camera), `fps`, `buffer_s` (`RCB_LOOKBACK_S`,
@@ -95,7 +92,7 @@ reference services of 2.1–2.4 and checks their answers against it.
 layer's crash recovery), §19–§25 are Part 4, §26–§31 are Part 5. The sections of Parts 1 and 3 are cited by their titles. A section whose
 content is per benchmark points to the benchmarks' docs.
 
-## Part 1 — `eai-standard/2.1`: the base
+## Part 1 — The base
 
 The agent talks to a **sim service** it cannot open, over HTTP. One trial is one episode unless the task declares a
 reset budget (the optional reset capability, below). **No step limit** (except a technical episode cap where a task
@@ -280,9 +277,9 @@ when the budget is spent; a success changes nothing (from 3.0; before 3.0 a succ
 budget is part of a result's configuration: results with different budgets are not ranked together (running.md).
 
 ### Agent-ended episodes
-PROTOCOL §3 "Agent-ended episodes": required from protocol v3.0 for every standard and realtime task served by an
-`eai-standard/2.x` service of its mode (`normalize` writes `RCB_AGENT_END: "1"` in its `sim` service's environment;
-`ci_checks/check-agent-end.py` checks it), an optional capability before. `RCB_STEP_LIMIT: "<N>"` adds a step limit
+PROTOCOL §3 "Agent-ended episodes": required for every standard and realtime task served by an
+`eai-standard/3.0` service of its mode (`normalize` writes `RCB_AGENT_END: "1"` in its `sim` service's environment;
+`ci_checks/check-agent-end.py` checks it). `RCB_STEP_LIMIT: "<N>"` adds a step limit
 (what one step is: the service's `/spec` and the task's instruction); without one, the service's own step cap
 (`/spec.max_control_steps`, the task's episode length) ends the episode the same way (`reason = "step_limit"`). Every
 2.x service implements it (2.1: the sidecar `rcb_service.py`; 2.2 and 2.4: `rcb_agent_end.py` with the adapter; 2.3:
@@ -337,11 +334,11 @@ client that never calls `/finish` is served as before, its session's end ending 
 - `/spec.success_signal` is the key a front end reads: where it says `hidden`, an MCP front end offers a `finish` tool
   that sends `POST /finish`.
 
-## Part 2 — `eai-standard/2.2`: capabilities added to 2.1
+## Part 2 — The shared layer: capabilities added to the base
 
-> 2.2 is a minor version of `eai-standard/2.1` (Part 1): everything there holds unless
-> this part says otherwise, every 2.2 addition is an optional capability, and a request written for 2.0 or 2.1 gets
-> the same answer as before (plus parts and keys an old client ignores).
+> The shared layer adds to the base (Part 1): everything there holds unless this part says otherwise, and every
+> addition is an optional capability; a request written for the base gets the same answer as from the base (plus parts
+> and keys a client may ignore).
 
 **One implementation.** The source is [`embodied_first_exam/standard/`](../../embodied_first_exam/standard/): the service layer
 `rcb_limited.py` (HTTP, RCB1 responses, the protocol helpers, the `/spec` self-check, crash recovery), the client
@@ -420,16 +417,15 @@ physics_steps_watch`. Both add **`stopped`** (2.2): `null`, or why the service
 stopped the call early (§12).
 
 ### 5. `/spec`
-2.0/2.1 keys, unchanged: `protocol` (`"eai-standard/2.2"`), `simulator`, `robot`, `task_text`, `control_hz`,
+The base's keys, unchanged: `protocol` (`"eai-standard/3.0"`), `simulator`, `robot`, `task_text`, `control_hz`,
 `physics_substeps`, `max_chunk_s`, `cameras`, `action_types`, `proprio_layout`, `proprio_groups`, `static`
 (scene facts: names, sizes, colours; never a position), `budget` (`{"reset": N, "steps": null, "wall_clock_s",
 "clock"}`; `clock` says what `time_s` / `time_left_s` count from: the agent's first request, Part 1 "The agent's clock";
-the shared layer fills it in and keeps the clock, `rcb_limited.agent_time`; the 2.4 layer has no clock of its own:
-its adapter keeps it and states it, as RoboArc's IKEA service does). 2.2 adds:
+the shared layer fills it in and keeps the clock, `rcb_limited.agent_time`; the operations layer has no clock of its own:
+its adapter keeps it and states it, as RoboArc's IKEA service does). The shared layer adds:
 
 | key | content |
 |---|---|
-| `protocol_compat` | `["rcb-limited/2.0", "rcb-limited/2.1", "eai-standard/2.1"]`: requests written for these are served unchanged |
 | `default_cameras` | the cameras the client asks for when a call names none |
 | `cameras.<cam>` | + `depth: true`, `intrinsic_cv` (3×3), `mount`, `depth_range_m` |
 | `robot_spec` | the robot's spec sheet (below) |
@@ -622,14 +618,14 @@ cameras, depth source, `/kinematics` model, proprio columns, live success rule a
 In the benchmarks' docs.
 
 ### 18. Versioning
-`protocol` in `/spec` = `metadata.protocol` = `eai-standard/2.2`. The 2.x client accepts every 2.x service under both
-spellings (`eai-standard/2.`, `rcb-limited/2.`); 2.1 clients work against a 2.2 service (they get float16 per-frame depth
-for `include_depth` and ignore the new parts and keys).
+`protocol` in `/spec` = `metadata.protocol` = `eai-standard/3.0`; the shipped clients accept only that. A base-layer
+request works against the shared layer (float16 per-frame depth for `include_depth`; the new parts and keys may be
+ignored).
 
-## Part 3 — Realtime mode: `eai-standard/2.3`
+## Part 3 — Realtime mode: the realtime capability
 
 Time does not stop. The wire protocol of the realtime mode, served by
-realtime tasks only (directories ending in `-realtime`, `protocol = "eai-standard/2.3"`); the shared implementation
+realtime tasks only (directories ending in `-realtime`, `/spec.timing.realtime = true`); the shared implementation
 is `embodied_first_exam/standard/realtime/rcb_realtime.py`, which other benchmarks' realtime services use unchanged. 2.3
 is 2.2 plus the realtime capability below; every 2.2 addition stays optional, so a 2.1 service with this capability is a
 2.3 service. Same endpoints, RCB1 frames and grading as 2.1. `/spec.timing` declares it: `realtime: true`, `slowdown` S
@@ -721,25 +717,24 @@ are part of a result's configuration (running.md).
 - **Agent code** runs where it does in standard mode, in the agent's own container: a controller that streams targets
   through the client, not code uploaded next to the simulator.
 
-## Part 4 — `eai-standard/2.4`: the operations capability
+## Part 4 — The operations capability
 
 Reference implementation:
 [`embodied_first_exam/standard/operations/`](../../embodied_first_exam/standard/operations/), with `rcb_limited.py` and `rcb_client.py`. `rcb1.py`,
-`run.sh`, the client image and the client pins are the 2.2 ones in `embodied_first_exam/standard/`. In the tables below, MUST
-means "required of a service that reports 2.4" (what a 2.4 client may rely on).
+`run.sh`, the client image and the client pins are the shared layer's in `embodied_first_exam/standard/`. In the tables below, MUST
+means "required of a service that reports `/spec.operations = true`" (what its client may rely on).
 
 ### 19. Version
 
-`eai-standard/2.4` = 2.3 + the **operations capability** below.
-- Every earlier addition stays an optional capability. That covers 2.2's depth, `frame_time_s`, extrinsics,
-  `POST /kinematics` and the per-call wall bound, and 2.3's realtime capability (Part 3). So a 2.2 service that adds the
-  operations capability is a 2.4 service.
-- Standard-mode tasks may declare `protocol = "eai-standard/2.4"`. Realtime tasks stay on 2.3.
+The operations layer = the shared layer + the **operations capability** below.
+- Every other capability stays optional. That covers the shared layer's depth, `frame_time_s`, extrinsics,
+  `POST /kinematics` and the per-call wall bound, and the realtime capability (Part 3).
+- Standard-mode tasks only; realtime tasks use the realtime layer.
 - Everything in Parts 1 and 2 holds unchanged: five endpoints (`/spec`, `/status`, `/observe`, `/submit`, `/finish`;
   plus `/kinematics`, `/reset` within a declared budget and the one below), RCB1, and grading by the live episode.
-- `/spec.protocol` is `eai-standard/2.4`.
+- `/spec.protocol` is `eai-standard/3.0` and `/spec.operations` is `true`.
 
-Why: a native simulator call can run for minutes (IPC and PBD deformables). Under 2.2, a client whose HTTP read timed
+Why: a native simulator call can run for minutes (IPC and PBD deformables). Without it, a client whose HTTP read timed
 out cannot tell whether the call ran, and a retry can execute the same actions twice. The capability makes every call
 identifiable, bounded, and queryable after the fact.
 
@@ -805,22 +800,20 @@ bodies on the CPU (numpy only, about 15 s).
 - A benchmark adopts 2.4 by copying `embodied_first_exam/standard/operations/` unchanged; `ci_checks/check-tooling-identity.sh`
   checks the copies.
 
-## Part 5 — The match extension: `eai-standard/2.x+match/1.0`
+## Part 5 — The match extension
 
 Embodied Olympics - Match ([its README](../../tasks/embodied-olympics-match/README.md)) runs matches between seats,
 refereed by the match's own service (its `core/`, unchanged). The match extension puts the standard endpoints in front of
 that service and adds the match's own calls, so an agent uses the same endpoint names as in every other standard task.
-It is an extension of a 2.x version, not a new version: a client that knows 2.1 (or 2.3) plays a match with it, and
-calls `/start` and `/ready` besides.
+It is an extension, not a new protocol: a client that knows the base (or the realtime capability) plays a match with
+it, and calls `/start` and `/ready` besides.
 
 ### 26. Version and implementation
 
-- `/spec.protocol` is `eai-standard/2.3+match/1.0` for a real-time match (Part 3's clock, §29) and
-  `eai-standard/2.1+match/1.0` for a standard twin in lockstep and for a turn-based match. `/spec.extensions` is
-  `{"match": "1.0"}`; `/spec.match_protocol` names the match service's own protocol (`eai-standard-realtime/1.0`,
-  `eai-standard-lockstep/1.0`, `eai-standard-turn/1.0`). The shipped clients accept these ids (any `eai-standard/2.`).
+- `/spec.protocol` is `eai-standard/3.0`; `/spec.match` is the match service's own spec, `/spec.timing.realtime` says
+  a real-time match (Part 3's clock, §29), and a turn-based match's seat API answers `turn_based: true` in its spec.
 - The implementation is `embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/`, copied unchanged into each
-  task's `environment/sim/eai_std/` by `apply_eai_std.py` next to it (which also sets the task's protocol, client and
+  task's `environment/sim/eai_std/` by `apply_eai_std.py` next to it (which also sets the task's client and
   text). The sim sidecar runs `python3 -m eai_std.serve` (`EAI_STD_CLOCK` = `realtime`, `lockstep` or `turn`): the core's
   own entry point (`core/serve.py`, or `core/lockstep.py` for a standard twin) builds and runs the match as before, and
   the extension only wraps its HTTP server. One port serves both APIs: the standard endpoints below and the core's seat
@@ -936,9 +929,9 @@ these, but no endpoint is without its tool unless the table says why.
 | `POST /kinematics` | `kinematics` | a 2.2 / 2.4 task whose service serves it (§8) |
 | `POST /finish` | `finish` | every task; it sends the request only when `/spec.success_signal` starts with `"hidden"` ("Agent-ended episodes"), else it says so and sends nothing |
 | `GET /status` | none | its fields come back in every result's `meta` |
-| `GET /operations/<id>` | none | the tool server re-queries it itself when a 2.4 reply is lost (Part 4) |
+| `GET /operations/<id>` | none | the tool server re-queries it itself when a reply of an operations service is lost (Part 4) |
 
-A match (Embodied Olympics - Match, `eai-standard/2.x+match/1.0`, Part 5) has the same `spec`, `observe` and `submit`
+A match (Embodied Olympics - Match, the match extension, Part 5) has the same `spec`, `observe` and `submit`
 (its rows are the match's JSON action objects; a hold chunk too) and the extension's calls as extra tools: `start`,
 `ready` (and `say`, `team` in a team format). It has no `finish` (its `/finish` is a 404: the match's rules end it), no
 `reset` and no `kinematics`; its declared deviations (`/spec.timing.deviations`: the clock from `/start`, `last_s` the
@@ -946,7 +939,7 @@ frames of now) are the service's. `GET /status` likewise has no tool.
 `ci_checks/check-mcp-tools.py` holds the routes the layers and adapters serve to this table, and every task to its
 tool list. Three kinds of task keep only their own interface, and their docs say so: RoboEngineer (`eai-policy`: the
 agent hands in a policy, no live robot), the matchlow matches (the player delivers skill code the platform runs) and a
-match exported without the extension (`eai-standard-lockstep/1.0`, `eai-standard-realtime/1.0`: no
+match exported without the extension (no
 `environment/sim/eai_std/`, the G1 table-tennis tasks; its service serves only the seat API `/<SEAT>/<call>` of the
 `game` command).
 

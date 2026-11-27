@@ -3,7 +3,7 @@
 This is the task protocol of Embodied First Exam (EFE; [repository](https://github.com/mll-lab-nu/embodied-first-exam),
 [site](https://www.embodied-first-exam.ai), [how to contribute](https://www.embodied-first-exam.ai/contribute/)). It is
 the four documents in this folder: this README (the conventions a task follows, and the binding
-invariants of Appendix H), [`standard_mode.md`](standard_mode.md) (the `eai-standard/2.x` wire format of the standard
+invariants of Appendix H), [`standard_mode.md`](standard_mode.md) (the `eai-standard/3.0` wire format of the standard
 modes), [`running.md`](running.md) (official-run configuration, seeds, retries, gateway, resource enforcement, results;
 enforced by the runner and scheduler) and [`leakage.md`](leakage.md) (where answer keys survive and how they are
 removed). Metadata values, names and run ids are in [`TAXONOMY.md`](../TAXONOMY.md); each benchmark's own choices in
@@ -79,21 +79,20 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
 - **privileged** (`-privileged`): agent and simulator share a container; the agent may read
   privileged state, reset freely and plan; the deliverable is a trajectory (`/app/output/trajectory.npz`) or code
   (`task_type = "policy"`), graded offline in the verifier.
-- **standard** (`-standard`; `eai-standard/2.1`, `2.2`, `2.4`): robot as a service. The simulator runs
+- **standard** (`-standard`; `eai-standard/3.0`): robot as a service. The simulator runs
   in a `sim` sidecar the agent cannot open; the agent sends actions and receives images and proprioception through the
   shipped client (`rcb_client.py`, `rcb1.py`); resets within the declared budget; the wall clock is the hard budget,
   with the task's step limit or the service's own step cap where it has one (below). Time passes only through
   `/submit` (Gym's `env.step`): a chunk, or a hold chunk that keeps the command in force for a number of seconds;
   `/observe` only reads. The agent ends the episode (agent-ended episodes, below; required from v3.0). Graded by the
   live episode the sidecar ran (H.4).
-- **realtime** (`-realtime`; `eai-standard/2.3`): standard mode on a clock that does not stop: once
+- **realtime** (`-realtime`; `eai-standard/3.0` with the realtime capability): standard mode on a clock that does not stop: once
   an episode starts (its first `/submit`) the robot runs at 1/S of real speed whatever the agent does, holds its last targets while the agent
   thinks, and is driven by a program in the agent's own container. Resets as in standard: within the declared budget,
   0 unless the task grants its own (§2).
-- **Agent-ended episodes** (standard and realtime mode; **required from v3.0** for every task served by an
-  `eai-standard/2.x` service of its mode: MODE_REGISTRY `agent_end`, `ci_checks/check-agent-end.py`, H.3; a task a
-  benchmark exports with a runtime of its own keeps its rules; v2.2–v2.4: optional; standard_mode.md "Agent-ended
-  episodes").
+- **Agent-ended episodes** (standard and realtime mode; **required** for every task served by an
+  `eai-standard/3.0` service of its mode: MODE_REGISTRY `agent_end`, `ci_checks/check-agent-end.py`, H.3; a task a
+  benchmark exports with a runtime of its own keeps its rules; standard_mode.md "Agent-ended episodes").
   - *Who ends it.* The service never tells the agent whether it has succeeded, and a success does not end the episode.
     The agent ends it with `POST /finish` (an MCP front end: its `finish` tool).
   - *Other ends.* A task may add a step limit, a number of its own control steps stated in its instruction; without
@@ -267,8 +266,8 @@ fields: running.md "Resources".
 
 ## 7. Versions
 
-This text is **v3.0**, and `eai-standard/3.0` (`EAI_STANDARD` in `scripts/task_conventions.py`) names the wire rules it
-puts on every `eai-standard/2.x` layer (standard_mode.md "Version 3.0"). What 3.0 changed:
+This text is **v3.0**, and `eai-standard/3.0` (`EAI_STANDARD` in `scripts/task_conventions.py`) names the wire protocol
+every standard and realtime task declares (standard_mode.md "Version 3.0"). What 3.0 changed:
 - Agent-ended episodes (§3) are required in the standard and realtime modes: the service never shows the success, the
   agent ends the episode with `POST /finish`, and the end state is graded.
 - Standard mode is Gym's `env.step`: the world stands still between calls, and `/submit` answers with the chunk's video
@@ -278,8 +277,8 @@ puts on every `eai-standard/2.x` layer (standard_mode.md "Version 3.0"). What 3.
 - The realtime clock starts at the first `/submit`.
 - Every agent-facing endpoint is also an MCP tool (`efe-robot`).
 
-The layers keep their version strings in `metadata.protocol` and `/spec.protocol`; `/spec.standard` says
-`eai-standard/3.0`. Earlier versions of this text: 2.4 made one fresh replay the default privileged grading, or up to
+Every task's `metadata.protocol` and every service's `/spec.protocol` is `eai-standard/3.0`; what a layer serves
+beyond the base is said by its `/spec` capabilities (standard_mode.md). Earlier versions of this text: 2.4 made one fresh replay the default privileged grading, or up to
 N with any success where the simulator does not replay bit-wise (bit-wise determinism is checked when the task is
 built, not in every trial, §4); 2.3 renamed the third mode `standard-realtime` to `realtime`, its task directories
 `<base>-realtime`, with no other change to the mode, and made its default reset budget 0 as in standard mode; 2.2 added
@@ -287,15 +286,15 @@ the optional agent-ended episodes of §3, required since 3.0. Like the wire prot
 only add (a recommended field, an optional feature, evidence). A
 result's `config.json` records `protocol_version`: `PROTOCOL_VERSION` in `scripts/task_conventions.py` of the checkout
 that writes the result (`"legacy"` for a trial of another version of the task), one of the keys results are compared
-by (`CONFIG_KEYS`, running.md "Results"). The wire protocol's versions:
-`eai-standard/2.1` (the base: `/spec`, `/status`, `/observe`, `/submit`, RCB1 frames), 2.2 (depth, kinematics, per-call
-bounds; shared layer `embodied_first_exam/standard/`), 2.3 (2.2 + realtime), 2.4 (2.3 + operation ids and deadlines; layer
-`embodied_first_exam/standard/operations/`). Minor versions only add; `/spec.protocol` equals `metadata.protocol`. A protocol change is
+by (`CONFIG_KEYS`, running.md "Results"). The wire protocol's layers: the base (`/spec`, `/status`, `/observe`,
+`/submit`, `/finish`, RCB1 frames), the shared layer (depth, kinematics, per-call bounds; `embodied_first_exam/standard/`),
+the realtime capability (`embodied_first_exam/standard/realtime/`) and the operations capability (operation ids and
+deadlines; `embodied_first_exam/standard/operations/`). A protocol change is
 an issue, then one pull request updating standard_mode.md, the reference implementation and an example task.
 In this version a task declares its open egress only as `[agent] network_mode = "public"`, its reset budget and S only
 in its `sim` service, and its default seed as `[metadata] instance_seed`; CI fails a task.toml with `[metadata] network`
 (H.6), and a realtime task's with `[metadata]` `reset_budget` or `slowdown`, and warns on these and `mode`
-elsewhere; `normalize` rewrites such a task into this form.
+elsewhere.
 
 ## Appendix H. Invariants (binding)
 
