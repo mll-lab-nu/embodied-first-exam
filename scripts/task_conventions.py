@@ -859,10 +859,6 @@ def normalize_agent_end(task: Path) -> None:
         write_if_changed(c, set_agent_end(c.read_text(), task.name))
 
 
-def _ordinal(n: int) -> str:
-    return f"{n:,}" + ("th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th"))
-
-
 def _set_number(old: str, sec: int) -> str:
     """`sec` written the way the old literal was (a float literal stays one: `3600.0`)."""
     return f"{sec}.0" if "." in old else str(sec)
@@ -929,41 +925,50 @@ LIMITS_TOKENS = "no separate limit."
 _LIMITS_CLOCK = "Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`)"
 # A tool call that writes to a still-running process can return only when its wait is over, even when the answer is
 # printed at once (one recorded trial lost ~98 min of a 3 h budget that way): harness-neutral advice, no duration in it.
-_LIMITS_WAITS = " Calls into a long-running process can block for their whole wait time: use short waits or one-shot scripts."
+_LIMITS_WAITS = " A call into a long-running process can block for its whole wait time. Use short waits or one-shot scripts."
 LIMITS_TIME = {   # mode -> (what counts and what is graded at the end, the service's own count of the limit)
-    "privileged": ("everything counts (the simulator's start-up too). At the end you are stopped without warning and only "
-                   "what is in `/app/output/` at that moment is graded.", ""),
-    "standard": ("everything counts (waiting for the service too). At the end you are stopped without warning and the "
-                 "episode is graded as it stands.", "; the service's `time_left_s` (in every reply) starts at your first "
-                 "request, so the file is the one to trust"),
-    "standard-mcp": ("everything counts (the time the tools take too). At the end you are stopped without warning and the "
-                     "episode is graded as it stands.", "; every tool result has the service's `time_left_s`, which starts "
-                     "at your first tool call, so the file is the one to trust"),
+    "privileged": ("Everything counts, including the simulator's start-up. At the end you are stopped without warning and "
+                   "only what is in `/app/output/` at that moment is graded.", ""),
+    "standard": ("Everything counts, including waiting for the service. At the end you are stopped without warning and "
+                 "the episode is graded as it stands.", ". Trust this file: the `time_left_s` in the service's replies "
+                 "starts only at your first request"),
+    "standard-mcp": ("Everything counts, including the time the tools take. At the end you are stopped without warning and "
+                     "the episode is graded as it stands.", ". Trust this file: the `time_left_s` in every tool result "
+                     "starts only at your first tool call"),
 }
 LIMITS_TIME["realtime"] = LIMITS_TIME["standard"]
 LIMITS_TIME["standard-mcp-shell"] = LIMITS_TIME["standard"]
 assert set(MODE_REGISTRY) <= set(LIMITS_TIME), "every mode of MODE_REGISTRY needs its LIMITS_TIME (PROTOCOL §5)"
 LIMITS_TIME_OWN = {("RoboDojo", "standard"): (   # agent-ended, judged per task (V2_AGENT_END_*): Goal says how
-    "everything counts (waiting for the service too). At the end you are stopped without warning and the episode ends.",
-    LIMITS_TIME["standard"][1]), ("roboEngineer", "standard"): (
-    "everything counts (waiting for the deployment service too, deployments included). At the end you are stopped "
-    "without warning and the evaluator takes the round you sealed or, if you sealed none, the latest deployment that "
-    "completed before then; a deployment still running is not graded.", "; the service's own deadline counts the same "
-    "limit from your first request to it")}
-LIMITS_TIME_TASK = ("everything counts (waiting for the service too). At the end you are stopped without warning and "
-                    "graded on what stands, as Goal says.", "; the clocks the service reports are the game's own")
-LIMITS_TIME_TASK_MCP = (LIMITS_TIME_TASK[0].replace("(waiting for the service too)", "(the time the tools take too)"),
+    "Everything counts, including waiting for the service. At the end you are stopped without warning and the episode "
+    "ends.", LIMITS_TIME["standard"][1]), ("roboEngineer", "standard"): (
+    "Everything counts, including waiting for the deployment service and the deployments. At the end you are stopped "
+    "without warning. The evaluator then takes the round you sealed; if you sealed none, it takes the latest deployment "
+    "that finished before then. A deployment still running is not graded.", ". The service's own deadline counts the "
+    "same limit from your first request to it")}
+LIMITS_TIME_TASK = ("Everything counts, including waiting for the service. At the end you are stopped without warning and "
+                    "graded on the state at that moment, as Goal says.", ". The clocks the service reports are the game's "
+                    "own")
+LIMITS_TIME_TASK_MCP = (LIMITS_TIME_TASK[0].replace("waiting for the service", "the time the tools take"),
                         LIMITS_TIME_TASK[1])
 LIMITS_NETWORK = ("your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install "
                   "packages and read anything in your container{readable}.")   # the no-cheating rule: Goal (V2_RULE_OWN)
-LIMITS_READABLE = ", the simulator's and the benchmark's source included"
-LIMITS_READABLE_MCP = ", the files the tools write included"
+LIMITS_READABLE = ", including the simulator's and the benchmark's source"
+LIMITS_READABLE_MCP = ", including the files the tools write"
 LIMITS_NETWORK_OPEN = ("open. You may install packages and search for, download and use public tools, robot models and "
-                       "pretrained controllers (say in your notes what you used); you may read anything in your "
-                       "container, the benchmark's source included. Do not look up an existing solution to this exact "
-                       "task, such as the benchmark's reference solutions; trials are reviewed.")
+                       "pretrained controllers (say in your notes what you used). You may read anything in your "
+                       "container, including the benchmark's source. Do not look up an existing solution to this exact "
+                       "task, such as the benchmark's reference solutions. Trials are reviewed.")
+# rendered words a task's own Limits line may still carry from an earlier render (old -> new)
+LIMITS_RETIRED = {
+    "open. You may install packages and search for, download and use public tools, robot models and pretrained "
+    "controllers (say in your notes what you used); you may read anything in your container, the benchmark's source "
+    "included. Do not look up an existing solution to this exact task, such as the benchmark's reference solutions; "
+    "trials are reviewed.": LIMITS_NETWORK_OPEN,
+    "none: one episode.": "none. You get one episode.",
+}
 LIMITS_STRICTER = " Additional rules for this task (stricter than the above): "
-LIMITS_OVER_CAP = ("Over a cap a process can be killed (the CPU cap only slows you down); usage: "
+LIMITS_OVER_CAP = ("Going over a cap can get a process killed (the CPU cap only slows you down). Usage: "
                    "`/run/rcb-limits/usage.json`.")
 
 
@@ -992,7 +997,7 @@ V2_MODE_LINE = {
 # ci_checks/benchmarks/robodojo/advisory-end-judgement.py checks each task against rcb_robodojo.END_JUDGEMENT, whose
 # "history" tasks say what counts as it happens).
 V2_FINAL_STATE = {
-    "privileged": "What counts is how things stand after the last action of your {deliverable}, replayed from the fixed start.",
+    "privileged": "Your {deliverable} is replayed from the fixed start. What counts is the state after its last action.",
     "standard": "What counts is how things stand at the end of the episode.",
 }
 # owner 11-26: plain finish wording, said once in each section. Goal: after the Success sentence, one short paragraph,
@@ -1002,12 +1007,13 @@ V2_FINAL_STATE = {
 # line). Limits: one Finish line (LIMITS_FINISH, rendered). Nowhere else.
 V2_AGENT_END_GOAL = "When you are done, send `/finish` to end the episode and get it graded."
 V2_AGENT_END_STATE = "Only the state at that point counts."
-V2_AGENT_END_REST = "Everything else counts only as it stands at that point."
+V2_AGENT_END_REST = "Everything else is judged on the state at that point."
 # the latched wording of 11-24, retired with D216, and the finish wording retired on 11-26: no Goal may carry it
 V2_AGENT_END_RETIRED = ("The episode succeeds if the goal is reached before it ends", "once done, stays counted",
                         "call finish (Limits)", "call finish (Robot Interface)", "ends when you call finish",
                         "if you never call finish", "The robot never tells you whether you have succeeded",
-                        "Success is judged on how things stand when the episode ends")
+                        "Success is judged on how things stand when the episode ends",
+                        "Everything else counts only as it stands at that point")
 V2_HAND_IN = {   # owner 11-24: a standard mode hands nothing in and is not asked for a script (no `/app/output/gen.py`)
     "standard-mcp": "The tool server records your calls.",
 }
@@ -1083,15 +1089,17 @@ def limits_time(task: Path, sec: int) -> str:
         a, b = LIMITS_TIME_TASK_MCP
     if agent_end_of(task) and a in (LIMITS_TIME[mode][0], LIMITS_TIME_OWN.get((bench, mode), ("",))[0]):
         a = re.sub(r" At the end you are stopped without warning\b.*", " At the end you are stopped without warning.", a)
-    return f"{sec} s of wall-clock time from the start of your session; {a} {_LIMITS_CLOCK}{b}.{_LIMITS_WAITS}"
+    return f"{sec} s of wall-clock time from the start of your session. {a} {_LIMITS_CLOCK}{b}.{_LIMITS_WAITS}"
 
 
 def limits_network(task: Path, kept: str | None) -> str:
     if network_of(task) == "open":
         text = kept or LIMITS_NETWORK_OPEN
         text = text.split(LIMITS_STRICTER.strip())[0].strip()
+        notes = " (say in your notes what you used)"
+        text = next((new for old, new in LIMITS_RETIRED.items() if text in (old, old.replace(notes, ""))), text)
         if mode_of(task) == "standard-mcp":      # an MCP-only task keeps no notes
-            text = text.replace(" (say in your notes what you used)", "")
+            text = text.replace(notes, "")
     else:
         text = LIMITS_NETWORK.format(readable=LIMITS_READABLE_MCP if mode_of(task) in MCP_MODES else LIMITS_READABLE)
     stricter = (metadata_of(task).get("honour") or {}).get("stricter", "")
@@ -1142,10 +1150,23 @@ def limits_resets(task: Path) -> str:
     if n is None:
         return "as many as you like while you develop."
     if n == 0:
-        return "none: one episode."
+        return LIMITS_RETIRED["none: one episode."]
     return (f"at most {n} (`spec()[\"budget\"][\"reset\"]`), each a new episode from the same starting state."
             if mode_of(task) not in MCP_MODES else
             f"at most {n} (`reset_episode()`), each a new episode from the same starting state.")
+
+
+def _limits_reworded(label: str, v: str) -> str:
+    """A task's own Limits line `v` with rendered words of an earlier render replaced (LIMITS_RETIRED) and, in a Steps
+    line, the plain end of a step limit ("…, then the episode ends.", never "ends by itself")."""
+    v = LIMITS_RETIRED.get(v, v)
+    if label == "Steps":
+        v = re.sub(r"^at most ([\d,]+) control steps \((.+?) gives what is left\); at the [\d,]+(?:st|nd|rd|th) the "
+                   r"episode ends by itself\.$", lambda m: f"at most {m.group(1)} control steps, then the episode ends. "
+                   f"{m.group(2)[0].upper() + m.group(2)[1:]} gives what is left.", v)
+        v = re.sub(r"; at the [\d,]+(?:st|nd|rd|th) the episode ends by itself\.", ", then the episode ends.", v)
+        v = v.replace(" ends by itself", " ends")
+    return v
 
 
 def render_limits(task: Path, text: str = "") -> str:
@@ -1154,7 +1175,7 @@ def render_limits(task: Path, text: str = "") -> str:
     has none, and for an agent-ended task with a step limit, or a cap its service's environment sets, a default Steps
     line), and an agent-ended task's Finish line (limits_finish)."""
     have = limits_lines(text)
-    kept = [(k, v) for k, v in have if k not in LIMITS_RENDERED and k != "Finish"]   # Finish: rendered (agent-ended)
+    kept = [(k, _limits_reworded(k, v)) for k, v in have if k not in LIMITS_RENDERED and k != "Finish"]   # Finish: rendered
     net = next((v for k, v in have if k == "Network"), None)
     out = []
     sec = cutoff_for(task)
@@ -1170,13 +1191,13 @@ def render_limits(task: Path, text: str = "") -> str:
     if ae and ae.get("step_limit") and "Steps" not in labels:
         n = ae["step_limit"]
         left = ("the tool results' `steps_left`" if mode_of(task) in MCP_MODES else "`meta[\"steps_left\"]`")
-        kept.append(("Steps", f"at most {n:,} control steps ({left} gives what is left); at the {_ordinal(n)} the "
-                              "episode ends by itself."))
+        kept.append(("Steps", f"at most {n:,} control steps, then the episode ends. {left[0].upper() + left[1:]} gives "
+                              "what is left."))
     elif ae and "Steps" not in labels:
         m = MAX_CONTROL_STEPS_RE.search(read_text(task / "environment/docker-compose.yaml") or "")
         if m:   # the service's own cap (RCB_MAX_CONTROL_STEPS), which the task's text does not state
             n = int(m.group(1))
-            kept.append(("Steps", f"at most {n:,} control steps; at the {_ordinal(n)} the episode ends by itself."))
+            kept.append(("Steps", f"at most {n:,} control steps, then the episode ends."))
     if ae:
         kept.append(("Finish", limits_finish(task, next((v for k, v in kept if k == "Steps"), ""))))
     out += [f"{k}: {v}" for k, v in kept]
@@ -1321,8 +1342,8 @@ def _v2_steps(task: Path, s: str) -> str:
     m = _CAP_IN_RESETS.search(s)
     if m:
         n, rest = int(m.group(1).replace(",", "")), " ".join(m.group(2).split())
-        steps = f"at most {n:,} {rest}; at the {_ordinal(n)} the episode ends by itself."
-        s = s[:m.start()] + "- Resets: none: one episode." + s[m.end():]
+        steps = f"at most {n:,} {rest}, then the episode ends."
+        s = s[:m.start()] + "- Resets: " + LIMITS_RETIRED["none: one episode."] + s[m.end():]
     elif _CAP_SENTENCE.search(s):
         m = _CAP_SENTENCE.search(s)
         n = int(m.group(1).replace(",", ""))
@@ -1333,7 +1354,7 @@ def _v2_steps(task: Path, s: str) -> str:
         m = _CAP_IN_ENDS.search(s)
         n, ends = int(m.group(2).replace(",", "")), " ".join(m.group(1).split())
         ends = " and ".join(ends.rsplit(", ", 1))
-        steps = f"at most {n:,} control steps ({' '.join(m.group(3).split())}); at the {_ordinal(n)} the episode ends by itself."
+        steps = f"at most {n:,} control steps ({' '.join(m.group(3).split())}), then the episode ends."
         s = _sub_prose(s, _CAP_IN_ENDS, f"The episode also ends {ends}.")
     if steps is None:
         return s

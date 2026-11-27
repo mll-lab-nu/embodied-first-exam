@@ -108,13 +108,14 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
   (`scripts/task_conventions.py`): the Goal, after the Success sentence, has one short paragraph, "When you are done,
   send `/finish` to end the episode and get it graded." (`V2_AGENT_END_GOAL`) and, for a goal judged on its end state,
   "Only the state at that point counts." (`V2_AGENT_END_STATE`), for one that counts some steps as they happen and
-  the rest at the end, "Everything else counts only as it stands at that point." (`V2_AGENT_END_REST`); `## Robot
+  the rest at the end, "Everything else is judged on the state at that point." (`V2_AGENT_END_REST`); `## Robot
   Interface` has one line for the endpoint (`ROBOT_FINISH`) and `## Limits` the Finish line (`LIMITS_FINISH`: what is
   graded if the agent never sends `/finish`: the episode at the step limit or cap its Steps line states, or at the
   session's end; with a reset budget, the last episode at the session's end), both rendered by `normalize`, with a step
-  limit or a step cap of the service also the Steps line. `final.json` records
-  `ended_by` (`finish`, `step_limit`, `session_end`: the time limit, the token budget or the agent's exit, which the
-  runner's record tells apart; `failed`, `error`) and the counters (`steps_used`, `finish_time_s`).
+  limit or a step cap of the service also the Steps line ("at most N control steps, then the episode ends.").
+  `final.json` records `ended_by` (`finish`, `step_limit`, `session_end`: the time limit, the token budget or the
+  agent's exit, which the runner's record tells apart; `failed`, `error`) and the counters (`steps_used`,
+  `finish_time_s`).
 - **Two routes to the robot** (standard and realtime): every such task offers its service through the shipped client
   (HTTP) and, in the same task, through the MCP server `efe-robot`, one tool per agent-facing endpoint; the agent
   chooses, and both drive the same episode (standard_mode.md "MCP tools"). RoboEngineer and the matchlow matches keep
