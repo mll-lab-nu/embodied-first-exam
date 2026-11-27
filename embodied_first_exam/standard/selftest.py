@@ -298,7 +298,7 @@ def a_give_up_is_answered_at_once():
             expect(isinstance(e, rcb_client.EpisodeOver) and "sim_crashed" in str(e), f"{what} raises EpisodeOver with the reason: {e!r}")
         expect(time.time() - t < 30, f"all at once ({time.time() - t:.0f} s)")
         e = _try(lambda: r.fk([0.0, 0.0, 0.0]))
-        expect(isinstance(e, ValueError) and "409" in str(e), f"kinematics: an error, no hang: {e!r}")
+        expect(isinstance(e, rcb_client.EpisodeOver) and "sim_crashed" in str(e), f"kinematics: EpisodeOver, no hang: {e!r}")
         with socket.create_connection(("127.0.0.1", c.port), timeout=10) as k:   # a malformed request cannot stop the answer
             k.sendall(b"POST /submit HTTP/1.1\r\nHost: x\r\nContent-Length: -1\r\n\r\n")
             k.settimeout(10)
