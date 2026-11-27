@@ -74,4 +74,4 @@ s.save_trajectory(rows, "/app/output/trajectory.npz")
   one GPU (7 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
   `/run/rcb-limits/usage.json`.
 - Resets: as many as you like (`s.reset()`).
-- Steps: at most 500 control steps (the benchmark's 100 s horizon); the replay stops there.
+- Steps: at most 500 control steps (the benchmark's 100 s horizon), then the replay stops.

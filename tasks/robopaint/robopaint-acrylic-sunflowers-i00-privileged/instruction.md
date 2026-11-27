@@ -133,5 +133,5 @@ the resulting sheet.
 - Resources: 8 CPUs, 12 GiB memory, 2048 processes and threads, 10 GiB disk (new files under `/app`, `/tmp`, `/root`),
   one GPU (3 GiB of its memory). Over a cap a process can be killed (the CPU cap only slows you down); usage:
   `/run/rcb-limits/usage.json`.
-- Steps: no step budget; a runaway guard stops an episode at 72000 control steps (1 h of simulated time).
+- Steps: no step budget. A runaway guard stops an episode at 72000 control steps (1 h of simulated time).
 - Resets: as many as you like (`s.reset()`: blank sheets, a dry brush, the robot at its start pose, exact).

@@ -106,5 +106,5 @@ the same episode. Call `r.wait_ready()`, then check `r.status()` (`spec["on_serv
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: no limit; actions and simulated time are reported, as cost.
+- Steps: no limit. Actions and simulated time are reported as cost.
 - Finish: if you never send `/finish`, the episode is graded when your session ends.

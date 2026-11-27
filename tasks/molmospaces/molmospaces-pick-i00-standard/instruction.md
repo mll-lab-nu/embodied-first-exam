@@ -93,5 +93,5 @@ reaches 0 before your time is up. Plan by it.
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: at most 303 control steps (the benchmark's 20 s horizon); then the episode ends by itself.
+- Steps: at most 303 control steps (the benchmark's 20 s horizon), then the episode ends.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

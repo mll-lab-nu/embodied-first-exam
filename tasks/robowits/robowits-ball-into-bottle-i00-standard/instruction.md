@@ -116,6 +116,6 @@ that runs longer than `spec["max_call_wall_s"]` stops at the next control step a
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: no step budget; a technical cap ends the episode after 200,000 control steps (1/30 s each, holds included),
-  graded as it stands, without the closing three-second check.
+- Steps: no step budget. A technical cap ends the episode after 200,000 control steps (1/30 s each, holds included). The
+  episode is then graded on its state at that point, without the closing three-second check.
 - Finish: if you never send `/finish`, the episode is graded when your session ends.

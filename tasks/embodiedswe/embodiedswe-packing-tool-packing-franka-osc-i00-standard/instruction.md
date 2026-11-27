@@ -63,5 +63,5 @@ Cameras (RGB 640×480, depth on request): `overview` (static) and `wrist` (on th
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: at most 400,000 control steps (7.4 h of simulated time, reason `step_guard`); then the episode ends.
+- Steps: at most 400,000 control steps (7.4 h of simulated time, reason `step_guard`), then the episode ends.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

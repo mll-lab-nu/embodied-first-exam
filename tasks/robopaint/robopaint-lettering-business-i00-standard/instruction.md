@@ -160,6 +160,6 @@ the stroke cap and when a process rule fails.
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: no step budget; actions and simulated time are reported as cost; a runaway guard stops the robot after 72000
-  control steps (1 h of simulated time; `hold(s)` also advances it).
+- Steps: no step budget. Actions and simulated time are reported as cost. A runaway guard stops the robot after 72000
+  control steps (1 h of simulated time). `hold(s)` also adds to that count.
 - Finish: if you never send `/finish`, the episode is graded when your session ends.

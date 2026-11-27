@@ -96,5 +96,5 @@ steps. Between calls the robot waits, frozen, while you think; an observation is
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: the episode ends after 1000 control steps (100 s of robot time); the task has to be done by then.
+- Steps: the episode ends after 1000 control steps (100 s of robot time). The task has to be done by then.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

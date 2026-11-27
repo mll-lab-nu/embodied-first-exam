@@ -115,6 +115,6 @@ res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/, l
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: at most 50,000 control steps (the spec's `max_control_steps`: 41.7 min of simulated time, holding included); at
-  the cap the episode ends by itself. There is no other step budget.
+- Steps: at most 50,000 control steps (the spec's `max_control_steps`: 41.7 min of simulated time, holding included),
+  then the episode ends. There is no other step budget.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

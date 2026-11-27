@@ -119,6 +119,6 @@ same camera, resolution and intrinsics as the robot's own head camera.
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: at most 2382 control steps (79.4 s of simulated time): they are the whole episode, and at the 2,382nd it ends
-  by itself; look and plan before you spend them.
+- Steps: at most 2382 control steps (79.4 s of simulated time), then the episode ends. Look and plan before you spend
+  them.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

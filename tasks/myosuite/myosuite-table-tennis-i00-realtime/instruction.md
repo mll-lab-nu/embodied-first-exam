@@ -132,5 +132,5 @@ milliseconds each; `cameras=None` means every camera, so name the ones you need.
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 10 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Steps: the episode ends by itself after 3 s of robot time.
+- Steps: the episode ends after 3 s of robot time.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

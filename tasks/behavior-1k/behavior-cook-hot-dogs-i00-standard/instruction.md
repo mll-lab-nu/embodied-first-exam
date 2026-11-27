@@ -118,6 +118,6 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio   # execution video 
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: no step budget (actions and simulated time are reported as cost); a runaway guard ends the episode at 200,000
+- Steps: no step budget (actions and simulated time are reported as cost). A runaway guard ends the episode at 200,000
   control steps (1.85 h of simulated time).
 - Finish: if you never send `/finish`, the episode is graded when your session ends.

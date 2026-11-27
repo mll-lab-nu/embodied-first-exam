@@ -130,5 +130,5 @@ One episode lasts 60 s of simulated time.
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: the episode ends by itself after 60 s of simulated time.
+- Steps: the episode ends after 60 s of simulated time.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

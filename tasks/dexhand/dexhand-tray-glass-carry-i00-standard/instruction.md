@@ -139,5 +139,5 @@ Each stage's `x, y, z` targets are displacements (metres, along the world axes) 
   no GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap
   only slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: at most 20 (`spec()["budget"]["reset"]`), each a new episode from the same starting state.
-- Steps: at most 3,000 control steps (60 s of simulated time) per episode; an episode that reaches them ends there.
+- Steps: at most 3,000 control steps (60 s of simulated time) per episode, then the episode ends.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

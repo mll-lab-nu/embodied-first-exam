@@ -117,9 +117,9 @@ images.
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: at most 200 steps, RoboDojo's own limit for this task. One step is one 25 Hz action (1/25 s of simulated time),
-  and everything that lets simulated time pass uses steps: a `joint_position` row with `dt` = k/25 s uses k, an
-  `ee_pose` row as many as its move takes at 0.25 m/s (at least one), holding still for s seconds (`hold(s)`) s x 25;
-  observing (`get_obs`), the spec, the status and the kinematics use none. Every reply gives `steps_left`; at the 200th
-  step the episode ends by itself.
+- Steps: at most 200 steps, RoboDojo's own limit for this task, then the episode ends. One step is one 25 Hz action
+  (1/25 s of simulated time). Everything that lets simulated time pass uses steps: a `joint_position` row with `dt` =
+  k/25 s uses k steps, an `ee_pose` row uses as many as its move takes at 0.25 m/s (at least one), and holding still for
+  s seconds (`hold(s)`) uses s x 25. Observing (`get_obs`), the spec, the status and the kinematics use none. Every
+  reply gives `steps_left`.
 - Finish: if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.

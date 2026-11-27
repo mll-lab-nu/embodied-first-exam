@@ -115,6 +115,7 @@ images.
   GPU; the simulator runs in its own container and does not count. Over a cap a process can be killed (the CPU cap only
   slows you down); usage: `/run/rcb-limits/usage.json`.
 - Resets: none: one episode.
-- Steps: no step budget; a technical cap ends the episode after 100,000 control steps (1/30 s each, about 56 min of
-  simulated time), graded as it stands. The service runs 60-120 control steps per second, so long holds can reach it.
+- Steps: no step budget. A technical cap ends the episode after 100,000 control steps (1/30 s each, about 56 min of
+  simulated time). The episode is then graded on its state at that point. The service runs 60-120 control steps per
+  second, so long holds can reach it.
 - Finish: if you never send `/finish`, the episode is graded when your session ends.
