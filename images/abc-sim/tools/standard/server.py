@@ -72,6 +72,7 @@ S.agent_end = AE.ENABLED  # agent-ended episodes: a success never ends the episo
 MD = S.model
 DT = S.dt
 CTRL_HZ = 1.0 / DT
+MAX_VIDEO_FPS = int(math.floor(CTRL_HZ + 1e-9))   # /spec.max_video_fps is an integer: control_hz rounded down (29.41 -> 29)
 SUBSTEPS = int(S.env._control_decimation)
 ROWS: list = []  # every executed row of the current episode: trajectory.npz
 TASK_INFO = json.load(open(os.path.join(SRV, "task.json")))
@@ -242,7 +243,7 @@ SPEC = {
     "physics_substeps": SUBSTEPS,
     "max_chunk_s": MAX_CHUNK_S,
     "max_frames_per_call": MAX_FRAMES,
-    "max_video_fps": CTRL_HZ,   # video_fps(): at most control_hz (1 / 0.034 s = 29.41)
+    "max_video_fps": MAX_VIDEO_FPS,   # video_fps(): at most control_hz rounded down (1 / 0.034 s = 29.41 -> 29)
     "cameras": {c: {"rgb": True, "depth": True, "resolution": [W, H], "intrinsic_cv": _intrinsic(c),
                     "depth_range_m": [float(MD.vis.map.znear * MD.stat.extent), float(MD.vis.map.zfar * MD.stat.extent)],
                     "mounted": MOUNTED[c], "mount": MOUNTS[c]} for c in CAMS},
@@ -469,8 +470,8 @@ def video_fps(meta: dict) -> int:
     fps = meta.get("video_fps")
     if fps is None:
         return 10
-    if isinstance(fps, bool) or not isinstance(fps, (int, float)) or not (1 <= fps <= CTRL_HZ):
-        raise ValueError(f"video_fps must be in [1, {CTRL_HZ:g}]")
+    if isinstance(fps, bool) or not isinstance(fps, (int, float)) or not (1 <= fps <= MAX_VIDEO_FPS):
+        raise ValueError(f"video_fps must be in [1, {MAX_VIDEO_FPS}]")
     return int(fps)
 
 
@@ -590,8 +591,9 @@ def do_observe(meta: dict):
 def reset_counters() -> dict:
     if not RESET_BUDGET:
         return {}
-    if AE.ENABLED:   # agent-ended: nothing here may depend on the success; after /finish (or the end) no reset
-        over = E.get("exiting") or (E["done"] and E["reason"] in AE.END_STATE_REASONS)
+    if AE.ENABLED:   # agent-ended: nothing here may depend on the success; after /finish (or the session's end) no
+        # reset; after the step limit one may follow while the budget lasts (as rcb_service._resets_left)
+        over = E.get("exiting") or (E["done"] and E["reason"] in NO_RESET_REASONS)
         left = 0 if over else RESET_BUDGET - E["resets"]
     else:
         left = 0 if (E["success"] or E.get("exiting")) else RESET_BUDGET - E["resets"]
@@ -603,9 +605,12 @@ def status() -> dict:
             "reason": E["reason"], "elapsed_s": round(time.time() - E["t0"], 1), **reset_counters()}
 
 
+NO_RESET_REASONS = ("finished", "timeout")   # the ends that close the trial (a step_limit end closes only its episode)
+
+
 def check_finish_reset() -> None:
-    """Agent-ended: after /finish (or the end of the session) no reset follows."""
-    if AE.ENABLED and E["done"] and E["reason"] in AE.END_STATE_REASONS:
+    """Agent-ended: after /finish (or the end of the session) no reset follows; after a step_limit end one may."""
+    if AE.ENABLED and E["done"] and E["reason"] in NO_RESET_REASONS:
         raise Refused({"error": "episode finished", "reason": E["reason"], "resets_left": 0})
 
 

@@ -9,7 +9,7 @@
 | Family / instance | `inhand_transfer` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.5.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.5.1` |
 
 ## Task
 ABC Sim `inhand_transfer_item_to_other_side` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Move the cream cheese stick to the left arm's side of the table, at least a hand's width past the middle, and set it down there.

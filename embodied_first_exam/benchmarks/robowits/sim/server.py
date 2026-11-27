@@ -589,8 +589,10 @@ def end_from_signal() -> None:
     """The collect hook's SIGUSR1 (the agent phase is over): end the episode (finish(): the settle window after the agent's
     last command, on the live simulator), then write the verdict (finalize). The reason
     says who ended it: "agent_exit" when the agent ended its session with more than AGENT_EXIT_MARGIN_S left (by the
-    service's clock of the agent, meta time_left_s), "timeout" at the time limit ."""
+    service's clock of the agent, meta time_left_s), "timeout" at the time limit . From here on every POST (/observe
+    too) is refused (409), as in rcb_service after the session's end."""
     with LOCK:
+        E["exiting"] = True
         if not E["done"]:
             # the agent's clock (from its first request); an agent that never sent one: the service's own uptime, which
             # starts before the agent's phase and so overstates the agent's time

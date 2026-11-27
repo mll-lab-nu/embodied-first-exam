@@ -344,7 +344,7 @@ SPEC = {
     "task_text": S.inst.get("text", ""),
     "control_dt": CTRL_DT,
     "max_chunk_s": MAX_CHUNK_S,
-    "max_control_steps": MAX_CONTROL_STEPS or None,
+    **({"max_control_steps": MAX_CONTROL_STEPS} if MAX_CONTROL_STEPS else {}),   # omitted when uncapped
     "max_video_fps": MAX_VIDEO_FPS,
     "max_frames_per_call": MAX_FRAMES_PER_CALL,
     "on_service_error": (
@@ -596,7 +596,12 @@ def _hold_seconds(meta: dict, parts: dict):
     """A rows-free hold chunk (eai-standard/3.0): its `seconds`, or None for a chunk of rows."""
     if meta.get("seconds") is None:
         return None
-    if "actions" in parts or meta.get("actions") not in (None, []) or meta.get("rows") not in (None, []):
+    if "actions" in parts:  # an empty `actions` part is no rows (as rcb_service)
+        data = parts["actions"].get("data") if isinstance(parts["actions"], dict) else parts["actions"]
+        rows = data is not None and np.size(data) > 0
+    else:
+        rows = meta.get("actions") not in (None, []) or meta.get("rows") not in (None, [])
+    if rows:
         raise ValueError("a chunk has either rows or `seconds` (a hold chunk without rows), not both")
     if meta.get("interpolate") != "hold":
         raise ValueError('a chunk without rows is a hold chunk: {"type": <type>, "interpolate": "hold", "seconds": n}')
@@ -765,13 +770,17 @@ def do_submit(q: dict):
     rec = Recorder(cams, fps, depth, ring=True)
     rec.tick(force=True)
     prev = np.asarray(S.targets, float).copy()
-    n_clip = 0
+    n_clip = 0  # rows executed that had a value clipped
+    clipped: list = []  # [{row, index, reason}] of the rows executed
     done = False
     executed = 0  # rows begun: fewer than the chunk's when the step limit ends the episode inside it
-    for row in A.astype(np.float64):
+    for ri, row in enumerate(A.astype(np.float64)):
         executed += 1
         tgt = np.clip(row, S.lower, S.upper)
-        n_clip += int(np.any(tgt != row))
+        bad = np.flatnonzero(tgt != row)
+        n_clip += int(bad.size > 0)
+        clipped += [{"row": ri, "index": int(j), "reason": f"{NAMES[j] if j < len(NAMES) else j} outside "
+                     f"[{S.lower[j]:g}, {S.upper[j]:g}]"} for j in bad]
         for j in range(1, k + 1):
             tg = tgt if interp == "hold" else prev + (tgt - prev) * (j / k)
             if _ctrl_step(tg, rec):
@@ -791,7 +800,9 @@ def do_submit(q: dict):
         "chunk_id": E["calls"],
         "type": ACTION_NAME,
         "executed_rows": executed,
-        "clipped": n_clip,
+        "control_steps_chunk": len(RECORD) - before,
+        "clipped": clipped[:200],
+        "n_clipped": len(clipped),
         "n_clipped_rows": n_clip,
         "duration_s": round((len(RECORD) - before) * CTRL_DT, 6),
         "planned_duration_s": round(int(A.shape[0]) * dt, 6),
@@ -809,6 +820,7 @@ def do_submit(q: dict):
             "cameras": cams,
             "note": q["note"],
             "control_steps": len(RECORD),
+            "n_clipped": len(clipped),
             "n_clipped_rows": n_clip,
             "task": task_info(),
             "rows_total": E["rows"],
@@ -844,7 +856,9 @@ def do_hold(q: dict):
         "type": ACTION_NAME,
         "hold": True,
         "executed_rows": 0,
-        "clipped": 0,
+        "control_steps_chunk": len(RECORD) - before,
+        "clipped": [],
+        "n_clipped": 0,
         "n_clipped_rows": 0,
         "duration_s": round((len(RECORD) - before) * CTRL_DT, 6),
         "planned_duration_s": round(q["hold"], 6),
@@ -1086,6 +1100,8 @@ class Hd(BaseHTTPRequestHandler):
             return self._json(200, {"ok": True, **_status()})
         if self.path == "/observe" and AGENT_END and E["done"] and E["reason"] == "finished":
             return self._json(409, {"error": "episode finished", "reason": E["reason"]})  # after /finish: /spec, /status only
+        if self.path == "/observe" and E.get("finalizing"):  # after the session's end (as rcb_service)
+            return self._json(409, {"error": "trial finished: your time is up", "reason": E["reason"]})
         if self.path == "/submit" and E["done"]:
             return self._json(409, {"error": "episode finished", "reason": E["reason"]})
         try:  # the whole request is checked before any physics: whatever is wrong with it is a 400 and changes nothing
