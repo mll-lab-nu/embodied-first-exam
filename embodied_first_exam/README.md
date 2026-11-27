@@ -6,8 +6,9 @@
   agent imports (`rcb_<benchmark>.py` and its helpers), the graders, the simulator service's adapter and shared assets.
   What is specific to one task (its frozen instance, reference solution, texts, Dockerfiles, compose file) stays in
   `tasks/<benchmark>/<task>/`.
-- `standard/`: the standard-mode client and service layers (docs/protocol/standard_mode.md). Tasks do not carry copies
-  of them: their Dockerfiles take the files from the files-only image `standard-files` (`images/standard-files/`).
+- `standard/`: the client and service layers of the standard and realtime modes ([standard/README.md](standard/README.md);
+  the wire protocol: docs/protocol/eai-standard.md). Tasks do not carry copies of them: their Dockerfiles take the files
+  from the files-only image `standard-files` (`images/standard-files/`).
   - the top level: the shared layer (`rcb_limited.py`, `rcb_client.py`, `rcb1.py`, `run.sh`) and its tests, and the
     live video several sim services film (`live_video.py`);
   - `sidecar/`: the sidecar service (`rcb_service.py`, which the realtime layer runs over too), the sidecar client and
@@ -15,7 +16,7 @@
     `sidecar/clients/<name>/`: the clients some benchmarks use (`robocasa`, `kinder`, `compact`);
   - `operations/`: the operations layer (`rcb_limited.py`, `rcb_client.py`, `selftest.py`);
   - `realtime/`: the realtime layer (`rcb_realtime.py`, its client);
-  - `agent_end/`: the agent-ended episode layer of the shared and the operations layers (`rcb_agent_end.py`, in the files-only image `standard-files`)
+  - `agent_end/`: the agent-ended episode layer of the shared and the operations layers (`rcb_agent_end.py`)
     and the tests of agent-ended episodes on every layer;
   - `mcp/`: the `efe-robot` MCP server that offers each standard and realtime task's robot service as tools, and
     `inject.py`, which `normalize` uses to write it into each task.
@@ -26,5 +27,5 @@ the task dir would have had, so `tasks/` stays a set of self-contained Harbor ta
 version (`files_image.py build`, push, `pin`).
 
 This folder is optional: the recommended place for what several tasks share is the benchmark's base image
-(`images/<name>/`), so the tasks get it from the image (docs/protocol/README.md §1, "What a contribution delivers").
+(`images/<name>/`), so the tasks get it from the image (docs/protocol/tasks.md, "What a contribution delivers").
 Code that builds or generates tasks is not kept in this repository.

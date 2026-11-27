@@ -29,7 +29,8 @@ and torch-cluster (BEHAVIOR's challenge evaluator). PyAV, the one `--eval` packa
 them out keeps the simulator stack identical (Isaac Sim, OmniGibson, bddl, torch, numpy < 2) and the image smaller.
 
 ManiGuard's data generator, its scripted skeletons, grasp annotations, policy servers and SFT code are not copied: they
-encode or point to reference solutions, which must not be in reach of an agent (PROTOCOL §2.7).
+encode or point to reference solutions, which must not be in reach of an agent (invariant H.2,
+docs/protocol/invariants.md).
 
 ## Locks
 Every build writes `/opt/locks/{dpkg,conda,pip}.lock` in the image. `dpkg.lock`, `conda.lock` and `pip.lock` here are

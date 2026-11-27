@@ -51,11 +51,6 @@ it. Maintainers push it with `scripts/images.sh push` after validating a build.
 
 ## Build (from the repository root)
 
-0.2.22 was published as a delta of the published 0.2.21: `FROM ghcr.io/mll-lab-nu/efe:robotangle-0.2.21@sha256:4fd681598e07a7a29201b8f30ccbee9944baaa856a5b05b045e48522c138f7ab` plus one `COPY` layer with the eight IPC instances'
-`instance_assets/frozen_assets/rope_volume.npz` (mode 0644). Its files are those of a full build from the pinned dataset
-revision, and a host that has 0.2.21 pulls only that layer (13 MB). A full build with the commands below gives the same
-files in other layers.
-
 ```bash
 images/roboarc/fetch_image_context.sh [<download dir>]     # images/roboarc/context/ from the pinned dataset, checked
 docker build -f images/roboarc/Dockerfile -t ghcr.io/mll-lab-nu/efe:roboarc-$(cat images/roboarc/VERSION) images/roboarc/context

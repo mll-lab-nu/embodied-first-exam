@@ -1,5 +1,5 @@
 name: Protocol change
-description: Propose a change to docs/protocol/README.md or the standard / realtime wire protocol (eai-standard/3.0 and its layers; docs/protocol/eai-standard-3.0.openapi.yaml).
+description: Propose a change to the task protocol (docs/protocol/) or the eai-standard/3.0 wire protocol (docs/protocol/eai-standard.md, docs/protocol/eai-standard.openapi.yaml).
 title: "[protocol] <change>"
 labels: ["protocol-change"]
 body:
@@ -9,9 +9,9 @@ body:
     validations: {required: true}
   - type: textarea
     id: change
-    attributes: {label: Exact change, description: "Fields, endpoints, rules; the proposed version (minor versions only add)."}
+    attributes: {label: Exact change, description: "Fields, endpoints, rules; for the wire protocol, the /spec capability that says a service offers it."}
     validations: {required: true}
   - type: textarea
-    id: compatibility
-    attributes: {label: Compatibility and migration, description: "Do existing clients and tasks keep working? Which tasks change, and who migrates them?"}
+    id: impact
+    attributes: {label: Affected tasks and clients, description: "Which tasks, services and clients change, and who updates them."}
     validations: {required: true}

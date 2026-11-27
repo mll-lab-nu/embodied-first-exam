@@ -32,11 +32,7 @@ The G1 public subset deliberately excludes non-G1 task configurations: upstream 
 
 The final CPU targets have native Docker build and boundary checks; the G1 evaluator additionally ran four terrain cases with exact fresh-container replay. The CPU reference families have native Harbor validation. **`train` (0.2.0-train)**: built FROM the 0.2.0-nominal tag (`TRAIN_ONLY=1 bash build.sh` on a host that pulled it; `BUILD_TRAIN=1` after the nominal build), torch 2.11.0+cu128 from the PyTorch CUDA 12.8 index (NVIDIA driver >= 570; the AWS hosts run 580.178.04), `pip check` clean, numpy 2.3.1 / mujoco 3.5.0 unchanged from nominal; full Harbor training / export / deployment trials on two L40S hosts (tasks/roboengineer/g1.md). EGL rendering is not used by training and not tested: the task's compose file grants the GPU's compute capability only.
 
-Version 0.1.1 adds checksum-pinned Apache-2.0 Skydio appearance assets. The operator
-preparation command downloads only those pinned public files; runtime images never
-download them. The Docker build verifies every mesh/texture/license hash. Existing
-tasks remain on their original 0.1.0 image tags; only the explicit
-`neural-fly-general-skydio-v1` observation revision selects 0.1.1 and enables
-`NEURALFLY_VISUAL_STYLE=skydio-x2/1` in both nominal and evaluator environments.
-The 0.1.1 build and native Harbor run are unverified locally; the native acceptance
-described above belongs to 0.1.0. Do not overwrite older image tags.
+The image carries checksum-pinned Apache-2.0 Skydio appearance assets. The operator preparation command downloads
+only those pinned public files; runtime images never download them. The Docker build verifies every mesh, texture and
+licence hash. The `neural-fly-general-skydio-v1` observation revision enables `NEURALFLY_VISUAL_STYLE=skydio-x2/1` in
+both the nominal and the evaluator environments. Never overwrite a published image tag.

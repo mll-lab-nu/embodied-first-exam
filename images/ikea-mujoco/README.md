@@ -10,8 +10,8 @@ scene's mechanism, `S.success()`), `scene.xml` with the two arms, the scene's me
 graders are copied by each task, and no robot demo or direct-force reference is in it.
 
 The image carries twelve scenes. Eight are tasks (lack, svallet, gladom, variera, eket, ikea365, vesken, stegesund);
-burvik, kyrre, stenerik and uppsta are in the image but are not tasks (work in progress: no reference passes every gate
-yet; tasks/roboarc/README.md, "IKEA suite"). Keeping them in the image keeps the image the one the tasks were validated on.
+burvik, kyrre, stenerik and uppsta are in the image but are not tasks: no reference passes every gate (tasks/roboarc/README.md,
+"IKEA suite"). Keeping them in the image keeps the image the one the tasks were validated on.
 
 `sim/` is the standard tasks' sidecar image, `ghcr.io/mll-lab-nu/efe:ikea-mujoco-sim-<images/ikea-mujoco/sim/VERSION>`:
 this image unchanged as the physics process, plus Nyx (RoboARC's renderer) in its own venv `/opt/nyx`
@@ -32,7 +32,7 @@ the grader checks in the verifier image (`instance_exact`) together with the ini
 What is staged per scene: `scene.py`, `scene.xml`, `task.json`, `layout.json`, `sw_cutover.json` (where present), the
 scene's own Python modules (not `_*.py` scripts) and `assets/`; then `assets.json` (its `note` and `tasks`, the pins the
 image carries at `/opt/ikea/assets.json`) and `bytepatch_libmujoco.py`. `stage_context.py` refuses any file whose sha256
-differs from the pins and any scene text that points at upstream material (PROTOCOL Appendix H.2); the scenes' upstream
+differs from the pins and any scene text that points at upstream material (invariant H.2, docs/protocol/invariants.md); the scenes' upstream
 provenance is kept outside this repository.
 
 ## Build (from the repository root)
@@ -55,8 +55,8 @@ A rebuild from the same context on a host that holds the build's layer cache giv
 patched `.so`'s sha256) and the same scene files, but its layers, and so its id, differ. The sidecar image's apt layer
 follows the Debian archive of its build day, so its id differs per build host. After a scene changes: `stage_context.py <tree> --pin`, rebuild, bump
 `VERSION`, refresh `images/ikea-mujoco/bindings.json` (`python /opt/tools/rcb_ikea.py info --task <t>` in the image, per
-task), upload the meshes as a new dataset revision and pin it, and re-render the tasks. A changed scene is a new task
-(PROTOCOL §2.8).
+task), upload the meshes as a new dataset revision and pin it, and re-render the tasks. A task whose scene changes keeps its
+name and gets a new `DIGEST` (invariant H.8).
 
 ## Registry
 

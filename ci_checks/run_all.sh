@@ -109,7 +109,7 @@ add python3 ci_checks/check-realtime.py"$pargs"
 # exception), and every agent-facing endpoint the layers and adapters serve has a tool
 add python3 ci_checks/check-mcp-tools.py"$pargs"
 # docs/protocol/standard_mode.md: the reference services of every layer answer as
-# docs/protocol/eai-standard-3.0.openapi.yaml says (paths, status codes, bodies against the schemas); in CI the
+# docs/protocol/eai-standard.openapi.yaml says (paths, status codes, bodies against the schemas); in CI the
 # unit-tests job runs it with its modules installed (RCB_SKIP_UNIT_TESTS=1 here)
 [ "${RCB_SKIP_UNIT_TESTS:-0}" = 1 ] || add python3 ci_checks/check-openapi-contract.py
 # the same document against the benchmarks' own servers (their own HTTP layer, no shared layer), read from

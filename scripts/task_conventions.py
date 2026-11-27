@@ -1825,7 +1825,7 @@ BEFORE_YOU_RUN = {
                     f"Builds its image ({ISAAC}): about 20 min, 30 GB free disk."),
     "iSpatialGym": ("Before you run", "The BEHAVIOR-1K dataset, `RCB_BEHAVIOR_DATA` (the same directory).",
                     f"Builds its image ({ISAAC}): about 20 min, 31 GB free disk."),
-    "LIBERO-MAX": ("Task definition", "A CPU with AVX-512 (Intel Ice Lake or newer Xeon, AMD Zen 4 or newer).", ""),
+    "LIBERO-MAX": ("", "A CPU with AVX-512 (Intel Ice Lake or newer Xeon, AMD Zen 4 or newer).", ""),
     "ManiGuard": ("Before you run",
                   "Prepare the data root `RCB_MANIGUARD_DATA` (3.4 GB; its key asks you to accept the BEHAVIOR Data "
                   "Bundle licence). NVIDIA driver 580.x: newer drivers crashed at start.",
@@ -1840,7 +1840,7 @@ BEFORE_YOU_RUN = {
                      "locally (`fetch_assets.sh --fit-fly`).", ""),
     "RoboLab": ("Before you run", "", f"Builds its image ({ISAAC}): 20-60 min, 60 GB free disk."),
     "RoboWits": ("Getting the images",
-                 "24 of its 30 tasks need BlenderKit models in `RCB_ROBOWITS_BLENDERKIT`: from the gated Hugging Face "
+                 "12 of its 15 tasks need BlenderKit models in `RCB_ROBOWITS_BLENDERKIT`: from the gated Hugging Face "
                  "dataset (accept its terms, `hf auth login`) or with your own BlenderKit Full Plan key.", ""),
     "VLABench": ("What you need before running", "", "Builds its image (CPU only): 5-20 min, 40 GB free disk."),
     "YAMLab": ("Before you run", "", f"Builds its image ({ISAAC}): about 25 min, 60 GB free disk."),
@@ -1862,7 +1862,7 @@ RT_CORES_BY_README = {"RoboARC"}
 
 
 def before_you_run_link(lab: str) -> tuple[str, str]:
-    """A BEFORE_YOU_RUN row's file (relative to the repository) and heading."""
+    """A BEFORE_YOU_RUN row's file (relative to the repository) and heading ("": the file itself)."""
     head = BEFORE_YOU_RUN[lab][0]
     f, _, h = head.rpartition("#")
     return (f, h) if f else (f"tasks/{BENCHMARK_DIRS[lab]}/README.md", head)
@@ -1882,6 +1882,10 @@ def check_before_you_run(tasks_dir: Path | None = None) -> list[str]:
             bad.append(f"{lab}: not a benchmark label")
             continue
         f, head = before_you_run_link(lab)
+        if not head:
+            if not (tasks_dir.parent / f).is_file():
+                bad.append(f"{lab}: no {f}")
+            continue
         heads = {gh_anchor(m) for m in re.findall(r"^#+ (.+)$", read_text(tasks_dir.parent / f) or "", re.M)}
         if gh_anchor(head) not in heads:
             bad.append(f"{lab}: {f} has no heading {head!r}")
@@ -1928,12 +1932,12 @@ def readme_quick_start(tasks_dir: Path | None = None) -> str:
     rows = []
     for lab, (_, hand, first) in sorted(BEFORE_YOU_RUN.items(), key=lambda kv: kv[0].lower()):
         f, head = before_you_run_link(lab)
-        rows.append(f"| [{lab}]({f}#{gh_anchor(head)}) | {hand or '-'} | {first or '-'} |")
+        rows.append(f"| [{lab}]({f}{'#' + gh_anchor(head) if head else ''}) | {hand or '-'} | {first or '-'} |")
     return "\n".join([
         "### Before you run", "",
         "- **Host:** Linux x86_64 with git, [uv](https://docs.astral.sh/uv/) (it fetches a Python 3.12-3.14 for "
         "Harbor if needed) and Docker Engine with Compose v2 and BuildKit (the `buildx` plugin). Without Docker, e.g. on a Slurm cluster: rootless podman "
-        "with `-e podman` ([docs/protocol/running.md](docs/protocol/running.md#without-docker-rootless-podman-eg-a-slurm-cluster)).",
+        "with `-e podman` ([docs/operations.md](docs/operations.md#rootless-podman)).",
         "- **GPU:** the NVIDIA driver and the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/"
         "container-toolkit/latest/install-guide.html) for every task that uses a GPU. An RTX-class GPU (with RT cores; "
         f"not A100 or H100): {', '.join(g['rtx'])}. Any NVIDIA GPU: {', '.join(g['any'])}. Some tasks: "
@@ -1945,7 +1949,7 @@ def readme_quick_start(tasks_dir: Path | None = None) -> str:
         "redistributed. Running that build means you accept the licences of what it installs; the linked section "
         "lists them. Organization members logged in to ghcr.io pull the prebuilt layers instead (on podman, after "
         "`podman login ghcr.io`, `harbor run -e podman` pulls the prebuilt image and uses it in place of the recipe; "
-        "[docs/protocol/running.md](docs/protocol/running.md#without-docker-rootless-podman-eg-a-slurm-cluster)).", "",
+        "[docs/operations.md](docs/operations.md#rootless-podman)).", "",
         "| Benchmark | By hand, once | First run |", "|---|---|---|", *rows, "",
         "### 1. Install", "",
         block("# clone with the submodules; install Harbor 0.23.0 with this repository's flags",
@@ -1961,9 +1965,9 @@ def readme_quick_start(tasks_dir: Path | None = None) -> str:
         block(f"# the core set: {core} tasks in every mode they have ({core_dirs} task dirs)", f"{d} {m}"),
         block("# the core tasks in one mode: " + ", ".join(f"--{k} ({n} tasks)" for k, n in per.items()),
               f"{d} --privileged {m}"),
-        block(f"# every task: {len(dirs)} task dirs ({bases} tasks in their modes, {benches} benchmarks); the paper and "
-              f"leaderboard count {len({base_of(p) for p in paper})} tasks / {len(paper)} tests / "
-              f"{len({p.parent.name for p in paper})} suites, without HumanCLAW", f"{d}@all {m}"),
+        block(f"# every task: {len(dirs)} task dirs ({bases} tasks in their modes, {benches} benchmarks)", f"{d}@all {m}"),
+        f"The paper and the leaderboard count the paper's {len({p.parent.name for p in paper})} suites (every "
+        f"benchmark but HumanCLAW): {len({base_of(p) for p in paper})} tasks, {len(paper)} tests.", "",
         block(f"# one benchmark, here RoboARC ({arc} task dirs)", f"{d}@all -p tasks/roboarc {m}"),
         block("# one task (add -y to skip Harbor's confirmation prompt, e.g. in a script)",
               f"{d}@all -p tasks/<benchmark>/<task> -a oracle"),
@@ -1976,35 +1980,25 @@ def readme_quick_start(tasks_dir: Path | None = None) -> str:
 
 TAXONOMY_FILE = Path(__file__).resolve().parents[1] / "docs/TAXONOMY.md"
 TAXONOMY_PROTOCOL_ROW = re.compile(r"(?m)^\| `protocol` \| .* \|$")
-# what a protocol value adds to its row in docs/TAXONOMY.md (the benchmarks that serve it come from the tasks)
-PROTOCOL_NOTES = {"eai-policy/1.0": "a benchmark's own runtime", "eai-policy/1.1": "a benchmark's own runtime"}
 
 
 def taxonomy_protocol_row(tasks_dir: Path | None = None) -> str:
-    """docs/TAXONOMY.md's `protocol` row, from the tasks: per sidecar mode, each value of `[metadata] protocol` and the
-    benchmarks whose tasks declare it (BENCHMARK_TABLE order; "some tasks" where a benchmark's tasks of that mode
-    declare more than one)."""
-    use: dict = {}
+    """docs/TAXONOMY.md's `protocol` row, from the tasks: `eai-standard/3.0` for every standard and realtime task, and
+    each other value a benchmark's own runtime declares, with the benchmarks whose tasks declare it (BENCHMARK_TABLE
+    order)."""
+    other: dict = {}
     for t in iter_tasks(tasks_dir):
-        m = mode_of(t)
-        if m in SIDECAR_MODES:
-            use.setdefault(m, {}).setdefault(str(metadata_of(t).get("protocol", "")), set()).add(bench_of(t))
+        if mode_of(t) in SIDECAR_MODES:
+            proto = str(metadata_of(t).get("protocol", ""))
+            if proto != EAI_STANDARD:
+                other.setdefault(proto, set()).add(bench_of(t))
     order = {lab: i for i, (_, lab, _) in enumerate(BENCHMARK_TABLE)}
-    parts = []
-    for m in SIDECAR_MODES:
-        per = use.get(m, {})
-        vals = []
-        for proto in sorted(per, key=lambda p: (p.startswith("eai-standard/") is False, p)):
-            benches = sorted(per[proto], key=lambda b: order.get(b, len(order)))
-            names = [b + (" (some tasks)" if sum(b in bs for bs in per.values()) > 1 else "") for b in benches]
-            note = PROTOCOL_NOTES.get(proto)
-            vals.append(f"`{proto}` ({(note + ': ') if note else ''}{', '.join(names)})")
-        parts.append(f"{m[0].upper() + m[1:]}: " + " · ".join(vals))
-    return ("| `protocol` | standard and realtime modes only; the benchmarks that serve each value (generated: "
-            "`python3 scripts/task_conventions.py taxonomy --write`). " + ". ".join(parts) + ". `eai-standard/3.0` is "
-            "specified in [protocol/standard_mode.md](protocol/standard_mode.md) (a service's capabilities, such as "
-            "operations, realtime or the match extension, are in its `/spec`); a benchmark's own runtime names its "
-            "protocol (PROTOCOL §3) |")
+    own = ", ".join(f"`{p}` ({', '.join(sorted(b, key=lambda x: order.get(x, len(order))))})"
+                    for p, b in sorted(other.items()))
+    return (f"| `protocol` | standard and realtime modes only: `{EAI_STANDARD}`, specified in "
+            "[protocol/eai-standard.md](protocol/eai-standard.md). What a service offers beyond the base is in its "
+            "`/spec` capabilities." + (f" A benchmark's own runtime names its own protocol: {own}." if own else "")
+            + " (Generated: `python3 scripts/task_conventions.py taxonomy --write`.) |")
 
 
 def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) -> list[str]:

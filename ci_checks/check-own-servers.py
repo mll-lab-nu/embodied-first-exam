@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Advisory contract check of the benchmarks' own eai-standard/3.0 servers against docs/protocol/eai-standard-3.0.openapi.yaml.
+"""Advisory contract check of the benchmarks' own eai-standard/3.0 servers against docs/protocol/eai-standard.openapi.yaml.
 
 check-openapi-contract.py runs the shared reference layers (rcb_service.py, rcb_limited.py, rcb_realtime.py) on toy
 simulators; the benchmark servers that serve the wire themselves (their own HTTP layer, no shared layer imported)
@@ -461,7 +461,7 @@ def main() -> int:
     repo = pathlib.Path(a.repo).resolve()
     try:
         import yaml
-        doc = yaml.safe_load((repo / "docs/protocol/eai-standard-3.0.openapi.yaml").read_text())
+        doc = yaml.safe_load((repo / "docs/protocol/eai-standard.openapi.yaml").read_text())
         counters, spec_req = required(doc, "Counters"), required(doc, "Spec")
     except Exception as exc:  # noqa: BLE001
         print(f"FAIL check-own-servers.py: cannot read the OpenAPI document: {exc}")
