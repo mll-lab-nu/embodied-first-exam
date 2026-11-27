@@ -143,7 +143,7 @@ through the robot's joint targets alone, (b) whose success check can be stated w
   paths included: that mode reads the simulator anyway. A standard instruction states the same goal with every quantity
   relative to where things start ("more than 10 cm above where it stood", "pushed in more than 5 mm", "along the
   forward axis of the arm's base") and never a world coordinate or an object pose; the arm's base pose is in `/spec`
-  (`robot_spec.base`). `ci_checks/benchmarks/labutopia/advisory-world-frame.sh` checks the standard texts.
+  (`robot_spec.base`). `ci_checks/check-world-frame-texts.sh` checks the standard texts.
 - **Budget: 3600 s**, both modes (each task's `[agent] timeout_sec`, stated in the Time line of its
   instruction's closing `## Limits`), the same as RoboLab's (also on Isaac Sim).
 

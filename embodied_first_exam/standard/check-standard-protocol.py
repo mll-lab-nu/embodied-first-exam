@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """eai-standard/3.0 conformance test of the shared layer, run against a LIVE sim service (docs/protocol/standard_mode.md).
 
-    check-standard-protocol.py --url http://127.0.0.1:8000 [--task tasks/<benchmark>/<t>-standard] [--out DIR] [--watch 0.5]
-    check-standard-protocol.py --launch tasks/<benchmark>/<t>-standard [--port 18000] [--out DIR]   # compose up the task's sidecar, test, down
+    embodied_first_exam/standard/check-standard-protocol.py --url http://127.0.0.1:8000 [--task tasks/<benchmark>/<t>-standard] [--out DIR] [--watch 0.5]
+    embodied_first_exam/standard/check-standard-protocol.py --launch tasks/<benchmark>/<t>-standard [--port 18000] [--out DIR]   # compose up the task's sidecar, test, down
 
 It drives the service through the task's own shipped client (environment/rcb_client.py) where the protocol allows, and
 through raw HTTP for the protocol-level cases (404s, include_depth requests, malformed bodies). Checked:
   /spec     the shared layer's keys and nothing unknown; cameras (intrinsics, mounting), robot_spec (joints with real limits, grippers,
             controller gains, TCP), world, kinematics, depth, proprio groups; budget == the task's [agent].timeout_sec;
   never     no forbidden field anywhere (segmentation, object poses, physical parameters); nothing in `static` or the limited
-            texts says where things are (positions, heights, centres, world coordinates: the benchmark's ci_checks/benchmarks/<bench>/advisory-world-frame.sh), while names,
+            texts says where things are (positions, heights, centres, world coordinates: ci_checks/check-world-frame-texts.sh for the benchmarks that declare it), while names,
             sizes and colours may stay (listed as INFO); response parts and meta keys from the allowed sets;
   frames    one frame axis: proprio rows = frame_step = frame_time_s = extrinsic_cv/<cam> = depth_frames/<cam> frames;
             time = step / control_hz; meta.cameras = the last frame's pose; static cameras never move;
@@ -198,8 +198,8 @@ def check_spec(rep: Report, spec: dict, task: Path | None) -> None:
     for path, v in leaves(st, "static"):
         rep.add("INFO", "spec.static (scene fact, no position)", f"{path} = {json.dumps(v)[:160]}")
     if task is not None:
-        hooks = sorted((Path(__file__).resolve().parents[1] / "ci_checks/benchmarks").glob("*/advisory-world-frame.sh"))
-        outs = [subprocess.run(["bash", str(h), str(task)], capture_output=True, text=True) for h in hooks]
+        outs = [subprocess.run(["bash", str(Path(__file__).resolve().parents[2] / "ci_checks/check-world-frame-texts.sh"),
+                                str(task)], capture_output=True, text=True)]
         bad = [o for o in outs if o.returncode != 0]
         rep.ok(not bad, "task.limited_texts", ("\n".join(o.stdout.strip() for o in bad) or "no inventories, sizes or workspace parameters in the texts")[:1500])
     # cameras
@@ -596,7 +596,7 @@ def main() -> int:
     client = a.client or (task / "environment" if task else None)
     if client is not None and not a.client and not (client / "rcb_client.py").exists():
         # the agent image takes the client from a files-only image (COPY --from): use its source in this repository
-        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+        sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
         import files_image   # noqa: E402
         got = {Path(dest).name: src for dest, src in files_image.copied(client / "Dockerfile").items()}
         if "rcb_client.py" in got and "rcb1.py" in got:

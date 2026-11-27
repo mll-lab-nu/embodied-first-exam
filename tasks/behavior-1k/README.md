@@ -360,7 +360,7 @@ sidecar files is byte-identical across the benchmark, the files image's included
   robot's cameras. Task-level skills (grasp, place, navigate) are never added to the agent's tooling; the reference
   solutions keep theirs in `solution/rcb_behavior_ref.py`.
 - **World-frame information.** Standard tasks never say where things are in the world (docs/protocol/standard_mode.md §10,
-  `ci_checks/benchmarks/behavior-1k/advisory-world-frame.sh`); the convention that the floor is the plane z = 0 defines the world frame and is given.
+  `ci_checks/check-world-frame-texts.sh`); the convention that the floor is the plane z = 0 defines the world frame and is given.
   Privileged tasks give the privileged state through the tooling.
 
 ## Licences

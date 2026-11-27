@@ -170,7 +170,7 @@ unchanged), resume class `exact`:
   a list as `dt` / `seconds` / `video_fps`, a string as `cameras`), a number too large for a float, NaN, a bad `depth`
   is a 400, no physics, the episode goes on; `null` for `dt`, `seconds`, `video_fps`, `cameras` or `note` is the
   default (what the shared client sends for an argument left out).
-- `ci_checks/check-standard-protocol.py` passes against a live service of a single-arm and a bimanual task (velocity limits are null:
+- `embodied_first_exam/standard/check-standard-protocol.py` passes against a live service of a single-arm and a bimanual task (velocity limits are null:
   WARN only). Crash recovery: the service killed between calls and inside a call resumes the same episode
   (`resumes = 2`, exact hash) and the oracle still ends in success.
 

@@ -224,7 +224,7 @@ registry lists all 88 RoboLab tasks that were frozen (the 53 here and the 35 wit
   recording, replay and rendering. Task-level skills (grasp, place, navigate) are never added to the agent's tooling;
   reference solutions keep theirs under `solution/`.
 - **World-frame information.** Standard tasks never say where things are in the world (docs/protocol/standard_mode.md §10,
-  `ci_checks/benchmarks/robolab/advisory-world-frame.sh`); the robot's root frame (Franka base at the origin) is the world convention. Privileged tasks
+  `ci_checks/check-world-frame-texts.sh`); the robot's root frame (Franka base at the origin) is the world convention. Privileged tasks
   give the privileged state through the tooling.
 
 ## Standard mode (eai-standard/3.0)

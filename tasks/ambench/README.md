@@ -229,7 +229,7 @@ below).
 ## Standard mode (eai-standard/3.0)
 - **Action**: `ee_pose` (8: AM-Bench's own action) rows `dt` apart (a multiple of 1/120 s, at most 0.5 s), `hold` (each row
   exactly as given) or `linear` (positions linear, orientation slerp, gripper linear); no `joint_position` (the arm alone
-  is not AM-Bench's action space: the controller moves the airframe too). `ci_checks/check-standard-protocol.py` tests the
+  is not AM-Bench's action space: the controller moves the airframe too). `embodied_first_exam/standard/check-standard-protocol.py` tests the
   service's first action type (it assumed `joint_position`).
 - **Cameras**: `ee_camera` (on ee_link) and `base_camera` (on base_link), 384×384 RGB + z-depth, `mount.type: link`; drawn by
   the render worker (rcb_ambench.Renderer) in the same `sim` sidecar.
@@ -240,7 +240,7 @@ below).
 - **Robot spec**: the limits PhysX enforces. AM-Bench's asset gives three arm joints (link2/link3 pitch, link4 roll) ±10 rad,
   more than a turn each way and no joint stop an arm meets: they are reported as `continuous` (`position_limits: null`)
   with the asset's range in `note` (the conformance check reads three equal ranges beyond ±2π as placeholders).
-- **Conformance** (`ci_checks/check-standard-protocol.py --launch`, PressButton): 164 PASS, 0 FAIL; the sidecar peaks at
+- **Conformance** (`embodied_first_exam/standard/check-standard-protocol.py --launch`, PressButton): 164 PASS, 0 FAIL; the sidecar peaks at
   4.6 GB of GPU memory (PhysX buffers, above).
 - **Episode**: one, no reset; AM-Bench's own time-out stays (the task's episode length; reason `episode_timeout`); simulated
   time advances only with the agent's calls; the wall clock (3600 s) is the budget.

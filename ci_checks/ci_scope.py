@@ -174,7 +174,7 @@ def scope(paths: list[str]) -> dict:
     for p in paths:
         if p in NO_TASK_EFFECT or p in REPO_LEVEL_ONLY:
             continue
-        if re.match(r"ci_checks/benchmarks/[^/]+/(?!advisory-)", p):   # an invariant hook, a file one runs (check_leak.sh)
+        if re.match(r"ci_checks/benchmarks/[^/]+/(?!advisory-)", p):   # an invariant hook, a file one reads (exported.toml)
             return {"scope": "full", "reason": f"{p}: a benchmark's invariant hook or what it reads (exported.toml), whose "
                     "mutations check-ci-selftest.py runs in the full suite only", "benches": []}
         own = owners(p)

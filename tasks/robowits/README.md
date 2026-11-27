@@ -242,7 +242,7 @@ pins the same `robowits-files` digest, so every task runs the same tooling, side
   moves, IK moves without collision checking, gripper, hold). Task-level skills (grasp, place, navigate) are never added
   to it; reference solutions keep theirs under `solution/`.
 - **World-frame information.** Standard tasks never say where things are in the world (docs/protocol/standard_mode.md §10,
-  `ci_checks/benchmarks/robowits/advisory-world-frame.sh`): no object poses or positions, no world coordinates of workspace items. Their success
+  `ci_checks/check-world-frame-texts.sh`): no object poses or positions, no world coordinates of workspace items. Their success
   criterion is stated in words and distances relative to the objects and the table top; the corners of the predicate's
   table-bounds rectangle and the goal line's coordinate are withheld. Given: object names, sizes and colours, the robot
   (its base pose included), the cameras' calibration, the world frame's convention. Privileged tasks give the privileged

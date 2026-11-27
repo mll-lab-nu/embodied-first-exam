@@ -208,7 +208,7 @@ bolts standard, drawer search privileged): 12/12, the same final states.
 - `bash ci_checks/run_all.sh tasks/abc-sim/abc-sim-*`: every invariant holds; the one advisory finding is the root
   README's benchmark list (regenerated after merge).
 - `python3 scripts/task_conventions.py --check tasks/abc-sim/abc-sim-*`: clean.
-- `ci_checks/check-standard-protocol.py` against a live spell_abc service: 222 PASS, 0 FAIL, 16 WARN (velocity limits:
+- `embodied_first_exam/standard/check-standard-protocol.py` against a live spell_abc service: 222 PASS, 0 FAIL, 16 WARN (velocity limits:
   the simulator enforces none).
 - Crash recovery: the spell_abc service killed (`kill -9`) after 300 of the reference's 507 rows; it restarted, resumed
   the same episode (`resumes` 1, no state mismatch) and the reference ended in success at the same final state.

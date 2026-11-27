@@ -247,7 +247,7 @@ that score 0; an apple_lift trajectory that leaves the apple on the table scores
 - `python3 scripts/task_conventions.py --check tasks/myosuite/myosuite-*/`: clean.
 - Crash recovery (docs/protocol/standard_mode.md): the key_turn service killed (`kill -9`) after the first 30 rows of the
   oracle stream; the service resumed the same episode (`resumes` 1, exact hash) and the oracle succeeded.
-- `ci_checks/check-standard-protocol.py` against a live hand_reach service: every /spec, /status, /observe and 404
+- `embodied_first_exam/standard/check-standard-protocol.py` against a live hand_reach service: every /spec, /status, /observe and 404
   check passes; its live part assumes a `joint_position` action type, which a
   muscle-driven body does not have.
 - Determinism of set 3 before building: three replays in one process and one in a fresh process gave the same final

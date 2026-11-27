@@ -55,7 +55,7 @@ has its own prefix (`task_conventions.py benchmarks --check`, `ci_scope.py --che
 
    ```toml
    schema_version = "1.3"
-   artifacts = ["/app/output/"]          # must include "/app/output/" (check-task-fields.sh)
+   artifacts = ["/app/output/"]          # must include "/app/output/" (check-task-layout.py)
 
    [task]
    name = "embodied-first-exam/mybench-pick-cube-i00-privileged"   # embodied-first-exam/<directory name>

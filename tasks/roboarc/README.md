@@ -166,7 +166,7 @@ height and physics parameters are withheld. The service's `robot_felt` passes ex
 ## Standard mode, world frame, network
 
 `eai-standard/3.0`; no world coordinates in standard texts (D7,
-`ci_checks/benchmarks/roboarc/advisory-world-frame.sh`); agent egress on the allowlist (PROTOCOL Appendix H.6).
+`ci_checks/check-world-frame-texts.sh`); agent egress on the allowlist (PROTOCOL Appendix H.6).
 
 Every text the agent sees calls the service's frame the world frame, as the other services call theirs, and defines it in
 words; it is the robot frame (the table height and the robot base's world position are never disclosed): origin at the robot's kinematic root link on its mounting, axes as the simulator's world
@@ -182,7 +182,7 @@ or robot base position either.
 (`BENCHMARKS`), `scripts/task_resources.toml`
 (the `^roboarc-` rules; the generic `^roboarc-(?!ikea-)` rules leave the IKEA suite to its own `^roboarc-ikea-` rules), `docs/TAXONOMY.md`, `README.md`, the checks that name a benchmark's prefix
 (`ci_checks/check-tooling-identity.sh` `MODULE`, where the IKEA suite is the group `roboarc-ikea`,
-`ci_checks/benchmarks/roboarc/advisory-world-frame.sh`); `ci_checks/ci_scope.py` (RoboARC's unit includes `images/ikea-mujoco/` and
+`ci_checks/check-world-frame-texts.sh`); `ci_checks/ci_scope.py` (RoboARC's unit includes `images/ikea-mujoco/` and
 `images/ikea-mujoco-files/`); the cutoff is
 each task's own `[agent] timeout_sec`.
 

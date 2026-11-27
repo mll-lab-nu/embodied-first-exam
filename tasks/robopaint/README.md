@@ -501,7 +501,7 @@ at `/tests/`; no task dir carries them. The sidecars are built from `environment
   sheets, rendering and replay. No stroke planner or painting skill is added to the agent's tooling; the reference
   solutions keep theirs under `solution/`.
 - **World-frame information.** Standard tasks never say where things are in the world: no sheet heights or centres,
-  no well positions, no pixel-to-world formula (docs/protocol/standard_mode.md §10, `ci_checks/benchmarks/robopaint/advisory-world-frame.sh`).
+  no well positions, no pixel-to-world formula (docs/protocol/standard_mode.md §10, `ci_checks/check-world-frame-texts.sh`).
   - Accepted consequence: the calibrated `canvas_cam` above the main sheet tells roughly where the sheet is.
   - Privileged tasks give the sheets through the tooling.
 

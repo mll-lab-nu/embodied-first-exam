@@ -18,10 +18,12 @@ if [ -z "${RCB_MODES_TABLE:-}" ]; then
   export RCB_MODES_TABLE
 fi
 INVARIANT_CHECKS=(check-verifier-isolation check-instance-copies check-standard-agent-image)   # Appendix H.1, H.3, H.4, H.6, H.7
-ADVISORY_CHECKS=(check-task-structure check-task-fields check-dockerfile check-instruction)
+ADVISORY_CHECKS=(check-dockerfile check-instruction)
 checks=()
 [ "$tier" != advisory ] && checks+=("${INVARIANT_CHECKS[@]}")
 [ "$tier" != invariants ] && checks+=("${ADVISORY_CHECKS[@]}")
+# advisory, one pass over all the given tasks: the files, README layout and task.toml fields
+[ "$tier" != invariants ] && { python3 "$root/ci_checks/check-task-layout.py" "$@" || rc=1; }
 n=0
 for t in "$@"; do
   t="${t%/}"; [ -f "$t/task.toml" ] || continue

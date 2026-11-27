@@ -333,7 +333,7 @@ a 400; a missing field, or a
 null `video_fps`, `cameras` or `note`, means the default. `hold(s)` (a hold chunk) runs whole control steps and
 `meta["duration_s"]` is what ran (less when the episode ended); `/observe` with `seconds > 0` is a 400.
 
-Measured (laptop): `ci_checks/check-standard-protocol.py --launch` passes on both twins (spec, cameras and depth,
+Measured (laptop): `embodied_first_exam/standard/check-standard-protocol.py --launch` passes on both twins (spec, cameras and depth,
 kinematics, projection). Harbor's oracle runs score 1: jar 14 in 7 min (the live episode ends at step 599), cabinet 19 in
 11 min (step 2240); `nop` scores 0 (an empty episode). The image holds the two Kit extensions Isaac Sim would fetch from
 NVIDIA's CDN at a first launch (the sidecar has no egress); OmniGibson's camera intrinsics read zero until a camera has
@@ -368,7 +368,7 @@ frozen instance and checks that nothing the agent reads names ManiGuard's demons
   IK then a joint-space line, no collision checking), `ee_pose`, state, cameras, recording, replay. No grasp, place, close
   or carry skills.
 - **World-frame information (D7).** Standard tasks never say where things are (docs/protocol/standard_mode.md,
-  `ci_checks/benchmarks/maniguard/advisory-world-frame.sh`): not the sphere's position, not the table height; the floor is the plane z = 0 and the robot's
+  `ci_checks/check-world-frame-texts.sh`): not the sphere's position, not the table height; the floor is the plane z = 0 and the robot's
   base pose is in `robot_spec`. Privileged tasks give everything through the tooling.
 - **Reference solutions out of reach.** ManiGuard's 40 public demonstrations per task, its scripted data generator and its
   grasp annotations are not in the image or the task dirs, and agent egress is allowlisted to the model APIs and the package registries by default in

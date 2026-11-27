@@ -77,7 +77,7 @@ ProcTHOR-10k one misses objects on 0.2.9's scene version).
 | privileged | `Session`: full state (`s.state()`, `s.model` / `s.data`), any camera, upstream's kinematics, reward and success code | unlimited | `tests/grade.py`: `trajectory.npz` replayed in one fresh process, which must succeed |
 | standard | `joint_position` (Franka 8, RB-Y1 25) and `done`; the robot's cameras (not the third-person follower), proprioception, `/kinematics` | none (D1) | the live episode: upstream's `judge_success()` on the state it ends in, in the sim service; nothing replays it |
 
-Standard mode's texts name objects and the goal only (D7, `ci_checks/benchmarks/molmospaces/advisory-world-frame.sh`); the robot's pose and
+Standard mode's texts name objects and the goal only (D7, `ci_checks/check-world-frame-texts.sh`); the robot's pose and
 camera calibration come from the service, object poses never. The privileged grader checks that each replay starts in the
 instance's t = 0 state (else `grader_error`, with `infra_error`); the standard sim service checks its own start against
 that hash when it builds the scene, before the agent is served (else it gives up: `instance_mismatch`, `infra_error`).

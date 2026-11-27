@@ -108,7 +108,7 @@ success rate), load rotor 14.7 / 1.0.
   heights and MuJoCo names included: that mode reads the simulator anyway. A standard instruction states the same goal
   with every threshold relative ("lift it at least 9.5 cm", "within 15 mm of the slot's centre", "the row farther from
   the robot's base"), and never a world coordinate, an object pose or an instrument state; the robot's own base poses
-  are in `/spec` (`robot_spec.base`). `ci_checks/benchmarks/autobio/advisory-world-frame.sh` checks the standard texts.
+  are in `/spec` (`robot_spec.base`). `ci_checks/check-world-frame-texts.sh` checks the standard texts.
 - **Texts.** The instructions describe each check in our own words and point to its source in the image
   (`/opt/AutoBio/autobio/<module>.py`); AutoBio's code is not quoted (no licence).
 - **Budget: 3600 s**, both modes (each task's `[agent] timeout_sec`, stated in the Time line of its

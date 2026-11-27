@@ -209,7 +209,7 @@ also after a success; the technical cap is the step limit (`step_limit`, judged 
   flags, recording, replay and rendering. Task-level skills (grasp, lift, handover, place, hang) are never added to the
   agent's tooling.
 - **World-frame information (D7).** Standard tasks never say where things are in the world (docs/protocol/standard_mode.md §10,
-  `ci_checks/benchmarks/yamlab/advisory-world-frame.sh`); the robot (both arm bases) and the world conventions are given. Privileged tasks give the
+  `ci_checks/check-world-frame-texts.sh`); the robot (both arm bases) and the world conventions are given. Privileged tasks give the
   privileged state through the tooling and the world heights of the success check in the instruction.
 
 - **Pointers to the reference solution.** The reference solution of an instance is the YAMLab teleoperation

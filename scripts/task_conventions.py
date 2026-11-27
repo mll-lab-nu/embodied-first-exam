@@ -107,6 +107,10 @@ BENCHMARK_TABLE = [
     ("humanclaw-", "HumanCLAW", "humanclaw"),  # find / navigate / sit with a simulated human body (HumanClawBench)
 ]
 BENCHMARKS = [(p, label) for p, label, _ in BENCHMARK_TABLE]   # (directory prefix, label): the first matching prefix wins
+# The benchmarks (folders of BENCHMARK_TABLE) whose standard tasks give no world coordinates in their texts (PROTOCOL §5;
+# each one's tasks/<folder>/README.md, "World-frame information"): ci_checks/check-world-frame-texts.sh checks them.
+NO_WORLD_FRAME_TEXTS = ("autobio", "behavior-1k", "labutopia", "maniguard", "molmospaces", "roboarc", "robolab",
+                        "robopaint", "robowits", "yamlab")
 # Modes (PROTOCOL §3): a benchmark ships any subset of the modes. A standard or realtime
 # task without a privileged twin says why in its README's Twin row ("— (none: ...)"), the task's own declaration:
 # no_twin_reason() reads it back, so no list of such tasks is kept here.
@@ -1654,7 +1658,7 @@ def committed_line(task: Path, key: str) -> str | None:
 def normalize_dynamics(task: Path) -> None:
     """`[metadata] dynamics` (static / dynamic; PROTOCOL §2) is the task's own declaration and is kept as written. A
     task.toml without it (a fresh render) gets the committed task's line back, right after `family`; a new task
-    declares it itself (ci_checks/check-task-fields.sh warns when it is missing)."""
+    declares it itself (ci_checks/check-task-layout.py warns when it is missing)."""
     p = task / "task.toml"
     s = p.read_text()
     if re.search(r"(?m)^dynamics = ", s):

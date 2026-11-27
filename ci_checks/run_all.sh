@@ -86,6 +86,8 @@ if [ ${#tasks[@]} -gt 0 ]; then
     [ -f "$h" ] || continue
     case "$h" in *.py) add xargs python3 "$(q "$h") < $(q "$hlist")" ;; *) add xargs bash "$(q "$h") < $(q "$hlist")" ;; esac
   done
+  # PROTOCOL §5: the standard texts of the benchmarks that give no world coordinates (task_conventions.NO_WORLD_FRAME_TEXTS)
+  add xargs bash ci_checks/check-world-frame-texts.sh "< $(q "$hlist")"
 fi
 # repo-level, cheap: always on everything, or on the given task dirs as before
 pargs=""; [ $explicit -eq 1 ] && pargs="$targs"

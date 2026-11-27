@@ -3,7 +3,7 @@
 no placeholder solve.sh, base images from the one registry, no results/ in the repository, no personal paths, internal
 names or host /data/ paths. Prints
 one summary line per rule with a count and a few examples; every rule fails the check. Names, modes and the other
-task.toml fields are check-task-fields.sh's; that test.sh clears /logs/verifier first is check-verifier-isolation.sh's.
+task.toml fields are check-task-layout.py's; that test.sh clears /logs/verifier first is check-verifier-isolation.sh's.
 
 Usage: check-protocol.py [task dirs...]   (default: every task under tasks/ plus repository-wide checks)
 """

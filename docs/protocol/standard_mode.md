@@ -486,7 +486,7 @@ predicate, segmentation; physical parameters of the scene other than the robot's
 either). Provided: the robot and its tool, camera calibration, world conventions, the budget, and what the task's
 texts give. Whether a task's texts state world coordinates of workspace items is its benchmark's decision (its doc,
 "World-frame information"). `rcb_limited.check_spec` refuses to start a service whose `/spec` names a forbidden field or
-puts a position into `static`; `ci_checks/check-standard-protocol.py` checks every response of a live service by hand.
+puts a position into `static`; `embodied_first_exam/standard/check-standard-protocol.py` checks every response of a live service by hand.
 Accepted consequence: a calibrated camera aimed at the workspace tells roughly where the workspace is.
 
 ### 11. Errors (no physics executed)

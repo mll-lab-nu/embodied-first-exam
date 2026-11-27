@@ -62,7 +62,7 @@ Guide for maintainers. The contract is [protocol/README.md](protocol/README.md);
   mode is not a reason to block, but the benchmark's doc says which modes it ships and why the others are left out.
   Where a family has twins, do they share the frozen instance, success rule and seeds, and is the cutoff of privileged
   and standard one number? A standard or realtime task without a twin: does it carry its own frozen instance,
-  and does its README's Twin row say why (`— (none: <reason>)`; the advisory check `check-task-structure.sh` warns
+  and does its README's Twin row say why (`— (none: <reason>)`; the advisory check `check-task-layout.py` warns
   otherwise: a deleted or misnamed twin must not pass silently)?
 - A new mode (PROTOCOL §3): does the pull request have everything §3 lists: the name (the directory suffix),
   its own PROTOCOL section (what the agent gets, what is graded, the time and reset rules, which failures are

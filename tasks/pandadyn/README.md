@@ -287,7 +287,7 @@ them moves by itself) get a `-realtime` twin, sharing the standard twin's adapte
   know them otherwise, since nothing in the scene marks them. Standard mode never gives where objects or fixtures are,
   their physical parameters (mass, friction, restitution, launch velocities), the seed, or goal values derived from the
   seeded variation; the privileged instruction and tooling give all of them. Panda Dynamic Scenes is therefore not among
-  the benchmarks whose own `ci_checks/benchmarks/<bench>/advisory-world-frame.sh` checks for "no world coordinates".
+  the benchmarks that `ci_checks/check-world-frame-texts.sh` checks for "no world coordinates".
 - **Pointers to the reference solution.** None reaches the agent: the image holds the environment package only (its
   command-line front end, which drives the benchmark's validation tooling, is left out, and comments that named that
   tooling are reworded: `images/pandadyn/sync_env.py`, which refuses a copy with such text); `instance.json` names no
