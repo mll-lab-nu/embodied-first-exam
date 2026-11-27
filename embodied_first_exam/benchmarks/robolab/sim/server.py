@@ -409,7 +409,7 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list) -> None:
                 st = f"failed: {str(exc)[:80]}"; break
             cur = np.asarray(S.hold_action(), dtype=np.float64); a = cur.copy()
             a[0:7] = cur[0:7] + np.clip(q_des - cur[0:7], -max_dq, max_dq); a[7] = grip
-            if ctrl_step(a, rec): st = "episode over" if E["done"] else f"stopped ({EP.stop_reason})"; break
+            if ctrl_step(a, rec): st = "episode over" if E["done"] else f"stopped ({EP.stop_reason or 'step limit'})"; break
             err = float(np.linalg.norm(S.ee_pose()[0] - p1))
             if i >= n_way and err < tol: st = "Success"; break
         plan.append({"row": ri, "arm": st, "ee_error_m": None if err is None else round(err, 4)})

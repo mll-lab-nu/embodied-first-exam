@@ -276,10 +276,13 @@ WRIST_CAMS = ("left_camera", "right_camera")     # mounted on the arms: their ex
 
 
 def joint_limits() -> dict:
+    """The arm joints' limits as the simulator enforces them; None only for a continuous joint (infinite limits). The
+    aloha-agilex arm joints are revolute with URDF limits [-10, 10] rad: limited (their span above 2 pi does not make
+    them continuous), so a target beyond is clipped and reported."""
     out = {}
     for j in list(ROBOT.left_arm_joints) + list(ROBOT.right_arm_joints):
         lo, hi = [float(x) for x in np.asarray(j.get_limits()).reshape(-1)[:2]]
-        out[j.get_name()] = [lo, hi] if (math.isfinite(lo) and math.isfinite(hi) and hi - lo < 2 * math.pi + 1e-6) else None   # None = continuous, never clipped
+        out[j.get_name()] = [lo, hi] if (math.isfinite(lo) and math.isfinite(hi)) else None   # None = continuous, never clipped
     return out
 LIMITS = joint_limits(); LIM_ARR = np.array([LIMITS[n] or [-np.inf, np.inf] for n in L_ARM + R_ARM], dtype=np.float64)  # (12, 2)
 
@@ -561,7 +564,10 @@ def _hold_seconds(meta: dict, parts: dict):
     """A rows-free hold chunk (eai-standard/3.0): its `seconds`, or None for a chunk of rows."""
     if meta.get("seconds") is None:
         return None
-    if "actions" in parts or meta.get("actions") not in (None, []) or meta.get("rows") not in (None, []):
+    part = parts.get("actions")   # an empty `actions` part is no rows (as rcb_service, server_mj)
+    data = part.get("data") if isinstance(part, dict) else part
+    if ((part is not None and data is not None and np.size(data) > 0)
+            or meta.get("actions") not in (None, []) or meta.get("rows") not in (None, [])):
         raise ValueError("a chunk has either rows or `seconds` (a hold chunk without rows), not both")
     if meta.get("interpolate") != "hold":
         raise ValueError('a chunk without rows is a hold chunk: {"type": <type>, "interpolate": "hold", "seconds": n}')
@@ -600,7 +606,8 @@ def agent_time_s() -> float:
 
 def meta_common() -> dict:
     t = agent_time_s()
-    return {"step": E["step"], "calls": E["calls"], "control_steps": int(S._sim_steps), "physics_steps": int(S._sim_steps), "sim_time_s": round(int(S._sim_steps) / PHYS_HZ, 3),
+    n = _ep_steps()   # the episode's steps, frozen at its end: the same count as /status
+    return {"step": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n, "sim_time_s": round(n / PHYS_HZ, 3),
             "time_s": round(t, 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - t, 1)),
             "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
             **_steps_left(), **({"cameras": calib()} if OBS_CALIBRATION else {})}   # the calibration of the state this response ends in
@@ -659,7 +666,10 @@ def run_joint_position(A: np.ndarray, dt: float, interp: str, rec: Recorder, cli
     for i in range(1, len(Q)):
         apply_joint_target(Q[i], V[i])
         S.step(); LIVE.tick(); rec.tick()
-        if E["done"] or _cap_hit(): return (i - 1) // steps_per_row + 1
+        if E["done"] or _cap_hit():
+            begun = (i - 1) // steps_per_row + 1
+            clipped[:] = [c for c in clipped if c["row"] < begun]   # only the rows executed (as server_mj / mw / casa)
+            return begun
     return len(rows)
 
 

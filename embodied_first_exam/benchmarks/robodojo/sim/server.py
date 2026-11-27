@@ -386,7 +386,7 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list, clipped: list) -> No
             if st[a] == "Success" and err[a] > tol:
                 st[a] = f"reached {err[a]:.3f} m from the target"
             if stopped:
-                st[a] = "episode over" if E["done"] else f"stopped ({EP.stop_reason})"
+                st[a] = "episode over" if E["done"] else f"stopped ({EP.stop_reason or 'step limit'})"
         plan.append({"row": ri, **{f"{a}_arm": st[a] for a in ARMS}, **{f"{a}_ee_error_m": err[a] for a in ARMS}})
         if E["done"] or EP.stopping: return
 

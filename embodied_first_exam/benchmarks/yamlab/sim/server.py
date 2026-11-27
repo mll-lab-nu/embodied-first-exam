@@ -434,7 +434,7 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list, clipped: list) -> No
             except Exception as exc:  # noqa: BLE001
                 st = {a: f"failed: {str(exc)[:80]}" for a in ARMS}; break
             if ctrl_step(act, rec):
-                st = {a: ("episode over" if E["done"] else f"stopped ({EP.stop_reason})") for a in ARMS}; break
+                st = {a: ("episode over" if E["done"] else f"stopped ({EP.stop_reason or 'step limit'})") for a in ARMS}; break
             for a, (_p0, p1, _q1, _g, _n) in goals.items():
                 err[a] = float(np.linalg.norm(S.ee_pose(a)[0] - p1))
             if i >= n_way and all(e is not None and e < tol for e in err.values()):
