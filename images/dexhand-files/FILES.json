@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:dexhand-files-0.11.0@sha256:4e16e8b63a4d2c93ed37a7a8b24ba27238c4a81764b9a9f02446640defa55519",
+ "image": "ghcr.io/mll-lab-nu/efe:dexhand-files-0.11.0@sha256:5bd382fdadf7a766bfdb014dd30350f5c1a5f87e5bcb559a3a0539b2d2cce7aa",
  "source": "embodied_first_exam/benchmarks/dexhand",
  "files": {
   "privileged/environment/arm_rig.py": "21b1ec8a66402906ae7b228db82a9b0dc8102a501a07caa153217f0f3cb765c0",
@@ -590,7 +590,7 @@
   "privileged/environment/variants/fef84ad4b3/replay.py": "fef84ad4b3f15ec9661542a161a8322accb4c8c7b17e0ec55dab9bf47d94f7dc",
   "privileged/environment/wuji_reset.json": "f35d7139d7abd0daaa5e1df73d8fe4f3097abe9d918f2fd4d8094130ec0e0cca",
   "privileged/tests/checked_replay.py": "59e8a004e67ec6f8ef02d979129665604ee9b3327874eb0573b732525ebd425d",
-  "privileged/tests/grade.py": "c4f1e5eab7a558463dbc767625e3bb9843d9b3d37575d75afe3a114555919b23",
+  "privileged/tests/grade.py": "079de0b8c728abaafa464fefd0707a28d47a521c09be2f12b7cbcfabeaa36cd7",
   "sim/essential_assets.py": "6327cb949e18a2096ed22248c10e1dc4e53ae3416fbaf18f91ef78d916e00c0d",
   "sim/essential_cube_layer_scene.py": "f401df79c0f6a0945bc5b60bb1fd459edebc02ced7d79f4d145ba7b91d1b8774",
   "sim/essential_cube_reorient_scene.py": "a03a96e1045180abb910370a51888fcdbb1232a52a447acef0bbf4760ff2dff4",
@@ -598,7 +598,7 @@
   "sim/finalize.py": "cd5526e16e4fd6b3662f99d1f266b0c409df63bc1a1bc520ed938e4122e2c2fc",
   "sim/finalize.sh": "7c347b83c53411c1c010b8a3fb5c2b27869ec597b5231ca125ebb72702a4ef38",
   "sim/rcb_dexhand.py": "3e1bd8364414fa26e2b83710665c44152a6c7d199851f6fab361a31aeb3b9742",
-  "sim/server.py": "53af1cb98e805e1b73efeeba44f066160ad4cc8e7a5451d0a54a29936652f3a1",
+  "sim/server.py": "3646aaf9f926ca19f1f571b77b9527e2a641ae4e00b4889bc9449d560cd628d4",
   "standard/tests/grade.py": "c14a8f6b3322f2fc083f0fa30a90d127068295e6430539c9042bac4feaf81d07"
  }
 }

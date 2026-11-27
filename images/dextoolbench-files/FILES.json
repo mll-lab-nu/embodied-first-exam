@@ -1,10 +1,10 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:dextoolbench-files-0.9.0@sha256:ab32718ec9c78f5d4d63c18b54eaaaee8726bf784f00b00fb654a50435ffc1f2",
+ "image": "ghcr.io/mll-lab-nu/efe:dextoolbench-files-0.9.0@sha256:1c1589184e3a826299983592aadb31360001f65314385d01bc4eacbc31fa6e88",
  "source": "embodied_first_exam/benchmarks/dextoolbench",
  "files": {
   "privileged/environment/rcb_dtb.py": "3479b39042b1414185f5e73f6c0540493a2064a72ded03ec40063f82cf17d9f9",
   "privileged/tests/grade.py": "61e65b0b22617d5acb7b7e31bf6ee710b56bbc37ff38194157beeb93d32eae6d",
-  "sim/server_mj.py": "3ee6bb9eec3a5cc89b5a44441243756605285ae7da57a34b572f62ee42f6efcc",
+  "sim/server_mj.py": "0603152401c5215421f3112c43bd2b9d407ee97ba35116c3ece8c23220b7845e",
   "standard/tests/grade.py": "9b3401607c83228622920daa336640aeda133dd25ddea5cd25815d8347079e9c"
  }
 }

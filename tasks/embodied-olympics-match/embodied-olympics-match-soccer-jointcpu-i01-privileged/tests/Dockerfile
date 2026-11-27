@@ -5,7 +5,7 @@ ENV MUJOCO_GL=disable PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_T
 COPY trusted/ /opt/trusted/
 COPY dev/ /opt/dev/
 COPY match_instance.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-match-files-0.3.0@sha256:0c6710ec1d7682bc4bf1b828a71d4c8b6c21193a279f13ad7e39d683307a95af /privileged/tests/grade.py /tests/grade.py
+COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-match-files-0.4.0@sha256:0d8eb42153dfb410f293e1ab6da62c5f3b7f08901fbb8c91f1d98e6729ebf88f /privileged/tests/grade.py /tests/grade.py
 RUN chmod 700 /opt/trusted && chmod -R a-w /opt/dev && chmod -R a+rX /opt/dev \
     && chmod +x /tests/test.sh && mkdir -p /logs/verifier && chmod 700 /logs/verifier
 WORKDIR /opt/trusted

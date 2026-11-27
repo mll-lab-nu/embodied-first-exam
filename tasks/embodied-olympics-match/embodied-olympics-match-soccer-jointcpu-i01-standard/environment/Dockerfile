@@ -2,7 +2,7 @@
 # (python 3.12 + the `game` client, MuJoCo 3.3.7 and the /opt/robot toolkit).
 FROM ghcr.io/mll-lab-nu/efe:embodied-olympics-match-soccer-joint-cpu-0.1.2@sha256:4b0eb7b85f713b09ddcf8675f5dd7542e54986df50a4ace0c96d9ee13ec0626f
 # the eai-standard/3.0 client (docs/protocol/standard_mode.md): `from rcb_client import Robot`
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:8a712f54d69d3fb089573d962c0756ef1026119a4337be28785e4a14410d20b3 /rcb1.py /rcb_client.py /opt/tools/
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:497a2b864b3a1aaf1f60206dc14f08a0f99960037f0e54be3d4bc2e39f5adba4 /rcb1.py /rcb_client.py /opt/tools/
 ENV PYTHONPATH=/opt/tools
 # the robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): the server Harbor starts, efe-robot
 COPY efe_mcp /opt/tools/efe_mcp
