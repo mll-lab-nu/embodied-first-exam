@@ -3,8 +3,8 @@ old = "## Task\nPut all the yellow triangular pieces in the box, and nothing els
 new = "## Task\nPut all the orange triangular pieces in the box, and nothing else."
 
 [[replace]]
-old = "## Goal\nSuccess: the box holds every yellow triangular piece from the table and nothing else. The episode ends as soon as that\nhas held for about a second."
-new = "## Goal\nSuccess: the box holds every orange triangular piece from the table and nothing else. The episode ends as soon as that\nhas held for about a second."
+old = "## Goal\nSuccess: the box holds every yellow triangular piece from the table and nothing else. The replay ends as soon as the\ntask is done."
+new = "## Goal\nSuccess: the box holds every orange triangular piece from the table and nothing else. The replay ends as soon as the\ntask is done."
 
 [[replace]]
 old = "state hash `080ddb7334cfb5d4`"
