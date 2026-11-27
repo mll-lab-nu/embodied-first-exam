@@ -3,11 +3,13 @@
 the service never shows the task's success). Two tiers:
 
   --tier invariants (the required CI job `invariants`, ci_checks/run_invariants.sh): every standard and realtime task
-      served by an eai-standard service of its mode (scripts/task_conventions.py agent_end_required: MODE_REGISTRY
-      "agent_end"; tasks a benchmark exports with a runtime of its own, Embodied Olympics Match and RoboEngineer, keep
-      their own rules) has RCB_AGENT_END "1" in its sim service (that service's block of the compose file: the same
-      line on another service, `main` say, does not count), the rendered finish line in its `## Robot Interface`
-      (ROBOT_FINISH) and the rendered Finish line in its `## Limits` (LIMITS_FINISH);
+      (scripts/task_conventions.py agent_end_required: MODE_REGISTRY "agent_end"; only the tasks a benchmark exports
+      with a runtime of its own, listed in its ci_checks/benchmarks/<bench>/exported.toml with one of the protocols
+      listed there, Embodied Olympics Match and RoboEngineer, keep their own rules) has RCB_AGENT_END "1" in its sim
+      service (that service's block of the compose file: the same line on another service, `main` say, does not
+      count), its finish line (tc.robot_finish: with the MCP tool where the task has the tools) in its
+      `## Robot Interface` and the Finish line tc.limits_finish renders in its `## Limits`; a standard or realtime task
+      whose protocol is neither its mode's nor its manifest's fails;
   --tier advisory (ci_checks/run_all.sh): such a task's Goal says how to end the episode (V2_AGENT_END_GOAL; the
       Embodied Safety Exam's exits instead: an exit is the same as `/finish`), none of the retired finish wording
       (V2_AGENT_END_RETIRED and RETIRED_FINISH below) anywhere in the instruction but `## Limits`, which renders the
@@ -31,7 +33,7 @@ import task_conventions as tc  # noqa: E402
 RETIRED = (r"ends as soon as", r"ends the moment", r"ends at the first success", r"a success ends the (?:run|trial)",
            r"the episode ends when the task is done", r"ends by itself as soon as", r"the service tells you that it ended",
            r"ends, as a success,")
-# Finish wording retired on 11-26 besides task_conventions.V2_AGENT_END_RETIRED (which normalize's generator owns): the
+# Finish wording retired on 11-26 besides task_conventions.V2_AGENT_END_RETIRED (which normalize owns): the
 # endpoint is named once, by the rendered lines (Robot Interface's finish line, Limits' Finish line)
 RETIRED_FINISH = ("call finish (Robot Interface)", "ends when you call finish")
 # Goal wording of how an episode ends on its own (owner 11-26): the time-out and the step limit are Limits' Steps line
@@ -40,44 +42,46 @@ GOAL_ENDS_ITSELF = (r"ends by itself", r"(?:judged|graded) as it stands", r"reas
 
 
 def goal_of(text: str) -> str:
-    m = re.search(r"(?ms)^## Goal[ \t]*\n(.*?)(?=^## |\Z)", text or "")
-    return " ".join(m.group(1).split()) if m else ""
-
-
-def sim_service(compose: str) -> str:
-    """The `sim` service's block of a compose file ("" when it has none, or the file has no top-level services:)."""
-    lines = compose.splitlines(keepends=True)
-    try:
-        i, j = tc.rcb_monitor_inject.services_span(lines)
-    except ValueError:
-        return ""
-    for name, k0, k1 in tc.rcb_monitor_inject.service_blocks(lines, i, j):
-        if name == "sim":
-            return "".join(lines[k0:k1])
-    return ""
+    return " ".join((tc.section(text, "Goal") or "").split())
 
 
 def without_limits(text: str) -> str:
     """The instruction without its `## Limits` section (the rendered Finish line lives there), whitespace folded."""
-    return " ".join(re.sub(r"(?ms)^## Limits[ \t]*\n.*?(?=^## |\Z)", "", text or "").split())
+    m = tc.section_match(text, "Limits")
+    return " ".join(((text or "")[:m.start()] + (text or "")[m.end():] if m else text or "").split())
 
 
 def errors(tasks: list[Path], tier: str) -> list[str]:
     errs = []
     for t in tasks:
-        if not (t / "task.toml").is_file() or not tc.agent_end_required(t):
+        if not (t / "task.toml").is_file():
             continue
         rel = t.relative_to(ROOT) if t.is_relative_to(ROOT) else t
+        mode = tc.mode_of(t)
+        if tier == "invariants" and tc.MODE_REGISTRY.get(mode, {}).get("agent_end"):
+            proto = str(tc.metadata_of(t).get("protocol") or "")
+            if proto not in tc.MODE_REGISTRY[mode]["protocols"] and proto not in tc.own_protocols(t.name, mode):
+                errs.append(f"{rel}: protocol {proto!r} is neither one of {mode} mode's "
+                            f"{list(tc.MODE_REGISTRY[mode]['protocols'])} nor one its benchmark's exported.toml lists for "
+                            "this task (only those keep their own rules, PROTOCOL §3)")
+        if not tc.agent_end_required(t):
+            continue
         text = (t / "instruction.md").read_text(encoding="utf-8") if (t / "instruction.md").is_file() else ""
         if tier == "invariants":
             compose = tc.read_text(t / "environment/docker-compose.yaml") or ""
-            if not tc.AGENT_END_RE.search(sim_service(compose)):
+            if not tc.AGENT_END_RE.search(tc.service_block(compose, "sim")):
                 errs.append(f"{rel}: its sim service does not set RCB_AGENT_END: \"1\" (agent-ended episodes are required "
                             "in standard and realtime mode, PROTOCOL §3; normalize writes it)")
-            if not any(k == "Finish" for k, _ in tc.limits_lines(text)):
-                errs.append(f"{rel}: instruction.md's `## Limits` has no Finish line (normalize renders it)")
-            if not any(re.search(rf"(?m)^{re.escape(x)}$", text) for x in tc.ROBOT_FINISH):
-                errs.append(f"{rel}: instruction.md's `## Robot Interface` has no finish line (normalize renders it)")
+            lines = tc.limits_lines(text)
+            fin = [v for k, v in lines if k == "Finish"]
+            want = tc.limits_finish(t, next((v for k, v in lines if k == "Steps"), ""))
+            if fin != [want]:
+                errs.append(f"{rel}: instruction.md's `## Limits` " + (f"Finish line is {fin[0]!r}, not" if len(fin) == 1
+                            else f"has {len(fin)} Finish lines, not one:") + f" {want!r} (normalize renders it)")
+            ri = tc.section(text, "Robot Interface") or ""
+            if not re.search(rf"(?m)^{re.escape(tc.robot_finish(t))}[ \t]*$", ri):
+                errs.append(f"{rel}: instruction.md's `## Robot Interface` has no line {tc.robot_finish(t)!r} "
+                            "(normalize renders it)")
         else:
             g = goal_of(text)
             if tc.V2_AGENT_END_GOAL not in g and "An exit is the same as `/finish`" not in g:

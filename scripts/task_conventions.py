@@ -725,8 +725,8 @@ def readme_resources(task: Path, old_readme: str = "") -> list[str]:
     if r:
         notes += [f"- Recommended GPU: {r['recommended_gpu']}."] if r.get("recommended_gpu") else []
     else:
-        sec = re.search(rf"(?ms)^{re.escape(RESOURCES_HEADING)}\n(.*?)(?=^## |\Z)", old_readme or "")
-        notes += [ln for ln in (sec.group(1).splitlines() if sec else [])
+        sec = section(old_readme, RESOURCES_HEADING[3:])
+        notes += [ln for ln in (sec.splitlines() if sec else [])
                   if ln.startswith(("- Recommended GPU:", "- Measured:"))]
     return [RESOURCES_HEADING, "Caps per container (PROTOCOL §6).", "", *rows, "", *notes]
 
@@ -819,13 +819,39 @@ def agent_end_of(task: Path) -> dict | None:
     return {"step_limit": int(m.group(1)) if m else None}
 
 
+# Tasks a benchmark exports with its own service inside (PROTOCOL §3): each such benchmark keeps a manifest,
+# ci_checks/benchmarks/<bench>/exported.toml, that lists the directories (`[[tasks]] name`) and the protocol(s) each mode
+# serves (`[protocols]`, a string or a list); a listed directory may declare one of its manifest's protocols for its mode
+# (a task may name its one protocol, `protocol`: then only that one). No per-benchmark table here.
+def _own_protocols() -> dict[str, dict[str, set[str]]]:
+    out: dict[str, dict[str, set[str]]] = {}
+    for man in sorted((Path(__file__).resolve().parents[1] / "ci_checks/benchmarks").glob("*/exported.toml")):
+        d = tomllib.loads(man.read_text())
+        protos = {m: {p} if isinstance(p, str) else set(p) for m, p in d.get("protocols", {}).items()}
+        for t in d.get("tasks", []):
+            own = t.get("protocol")
+            out[t["name"]] = {m: ps & {own} for m, ps in protos.items()} if own else protos
+    return out
+
+
+OWN_PROTOCOLS = _own_protocols()
+
+
+def own_protocols(name: str, mode: str | None) -> set[str]:
+    """The protocols a benchmark's own exported task may declare instead of its mode's (empty: not such a task)."""
+    return OWN_PROTOCOLS.get(name, {}).get(mode or "", set())
+
+
 def agent_end_required(task: Path) -> bool:
-    """PROTOCOL v3.0 §3 / H.3: the task's episode must be agent-ended: its mode says so (MODE_REGISTRY "agent_end") and
-    it is served by an eai-standard service of that mode (a task exported with a runtime of its own, PROTOCOL §3, such
-    as Embodied Olympics Match or RoboEngineer, keeps its own rules)."""
-    d = MODE_REGISTRY.get(mode_of(task), {})
-    proto = str(metadata_of(task).get("protocol") or "")
-    return bool(d.get("agent_end")) and proto in d.get("protocols", ())
+    """PROTOCOL v3.0 §3 / H.3: the task's episode must be agent-ended: its mode says so (MODE_REGISTRY "agent_end"),
+    unless it is a task a benchmark exports with a runtime of its own (PROTOCOL §3: Embodied Olympics Match,
+    RoboEngineer), listed in that benchmark's exported.toml and declaring one of the protocols it lists for its mode.
+    Any other protocol does not exempt a task (check-agent-end.py fails one that is neither its mode's nor its
+    manifest's)."""
+    mode = mode_of(task)
+    if not MODE_REGISTRY.get(mode, {}).get("agent_end"):
+        return False
+    return str(metadata_of(task).get("protocol") or "") not in own_protocols(task.name, mode)
 
 
 AGENT_END_ENV_LINE = '      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)\n'
@@ -932,12 +958,8 @@ LIMITS_TIME = {   # mode -> (what counts and what is graded at the end, the serv
     "standard": ("Everything counts, including waiting for the service. At the end you are stopped without warning and "
                  "the episode is graded as it stands.", ". Trust this file: the `time_left_s` in the service's replies "
                  "starts only at your first request"),
-    "standard-mcp": ("Everything counts, including the time the tools take. At the end you are stopped without warning and "
-                     "the episode is graded as it stands.", ". Trust this file: the `time_left_s` in every tool result "
-                     "starts only at your first tool call"),
 }
 LIMITS_TIME["realtime"] = LIMITS_TIME["standard"]
-LIMITS_TIME["standard-mcp-shell"] = LIMITS_TIME["standard"]
 assert set(MODE_REGISTRY) <= set(LIMITS_TIME), "every mode of MODE_REGISTRY needs its LIMITS_TIME (PROTOCOL §5)"
 LIMITS_TIME_OWN = {("RoboDojo", "standard"): (   # agent-ended, judged per task (V2_AGENT_END_*): Goal says how
     "Everything counts, including waiting for the service. At the end you are stopped without warning and the episode "
@@ -949,22 +971,22 @@ LIMITS_TIME_OWN = {("RoboDojo", "standard"): (   # agent-ended, judged per task 
 LIMITS_TIME_TASK = ("Everything counts, including waiting for the service. At the end you are stopped without warning and "
                     "graded on the state at that moment, as Goal says.", ". The clocks the service reports are the game's "
                     "own")
-LIMITS_TIME_TASK_MCP = (LIMITS_TIME_TASK[0].replace("waiting for the service", "the time the tools take"),
-                        LIMITS_TIME_TASK[1])
 LIMITS_NETWORK = ("your model's API and the package registries (PyPI, Debian / Ubuntu archives) only. You may install "
                   "packages and read anything in your container{readable}.")   # the no-cheating rule: Goal (V2_RULE_OWN)
 LIMITS_READABLE = ", including the simulator's and the benchmark's source"
-LIMITS_READABLE_MCP = ", including the files the tools write"
 LIMITS_NETWORK_OPEN = ("open. You may install packages and search for, download and use public tools, robot models and "
-                       "pretrained controllers (say in your notes what you used). You may read anything in your "
-                       "container, including the benchmark's source. Do not look up an existing solution to this exact "
-                       "task, such as the benchmark's reference solutions. Trials are reviewed.")
+                       "pretrained controllers (say in your notes what you used); you may read anything in your "
+                       "container, the benchmark's source included.")   # the no-cheating rule: Goal (V2_RULE_OWN)
 # rendered words a task's own Limits line may still carry from an earlier render (old -> new)
 LIMITS_RETIRED = {
     "open. You may install packages and search for, download and use public tools, robot models and pretrained "
     "controllers (say in your notes what you used); you may read anything in your container, the benchmark's source "
     "included. Do not look up an existing solution to this exact task, such as the benchmark's reference solutions; "
     "trials are reviewed.": LIMITS_NETWORK_OPEN,
+    "open. You may install packages and search for, download and use public tools, robot models and pretrained "
+    "controllers (say in your notes what you used). You may read anything in your container, including the benchmark's "
+    "source. Do not look up an existing solution to this exact task, such as the benchmark's reference solutions. "
+    "Trials are reviewed.": LIMITS_NETWORK_OPEN,
     "none: one episode.": "none. You get one episode.",
 }
 LIMITS_STRICTER = " Additional rules for this task (stricter than the above): "
@@ -986,10 +1008,6 @@ V2_MODE_LINE = {
                      "hardware: one live episode."),
     "realtime+mcp": ("The robot runs as a service you reach through its client or its MCP tools, as if it were real "
                      "hardware, on a clock that does not stop while you think: one live episode."),
-    "standard-mcp": ("The robot runs as a service you reach only through the `efe-robot` MCP tools, as if it were real "
-                     "hardware: one live episode."),
-    "standard-mcp-shell": ("The robot runs as a service you reach through the `efe-robot` MCP tools, their Python client "
-                           "`efe_robot` or the service's own client, as if it were real hardware: one live episode."),
 }
 # owner 11-24: the fixed grading words carry each rule once (what is graded and when, who ends the episode), no
 # restatement. V2_FINAL_STATE is for a grader that judges the end state. An agent-ended episode closes its Goal with
@@ -1014,9 +1032,6 @@ V2_AGENT_END_RETIRED = ("The episode succeeds if the goal is reached before it e
                         "if you never call finish", "The robot never tells you whether you have succeeded",
                         "Success is judged on how things stand when the episode ends",
                         "Everything else counts only as it stands at that point")
-V2_HAND_IN = {   # owner 11-24: a standard mode hands nothing in and is not asked for a script (no `/app/output/gen.py`)
-    "standard-mcp": "The tool server records your calls.",
-}
 V2_RULES_HEAD = "Rules:"
 V2_RULE_NO_RESET = "One episode, no reset: what you knock over stays knocked over."
 V2_RULE_NO_PRIV = ("You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no "
@@ -1024,10 +1039,6 @@ V2_RULE_NO_PRIV = ("You get only the cameras and the robot's own sensor readings
 # the one anti-cheating rule (owner 11-24), first in Goal's rules (standard: the first bullet under "Rules:"; privileged:
 # its "Rules:" paragraph); Limits' Network line says only what can be reached, read and installed
 V2_RULE_OWN = NO_CHEATING
-V2_RULE_TOOLS = ("Tools only: you may write and run code to compute, but every robot command and observation is an "
-                 "`efe-robot` tool call you make yourself; no script starts or calls the tool server, and code must not "
-                 "contact the simulator (the service's request log is checked against the server's).")
-V2_RULE_ROUTE = "One route at a time: the tools, `efe_robot` and the service's client all drive the one robot."
 
 
 def _fill(t: str, first: str = "", rest: str = "") -> str:
@@ -1040,9 +1051,6 @@ def _fill(t: str, first: str = "", rest: str = "") -> str:
 
 def _wrap_bullet(t: str) -> str:
     return _fill(t, "- ", "  ")
-
-
-MCP_MODES = ("standard-mcp", "standard-mcp-shell")     # the MCP modes (their task dirs: branch standard-mcp)
 
 
 def skeleton_errors(text: str) -> list[str]:
@@ -1065,11 +1073,33 @@ def skeleton_errors(text: str) -> list[str]:
     return errs
 
 
+def section_match(text: str, name: str) -> "re.Match[str] | None":
+    """The `## <name>` section of a markdown text (an instruction, a README): group(1) is its body, up to the next H2."""
+    return re.search(rf"(?ms)^## {re.escape(name)}[ \t]*\n(.*?)(?=^## |\Z)", text or "")
+
+
+def section(text: str, name: str) -> str | None:
+    """The body of the `## <name>` section of a markdown text, None when it has none."""
+    m = section_match(text, name)
+    return m.group(1) if m else None
+
+
+def service_block(compose: str, name: str) -> str:
+    """The block of compose service `name` ("" when there is none, or no top-level services:), by the monitor
+    injector's parser (images/monitor/rcb_monitor/inject.py)."""
+    lines = (compose or "").splitlines(keepends=True)
+    try:
+        i, j = rcb_monitor_inject.services_span(lines)
+    except ValueError:
+        return ""
+    return next(("".join(lines[k0:k1]) for n, k0, k1 in rcb_monitor_inject.service_blocks(lines, i, j) if n == name), "")
+
+
 def limits_lines(text: str) -> list[tuple[str, str]]:
     """The bullets of an instruction's `## Limits`, as (label, text)."""
-    m = re.search(rf"(?ms)^{re.escape(LIMITS_HEADING)}[ \t]*\n(.*?)(?=^## |\Z)", text or "")
+    body = section(text, LIMITS_HEADING[3:])
     out = []
-    for b in re.split(r"(?m)^- ", m.group(1)) if m else []:
+    for b in re.split(r"(?m)^- ", body) if body is not None else []:
         b = " ".join(b.split())
         if not b:
             continue
@@ -1081,12 +1111,8 @@ def limits_lines(text: str) -> list[tuple[str, str]]:
 def limits_time(task: Path, sec: int) -> str:
     mode, bench = mode_of(task), bench_of(task)
     a, b = LIMITS_TIME_OWN.get((bench, mode)) or LIMITS_TIME[mode]
-    name = task.name
-    base_std = name[: -len(mode)] + "standard" if name.endswith("-" + mode) else name
-    if name in RO_EXPORTED_TASKS or (mode == "standard-mcp-shell" and base_std in RO_EXPORTED_TASKS):
+    if task.name in RO_EXPORTED_TASKS:
         a, b = LIMITS_TIME_TASK
-    elif mode in MCP_MODES and base_std in RO_EXPORTED_TASKS:
-        a, b = LIMITS_TIME_TASK_MCP
     if agent_end_of(task) and a in (LIMITS_TIME[mode][0], LIMITS_TIME_OWN.get((bench, mode), ("",))[0]):
         a = re.sub(r" At the end you are stopped without warning\b.*", " At the end you are stopped without warning.", a)
     return f"{sec} s of wall-clock time from the start of your session. {a} {_LIMITS_CLOCK}{b}.{_LIMITS_WAITS}"
@@ -1098,10 +1124,8 @@ def limits_network(task: Path, kept: str | None) -> str:
         text = text.split(LIMITS_STRICTER.strip())[0].strip()
         notes = " (say in your notes what you used)"
         text = next((new for old, new in LIMITS_RETIRED.items() if text in (old, old.replace(notes, ""))), text)
-        if mode_of(task) == "standard-mcp":      # an MCP-only task keeps no notes
-            text = text.replace(notes, "")
     else:
-        text = LIMITS_NETWORK.format(readable=LIMITS_READABLE_MCP if mode_of(task) in MCP_MODES else LIMITS_READABLE)
+        text = LIMITS_NETWORK.format(readable=LIMITS_READABLE)
     stricter = (metadata_of(task).get("honour") or {}).get("stricter", "")
     if stricter:
         text = text.rstrip() + LIMITS_STRICTER + str(stricter).strip()
@@ -1151,9 +1175,7 @@ def limits_resets(task: Path) -> str:
         return "as many as you like while you develop."
     if n == 0:
         return LIMITS_RETIRED["none: one episode."]
-    return (f"at most {n} (`spec()[\"budget\"][\"reset\"]`), each a new episode from the same starting state."
-            if mode_of(task) not in MCP_MODES else
-            f"at most {n} (`reset_episode()`), each a new episode from the same starting state.")
+    return f"at most {n} (`spec()[\"budget\"][\"reset\"]`), each a new episode from the same starting state."
 
 
 def _limits_reworded(label: str, v: str) -> str:
@@ -1190,8 +1212,7 @@ def render_limits(task: Path, text: str = "") -> str:
     ae = agent_end_of(task)
     if ae and ae.get("step_limit") and "Steps" not in labels:
         n = ae["step_limit"]
-        left = ("the tool results' `steps_left`" if mode_of(task) in MCP_MODES else "`meta[\"steps_left\"]`")
-        kept.append(("Steps", f"at most {n:,} control steps, then the episode ends. {left[0].upper() + left[1:]} gives "
+        kept.append(("Steps", f"at most {n:,} control steps, then the episode ends. `meta[\"steps_left\"]` gives "
                               "what is left."))
     elif ae and "Steps" not in labels:
         m = MAX_CONTROL_STEPS_RE.search(read_text(task / "environment/docker-compose.yaml") or "")
@@ -1204,31 +1225,36 @@ def render_limits(task: Path, text: str = "") -> str:
     return LIMITS_HEADING + "\n" + "\n".join(_wrap_bullet(x) for x in out) + "\n"
 
 
-# the Finish line of an agent-ended task's `## Limits` (PROTOCOL §3; rendered; owner 11-26: one line):
-# [HTTP client, MCP tools][a Steps line with a step limit or cap; no Steps line, or one that says there is no step
-# budget (a technical cap it names is graded the same way); a reset budget (after the cap, a failure end too, /reset is
+# the Finish line of an agent-ended task's `## Limits` (PROTOCOL §3; rendered; owner 11-26: one line): [a Steps line
+# with a step limit or a cap that ends the episode (a technical cap or a runaway guard that "ends the episode at / after
+# N control steps", even in a line that says there is no step budget: the cap ends and grades the episode too); no
+# Steps line, or one with no step budget and no such cap; a reset budget (after the cap, a failure end too, /reset is
 # still allowed and only the last episode is graded: standard_mode.md "Agent-ended episodes")]
-LIMITS_FINISH = (
-    ("if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.",
-     "if you never send `/finish`, the episode is graded when your session ends.",
-     "if you never send `/finish`, the last episode is graded when your session ends."),
-    ("if you never call the `finish` tool, the episode is graded when the step limit is reached or your session ends.",
-     "if you never call the `finish` tool, the episode is graded when your session ends.",
-     "if you never call the `finish` tool, the last episode is graded when your session ends."))
+LIMITS_FINISH = ("if you never send `/finish`, the episode is graded when the step limit is reached or your session ends.",
+                 "if you never send `/finish`, the episode is graded when your session ends.",
+                 "if you never send `/finish`, the last episode is graded when your session ends.")
 LIMITS_NO_STEP_BUDGET = re.compile(r"(?:there is )?(?:no step budget|unlimited|no (?:step )?limit)\b", re.I)
+LIMITS_CAP_ENDS = re.compile(r"\bends the episode (?:at|after) [\d,]+ control steps\b")
 
 
 def limits_finish(task: Path, steps: str) -> str:
     """The Finish line (LIMITS_FINISH) of an agent-ended task whose Limits' Steps line is `steps` ("": none)."""
-    kind = 2 if reset_budget_of(task) else 1 if not steps or LIMITS_NO_STEP_BUDGET.match(steps) else 0
-    return LIMITS_FINISH[mode_of(task) in MCP_MODES][kind]
+    if reset_budget_of(task):
+        return LIMITS_FINISH[2]
+    no_cap = not steps or (LIMITS_NO_STEP_BUDGET.match(steps) and not LIMITS_CAP_ENDS.search(steps))
+    return LIMITS_FINISH[1 if no_cap else 0]
 
 
 # the endpoint's line in an agent-ended task's `## Robot Interface`, its own paragraph after the mode line (rendered):
-# [client only, client and MCP tools, MCP tools only]
+# [client only, client and MCP tools]
 ROBOT_FINISH = ("`POST /finish`: ends the episode; it is graded right away.",
-                "`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.",
-                "The `finish` tool ends the episode; it is graded right away.")
+                "`POST /finish` (MCP tool `finish`): ends the episode; it is graded right away.")
+
+
+def robot_finish(task: Path) -> str:
+    """The finish line of an agent-ended task's `## Robot Interface` (ROBOT_FINISH): with the MCP tools where it has
+    them (efe_mcp_manifest)."""
+    return ROBOT_FINISH[1] if efe_mcp_manifest(task) else ROBOT_FINISH[0]
 
 
 # a task with resets (a reset budget N > 0; Goal and `## Limits` state them): its mode line without "one live episode"
@@ -1299,9 +1325,8 @@ def _v2_finish(task: Path, s: str) -> str:
     s = re.sub(r"(?m)^(?:" + "|".join(re.escape(x) for x in ROBOT_FINISH) + r")[ \t]*\n(?:[ \t]*\n)?", "", s)
     if not agent_end_of(task):
         return s
-    mode = mode_of(task)
-    line = ROBOT_FINISH[2] if mode == "standard-mcp" else ROBOT_FINISH[1] if efe_mcp_manifest(task) else ROBOT_FINISH[0]
-    m = re.search(r"(?ms)^## Robot Interface[ \t]*\n(.*?)(?=^## |\Z)", s)
+    line = robot_finish(task)
+    m = section_match(s, "Robot Interface")
     if not m:
         return s
     modes = {" ".join(v.split()) for d in (V2_MODE_LINE, V2_MODE_LINE_RESETS) for k, v in d.items() if k != "privileged"}
@@ -1358,7 +1383,7 @@ def _v2_steps(task: Path, s: str) -> str:
         s = _sub_prose(s, _CAP_IN_ENDS, f"The episode also ends {ends}.")
     if steps is None:
         return s
-    lim = re.search(rf"(?ms)^{re.escape(LIMITS_HEADING)}[ \t]*\n(.*?)(?=^## |\Z)", s)
+    lim = section_match(s, LIMITS_HEADING[3:])
     if not lim:
         return s
     body = lim.group(1).rstrip("\n")
@@ -2239,7 +2264,13 @@ def main(argv: list[str]) -> int:
             print(t)
         return 0
     check = "--check" in argv
-    dirs = [Path(a) for a in argv if a != "--check" and (Path(a) / "task.toml").is_file()]
+    args = [a for a in argv if a != "--check"]
+    nodir = [a for a in args if not (Path(a) / "task.toml").is_file()]
+    if not args or nodir:            # a typo, or no task at all, must not pass as nothing to normalize
+        print("usage: task_conventions.py [--check] <task dir>...  (or modes | task-dir | benchmarks | readme | taxonomy | "
+              "core-set)" + (f"; not a task directory: {', '.join(nodir)}" if nodir else ""), file=sys.stderr)
+        return 2
+    dirs = [Path(a) for a in args]
     bad = 0
     for d in dirs:
         if check:

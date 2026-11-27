@@ -50,8 +50,12 @@ def sources() -> list[Path]:
     pats = ["embodied_first_exam/standard/*.py", "embodied_first_exam/standard/**/*.py",
             "embodied_first_exam/benchmarks/**/sim/*.py", "embodied_first_exam/benchmarks/**/standard/*.py",
             "images/*/tools/**/*.py"]
-    out = subprocess.run(["git", "-C", str(ROOT), "ls-files", *pats], capture_output=True, text=True).stdout.split()
-    return [ROOT / f for f in out if "/mcp/" not in f and "privileged" not in f and "test" not in Path(f).name]
+    out = subprocess.run(["git", "-C", str(ROOT), "ls-files", *pats], capture_output=True, text=True,
+                         check=True).stdout.split()
+    found = [ROOT / f for f in out if "/mcp/" not in f and "privileged" not in f and "test" not in Path(f).name]
+    if not found:                # no checkout to read: the route scan would pass on nothing
+        raise SystemExit("FAIL check-mcp-tools: git ls-files found no service sources to scan")
+    return found
 
 
 def served_routes() -> dict[str, set[str]]:
@@ -172,8 +176,8 @@ def check_task(task: Path) -> list[str]:
         servers = []
     if not any(s.get("name") == "efe-robot" and s.get("args") == ["/opt/tools/efe_mcp/server.py"] for s in servers):
         errs.append(f"{task.name}: task.toml has no [[environment.mcp_servers]] efe-robot entry")
-    ri = re.search(r"(?ms)^## Robot Interface\n(.*?)(?=^## |\Z)", ins)
-    if not ri or I.SECTION not in ri.group(1):
+    ri = tc.section(ins, "Robot Interface")
+    if ri is None or I.SECTION not in ri:
         errs.append(f"{task.name}: instruction.md has no `{I.SECTION}` in Robot Interface")
     t = m.get("tools") or []
     if m.get("kind") == "rcb":

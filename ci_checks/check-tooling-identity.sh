@@ -124,20 +124,6 @@ def check_layer(t: str, layer: dict, ref: dict, at, ver: str, img: dict) -> None
             bad.append(f"{t}: {rel} differs from {srcf} (regenerate the task)")
 
 
-def sim_service(compose: str) -> str:
-    """The `sim:` service block of a compose file (indentation-based, no YAML dependency)."""
-    out, inside = [], False
-    for line in open(compose).read().splitlines():
-        ind = len(line) - len(line.lstrip())
-        if line.strip() and ind <= 2 and inside:
-            break
-        if re.match(r"^  sim:\s*$", line):
-            inside = True; continue
-        if inside:
-            out.append(line)
-    return "\n".join(out)
-
-
 # task dirs: tasks/<benchmark folder>/<task>/ (task_conventions.iter_tasks), or a flat tree of task dirs
 TDIR = {p.name: str(p) for p in tc.iter_tasks(tasks)} or {d: os.path.join(tasks, d) for d in os.listdir(tasks)}
 for t in sorted(TDIR):
@@ -158,7 +144,7 @@ for t in sorted(TDIR):
         n_layer += 1
         check_layer(t, LAYER, *((canon24, src24, "2.4") if v24 else (canon, src22, "2.2")), img)
         cf = os.path.join(TDIR[t], "environment/docker-compose.yaml")
-        blk = sim_service(cf) if os.path.isfile(cf) else ""
+        blk = tc.service_block(open(cf).read(), "sim") if os.path.isfile(cf) else ""
         m = re.search(r"^\s*restart:\s*[\"']?on-failure:(\d+)", blk, re.M)
         if not m or int(m.group(1)) < 3:
             bad.append(f"{t}: the sim service needs `restart: on-failure:N` with N >= 3 (crash recovery)")
