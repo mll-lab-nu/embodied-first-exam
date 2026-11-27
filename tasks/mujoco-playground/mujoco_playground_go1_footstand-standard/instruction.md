@@ -38,7 +38,7 @@ obs = r.get_obs(last_s=1.0)                    # the frames recorded over the la
 r.fk(q); r.ik({"FR": [x, y, z, 1, 0, 0, 0]}, seed=q)   # feet in the trunk frame <-> joints (no physics)
 r.submit("done", [])                           # end the episode now (the same as finish)
 r.status()                                     # calls, control steps, done, reason, elapsed time, episode, resets_left
-obs = r._post("/reset", {"cameras": ["track"]}, [], 900)   # POST /reset: a new episode (the 2.2 client has no reset())
+# a new episode: POST /reset, or the MCP tool `reset` (this client has no reset() call)
 ```
 
 Simulated time only advances with your commands (and `hold(s)`, which holds the current targets). A reset

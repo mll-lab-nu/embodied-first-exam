@@ -33,7 +33,7 @@ in a program that plays the match.
 ### Session
 ```python
 from tools.fullsim.session import Session
-s = None
+s = Session("badminton", level=5, seed=1034)   # this task's match: its opponent level and seed
 s.spec()          # the action interface and the rules (as the twin's `game spec`)
 s.state()         # the observation
 s.world           # the whole mutable match

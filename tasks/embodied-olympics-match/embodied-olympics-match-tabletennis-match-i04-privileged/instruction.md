@@ -36,7 +36,7 @@ match.
 ### Session
 ```python
 from tools.fullsim.session import Session
-s = None
+s = Session("tabletennis", level=4, seed=34)   # this task's match: its opponent level and seed
 s.spec()          # the action interface and the rules (as the twin's `game spec`)
 s.state()         # the observation
 s.world           # the whole mutable match

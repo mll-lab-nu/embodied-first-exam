@@ -131,8 +131,7 @@ right and Y towards the robot; the origin is the sheet's far-left corner as seen
 sheet's far edge (+x), image left = the robot's left (+y): the same orientation as `canvas_cam`.
 
 ### Process rules
-The grader checks the process rules in Goal on the episode with two numbers you can check yourself; only painted strokes
-on the main sheet count (the practice sheet is free):
+These rules are checked on the episode; only painted strokes on the main sheet count (the practice sheet is free):
 - Paint path budget: `path_mm` ≤ 40500 mm. `path_mm` is the total length of the brush tip's path while it presses on the
   main sheet with paint (all strokes together, sampled at every physics step).
 - Strokes are sweeps: `scribble_share` ≤ 0.1. A stroke's scribble ratio is its length divided by the diagonal of its

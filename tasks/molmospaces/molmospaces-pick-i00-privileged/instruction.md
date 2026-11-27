@@ -29,27 +29,28 @@ policy.
 from rcb_molmospaces import Session
 s = Session("/app/instance.json")    # builds the episode (10-40 s: the Franka scenes ~10 s, the RB-Y1 houses up to ~40 s)
 s.layout; row = s.hold_row()         # the row layout; the row that keeps every controller at its current target
-s.step(row)                          # one control step = one upstream Task.step; False once the episode is over
-s.done; s.status()                   # upstream's is_done(); {"success", "done", "steps", "horizon", "state_sha", "resets"}
+s.step(row)                          # one control step = one simulator Task.step; False once the episode is over
+s.done; s.status()                   # the simulator's is_done(); {"success", "done", "steps", "horizon", "state_sha", "resets"}
 s.state()                            # {"bodies": {name: [x y z qw qx qy qz]}, "joints": {name: [qpos]}, "task", "time", "mujoco"}
 s.model, s.data                      # the live MuJoCo model and data (read them; changing them is not part of the replay)
 s.render(cam); s.render_depth(cam)   # uint8 (H, W, 3); float32 (H, W) depth in m. Cameras: s.cameras
 s.camera_info(cam)                   # intrinsic_cv, extrinsic_cv (world -> camera, OpenCV axes), cam2world_gl, mount
 s.proprio(); s.robot_spec()          # joint pos / vel / effort, gripper openings, tcp poses; joints, limits, commands
-s.kinematics({"op": "fk", "q": q})   # upstream's kinematic model, no physics: tcp poses for joint positions q
+s.kinematics({"op": "fk", "q": q})   # the robot's kinematic model, no physics: tcp poses for joint positions q
 s.kinematics({"op": "ik", "targets": {"gripper": pose7}})   # joint positions for a tcp pose (x y z qw qx qy qz)
 s.reset()                            # back to the fixed start (as often as you like)
 s.replay(rows)                       # reset, run the rows, return the status
 s.save_trajectory(rows, "/app/output/trajectory.npz")
 ```
 - `q` follows `s.kinematics_spec()["joint_names"]`; poses are x y z qw qx qy qz.
-- Upstream's package `molmo_spaces` is installed (without its scripted experts); the episode is `/app/instance.json`.
+- The simulator's package `molmo_spaces` is installed (without its scripted experts); the episode is
+  `/app/instance.json`.
 - The replay CLI does what the grader does; run it to check yourself:
   `python /opt/tools/rcb_molmospaces.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
 
 ### Actions
 - The house's world frame, z up, metres; quaternions wxyz.
-- A row (`s.layout`) has 8 entries, the targets of upstream's joint-position controllers, in this order: `fr3_joint1`,
+- A row (`s.layout`) has 8 entries, the targets of the robot's joint-position controllers, in this order: `fr3_joint1`,
   `fr3_joint2`, `fr3_joint3`, `fr3_joint4`, `fr3_joint5`, `fr3_joint6`, `fr3_joint7`, `gripper` (fr3_joint1..7 in rad;
   gripper: the Robotiq command, 0 = open .. 255 = closed). At t = 0 the gripper is open and its target is 0.
 - One control step is 0.066 s of simulated time (MuJoCo steps of 2 ms). A row holds until the next one. `s.hold_row()`

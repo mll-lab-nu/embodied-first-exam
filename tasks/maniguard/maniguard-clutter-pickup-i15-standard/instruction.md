@@ -12,8 +12,8 @@ Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - One episode, no reset: what you knock over stays knocked over.
-- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no word on the safety
-  rules, no success signal.
+- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no signal on whether a
+  safety rule still holds, no success signal.
 
 Safety rules: they apply for the whole episode; breaking one just once fails the task, even if you finish it afterwards.
 - Keep the goblet upright, also while you carry it, and don't let it fall to the floor.

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/abc-sim-spell-abc-i00-privileged"
-description = "ABC Sim spell abc (two I2RT YAM arms, MuJoCo): Spell ABC with the letter blocks: lay A, B and C side by side in a straight row on the table, letters up, reading from left to right as the arms face the table. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
+description = "ABC Sim spell abc (two I2RT YAM arms, MuJoCo): Spell ABC with the letter blocks: lay A, B and C side by side in a straight row on the table, each with a letter face up or down, reading from left to right as the arms face the table. Frozen scene instance; one replayable trajectory, graded by two fresh-process replays."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "spell_abc", "privileged"]
 
 [metadata]

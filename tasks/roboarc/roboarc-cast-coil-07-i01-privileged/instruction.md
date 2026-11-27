@@ -6,9 +6,9 @@ go of them and move both arms clear of them.
 
 ## Goal
 Success: the gold and silver pieces are fitted together exactly the way they are made to fit, resting on the table, with
-both arms clear of them and both pieces still. Do not force pieces into each other: a success with pieces pushed into
-each other is reviewed instead of credited automatically. Dropping a piece off the table ends the episode as a failure.
-A replay ends, as a success, as soon as all of this has held for 0.5 s; later rows are not run.
+both arms clear of them and both pieces still. Do not force pieces into each other: a success reached that way may not
+count. Dropping a piece off the table ends the episode as a failure. A replay ends, as a success, as soon as all of this
+has held for 0.5 s; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 14) actions, one row
 per control step (1/40 s), at most 200000 rows (a longer trajectory is invalid). Leave the script that produced it at

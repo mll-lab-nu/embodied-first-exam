@@ -72,10 +72,9 @@ s.save_trajectory()                    # writes the SCORED file /app/output/traj
 The simulator is deterministic on the CPU: the same rows from the frozen start give the same state, so a trajectory you
 generate closed-loop (reading `s.state()`, `s.world`) replays exactly.
 `python /opt/tools/rcb_rfo.py replay --instance /app/instance.json --traj /app/output/trajectory.npz --out /tmp/r.json`
-runs the same replay from the shell. The world's source is in `/opt/tools/rfo/`: the robot and action layer `world.py`
-and the referee's toolkit `referee.py`. This task's rules, as code, are in `/opt/tools/rfo_task.py`. The robot library
-(model, meshes, limits, the walking and running policies' weights) is in `/opt/roboolympics/`. You may build your own
-copies of the world to plan or learn in.
+runs the same replay from the shell. The world's source is in `/opt/tools/rfo/` (the robot and action layer:
+`world.py`). The robot library (model, meshes, limits, the walking and running policies' weights) is in
+`/opt/roboolympics/`. You may build your own copies of the world to plan or learn in.
 
 ### Actions
 One row is one control step (10 ms; the physics runs at 1 kHz). Every row ends with `grip_left`, `grip_right`.

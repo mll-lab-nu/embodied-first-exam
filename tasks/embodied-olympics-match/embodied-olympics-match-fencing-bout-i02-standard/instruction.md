@@ -15,7 +15,8 @@ Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
 - One bout, no reset: a touch against you stays.
-- Use only the camera images, the service's replies and this text: no simulator internals or hidden state.
+- Play from the camera images and the service's replies; do not use the simulator's state or the opponent's code to
+  choose actions.
 - Your chess clock: 60 minutes of real time, running only on your turn (thinking, tool calls, your programs and your
   reviews all count). If it runs out, you lose.
 - After each of your actions (except one that ends the match) send `game ready "WHY" "PLAN"`, a short review, before the

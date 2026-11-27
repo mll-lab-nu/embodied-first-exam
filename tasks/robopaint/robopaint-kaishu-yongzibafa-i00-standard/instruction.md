@@ -133,24 +133,28 @@ right and Y towards the robot; the origin is the sheet's far-left corner as seen
 sheet's far edge (+x), image left = the robot's left (+y): the same orientation as `canvas_cam`.
 
 ### Process rules
-The grader checks the process rules in Goal on the episode with two numbers you can compute yourself; only inked strokes
-on the main sheet count (the practice sheet is free):
+These rules are checked on the episode; only inked strokes on the main sheet count (the practice sheet is free). They
+use two numbers you can compute yourself:
 - `path_mm`: the total length of the brush tip's path while it presses on the main sheet with ink (all strokes together,
   sampled at every physics step);
 - `mark_width_mm`: the average width of your marks. It is the area each stroke inks on its own, summed over the strokes
   and divided by `path_mm`; a stroke's own area is its own mark where ink coverage is ≥ 0.5, and where different strokes
   overlap, each counts its own.
 
-Colouring in = `path_mm` > 3230 mm and `mark_width_mm` < 1.34 mm (a long path of thin marks): it fails the task. Both of
-these are fine: a pressed brush keeps the marks wide enough, even when it goes over a stroke again, and a light hand on
-a short path stays under the path limit. The stroke cap counts strokes as they are written, not contacts (this refines
-"one continuous contact is one stroke" above). A contact is cut into two strokes wherever the brush moves more than 5 mm
-along the main sheet without marking it (its mark narrower than 0.1 mm: a press too light to ink), and a stroke longer
-than 600 mm of path counts as one stroke per started 600 mm. So pieces joined by a touch too light to ink are separate
-strokes, and one contact held down for a long time to write and re-write counts as several. A stroke written with the
-brush down and lifted at its end counts as one. Strokes are sweeps: at most 10 % of `path_mm` may lie in strokes whose
-path is longer than 12 times the diagonal of their bounding box (the diagonal taken as at least 10 mm). Back-and-forth,
-zigzag, spiral or looping fills inside one stroke fail. Breaking a process rule fails the task.
+The rules:
+- No colouring in: `path_mm` above 3230 mm together with `mark_width_mm` below 1.34 mm (a long path of thin marks) fails
+  the task. A pressed brush keeps the marks wide enough, even when it goes over a stroke again, and a light hand on a
+  short path stays under the path limit.
+- Strokes are counted as they are written, not as contacts (this refines "one continuous contact is one stroke" above).
+  A contact is cut into two strokes wherever the brush moves more than 5 mm along the main sheet without marking it (its
+  mark narrower than 0.1 mm: a press too light to ink). A stroke longer than 600 mm of path counts as one stroke per
+  started 600 mm. So pieces joined by a touch too light to ink are separate strokes, and one contact held down for a
+  long time to write and re-write counts as several; a stroke written with the brush down and lifted at its end counts
+  as one.
+- Strokes are sweeps: at most 10 % of `path_mm` may lie in strokes whose path is longer than 12 times the diagonal of
+  their bounding box (the diagonal taken as at least 10 mm). Back-and-forth, zigzag, spiral or looping fills inside one
+  stroke fail.
+- Breaking a process rule fails the task.
 
 The score (`final_reward`, 0 to 1) is how well your ink overlaps the exemplar's (1 = the same); it is scaled down above
 the stroke cap and when a process rule fails.

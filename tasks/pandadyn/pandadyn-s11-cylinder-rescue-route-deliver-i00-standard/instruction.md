@@ -24,11 +24,11 @@ When you are done, send `/finish` to end the episode and get it graded.
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
   benchmark's demonstrations, trained policies); trials are reviewed.
-- Episodes and resets: you have 3 resets (the spec's reset budget is authoritative). A reset puts the robot and the
-  scene back on the same frozen starting state and starts a new episode. Rebuilding the scene takes about a second; no
-  robot time passes. You can reset while an episode runs (it is abandoned) or after one has ended. Only the last episode
-  is graded: an episode you reset away is never graded. Do not stop early: as long as the episode is still running, or
-  you have a reset left, the run can still pass.
+- Episodes and resets: you have 3 resets (`spec()["budget"]["reset"]`; `resets_left` in each reply's `meta` shows how
+  many are left). A reset puts the robot and the scene back on the same frozen starting state and starts a new episode.
+  Rebuilding the scene takes about a second; no robot time passes. You can reset while an episode runs (it is abandoned)
+  or after one has ended. Only the last episode is graded: an episode you reset away is never graded. Do not stop early:
+  as long as the episode is still running, or you have a reset left, the run can still pass.
 - You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
 ## Robot Interface
@@ -40,7 +40,7 @@ as if it were real hardware.
 
 ### Client
 `/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`). Its docstring (`help(rcb_client)`) lists the calls and their
-arguments. Its examples name another robot's facts; this robot's facts are in `r.spec()` and below.
+arguments. Where the docstring's example numbers differ, this page and `r.spec()` are right.
 
 | call | what it does |
 |---|---|

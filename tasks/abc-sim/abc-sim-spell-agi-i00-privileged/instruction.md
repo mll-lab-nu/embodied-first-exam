@@ -1,8 +1,8 @@
 # ABC Sim · spell agi (privileged)
 
 ## Task
-Spell AGI with the letter blocks: lay A, G and I side by side in a straight row on the table, letters up, reading from
-left to right as the arms face the table.
+Spell AGI with the letter blocks: lay A, G and I side by side in a straight row on the table, each with a letter face up
+or down, reading from left to right as the arms face the table.
 
 ## Goal
 Success: the blocks A, G and I lie flat on the table side by side in a straight row, close together, in that order from

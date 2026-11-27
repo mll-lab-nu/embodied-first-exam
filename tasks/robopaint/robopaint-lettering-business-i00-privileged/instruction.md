@@ -107,8 +107,8 @@ frame that is x = -0.100 + 0.1136 - Y/1000, y = 0.1136 - X/1000 (m) (`s.geo.mm_t
 far edge (+x), image left = the robot's left (+y): the same orientation as `s.canvas()` and `canvas_cam`.
 
 ### Process rules
-The grader checks the process rules in Goal on the replayed trajectory with two numbers you can compute yourself; only
-inked strokes on the main sheet count (the practice sheet is free):
+These rules are checked on the replayed trajectory; only inked strokes on the main sheet count (the practice sheet is
+free). They use two numbers you can compute yourself:
 - `path_mm`: the total length of the pen tip's path while it presses on the main sheet with ink (all strokes together,
   sampled at every physics step);
 - `mark_width_mm`: the average width of your marks. It is the area each stroke inks on its own, summed over the strokes

@@ -32,7 +32,7 @@ commands.
 from rcb_bigym2 import Session
 s = Session("/app/instance.json")      # a few seconds: the scene + the controller's 200-step warm-up
 s.layout                               # the 21 action slots, in order (below)
-row = s.hold_row()                     # stand still: your last command with zero vx, vy, wz (before any: upstream's)
+row = s.hold_row()                     # stand still: your last command with zero vx, vy, wz (before any: the default)
 done = s.step(row)                     # one control step (50 Hz); True once the episode is over
 s.status()                             # success, done, outcome, fell, steps, horizon, state_sha
 s.reset()                              # back to the frozen instance (unlimited; under a second, a new Session ~3 s)
@@ -41,8 +41,8 @@ s.env, s.tools, s.model, s.data        # the env wrapper steps go through, BiGym
 s.tools.ik(left_pos=p, right_pos=q)    # BiGym's IK: 14 arm targets (left 7, right 7) putting each gripper's
                                        # *_end_effector site (the point between its finger pads) at a world point
 s.image("head", 256, 256)              # an onboard camera's RGB image (head, left_wrist, right_wrist); 84x84 by
-                                       # default (upstream's size), up to 640x640
-s.held(s.task.cup)                     # BiGym's "held", per gripper: {"left": bool, "right": bool}; the upstream call
+                                       # default, up to 640x640
+s.held(s.task.cup)                     # BiGym's "held", per gripper: {"left": bool, "right": bool}; BiGym's own call
                                        # takes the keys of s.task.robot.grippers (HandSide), not strings
 s.replay(rows)                         # replays from the start, as graded: {"success", "state_sha", ...}
 s.save_trajectory(rows)                # writes the scored file /app/output/trajectory.npz; pass another path to explore

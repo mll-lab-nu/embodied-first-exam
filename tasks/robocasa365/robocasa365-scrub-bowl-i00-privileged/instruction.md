@@ -4,9 +4,9 @@
 Scrub the bowl in the sink with the sponge for a while, then move your hand away.
 
 ## Goal
-Success: the sponge has been rubbed back and forth on the bowl for a second or more in all, and at the end the hand has
-moved well away from the bowl. Your trajectory is replayed from the fixed start. What counts is the state after its last
-action.
+Success: the sponge is rubbed back and forth on the bowl for about a second or more in all, and at the end the hand has
+moved well away from the bowl. Your trajectory is replayed from the fixed start. The scrubbing counts as it happens in
+the replay; everything else is judged on the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 13)`
 with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave

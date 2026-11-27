@@ -11,7 +11,7 @@ tray rests loose on the ring; no arm touches any part and everything is still. F
 the simulation and ends the episode at once, without success.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts, and it must
-still hold after your last command is held a moment longer. That check runs on a copy, so the robot does not move.
+still hold after your last command is held a moment longer.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

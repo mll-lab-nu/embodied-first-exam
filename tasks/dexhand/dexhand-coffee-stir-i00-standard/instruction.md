@@ -6,8 +6,8 @@ Mix the milk into the coffee: stir it six times with the teaspoon, then lay the 
 ## Goal
 Success: in this order, with the spoon held between the thumb and another finger and its bowl down in the coffee, the
 bowl circles the mug six full times (leaving the coffee before the sixth turn starts the count again); then the spoon
-lies roughly flat on the worktop beside the mug, clear of it and out of the hand, and spoon and mug are still for a
-second.
+lies roughly flat on the worktop, at least a mug's width away from the mug and out of the hand, and spoon and mug are
+still for a second.
 
 Any of these ends the episode at once as a failure, which later actions cannot undo:
 - The mug tips, slides or is lifted.
@@ -30,8 +30,7 @@ Rules:
 - Episodes: 20 resets (`spec()["budget"]["reset"]`), each a new episode from the same starting state; within an episode
   what you knock over stays knocked over until you reset. Only the last episode is graded. No reset is possible after
   `/finish`.
-- You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no score, no success
-  signal.
+- You get only the cameras and the robot's own sensor readings: no live object poses, no score, no success signal.
 
 Only the robot's actuator targets act on the scene: no object teleports, grasp welds, scripted object motion or applied
 forces.
@@ -58,7 +57,7 @@ q = obs.group("joint_pos", now=True)
 res = r.submit("joint_position", rows, dt=0.02, interpolate="hold", video="none")
 r.fk(q)                       # robot-link forward kinematics; no physics is stepped
 r.status()
-res = r._post("/reset", {"cameras": ["overview"]}, [], 900)   # POST /reset (this client has no reset())
+# a new episode: POST /reset, or the MCP tool `reset` (this client has no reset() call)
 ```
 Requests can return RGB frames or mp4, with depth `none`, `last` or `frames`. Each call returns at most 1,000 camera
 images, counting per-frame depth; reduce cameras, fps or duration for larger chunks. `hold(s)` holds the current targets
@@ -67,10 +66,10 @@ links; no IK primitive is supplied. If the service connection fails, call `r.wai
 before continuing. Crash recovery resumes the same journaled episode, without a reset, and the wall-clock budget keeps
 running.
 
-Resets: `r._post("/reset", ...)` (`POST /reset`) starts a new episode from the same starting state. You can call it
-during a running episode, which it abandons, or after one has ended. It takes no simulated time and returns the start's
-images and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]`
-and `meta["resets_left"]` count the episodes. `meta["control_steps"]` counts the current episode's control steps,
+Resets: `POST /reset` (MCP tool `reset`) starts a new episode from the same starting state. You can call it during a
+running episode, which it abandons, or after one has ended. It takes no simulated time and returns the start's images
+and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. `meta["episode"]` and
+`meta["resets_left"]` count the episodes. `meta["control_steps"]` counts the current episode's control steps,
 `meta["control_steps_total"]` those of all episodes.
 
 ### MCP tools

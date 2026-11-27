@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.3.0` |
 
 ## Task
-ABC Sim `spell_bair` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Spell BAIR with the letter blocks: lay B, A, I and R side by side in a straight row on the table, letters up, reading from left to right as the arms face the table.
+ABC Sim `spell_bair` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Spell BAIR with the letter blocks: lay B, A, I and R side by side in a straight row on the table, each with a letter face up or down, reading from left to right as the arms face the table.
 Twenty-six wooden letter blocks (A to Z, 3 cm cubes; each letter is printed on two opposite faces) lie on the table, letter face up. The deliverable is one replayable trajectory (`/app/output/trajectory.npz`, `(T, 14)`, one row per 0.034 s control step).
 
 ## Difficulty

@@ -5,10 +5,13 @@ Dump the lettuce from the pot into the sink, rinse it under running water, then 
 back in the pot.
 
 ## Goal
-Success: the lettuce has been in the sink under running water for a moment, and at the end it is back in the pot and the
-water is off.
+Success: the lettuce is in the sink under running water for a moment, and at the end it is back in the pot and the water
+is off.
 
-When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
+The rinse counts as it happens.
+
+When you are done, send `/finish` to end the episode and get it graded. Everything else is judged on the state at that
+point.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
