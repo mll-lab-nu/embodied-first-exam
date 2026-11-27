@@ -130,9 +130,10 @@ if STEP_LIMIT is not None and (not AGENT_END or STEP_LIMIT < 1):
     raise RuntimeError("RCB_STEP_LIMIT needs RCB_AGENT_END=1 and a positive number of steps")
 END_STATE_REASONS = ("finished", "timeout", "step_limit")     # ends judged on the state they leave
 # final.json "ended_by": "session_end" is the end of the agent's session (its time limit, its token budget or its own
-# exit: the runner's record says which); any end not listed is "failed" (the task's own failure rule)
+# exit: the runner's record says which); an infrastructure end (the reason's word before any ":") is "error"; any end
+# not listed is "failed" (the task's own failure rule)
 ENDED_BY = {"finished": "finish", "step_limit": "step_limit", "timeout": "session_end", "error": "error",
-            "sim_crashed_on_call": "error", "sim_crashed": "error"}
+            "sim_crashed_on_call": "error", "sim_crashed": "error", "resume_failed": "error", "instance_mismatch": "error"}
 HIDDEN_KEYS = frozenset({"success", "live_success", "is_success", "reward", "score", "progress", "stage", "stages",
                          "stages_reached", "subtask", "subtasks_done", "hold_steps", "settled"})
 SUCCESS_SIGNAL_NOTE = ("hidden: the service never tells you whether you have succeeded and a success does not end the "
@@ -343,6 +344,8 @@ def give_up(data: str, reason: str, infra: bool) -> None:
     except (OSError, ValueError):
         fin = {}
     if not fin.get("finalized"):
+        if "ended_by" in fin:                        # an agent-ended episode's record of an earlier end: the trial
+            fin["ended_by"] = "error"                # ends on this give-up, no end the agent or the task chose
         fin.update({"protocol": PROTOCOL, "success": False, "done": True, "reason": reason, "finalized": True,
                     **({"infra_error": 1} if infra else {})})
         write_json_atomic(path, fin)
@@ -352,7 +355,8 @@ def give_up(data: str, reason: str, infra: bool) -> None:
         f.write(str(os.getpid()))
 
 
-def encode_mp4(frames: np.ndarray, fps: float) -> bytes:
+def encode_mp4(frames, fps: float) -> bytes:
+    """H.264 mp4 of (N,H,W,3) frames: an array, or a list (or any iterable) of (H,W,3) frames."""
     import imageio.v2 as imageio
     fd, path = tempfile.mkstemp(suffix=".mp4")
     os.close(fd)
@@ -405,23 +409,32 @@ class Recorder:
             rgb, dep = self.sim.images(self.cams, self.depth)
             for c in self.cams:
                 self.frames[c].append(rgb[c])
-                if c in dep:
-                    self.dep[c].append(dep[c])
+                if c in dep:                         # kept as it is sent: float16 (2 bytes a pixel; RGB has 3)
+                    self.dep[c].append(np.asarray(dep[c]).astype(np.float16))
         if proprio:
             self.prop.append(np.asarray(self.sim.proprio(), np.float32))
             self.grabbed_at = self.k
 
     def parts(self) -> list:
+        """The response's RCB1 parts; the Recorder hands its frames over (call it once). One copy of the frames: no
+        np.stack; frames/ and depth/ are written into the body from the lists (rcb1.Frames, which empties them), the
+        mp4 is encoded from the list, and a list nothing sends is let go of here."""
         out = []
         for c in self.cams:
-            fr = np.stack(self.frames[c])
+            fp = rcb1.frames_part(f"frames/{c}", self.frames[c])   # np.stack's dtype and shape (and its error if empty)
+            fr, self.frames[c] = fp[2], []
             if self.video in ("mp4", "both"):
-                out.append((f"video/{c}", "mp4", encode_mp4(fr, self.fps), {"fps": round(self.fps, 3), "n": int(len(fr))}))
+                out.append((f"video/{c}", "mp4", encode_mp4((np.asarray(f, fr.dtype) for f in fr.arrays), self.fps),
+                            {"fps": round(self.fps, 3), "n": int(len(fr.arrays))}))
+            last = rcb1.array_part(f"last/{c}", np.asarray(fr.arrays[-1], fr.dtype))
             if self.video in ("frames", "both"):
-                out.append(rcb1.array_part(f"frames/{c}", fr))
-            out.append(rcb1.array_part(f"last/{c}", fr[-1]))
+                out.append(fp)
+            else:
+                fr.arrays.clear()
+            out.append(last)
             if self.dep[c]:
-                out.append(rcb1.array_part(f"depth/{c}", np.stack(self.dep[c]).astype(np.float16)))
+                out.append(rcb1.frames_part(f"depth/{c}", self.dep[c]))
+            self.dep[c] = []
         out.append(rcb1.array_part("proprio", np.stack(self.prop)))
         return out
 
@@ -646,7 +659,7 @@ class Service:
         if not self.agent_end:
             return {}
         r = self.reason
-        out = {"success_signal": "hidden", "ended_by": ENDED_BY.get(r, "failed") if r else None,
+        out = {"success_signal": "hidden", "ended_by": ENDED_BY.get(str(r).split(":")[0], "failed") if r else None,
                "end_judgement": self.end_judgement, "hidden_success_seen": self.seen_step is not None,
                "hidden_success_first_step": self.seen_step, "trial_hidden_success_seen": bool(self.trial_seen),
                "finish_time_s": round(self.finish_t - self.t0, 1) if self.finish_t and self.t0 else None}
@@ -727,7 +740,15 @@ class Service:
         in_calls = sum(bool(e["crashed_in_call"]) for e in ev if e["ev"] == "resuming") + int(in_call)
         died = [d for d in deaths(self.data) if d["process"] >= first]      # the deaths since the episode began
         fatal = bool(died and died[-1]["fatal_signal"])                      # the one just before this start
-        cp = [e for e in ev if "state_sha" in e and "journal_rows" in e][-1]
+        ci = max(i for i, e in enumerate(ev) if "state_sha" in e and "journal_rows" in e)
+        cp = ev[ci]
+        # An end logged after it without a checkpoint (_end's fallback: the state could not be hashed) still ended the
+        # episode: it resumes from that checkpoint ended, as the end event says
+        end = next((e for e in reversed(ev[ci + 1:]) if e["ev"] == "end" and e.get("done")), None)
+        if end is not None:
+            cp = {**cp, "done": True, "reason": end["reason"], "success": bool(end.get("success")),
+                  "error_infra": bool(end.get("error_infra")),
+                  **({"finish_t": end["finish_t"]} if end.get("finish_t") is not None else {})}
         # The live outcome is decided when the graded episode has ended and nothing can follow it: a success, or a
         # failure with no reset left. Then crashes after it cannot take that outcome away: past the restarts, the
         # episode is resumed and finalized as it ended (its own verdict, live_verdict() included), not given up.
@@ -863,12 +884,13 @@ class Service:
 
     @staticmethod
     def _reply_rcb1(meta: dict, parts: list) -> tuple[int, str, bytes]:
-        body = rcb1.encode(meta, parts)
-        if len(body) > MAX_RESPONSE:
+        if rcb1.size(meta, parts) > MAX_RESPONSE:    # known before anything is built: the body is built once
+            for p in parts:
+                if p[0].startswith(("frames/", "depth/")) and isinstance(p[2], rcb1.Frames):
+                    p[2].arrays.clear()
             parts = [p for p in parts if not p[0].startswith(("frames/", "depth/"))]
             meta = {**meta, "degraded": f"response over {MAX_RESPONSE} bytes: frames/ and depth/ dropped"}
-            body = rcb1.encode(meta, parts)
-        return 200, "application/x-rcb1", body
+        return 200, "application/x-rcb1", rcb1.encode(meta, parts)
 
     def _view(self, meta: dict, default_video: str) -> tuple[list[str], int, str, bool]:
         cams = meta.get("cameras") or list(self.sim.cameras)
@@ -906,6 +928,15 @@ class Service:
             body["resets_left"] = self._resets_left()
         return Refused(409, body)
 
+    def _observe_refusal(self) -> Refused | None:
+        """An /observe's 409, whatever it asks: after /finish, after the session's end (SIGUSR1) and after a give-up
+        every call but GET /spec and /status is refused; after any other end of the episode it may still look."""
+        if self.stopping or (self.agent_end and self.done and self.reason == "finished"):
+            return self._conflict()
+        if self.finalized:
+            return Refused(409, {"error": "the sim service gave up on this trial", "reason": self.reason, "gave_up": True})
+        return None
+
     def _step(self, typ: str, row: np.ndarray) -> dict:
         """One control step: execute, journal, and end the episode if it is over."""
         sim_row = np.asarray(self.sim.to_sim(typ, row), dtype=np.float64)
@@ -940,7 +971,9 @@ class Service:
         try:
             self._checkpoint("end")
         except Exception as exc:  # noqa: BLE001 -- a broken simulator may not even hash: the end is still logged
-            self.log("end", reason=reason, checkpoint_error=repr(exc)[:300])
+            # (with how it ended: a resume from the checkpoint before it keeps the episode ended, _resume)
+            self.log("end", reason=reason, done=True, success=bool(self.success), error_infra=bool(self.error_infra),
+                     **({"finish_t": self.finish_t} if self.agent_end else {}), checkpoint_error=repr(exc)[:300])
             self._write_final()
 
     def _agent_finish(self) -> dict:
@@ -1101,8 +1134,9 @@ class Service:
     def _observe(self, meta: dict, parts: dict) -> tuple[dict, list]:
         """A pure read (eai-standard/3.0): no time passes. last_s = 0 the current frame; last_s = n the frames the
         recorder took in the last n robot seconds (none: the current frame, meta.last_s = 0)."""
-        if self.agent_end and self.done and self.reason == "finished":
-            raise self._conflict()                   # after /finish every call but /spec and /status is refused
+        refused = self._observe_refusal()
+        if refused:
+            raise refused
         with bad_request():
             if real(meta, "seconds", 0.0) != 0.0:
                 raise ValueError(SECONDS_GONE)
@@ -1185,7 +1219,8 @@ class Service:
             try:
                 self._checkpoint("end", reset_failed=True)
             except Exception as exc:  # noqa: BLE001 -- a broken simulator may not even hash
-                self.log("end", reason="error", reset_failed=True, checkpoint_error=repr(exc)[:300])
+                self.log("end", reason="error", reset_failed=True, done=True, success=False, error_infra=True,
+                         checkpoint_error=repr(exc)[:300])
                 self._write_final()
             raise
         self.resets += 1

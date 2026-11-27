@@ -230,8 +230,8 @@ def load(path: Path, name: str):
 
 
 copies: dict[str, Path] = {}
-for p in sorted([*(ROOT / "embodied_first_exam/benchmarks").glob("*/*/rcb_service.py"),
-                 ROOT / "images/abc-sim/tools/realtime/rcb_service.py"]):
+for p in sorted([*(ROOT / "embodied_first_exam/benchmarks").glob("**/rcb_service.py"),
+                 *(ROOT / "images").glob("*/tools/**/rcb_service.py")]):
     copies.setdefault(hashlib.sha256(p.read_bytes()).hexdigest(), p)
 for h, path in copies.items():
     S = load(path, f"rcb_service_{h[:8]}")

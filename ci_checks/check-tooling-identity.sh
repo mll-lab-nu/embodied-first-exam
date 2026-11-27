@@ -32,6 +32,9 @@
 #    unchanged; the MuJoCo service: as scripts/task_conventions.py replace_words spells it). RoboTwin's privileged
 #    tests/test.sh and solution/solve.sh differ by the task's name only and are compared with the name replaced.
 #    Not covered here: the per-task texts of these benchmarks (instruction.md, README.md, task.toml).
+# 5. The shared 2.1 sidecar service rcb_service.py (docs/protocol/standard_mode.md Part 1; under the 2.3 layer too): every
+#    copy, embodied_first_exam/benchmarks/**/rcb_service.py and images/*/tools/**/rcb_service.py, is the same code
+#    (compared without comments and docstrings, which a few copies word differently).
 # Usage: check-tooling-identity.sh [tasks dir]   (repo-level; run_all.sh calls it once)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -215,6 +218,27 @@ for t in sorted(TDIR):
         role = module if f == module else f"{mode} {rel}" if rel in SHARED else None
         if role:
             seen[bench][role].setdefault(h, f"{t}/{rel} (files image)")
+# 5. the 2.1 sidecar service: one code in every copy (comments and docstrings aside)
+import ast  # noqa: E402
+
+
+def code_sha(p: Path) -> str:
+    tree = ast.parse(p.read_text(encoding="utf-8"))
+    for n in ast.walk(tree):
+        if (isinstance(n, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)) and n.body
+                and isinstance(n.body[0], ast.Expr) and isinstance(n.body[0].value, ast.Constant)
+                and isinstance(n.body[0].value.value, str)):
+            n.body = n.body[1:] or [ast.Pass()]
+    return hashlib.sha256(ast.dump(tree).encode()).hexdigest()[:16]
+
+
+v21 = collections.defaultdict(list)
+for p in sorted([*Path(ROOTD, "embodied_first_exam/benchmarks").glob("**/rcb_service.py"),
+                 *Path(images).glob("*/tools/**/rcb_service.py")]):
+    v21[code_sha(p)].append(os.path.relpath(p, ROOTD))
+if len(v21) > 1:
+    bad.append(f"rcb_service.py (the 2.1 sidecar service): {len(v21)} versions of its code: "
+               + "; ".join(f"{h} ({', '.join(ps)})" for h, ps in sorted(v21.items())))
 bad += [f"{b}: {len(v)} versions of {role}: " + ", ".join(f"{h} ({p})" for h, p in sorted(v.items()))
         for b, roles in sorted(seen.items()) for role, v in sorted(roles.items()) if len(v) > 1]
 if bad:
@@ -225,5 +249,6 @@ if bad:
         print(f"  ... {len(bad) - 60} more")
     sys.exit(1)
 print("ok shared sources: " + ("; ".join(f"{b} {dirs[b]} task dirs, {len(seen[b])} shared files" for b in sorted(seen)) or "no BEHAVIOR / RoboLab / RoboWits / ManiGuard / MolmoSpaces / MyoSuite / DexJoCo / DexHand / RoboARC / BiGym 2.0 / YAMLab tasks")
-      + f"; the eai-standard/2.2 / 2.4 layers in {n_layer} task dirs; the eai-standard/2.3 realtime layer in {n_rt}")
+      + f"; the eai-standard/2.2 / 2.4 layers in {n_layer} task dirs; the eai-standard/2.3 realtime layer in {n_rt}"
+      + f"; rcb_service.py (2.1) one code in {sum(map(len, v21.values()))} copies")
 PY
