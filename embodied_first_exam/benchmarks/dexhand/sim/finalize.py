@@ -5,11 +5,13 @@ trajectory.npz and episode.json, with the live success and the live end-state ha
 from episode.json: success = the live episode's success under the task's predicate (tasks/dexhand/README.md,
 "Standard-mode grading by the live episode"). Nothing is replayed to grade it. The service's own record is the only source:
 the live predicate is the one a replay would recompute (the same Session.step on the same rows, which also refuses a
-target out of range or a moved locked wrist), and a success ends the episode, so no later row and no settle window
-exists that only a replay would see.
+target out of range or a moved locked wrist). The episode is agent-ended (PROTOCOL §3): a success never ends it, the
+service judges the state it ends in (POST /finish, the step cap or the session's end, with its end window), and the
+recorded trajectory holds every row it ran, the end window's too.
 
 After final.json is finalized ("video_pending": true), the family's replay.py films the recorded trajectory in one
-fresh process (`--video`), bounded by the collect hook's remaining time: the video is for people only. Its failure or
+fresh process (`--video`; an agent-ended episode's through film_agent_end(): every recorded row, to the graded end
+state), bounded by the collect hook's remaining time: the video is for people only. Its failure or
 timeout loses the video and nothing else (never a 0, never infra)."""
 
 from __future__ import annotations
@@ -66,6 +68,44 @@ def write(result: dict) -> None:
 LIVE = {"graded_by": "live", "replays": 0, "video": False, "video_source": "render"}
 
 
+# Agent-ended episodes: the service (server.py execute) puts the family's verdict state back after every control step
+# that latches the success, the physics going on, so its recorded rows run past the first success to the state it
+# judged. A family's replay.py stops where its Session reports done; film_agent_end() runs that replay.py with the same
+# put-back around Session.step (the names and the owner as server.py's RUNTIME_VERDICT and _verdict_owner).
+FILM_AGENT_END = "--film-agent-end"
+RUNTIME_VERDICT = ("success", "failure", "failure_detail", "stage", "stage_steps", "hold", "hold_ref", "released_hold",
+                   "peak_stage", "lift_steps", "hold_steps")
+
+
+def film_agent_end(script: str, argv: list) -> None:
+    import copy
+    import runpy
+
+    import runtime
+
+    def owner_of(session):
+        checker = getattr(session, "checker", None)
+        return checker if checker is not None and "success" not in vars(session) else session
+
+    step = runtime.Session.step
+
+    def agent_end_step(self, *args, **kwargs):
+        owner = owner_of(self)
+        names = RUNTIME_VERDICT if owner is self else tuple(vars(owner))
+        saved = {k: copy.deepcopy(v) for k, v in vars(owner).items()
+                 if k in names and not type(v).__module__.startswith("mujoco")}
+        out = step(self, *args, **kwargs)
+        status = self.status()
+        if bool(status["success"]) and not status.get("failed"):
+            for k, v in saved.items():
+                setattr(owner, k, v)
+        return out
+
+    runtime.Session.step = agent_end_step
+    sys.argv = [script, *argv]
+    runpy.run_path(script, run_name="__main__")
+
+
 def main() -> None:
     code = int(os.environ.get("RCB_END_RC", "1"))
     if code == 2:
@@ -92,6 +132,8 @@ def main() -> None:
     script = os.environ.get("RCB_REPLAY_SCRIPT", str(Path(__file__).with_name("replay.py")))
     command = [sys.executable, script, "--task", os.environ["RCB_TASK"], "--traj", str(DATA / "trajectory.npz"),
                "--trusted-service", "--out", str(DATA / "video.json"), "--video", str(DATA / "replay.mp4")]
+    if result.get("success_signal") == "hidden":   # agent-ended (rcb_agent_end.final_fields): to the graded end state
+        command[1:2] = [str(Path(__file__).resolve()), FILM_AGENT_END, script]
     if str(result.get("hand") or "sharpa") != "sharpa":
         # The trusted service's hand; runtimes without hand selection only ever run sharpa.
         command += ["--hand", str(result["hand"])]
@@ -115,4 +157,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    if sys.argv[1:2] == [FILM_AGENT_END]:
+        film_agent_end(sys.argv[2], sys.argv[3:])
+    else:
+        main()
