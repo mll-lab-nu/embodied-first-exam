@@ -66,6 +66,20 @@ reference services of 2.1–2.4 and checks their answers against it.
   30), Part 3's recorder ("Cameras"), recording continuously while the clock runs, with the depth of the depth cameras;
   an adapter without its two hooks records on the simulator's thread into the same ring at 10 fps (each render there
   costs the clock its time), which its `fps` says.
+- **The field checks are the same in every layer** (2.2/2.4 answer them in `rcb_limited.py`, before the adapter sees
+  the call): `dt`, `seconds`, `video_fps` and `last_s` are JSON numbers (not `true`/`false`, not a string) and finite,
+  `null` is the default; `video_fps` lies in [1, `max_video_fps`] (2.1/2.3: 30; 2.2/2.4: `/spec.max_video_fps` where
+  the adapter declares it, else the larger of 30 and `control_hz`); `interpolate` is one the service knows (2.2/2.4:
+  `linear` or `hold`); a chunk's rows × `dt` is at most `max_chunk_s` (a planner type such as `ee_pose`, whose duration
+  the service plans, is not counted so). Each is a 400 that leaves the episode as it was. A `/finish` body is read
+  only up to the 64 MB limit (more: 413, a negative `Content-Length`: 400) though it is ignored. After `/finish`
+  `GET /operations/{id}` (2.4) is a 409 like every other call but `GET /spec` and `GET /status`, and `resets_left` is
+  0. A hold chunk's `planned_duration_s` is the `seconds` it sent (what it declared); `duration_s` what ran (a hold the
+  adapter stops early, blocked, is shorter). 2.3's hold answer carries `hold = true` and `executed_rows = 0` like the
+  other layers'. The standard recorder of 2.2/2.4 can be turned off (`Service(record_frames=False)`, as 2.1's
+  `record_frames`): `/spec.timing.recorder` then says it records nothing and `last_s` answers the current frame; 2.3
+  without a recorder declares the same (`cameras: []`). With 2.1's `record_frames = "delivered"` a recorded frame
+  holds the images the agent was sent at that step, and `last_s` returns only frames that hold every requested camera.
 - **The realtime clock** starts at the episode's first `/submit` (again after a reset and a crash recovery), never at an
   `/observe`; `/submit` answers at once with `duration_s` and `end_step` (= `plan_end_step`). An `/observe` before the
   simulator thread has published its first state is a 503 `{"error": "warming up"}` (retry).
@@ -161,9 +175,9 @@ the wall clock; the simulated time is recorded as cost.
 ### Errors (no physics executed)
 | code | when |
 |---|---|
-| 400 | wrong type/dim, a chunk with no rows (other than a hold chunk), a hold chunk with rows, `/observe` with `seconds > 0` (3.0), NaN/inf, a field of the wrong JSON type (`dt`, `seconds` or `video_fps` not a finite number, `cameras` not a list), `dt` or `seconds` out of range or `dt` not a multiple of the physics step, chunk too long, bad interpolate/video value, `video_fps` outside [1, 30], more images than `max_frames_per_call` in one response (PROTOCOL §3), malformed body |
-| 409 | episode already finished (`done`); the trial is over; after `/finish` every call but `GET /spec` and `GET /status` |
-| 413 | body over 64 MB (`rcb_client.py` raises before sending such a body) |
+| 400 | wrong type/dim, a chunk with no rows (other than a hold chunk), a hold chunk with rows, `/observe` with `seconds > 0` (3.0), NaN/inf, a field of the wrong JSON type (`dt`, `seconds` or `video_fps` not a finite number, `cameras` not a list), `dt` or `seconds` out of range or `dt` not a multiple of the physics step, chunk too long, bad interpolate/video value, `video_fps` outside [1, `max_video_fps`] ("Version 3.0"), a JSON `true`/`false` or string where a number goes, more images than `max_frames_per_call` in one response (PROTOCOL §3), malformed body |
+| 409 | episode already finished (`done`); the trial is over; after `/finish` every call but `GET /spec` and `GET /status` (2.4's `GET /operations/{id}` too) |
+| 413 | body over 64 MB, `/finish`'s too (`rcb_client.py` raises before sending such a body) |
 | 503 | realtime (2.3): an `/observe` before the simulator thread has published its first state (`{"error": "warming up"}`; retry) |
 | 500 | simulator error; the episode ends with `reason = "error"` (the client raises `EpisodeOver`; the verifier reports `sim_error = 1`) |
 
@@ -272,8 +286,8 @@ client that never calls `/finish` is served as before, its session's end ending 
   and `/finish` are 409, `/observe` still answers.
 - The collect hook's signal at the end of the agent's session ends the episode with `reason = "timeout"`.
 - Realtime (2.3): `/finish` is answered by the simulator thread between control steps; the clock stops with the episode
-  (no step runs after it), pending watches are answered, and a settle or hold window runs after the agent is gone, off
-  the clock.
+  (no step runs after it) and a settle or hold window runs after the agent is gone, off the clock. (Before 3.0 the
+  pending watches were answered here; from 3.0 `/observe` never waits, so none is pending.)
 - Resets: as before a success (`resets_left` counts as without one); after `/finish` or the session's end `/reset` is a
   409; after a failure end or the step cap it is allowed while the budget lasts. Only the last episode is graded.
 - The verdict: the task's own rule on the state the episode ended in, with its settle or hold window run from there on
@@ -661,9 +675,10 @@ are part of a result's configuration (running.md).
   load. A request that renders and alone takes more than 0.5 s makes the next rendering request wait four times that
   long, clock on time or not; requests without images (`cameras: []`, `/status`) are not held back by it. Requests can so
   take at most a fifth of the clock's time. Without a recorder, the cameras are rendered (and the proprioception
-  read) at most once per control step: parallel observes and watches share that step's frames. A watch (`seconds > 0`) renders inside the
-  control steps it watches, so where one render of its cameras takes longer than its frame interval the clock runs late
-  and stalls while it lasts -- counted in `stalls` and `stalled_s`. Refusals the episode's state decides (409; an `at`
+  read) at most once per control step: parallel observes share that step's frames. (Before 3.0 a watch, `/observe`
+  with `seconds > 0`, rendered inside the control steps it watched, so where one render of its cameras took longer than
+  its frame interval the clock ran late and stalled while it lasted; from 3.0 that request is a 400.) The clock's
+  stalls are counted in `stalls` and `stalled_s`. Refusals the episode's state decides (409; an `at`
   too far ahead; too many frames) are answered by the simulator's thread, and a 409 still comes before a 400 for a
   request's fields.
 - **Crashes and simulator errors.** No call spans the clock (`/submit` answers at once), so what the agent's commands
