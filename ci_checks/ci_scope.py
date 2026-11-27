@@ -61,7 +61,7 @@ UNITS: dict[str, list[str]] = {
     "MyoSuite": _own("myosuite"),
     "DexJoCo": _own("dexjoco"),
     "DexHand": _own("dexhand"),
-    "VLABench": _own("vlabench"),
+    "VLABench": _own("vlabench", "images/vlabench-build-files/"),
     "RoboCasa-GR1": _own("robocasa-gr1", "embodied_first_exam/benchmarks/robocasa/", "images/robocasa-files/"),   # RoboCasa's service, tooling, graders
     "RoboCasa": _own("robocasa"),
     "RoboCasa365": _own("robocasa365", "embodied_first_exam/benchmarks/robocasa/", "images/robocasa-files/"),   # RoboCasa's service and graders
