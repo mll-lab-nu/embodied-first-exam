@@ -9,7 +9,7 @@
 | Family / instance | `drawer_search` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.4.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.5.0` |
 
 ## Task
 ABC Sim `multi_drawer_search` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Find the measuring cup in the drawers and put it in the bin, then do the same with the dish brush.

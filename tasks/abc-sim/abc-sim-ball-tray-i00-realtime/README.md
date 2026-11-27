@@ -10,7 +10,7 @@
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 0 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §3) |
-| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.4.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.5.0` |
 
 ## Task
 ABC Sim `ball_tray_balancing` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Hold the tray by both handles, one gripper on each, and keep the ball on the tray until the episode ends.
