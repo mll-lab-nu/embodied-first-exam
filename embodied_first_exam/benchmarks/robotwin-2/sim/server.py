@@ -42,16 +42,17 @@ signal.signal(signal.SIGUSR1, lambda *_: _USR1.__setitem__("pending", True))
 # both are judged on the state they leave: RoboTwin's check_success on it (no settle window: the check is one state's).
 # RCB_STEP_LIMIT=N (with RCB_AGENT_END=1) adds a step limit: N physics steps (1/250 s, the control step: `dt` is a
 # multiple of it); the chunk that reaches it stops there and the episode ends (reason "step_limit"), judged on the state
-# it leaves. A value that is no positive whole number is ignored, never a startup crash (compose would restart it in a loop).
+# it leaves. A value that is no positive whole number, or one without RCB_AGENT_END=1, refuses to start (as rcb_service).
 AGENT_END = os.environ.get("RCB_AGENT_END") == "1"
 
 
 def _step_limit():
-    try: n = int(str(os.environ.get("RCB_STEP_LIMIT") or "0").strip())
-    except ValueError: n = 0
-    if os.environ.get("RCB_STEP_LIMIT") and (n < 1 or not AGENT_END):
-        print(f"[sim] RCB_STEP_LIMIT={os.environ.get('RCB_STEP_LIMIT')!r} ignored (a positive number of steps, with RCB_AGENT_END=1)", flush=True)
-    return n if n >= 1 and AGENT_END else None
+    raw = os.environ.get("RCB_STEP_LIMIT")
+    try: n = int(raw or 0) or None
+    except ValueError: n = -1
+    if n is not None and (not AGENT_END or n < 1):
+        raise RuntimeError(f"RCB_STEP_LIMIT={raw!r}: RCB_STEP_LIMIT needs RCB_AGENT_END=1 and a positive number of steps")
+    return n
 STEP_LIMIT = _step_limit()
 END_STATE_REASONS = ("finished", "timeout", "step_limit")     # ends judged on the state they leave
 END_JUDGEMENT = "state"
@@ -599,7 +600,7 @@ def agent_time_s() -> float:
 
 def meta_common() -> dict:
     t = agent_time_s()
-    return {"step": E["step"], "calls": E["calls"], "physics_steps": int(S._sim_steps), "sim_time_s": round(int(S._sim_steps) / PHYS_HZ, 3),
+    return {"step": E["step"], "calls": E["calls"], "control_steps": int(S._sim_steps), "physics_steps": int(S._sim_steps), "sim_time_s": round(int(S._sim_steps) / PHYS_HZ, 3),
             "time_s": round(t, 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - t, 1)),
             "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
             **_steps_left(), **({"cameras": calib()} if OBS_CALIBRATION else {})}   # the calibration of the state this response ends in
@@ -825,7 +826,8 @@ def do_submit(q: dict) -> tuple[dict, list]:
     E["step"] += int(executed); E["calls"] += 1
     succ = _judge_after_call("submit")
     planned = round(int(A.shape[0]) * dt, 6) if typ == "joint_position" else round(_plan_steps(plan) / PHYS_HZ, 6)
-    out = {**meta_common(), "chunk_id": E["calls"], "type": typ, "executed_rows": int(executed), "physics_steps_chunk": int(S._sim_steps) - before,
+    out = {**meta_common(), "chunk_id": E["calls"], "type": typ, "executed_rows": int(executed),
+           "control_steps_chunk": int(S._sim_steps) - before, "physics_steps_chunk": int(S._sim_steps) - before,   # control step = physics step
            "duration_s": round((int(S._sim_steps) - before) / PHYS_HZ, 6), "planned_duration_s": planned,
            "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None,
            "frame_step": int(S._sim_steps), "ok": True,   # the physics step its newest image shows (as /observe's)
@@ -856,7 +858,8 @@ def do_hold(q: dict) -> tuple[dict, list]:
         if E["done"] or _cap_hit(): break
     rec.tick(force=True); LIVE.end_call(); E["calls"] += 1
     succ = _judge_after_call("hold")
-    out = {**meta_common(), "chunk_id": E["calls"], "type": typ, "hold": True, "executed_rows": 0, "physics_steps_chunk": int(S._sim_steps) - before,
+    out = {**meta_common(), "chunk_id": E["calls"], "type": typ, "hold": True, "executed_rows": 0,
+           "control_steps_chunk": int(S._sim_steps) - before, "physics_steps_chunk": int(S._sim_steps) - before,
            "duration_s": round((int(S._sim_steps) - before) / PHYS_HZ, 6), "planned_duration_s": round(n, 6),
            "clipped": [], "n_clipped": 0, "plan": [], "rejected": None, "frame_step": int(S._sim_steps), "ok": True}
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": 0, "hold_s": n, "cameras": cams, "note": q["note"][:500],
@@ -894,7 +897,7 @@ def do_observe(q: dict) -> tuple[dict, list]:
 
 
 def _status() -> dict:
-    return {"step": E["step"], "calls": E["calls"], "physics_steps": _ep_steps(), "done": E["done"], "reason": E["reason"],
+    return {"step": E["step"], "calls": E["calls"], "control_steps": _ep_steps(), "physics_steps": _ep_steps(), "done": E["done"], "reason": E["reason"],
             "elapsed_s": round(time.time() - E["t0"], 1), **_steps_left()}
 
 
