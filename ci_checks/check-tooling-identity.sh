@@ -13,14 +13,14 @@
 #    A change to one of them is rolled out to every task of the benchmark at once. Same approach as ci_checks/benchmarks/robopaint/advisory-tooling.sh.
 #    Tasks the benchmark's own exporter wrote (task.toml [metadata] exporter: Embodied Olympics, PROTOCOL §3) are a group of their own,
 #    one per exporter and [metadata] skill_in_loop.
-# 2. The eai-standard/2.2 layer (every task whose metadata.protocol is 2.2: BEHAVIOR, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, DexHand, YAMLab, RoboDojo, LabUtopia, AutoBio, EmbodiedSWE): the
+# 2. The shared layer (every task whose sim image takes rcb_limited.py, task_conventions.service_layer: BEHAVIOR, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, DexHand, YAMLab, RoboDojo, LabUtopia, AutoBio, EmbodiedSWE): the
 #    agent's client environment/rcb_client.py + rcb1.py and the service's environment/sim/rcb_limited.py + rcb1.py +
 #    run.sh are byte-identical to their source in embodied_first_exam/standard/ (docs/protocol/standard_mode.md), and the sidecar is
 #    set up for crash recovery: `command: sh /srv/run.sh` (run.sh exits non-zero when the service crashes) and
 #    `restart: on-failure:N` with N >= 3 (docs/protocol/standard_mode.md).
-#    The eai-standard/2.4 layer (metadata.protocol 2.4: RoboARC, its IKEA suite included) is held to the same rules, with rcb_limited.py and
-#    rcb_client.py from embodied_first_exam/standard/operations/ (docs/protocol/standard_mode.md) and 2.2's rcb1.py and run.sh.
-# 3. The eai-standard/2.3 realtime layer (every task whose metadata.protocol is 2.3: HumanoidBench, BiGym 2.0
+#    The operations layer (RoboARC, its IKEA suite included) is held to the same rules, with rcb_limited.py and
+#    rcb_client.py from embodied_first_exam/standard/operations/ (docs/protocol/standard_mode.md) and the shared layer's rcb1.py and run.sh.
+# 3. The realtime layer (every task on realtime/rcb_realtime.py: HumanoidBench, BiGym 2.0
 #    realtime): the service's environment/sim/rcb_realtime.py and the agent's environment/rcb_client.py are
 #    byte-identical to their one source, embodied_first_exam/standard/realtime/ (docs/protocol/standard_mode.md,
 #    "Realtime mode").
@@ -33,7 +33,7 @@
 #    embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py. RoboTwin's privileged
 #    tests/test.sh and solution/solve.sh differ by the task's name only and are compared with the name replaced.
 #    Not covered here: the per-task texts of these benchmarks (instruction.md, README.md, task.toml).
-# 5. The shared 2.1 sidecar service rcb_service.py (docs/protocol/standard_mode.md Part 1; under the 2.3 layer too): every
+# 5. The sidecar service rcb_service.py (docs/protocol/standard_mode.md Part 1; under the realtime layer too): every
 #    copy, embodied_first_exam/benchmarks/**/rcb_service.py and images/*/tools/**/rcb_service.py, is the same code
 #    (compared without comments and docstrings, which a few copies word differently).
 # Usage: check-tooling-identity.sh [tasks dir]   (repo-level; run_all.sh calls it once)
@@ -72,11 +72,11 @@ images = os.path.join(ROOTD, "images")
 FAMILY_SOURCE = {"environment/sim/server_mj.py": "embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py",
                  "environment/sim/server_mw.py": "embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py"}
 src_sha = {rel: sha(os.path.join(ROOTD, f)) for rel, f in FAMILY_SOURCE.items() if os.path.isfile(os.path.join(ROOTD, f))}
-V24 = {"rcb_limited.py", "rcb_client.py"}   # the 2.4 layer's own files (embodied_first_exam/standard/operations/); the rest is 2.2's
-src22 = lambda f: f  # noqa: E731  (each layer: its file's path under embodied_first_exam/standard/)
-src24 = lambda f: f"operations/{f}" if f in V24 else f  # noqa: E731
+OPS_OWN = {"rcb_limited.py", "rcb_client.py"}   # the operations layer's own files (embodied_first_exam/standard/operations/); the rest is the shared layer's
+src_shared = lambda f: f  # noqa: E731  (each layer: its file's path under embodied_first_exam/standard/)
+src_ops = lambda f: f"operations/{f}" if f in OPS_OWN else f  # noqa: E731
 canon_of = lambda files, at: {f: sha(os.path.join(src, at(f))) for f in set(files) if os.path.isfile(os.path.join(src, at(f)))}  # noqa: E731
-canon, canon24 = canon_of(LAYER.values(), src22), canon_of(LAYER.values(), src24)
+canon, canon_ops = canon_of(LAYER.values(), src_shared), canon_of(LAYER.values(), src_ops)
 # files-only images (scripts/files_image.py): a file's one source -> the sha256 FILES.json pins for it
 import files_image  # noqa: E402
 PINNED = {}
@@ -102,14 +102,14 @@ def from_files_image(task_dir: str) -> dict:
 
 seen = collections.defaultdict(lambda: collections.defaultdict(dict))   # benchmark -> role -> {sha: first copy}
 dirs = collections.Counter(); bad = []; n_layer = 0
-# the 2.3 realtime layer: one source, copied unchanged
+# the realtime layer: one source, copied unchanged
 RT_LAYER = {"environment/sim/rcb_realtime.py": "rcb_realtime.py", "environment/rcb_client.py": "rcb_client.py"}
-src23 = lambda f: f"realtime/{f}"  # noqa: E731
-rt_canon = canon_of(RT_LAYER.values(), src23)
+src_rt = lambda f: f"realtime/{f}"  # noqa: E731
+rt_canon = canon_of(RT_LAYER.values(), src_rt)
 n_rt = 0
 
 
-def check_layer(t: str, layer: dict, ref: dict, at, ver: str, img: dict) -> None:
+def check_layer(t: str, layer: dict, ref: dict, at, name: str, img: dict) -> None:
     """Every file of a layer (task path -> source file) is in the task, or taken from a files-only image, byte-identical
     to its source under embodied_first_exam/standard/ (`at`: the file's path there)."""
     for rel, f in sorted(layer.items()):
@@ -119,7 +119,7 @@ def check_layer(t: str, layer: dict, ref: dict, at, ver: str, img: dict) -> None
             if img[rel] != (ref.get(f) or "")[:16]:
                 bad.append(f"{t}: {rel} (from a files-only image) differs from {srcf}")
         elif not os.path.isfile(p):
-            bad.append(f"{t}: {rel} missing (eai-standard/{ver} layer, {srcf})")
+            bad.append(f"{t}: {rel} missing ({name} layer, {srcf})")
         elif sha(p) != ref.get(f):
             bad.append(f"{t}: {rel} differs from {srcf} (regenerate the task)")
 
@@ -134,15 +134,14 @@ for t in sorted(TDIR):
              else "roboarc-ikea" if t.startswith("roboarc-ikea-")         # RoboARC's IKEA suite: its own sources (rcb_ikea.py)
              else t.split("-")[0])
     meta = tomllib.load(open(tt, "rb")).get("metadata", {})
-    proto = str(meta.get("protocol", ""))
-    v24 = proto == "eai-standard/2.4"
+    layer = tc.service_layer(Path(TDIR[t]))
     img = from_files_image(TDIR[t])     # layer files the image build takes from a files-only image
-    if proto == "eai-standard/2.3":
+    if layer == "realtime":
         n_rt += 1
-        check_layer(t, RT_LAYER, rt_canon, src23, "2.3", img)
-    if v24 or proto == "eai-standard/2.2":
+        check_layer(t, RT_LAYER, rt_canon, src_rt, "realtime", img)
+    if layer in ("shared", "operations"):
         n_layer += 1
-        check_layer(t, LAYER, *((canon24, src24, "2.4") if v24 else (canon, src22, "2.2")), img)
+        check_layer(t, LAYER, *((canon_ops, src_ops, "operations") if layer == "operations" else (canon, src_shared, "shared")), img)
         cf = os.path.join(TDIR[t], "environment/docker-compose.yaml")
         blk = tc.service_block(open(cf).read(), "sim") if os.path.isfile(cf) else ""
         m = re.search(r"^\s*restart:\s*[\"']?on-failure:(\d+)", blk, re.M)
@@ -200,7 +199,7 @@ for t in sorted(TDIR):
         role = module if f == module else f"{mode} {rel}" if rel in SHARED else None
         if role:
             seen[bench][role].setdefault(h, f"{t}/{rel} (files image)")
-# 5. the 2.1 sidecar service: one code in every copy (comments and docstrings aside)
+# 5. the sidecar service: one code in every copy (comments and docstrings aside)
 import ast  # noqa: E402
 
 
@@ -214,23 +213,23 @@ def code_sha(p: Path) -> str:
     return hashlib.sha256(ast.dump(tree).encode()).hexdigest()[:16]
 
 
-v21 = collections.defaultdict(list)
+sidecar_codes = collections.defaultdict(list)
 for p in sorted([*Path(ROOTD, "embodied_first_exam/benchmarks").glob("**/rcb_service.py"),
                  *Path(images).glob("*/tools/**/rcb_service.py")]):
-    v21[code_sha(p)].append(os.path.relpath(p, ROOTD))
-if len(v21) > 1:
-    bad.append(f"rcb_service.py (the 2.1 sidecar service): {len(v21)} versions of its code: "
-               + "; ".join(f"{h} ({', '.join(ps)})" for h, ps in sorted(v21.items())))
+    sidecar_codes[code_sha(p)].append(os.path.relpath(p, ROOTD))
+if len(sidecar_codes) > 1:
+    bad.append(f"rcb_service.py (the sidecar service): {len(sidecar_codes)} versions of its code: "
+               + "; ".join(f"{h} ({', '.join(ps)})" for h, ps in sorted(sidecar_codes.items())))
 bad += [f"{b}: {len(v)} versions of {role}: " + ", ".join(f"{h} ({p})" for h, p in sorted(v.items()))
         for b, roles in sorted(seen.items()) for role, v in sorted(roles.items()) if len(v) > 1]
 if bad:
-    print("FAIL shared sources (byte-identical copies; the 2.2 / 2.4 layers as in embodied_first_exam/standard/, the 2.3 layer as in embodied_first_exam/standard/realtime/):")
+    print("FAIL shared sources (byte-identical copies; the shared / operations layers as in embodied_first_exam/standard/, the realtime layer as in embodied_first_exam/standard/realtime/):")
     for b in bad[:60]:
         print("  -", b)
     if len(bad) > 60:
         print(f"  ... {len(bad) - 60} more")
     sys.exit(1)
 print("ok shared sources: " + ("; ".join(f"{b} {dirs[b]} task dirs, {len(seen[b])} shared files" for b in sorted(seen)) or "no BEHAVIOR / RoboLab / RoboWits / ManiGuard / MolmoSpaces / MyoSuite / DexJoCo / DexHand / RoboARC / BiGym 2.0 / YAMLab tasks")
-      + f"; the eai-standard/2.2 / 2.4 layers in {n_layer} task dirs; the eai-standard/2.3 realtime layer in {n_rt}"
-      + f"; rcb_service.py (2.1) one code in {sum(map(len, v21.values()))} copies")
+      + f"; the shared / operations layers in {n_layer} task dirs; the realtime layer in {n_rt}"
+      + f"; rcb_service.py (sidecar) one code in {sum(map(len, sidecar_codes.values()))} copies")
 PY

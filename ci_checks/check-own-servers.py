@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Advisory contract check of the benchmarks' own eai-standard/2.1 servers against docs/protocol/eai-standard-3.0.openapi.yaml.
+"""Advisory contract check of the benchmarks' own eai-standard/3.0 servers against docs/protocol/eai-standard-3.0.openapi.yaml.
 
 check-openapi-contract.py runs the shared reference layers (rcb_service.py, rcb_limited.py, rcb_realtime.py) on toy
-simulators; the benchmark servers that serve the 2.1 wire themselves (their own HTTP layer, no shared layer imported)
+simulators; the benchmark servers that serve the wire themselves (their own HTTP layer, no shared layer imported)
 need their simulator and are not started there. This check reads their source instead (static, no simulator, no
-docker): every `embodied_first_exam/benchmarks/*/sim/server*.py` whose PROTOCOL is "eai-standard/2.1" and that imports
+docker): every `embodied_first_exam/benchmarks/*/sim/server*.py` whose PROTOCOL is "eai-standard/3.0" and that imports
 neither rcb_service nor rcb_limited. In each one, from the dict literals it builds (a `**f()` spread of a module-level
 function counts with the keys that function always returns; a conditional spread counts with none):
 
@@ -336,9 +336,9 @@ def check_module(m: Module, counters: list[str], spec_req: list[str]) -> list[st
 
 
 GOOD = '''
-PROTOCOL = "eai-standard/2.1"
-SPEC = {"protocol": PROTOCOL, "action_types": {}, "cameras": {}, "max_control_steps": 100}
-SPEC["standard"] = "eai-standard/3.0"
+PROTOCOL = "eai-standard/3.0"
+SPEC = {"protocol": PROTOCOL, "action_types": {}, "max_control_steps": 100}
+SPEC["cameras"] = {}
 def meta_common():
     return {"calls": 0, "control_steps": 0, "done": False, "reason": None, **({"x": 1} if 1 else {})}
 def submit():
@@ -364,8 +364,8 @@ CAP = 100
 SPEC["max_control_steps"] = CAP
 '''
 BAD = '''
-PROTOCOL = "eai-standard/2.1"
-SPEC = {"protocol": PROTOCOL, "action_types": {}, "cameras": {}, "max_control_steps": CAP or None}
+PROTOCOL = "eai-standard/3.0"
+SPEC = {"protocol": PROTOCOL, "action_types": {}, "max_control_steps": CAP or None}
 def meta_common():
     return {"calls": 0, "done": False, "reason": None}
 def submit():
@@ -377,9 +377,9 @@ def status():
     return {"calls": 0, "physics_steps": 0, "done": False, "reason": None}
 '''
 BAD_EXPECT = ("status() (/status", "answer meta (chunk_id) lacks ['control_steps']", "lacks ['control_steps_chunk', "
-              "'n_clipped']", "clipped is not a list", "lacks ['standard']", "max_control_steps may be null")
+              "'n_clipped']", "clipped is not a list", "lacks ['cameras']", "max_control_steps may be null")
 OK_HEAD = '''
-PROTOCOL = "eai-standard/2.1"
+PROTOCOL = "eai-standard/3.0"
 def meta_common():
     return {"calls": 0, "control_steps": 0, "done": False, "reason": None}
 def status():
@@ -387,13 +387,13 @@ def status():
 '''
 # each a source with one kind of fault only (the rest complete), and what must be flagged in it
 BAD_MORE = [
-    ("answers built with dict(...)", OK_HEAD + '''SPEC = dict(protocol=PROTOCOL, action_types={}, cameras={}, standard="eai-standard/3.0")
+    ("answers built with dict(...)", OK_HEAD + '''SPEC = dict(protocol=PROTOCOL, action_types={}, cameras={})
 def submit():
     return dict(**meta_common(), chunk_id=1, clipped=[], n_clipped=0), []
 def observe():
     return dict(obs_id=2, calls=0, done=False, reason=None), []
 ''', ("a /submit answer lacks ['control_steps_chunk']", "an answer meta (obs_id) lacks ['control_steps']")),
-    ("answers built by subscript assignment", OK_HEAD + '''SPEC = {"protocol": PROTOCOL, "action_types": {}, "cameras": {}, "standard": "eai-standard/3.0"}
+    ("answers built by subscript assignment", OK_HEAD + '''SPEC = {"protocol": PROTOCOL, "action_types": {}, "cameras": {}}
 def submit():
     meta = {**meta_common()}
     meta["chunk_id"] = 1
@@ -408,7 +408,7 @@ def observe():
     return m, []
 ''', ("clipped is not a list", "an answer meta (obs_id) lacks ['control_steps', 'reason']")),
     ("max_control_steps null through a variable", OK_HEAD + '''LIM = CAP or None
-SPEC = {"protocol": PROTOCOL, "action_types": {}, "cameras": {}, "standard": "eai-standard/3.0", "max_control_steps": LIM}
+SPEC = {"protocol": PROTOCOL, "action_types": {}, "cameras": {}, "max_control_steps": LIM}
 def submit():
     return {**meta_common(), "chunk_id": 1, "control_steps_chunk": 3, "clipped": [], "n_clipped": 0}, []
 ''', ("max_control_steps may be null (LIM)",)),
@@ -441,14 +441,14 @@ def discover(repo: pathlib.Path) -> list[pathlib.Path]:
     out = []
     for p in sorted((repo / "embodied_first_exam/benchmarks").glob("*/sim/server*.py")):
         src = p.read_text(errors="replace")
-        if '"eai-standard/2.1"' not in src:
+        if '"eai-standard/3.0"' not in src:
             continue
         try:
             tree = ast.parse(src, filename=str(p))
         except SyntaxError:
             out.append(p)                                # reported as unparsable below
             continue
-        if protocol_of(tree) == "eai-standard/2.1" and not is_shared_layer_import(tree):
+        if protocol_of(tree) == "eai-standard/3.0" and not is_shared_layer_import(tree):
             out.append(p)
     return out
 
@@ -473,7 +473,7 @@ def main() -> int:
         return 2
     servers = [pathlib.Path(s) for s in a.servers] or discover(repo)
     if not servers:
-        print("FAIL check-own-servers.py: no benchmark-own eai-standard/2.1 server found (the discovery went blind)")
+        print("FAIL check-own-servers.py: no benchmark-own eai-standard/3.0 server found (the discovery went blind)")
         return 2
     findings = []
     for p in servers:
@@ -491,7 +491,7 @@ def main() -> int:
     if findings:
         print(f"check-own-servers.py: {len(findings)} finding(s) in {len(servers)} server(s) ({names}) -- advisory")
         return 3
-    print(f"ok check-own-servers.py: {len(servers)} benchmark-own 2.1 server(s) ({names}) carry the OpenAPI's keys")
+    print(f"ok check-own-servers.py: {len(servers)} benchmark-own server(s) ({names}) carry the OpenAPI's keys")
     return 0
 
 

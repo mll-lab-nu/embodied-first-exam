@@ -6,7 +6,7 @@ per-benchmark list. For every task whose directory ends in `-realtime`:
     environment/docker-compose.yaml (a task a benchmark exports with its own service, PROTOCOL §3, may set its own
     variable instead: `RO_SLOWDOWN`); task.toml keeps no copy of it (`[metadata] slowdown`); the instruction states it,
     as `S = <S>` (or, for S = 1, says the robot runs "in real time");
-  - reset budget: an `eai-standard/2.3` service declares it, `RCB_RESET_BUDGET` with a whole-number default
+  - reset budget: a service on the realtime layer declares it, `RCB_RESET_BUDGET` with a whole-number default
     (`"${RCB_RESET_BUDGET:-N}"`, or a fixed `"N"`); a benchmark's own service may declare none (then it has no reset: N = 0);
     task.toml keeps no copy of it (`[metadata] reset_budget`); every "K resets" the instruction states is N; with
     N > 0 the instruction states N or points to `spec()["budget"]["reset"]`; with a declared N = 0 it says "no reset".
@@ -38,7 +38,7 @@ def check(task: Path) -> list[str]:
     compose = tc.read_text(task / "environment/docker-compose.yaml") or ""
     md = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
     text = tc.read_text(task / "instruction.md") or ""
-    own = md.get("protocol") != "eai-standard/2.3"     # PROTOCOL §3: a benchmark's own service and protocol
+    own = tc.service_layer(task) != "realtime"     # PROTOCOL §3: a benchmark's own service
     # slowdown S
     m = tc.SLOWDOWN_RE.search(compose) or (tc.OWN_SLOWDOWN_RE.search(compose) if own else None)
     if not m:

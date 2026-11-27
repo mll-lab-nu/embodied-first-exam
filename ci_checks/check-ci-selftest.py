@@ -239,7 +239,7 @@ MUTATIONS = [
      STD, COMPOSE, lambda s: in_service("main", "    environment:\n      RCB_AGENT_END: \"1\"")(
          sub(r"^[ \t]*RCB_AGENT_END:.*\n", "")(s)), AGENT_END, "does not set RCB_AGENT_END"),
     ("... a protocol that only looks like its mode's (a trailing space) with RCB_AGENT_END removed (H.3 bypass)",
-     STD, TOML, {TOML: sub(r'^(protocol = "eai-standard/2\.2)"', r'\1 "'),
+     STD, TOML, {TOML: sub(r'^(protocol = "eai-standard/3\.0)"', r'\1 "'),
            COMPOSE: sub(r"^[ \t]*RCB_AGENT_END:.*\n", "")}, AGENT_END, "is neither one of standard mode's"),
     ("the instruction no longer states the network rule (what the network reaches)",
      STD, "instruction.md", sub(r"(?ms)^- Network: .*?(?=^- )", ""), RESOURCES, "does not state the Network line"),

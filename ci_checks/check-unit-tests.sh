@@ -3,10 +3,11 @@
 #  1. Standard library only: the runner's helpers (scripts/tests/), the usage gateway's raw log and budget stop, the
 #     runner's lane stop and infra rules (account_failure_check.py --selftest), and the EmbodiedSWE grader's rollout limit
 #     (a request outlasting it is a graded timeout, not infra; needs Landlock, skipped with a note otherwise).
-#  2. numpy + requests (no simulator, no image, no GPU): the eai-standard/2.2 and 2.4 layers' selftests on a stub
-#     simulator (embodied_first_exam/standard/), the 2.1 service's first-attempt record on a toy simulator (sidecar/), and
-#     the per-call image budget of the 2.1, 2.2 and 2.3 layers (frames_selftest.py), the agent-ended episodes of the
-#     2.2 layer and of the 2.1 service and 2.3 layer (agent_end/), and the robot's MCP tools on toy 2.2 / 2.3 / 2.4 services and a match seat
+#  2. numpy + requests (no simulator, no image, no GPU): the shared and the operations layers' selftests on a stub
+#     simulator (embodied_first_exam/standard/), the sidecar service's first-attempt record on a toy simulator (sidecar/), and
+#     the per-call image budget of the sidecar, shared and realtime layers (frames_selftest.py), the agent-ended episodes of
+#     the shared layer and of the sidecar service and realtime layer (agent_end/), and the robot's MCP tools on toy shared /
+#     realtime / operations services and a match seat
 #     (standard/mcp/tests/: the API path and the MCP path leave the same episode). Run when both modules can be imported, skipped with a note otherwise;
 #     `--all` makes a missing module a failure.
 # A benchmark's own tests live with its tasks (their tests/), not here. The resource monitor's tests are run by

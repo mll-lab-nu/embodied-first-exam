@@ -3,34 +3,36 @@
 this benchmark's own: ci_checks/run_invariants.sh runs every ci_checks/benchmarks/*/invariant-* hook with the task
 directories in scope.
 
-A match that declares the match extension (`[metadata] protocol` = `eai-standard/2.3+match/1.0` or
-`eai-standard/2.1+match/1.0`) serves it from environment/sim/eai_std/, a byte copy of
+A match on the match extension (apply_eai_std.py TASKS there) serves it from environment/sim/eai_std/, a byte copy of
 embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/ (its rcb1.py = embodied_first_exam/standard/rcb1.py), and
-its sim sidecar runs `python3 -m eai_std.serve` with EAI_STD_CLOCK set; a match that does not declare it carries no
-copy. Equivalently: `apply_eai_std.py --check` there changes nothing. `--selftest` runs the hook's own cases.
+its sim sidecar runs `python3 -m eai_std.serve` with EAI_STD_CLOCK set (realtime for a `-realtime` task, lockstep or
+turn for a `-standard` one); any other match carries no copy. Equivalently: `apply_eai_std.py --check` there changes nothing. `--selftest` runs the hook's own cases.
 Standard library only.
 """
 from __future__ import annotations
 
+import importlib.util
 import re
 import sys
-import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 SRC = ROOT / "embodied_first_exam/benchmarks/embodied-olympics-match/eai_std"
 PREFIX = "embodied-olympics-match-"
-EXT = {"eai-standard/2.3+match/1.0": ("realtime",), "eai-standard/2.1+match/1.0": ("lockstep", "turn")}
+_spec = importlib.util.spec_from_file_location("apply_eai_std", SRC.parent / "apply_eai_std.py")
+_apply = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_apply)
+ON_EXTENSION = frozenset(_apply.TASKS)        # the matches on the match extension
 
 
-def problems(task: Path, src: Path = SRC) -> list[str]:
-    try:
-        proto = tomllib.loads((task / "task.toml").read_text()).get("metadata", {}).get("protocol")
-    except (OSError, tomllib.TOMLDecodeError) as e:
-        return [f"task.toml unreadable ({e})"]
+def clocks(task: Path) -> tuple[str, ...]:
+    return ("realtime",) if task.name.endswith("-realtime") else ("lockstep", "turn")
+
+
+def problems(task: Path, src: Path = SRC, on: frozenset = ON_EXTENSION) -> list[str]:
     copy = task / "environment/sim/eai_std"
-    if proto not in EXT:
-        return ["environment/sim/eai_std/ in a task that does not declare the match extension"] if copy.exists() else []
+    if task.name not in on:
+        return ["environment/sim/eai_std/ in a task that is not on the match extension"] if copy.exists() else []
     out = []
     want = {f.name: f.read_bytes() for f in sorted(src.glob("*.py"))}
     have = {f.name: f.read_bytes() for f in sorted(copy.glob("*.py"))} if copy.is_dir() else {}
@@ -51,8 +53,8 @@ def problems(task: Path, src: Path = SRC) -> list[str]:
     if not re.search(r"^    command: python3 -m eai_std\.serve\s*$", blk, re.M):
         out.append("the sim sidecar does not run `python3 -m eai_std.serve`")
     clock = re.search(r'^\s+EAI_STD_CLOCK:\s*"?(\w+)"?\s*$', blk, re.M)
-    if not clock or clock.group(1) not in EXT[proto]:
-        out.append(f"EAI_STD_CLOCK {clock.group(1) if clock else None!r} for protocol {proto} (one of {list(EXT[proto])})")
+    if not clock or clock.group(1) not in clocks(task):
+        out.append(f"EAI_STD_CLOCK {clock.group(1) if clock else None!r} (one of {list(clocks(task))})")
     return out
 
 
@@ -63,20 +65,20 @@ def selftest() -> int:
         src.mkdir()
         (src / "a.py").write_text("x = 1\n")
         t = Path(d) / (PREFIX + "x-realtime")
+        on = frozenset({t.name})
         (t / "environment/sim/eai_std").mkdir(parents=True)
-        (t / "task.toml").write_text('[metadata]\nprotocol = "eai-standard/2.3+match/1.0"\n')
+        (t / "task.toml").write_text('[metadata]\nprotocol = "eai-standard/3.0"\n')
         (t / "environment/sim/eai_std/a.py").write_text("x = 1\n")
         (t / "environment/docker-compose.yaml").write_text(
             'services:\n  sim:\n    command: python3 -m eai_std.serve\n    environment:\n      EAI_STD_CLOCK: "realtime"\n')
-        cases = [(problems(t, src), 0)]
+        cases = [(problems(t, src, on), 0)]
         (t / "environment/sim/eai_std/a.py").write_text("x = 2\n")
-        cases.append((problems(t, src), 1))
+        cases.append((problems(t, src, on), 1))
         (t / "environment/sim/eai_std/a.py").write_text("x = 1\n")
         (t / "environment/docker-compose.yaml").write_text(
             'services:\n  sim:\n    command: python3 -m core.lockstep\n    environment:\n      EAI_STD_CLOCK: "lockstep"\n')
-        cases.append((problems(t, src), 2))
-        (t / "task.toml").write_text('[metadata]\nprotocol = "eai-standard-realtime/1.0"\n')
-        cases.append((problems(t, src), 1))
+        cases.append((problems(t, src, on), 2))
+        cases.append((problems(t, src, frozenset()), 1))
     bad = [(i, got, n) for i, (got, n) in enumerate(cases) if len(got) != n]
     for i, got, n in bad:
         print(f"FAIL selftest case {i}: {got} (want {n} problem(s))")

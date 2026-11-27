@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""eai-standard/2.2 (formerly rcb-limited/2.2) conformance test, run against a LIVE sim service (docs/protocol/standard_mode.md).
+"""eai-standard/3.0 conformance test of the shared layer, run against a LIVE sim service (docs/protocol/standard_mode.md).
 
     check-standard-protocol.py --url http://127.0.0.1:8000 [--task tasks/<benchmark>/<t>-standard] [--out DIR] [--watch 0.5]
     check-standard-protocol.py --launch tasks/<benchmark>/<t>-standard [--port 18000] [--out DIR]   # compose up the task's sidecar, test, down
 
 It drives the service through the task's own shipped client (environment/rcb_client.py) where the protocol allows, and
-through raw HTTP for the protocol-level cases (404s, 2.0/2.1 requests, malformed bodies). Checked:
-  /spec     2.2 keys and nothing unknown; cameras (intrinsics, mounting), robot_spec (joints with real limits, grippers,
+through raw HTTP for the protocol-level cases (404s, include_depth requests, malformed bodies). Checked:
+  /spec     the shared layer's keys and nothing unknown; cameras (intrinsics, mounting), robot_spec (joints with real limits, grippers,
             controller gains, TCP), world, kinematics, depth, proprio groups; budget == the task's [agent].timeout_sec;
   never     no forbidden field anywhere (segmentation, object poses, physical parameters); nothing in `static` or the limited
             texts says where things are (positions, heights, centres, world coordinates: the benchmark's ci_checks/benchmarks/<bench>/advisory-world-frame.sh), while names,
@@ -14,12 +14,12 @@ through raw HTTP for the protocol-level cases (404s, 2.0/2.1 requests, malformed
   frames    one frame axis: proprio rows = frame_step = frame_time_s = extrinsic_cv/<cam> = depth_frames/<cam> frames;
             time = step / control_hz; meta.cameras = the last frame's pose; static cameras never move;
   depth     none by default; `last` = float32 (H,W) pixel-aligned with RGB, >= 0, 0 = invalid, plausible range; `frames` =
-            one map per frame whose last map equals `last` to 1 mm; the 2.1 `include_depth` form still answers;
+            one map per frame whose last map equals `last` to 1 mm; the `include_depth` form answers;
   kinematics stateless (twice the same answer, no control step advances); FK of the measured joints = the measured TCP
             proprio; FK(parent link) . mount = each moving camera's pose; IK round trip; unreachable -> ok false; 400s;
   projection the TCP projected through intrinsics/extrinsics lands on the gripper: within a 6 cm disc around it the depth
             image has a surface at the TCP's depth (+-5 cm) (overlays in --out).
-A hold chunk of --watch seconds (default 0.5; eai-standard/3.0: /submit interpolate="hold", no rows) advances physics while
+A hold chunk of --watch seconds (default 0.5: /submit interpolate="hold", no rows) advances physics while
 holding the last command; /observe with seconds > 0 must be a 400 and last_s reads what the hold recorded.
 Exit 1 on any FAIL. Needs numpy + requests (+ pyyaml for --launch, Pillow for the overlays)."""
 from __future__ import annotations
@@ -29,12 +29,13 @@ from pathlib import Path
 import numpy as np
 import requests
 
-SPEC_KEYS_REQ = {"protocol", "protocol_compat", "simulator", "robot", "task_text", "control_hz", "max_chunk_s",
+SPEC_KEYS_REQ = {"protocol", "simulator", "robot", "task_text", "control_hz", "max_chunk_s",
                  "cameras", "default_cameras", "action_types", "proprio_layout", "proprio_groups", "static", "world", "budget",
                  "robot_spec", "kinematics", "depth"}
 SPEC_KEYS_OK = SPEC_KEYS_REQ | {"physics_substeps", "physics_hz", "on_service_error", "max_call_wall_s",   # + crash recovery
                                 "episode", "max_control_steps",                                           # standard_mode.md, PROTOCOL §2
-                                "max_frames_per_call"}   # standard_mode.md §12: where the adapter states one
+                                "max_frames_per_call",   # standard_mode.md §12: where the adapter states one
+                                "operations"}            # the operations capability (the operations layer)
 CAM_KEYS_REQ = {"rgb", "depth", "mounted", "resolution", "intrinsic_cv", "mount"}
 CAM_KEYS_OK = CAM_KEYS_REQ | {"calibration_in_obs", "depth_range_m"}
 ROBOT_KEYS_REQ = {"name", "base", "joints", "grippers", "controller", "tcp"}
@@ -183,13 +184,9 @@ def ext_to_T_world_cam(E) -> np.ndarray:
 
 # ---------------------------------------------------------------- the checks
 def check_spec(rep: Report, spec: dict, task: Path | None) -> None:
-    if spec.get("protocol") == "rcb-limited/2.2":          # another name of the same protocol, which the shared layer accepts
-        rep.add("WARN", "spec.protocol", "legacy name rcb-limited/2.2 (use eai-standard/2.2)")
-    else:
-        rep.ok(spec.get("protocol") == "eai-standard/2.2", "spec.protocol", str(spec.get("protocol")))
+    rep.ok(spec.get("protocol") == "eai-standard/3.0", "spec.protocol", str(spec.get("protocol")))
     for k in ("on_service_error", "max_call_wall_s"):     # crash recovery and the per-call bound (rcb_limited.serve adds both)
         rep.ok(k in spec, f"spec.{k}", str(spec.get(k))[:120])
-    rep.ok(set(spec.get("protocol_compat") or []) >= {"rcb-limited/2.0", "rcb-limited/2.1"}, "spec.protocol_compat", str(spec.get("protocol_compat")))
     rep.ok(SPEC_KEYS_REQ <= set(spec), "spec.required_keys", f"missing {sorted(SPEC_KEYS_REQ - set(spec))}")
     rep.ok(set(spec) <= SPEC_KEYS_OK, "spec.no_unknown_keys", f"unknown {sorted(set(spec) - SPEC_KEYS_OK)}")
     bad = forbidden(spec)
@@ -383,7 +380,7 @@ def check_live(rep: Report, url: str, task: Path | None, client_dir: Path, out: 
     (out / "spec.json").write_text(json.dumps(spec, indent=1))
     check_spec(rep, spec, task)
     if not SPEC_KEYS_REQ <= set(spec):
-        rep.add("FAIL", "live checks skipped", "/spec is not a 2.2 spec"); return
+        rep.add("FAIL", "live checks skipped", "/spec is not a shared-layer spec"); return
     hz = float(spec["control_hz"]); order = spec["world"]["quaternion_order"]; kin = spec["kinematics"]; lay = spec["proprio_layout"]
     cams = list(spec["default_cameras"])
     # /status and the 404 surface
@@ -399,19 +396,19 @@ def check_live(rep: Report, url: str, task: Path | None, client_dir: Path, out: 
     o = r.get_obs()
     check_parts_and_meta(rep, "observe.default", o, spec, cams)
     rep.ok(not o.last_depth and not o.depth, "observe.default.no_depth", f"depth parts: {[p for p in o.raw if 'depth' in p]}")
-    # 2.0-style JSON request (the old client's fields) and 2.1's include_depth
+    # a JSON request and the include_depth form
     rj = raw_post(url, "/observe", {"cameras": cams, "seconds": 0.0, "video_fps": 5, "include_depth": False, "video": "frames"})
     ok = rj.status_code == 200
     if ok:
         m, p = rcb1.decode(rj.content)
         ok = all(f"last/{c}" in p for c in cams) and "proprio" in p and not any("depth" in k for k in p)
-    rep.ok(ok, "compat.2_0_request", f"HTTP {rj.status_code}")
+    rep.ok(ok, "observe.json_request", f"HTTP {rj.status_code}")
     rj = raw_post(url, "/observe", {"cameras": cams, "seconds": 0.0, "include_depth": True, "video": "frames"})
     ok = rj.status_code == 200
     if ok:
         m, p = rcb1.decode(rj.content)
         ok = all(f"depth/{c}" in p and p[f"depth/{c}"]["dtype"] == "float16" and len(p[f"depth/{c}"]["shape"]) == 3 for c in cams)
-    rep.ok(ok, "compat.2_1_include_depth", f"HTTP {rj.status_code}: depth/<cam> float16 (N,H,W)")
+    rep.ok(ok, "observe.include_depth", f"HTTP {rj.status_code}: depth/<cam> float16 (N,H,W)")
     for body, what in (({"depth": "sideways"}, "bad depth value"), ({"seconds": -1}, "negative seconds"), ({"video": "gif"}, "bad video")):
         code = raw_post(url, "/observe", body).status_code
         rep.ok(code == 400, f"http.observe.400[{what}]", str(code))
@@ -627,7 +624,7 @@ def main() -> int:
     (out / "report.json").write_text(json.dumps({"url": a.url, "task": str(task) if task else None, "elapsed_s": round(time.time() - t0, 1),
                                                  "failed": rep.failed, "rows": rep.rows}, indent=1))
     n = {k: sum(r["level"] == k for r in rep.rows) for k in ("PASS", "FAIL", "WARN", "INFO")}
-    print(f"{'FAIL' if rep.failed else 'ok'} eai-standard/2.2 conformance: {n} (report {out / 'report.json'})")
+    print(f"{'FAIL' if rep.failed else 'ok'} eai-standard/3.0 conformance: {n} (report {out / 'report.json'})")
     return 1 if rep.failed else 0
 
 

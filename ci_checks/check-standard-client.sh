@@ -6,8 +6,8 @@
 #   - every FROM is CLIENT_IMAGE;
 #   - every `pip install` installs the pins: `-r <file>` with a byte-identical copy of client-requirements.txt in the
 #     build context, or the full pin list inline (name==version for every pin, nothing else).
-# A failure for the eai-standard/2.2 and 2.4 tasks, which carry client.env's image and the pins (BEHAVIOR-1K, RoboLab,
-# RoboWits, RoboPaint; RoboARC on 2.4). For every other task it only reports (a warning, never a failure) whether all standard tasks
+# A failure for the tasks on the shared and the operations layers (task_conventions.service_layer), which carry
+# client.env's image and the pins (BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint; RoboARC on the operations layer). For every other task it only reports (a warning, never a failure) whether all standard tasks
 # share the one client image of client.env (their own pip pins are their benchmark's business; PROTOCOL §7, open).
 # Usage: check-standard-client.sh [tasks dir] (tasks/, or a flat tree of task dirs)   (repo-level; run_all.sh calls it once)
 set -uo pipefail
@@ -71,7 +71,7 @@ def pip_problems(dockerfile: str, context: str) -> list:
     return out
 
 
-bad, v1, v1_off, n22 = [], 0, [], 0
+bad, v1, v1_off, n_layer = [], 0, [], 0
 def task_dirs(root):   # (name, its parent) of every task dir: the repository's tasks/<folder>/<task>/ (tc.iter_tasks), or a flat scratch tree
     flat = [(n, root) for n in sorted(os.listdir(root)) if os.path.isfile(os.path.join(root, n, "task.toml"))]
     return flat or [(p.name, str(p.parent)) for p in tc.iter_tasks(Path(root))]
@@ -81,7 +81,6 @@ for t, tasks in task_dirs(tasks):
     tt = os.path.join(tasks, t, "task.toml")
     if not os.path.isfile(tt):
         continue
-    meta = tomllib.load(open(tt, "rb")).get("metadata", {})
     if not t.endswith(tuple("-" + m for m in tc.SIDECAR_MODES)):      # the mode: the directory's suffix
         continue
     probs, froms = [], []
@@ -90,12 +89,12 @@ for t, tasks in task_dirs(tasks):
         if os.path.isfile(df):
             probs += [f"{sub}/Dockerfile: {p}" for p in pip_problems(df, os.path.join(tasks, t, sub))]
             froms += re.findall(r"^\s*FROM\s+(\S+)", re.sub(r"\\\n", " ", open(df).read()), re.M | re.I)
-    is22 = bool(re.fullmatch(r"eai-standard/2\.[24]", str(meta.get("protocol", ""))))   # 2.2 and 2.4 layers
-    n22 += is22
+    on_layer = tc.service_layer(Path(tasks, t)) in ("shared", "operations")
+    n_layer += on_layer
     v1 += 1
     if any(f != IMAGE for f in froms):
         v1_off.append((t, sorted(set(f for f in froms if f != IMAGE))))
-    if probs and is22:
+    if probs and on_layer:
         bad.append((t, probs))
 for t, probs in bad:
     for p in probs:
@@ -108,6 +107,6 @@ if v1_off:
 else:
     print(f"ok one client image: all {v1} standard task dirs FROM {IMAGE}")
 if not bad:
-    print(f"ok standard client: {n22} eai-standard/2.2 / 2.4 task dirs on the client image with the shared pins")
+    print(f"ok standard client: {n_layer} shared / operations layer task dirs on the client image with the shared pins")
 sys.exit(1 if bad else 0)
 PY

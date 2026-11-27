@@ -146,7 +146,7 @@ def check_task(task: Path) -> list[str]:
     toml = tc.read_text(task / "task.toml") or ""
     ins = tc.read_text(task / "instruction.md") or ""
     if m is None:
-        why = I.exception(tc.bench_dir(task), task.name, str(tc.metadata_of(task).get("protocol") or ""))
+        why = I.exception(tc.bench_dir(task), task.name, str(tc.metadata_of(task).get("protocol") or ""), task)
         if tc.mode_of(task) in ("standard", "realtime") and not why:
             errs.append(f"{task.name}: a standard or realtime task with no MCP tools and no exception (inject.EXCEPTIONS)")
         if d.exists() or I.DOCKER_LINE in df or I.TOML_MARK in toml or I.SECTION in ins:

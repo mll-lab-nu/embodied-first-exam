@@ -89,7 +89,7 @@ if [ ${#tasks[@]} -gt 0 ]; then
 fi
 # repo-level, cheap: always on everything, or on the given task dirs as before
 pargs=""; [ $explicit -eq 1 ] && pargs="$targs"
-add bash ci_checks/check-tooling-identity.sh                # shared sources (PROTOCOL §1); the eai-standard/2.2 layer = embodied_first_exam/standard/
+add bash ci_checks/check-tooling-identity.sh                # shared sources (PROTOCOL §1); the shared layer = embodied_first_exam/standard/
 add bash ci_checks/check-standard-client.sh                 # standard agent + verifier images: the pinned client base and pins
 add python3 ci_checks/check-recipe-copies.py               # base-image recipes inside other images' recipes: byte-identical to their source
 # PROTOCOL §6: the caps of every container ([environment], the compose files, x-gpu-memory-gb), the rules of
@@ -112,6 +112,7 @@ add python3 ci_checks/check-mcp-tools.py"$pargs"
 [ "${RCB_SKIP_UNIT_TESTS:-0}" = 1 ] || add python3 ci_checks/check-openapi-contract.py
 # the same document against the benchmarks' own 2.1 servers (their own HTTP layer, no shared layer), read from
 # their source: the keys /status, every answer meta and /spec must carry (static: no simulator)
+add python3 ci_checks/check-protocol-strings.py             # one protocol id, eai-standard/3.0, in code, tasks and docs
 add python3 ci_checks/check-own-servers.py
 # PROTOCOL §4: every task renders a video and the runner can collect it; a declared video time bound is not
 # shorter than the verdict replay's (privileged)
