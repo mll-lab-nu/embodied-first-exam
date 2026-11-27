@@ -39,8 +39,8 @@ res.meta["done"], res.meta["reason"]
 res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio
 ```
 
-`hold(s)` holds the robot still (delta channels zero, targets, grip and mode kept) while physics runs for `s` seconds;
-those control steps are part of the episode. One call returns at most 3000 images.
+`hold(s)` holds the robot still while physics runs for `s` seconds: the delta channels are zero, and the targets, grip
+and mode are kept. Those control steps are part of the episode. One call returns at most 3000 images.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,

@@ -78,11 +78,11 @@ call that runs longer than `spec["max_call_wall_s"]` stops at the next control s
   rounded); a chunk may cover at most 10 s; out-of-limit values are clipped and listed in `meta["clipped"]` (limits in
   the spec). Use `obs.meta["proprio"]["now"][:16]` as the starting row to move smoothly.
 - `ee_pose` (16): right `x y z qw qx qy qz gripper`, left same; world frame (robot base at (0, 0, 1.08), x away from the
-  robot, y to its left, +z up); quaternions wxyz. Each row is solved by inverse kinematics (no collision checking) and
-  driven to in joint space; an arm whose IK fails holds and is reported in `meta["plan"]`. The pose is the **gripper
-  tip** frame: +z is the approach direction, +x the direction the fingers close along (same convention as the `proprio`
-  end-effector poses, so an observed pose is a valid target). At most 50 rows per submit; `dt` is ignored; a gripper
-  width outside 0 .. 0.1 is clipped and listed in `meta["clipped"]`.
+  robot, y to its left, +z up); quaternions wxyz. The service solves each row by inverse kinematics (with no collision
+  checking) and drives the arm there in joint space. If the IK fails for an arm, that arm holds and the failure is
+  reported in `meta["plan"]`. The pose is the **gripper tip** frame: +z is the approach direction, +x the direction the
+  fingers close along (same convention as the `proprio` end-effector poses, so an observed pose is a valid target). At
+  most 50 rows per submit; `dt` is ignored; a gripper width outside 0 .. 0.1 is clipped and listed in `meta["clipped"]`.
 - A request with a field of the wrong type or out of range (`dt`, `seconds` outside 0 .. 30, `video_fps` not a whole
   number in 1 .. 30, `video`, `interpolate`, `cameras` not a list of names, `note` not a string, actions that are not
   finite (T, 16) numbers) is answered 400 before anything is executed: the client raises `ValueError`, nothing has moved
@@ -91,9 +91,9 @@ call that runs longer than `spec["max_call_wall_s"]` stops at the next control s
 ### Observations
 - Cameras: `ego` (static, above and behind the robot, looking at the table), `wrist_right` / `wrist_left` (on the
   wrists; they move, so use the pose that comes with each frame). Resolution 848×480. `spec["cameras"][cam]` gives the
-  intrinsics and the mounting: a static pose, or the parent link and the fixed offset (world_T_cam = FK(link) ·
-  `link_T_cam_cv`). A point (X, Y, Z) in a camera's OpenCV frame (x right, y down, z forward) appears at u = fx·X/Z +
-  cx, v = fy·Y/Z + cy; depth is that Z.
+  intrinsics and the mounting. The mounting is either a static pose, or the parent link and the fixed offset
+  (world_T_cam = FK(link) · `link_T_cam_cv`). A point (X, Y, Z) in a camera's OpenCV frame (x right, y down, z forward)
+  appears at u = fx·X/Z + cx, v = fy·Y/Z + cy; depth is that Z.
 - `spec["robot_spec"]` lists the joints with their position, velocity and effort limits, the grippers, the PD gains and
   the tool frames; `spec["world"]` the frame conventions.
 - The wrist joints are limited to ±60°, so a vertical approach only works for finger-closing directions within about

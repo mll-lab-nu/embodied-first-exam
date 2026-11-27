@@ -41,11 +41,11 @@ s.render_frame("table_cam_front")   # RGB uint8 (480, 640, 3); cameras: table_ca
 s.render_video(actions, "/app/output/check.mp4", cameras=["table_cam_front"])
 s.close()                          # release the renderer when you are done with a Session
 ```
-There are no ready-made motions: AutoBio's scripted experts are not in this image. Its other code is, under
-`/opt/AutoBio/autobio` (importable once a Session exists): the scene helpers `s.task` is built from, its inverse
-kinematics (`kinematics.py`) and its path timing (`topp.py`). One control step is one physics step, 2 ms: a row is
-executed for exactly one step, so a motion lasting 1 s is 500 rows (repeat a row to hold a target). Your wall-clock time
-is the budget (the reference replays at about 800 control steps/s here); the one technical cap is 600000 rows per
+There are no ready-made motions: AutoBio's scripted experts are not in this image. The rest of AutoBio's code is there,
+under `/opt/AutoBio/autobio` (importable once a Session exists): the scene helpers that `s.task` is built from, its
+inverse kinematics (`kinematics.py`) and its path timing (`topp.py`). One control step is one physics step, 2 ms: a row
+is executed for exactly one step, so a motion lasting 1 s is 500 rows (repeat a row to hold a target). Your wall-clock
+time is the budget (the reference replays at about 800 control steps/s here); the one technical cap is 600000 rows per
 trajectory (1200 s of simulated time).
 
 ### Actions

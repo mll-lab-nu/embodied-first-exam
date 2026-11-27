@@ -51,8 +51,8 @@ back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `cli
 
 ### Actions
 - Action `joint_position`: the robot's native controller command, one row per control step (`control_dt` = 0.05 s). 13
-  channels, in order: `arm_joint1 .. arm_joint7` -- absolute joint position targets (rad, within the joint limits in
-  `spec["action_types"]["joint_position"]` (`lower` / `upper`, from `r.spec()`)); `grip` (+1 closes, -1 opens);
+  channels, in order: `arm_joint1 .. arm_joint7` -- absolute joint position targets (rad), within the joint limits
+  `lower` / `upper` in `spec["action_types"]["joint_position"]` (from `r.spec()`); `grip` (+1 closes, -1 opens);
   `base_x, base_y, base_yaw` -- the mobile base's velocities in its own frame (normalised, [-1, 1]); `torso` -- the
   torso lift's velocity; `hybrid_mode` (> 0: base mode; <= 0: arm mode, the default -1). Values are clipped to the
   limits.

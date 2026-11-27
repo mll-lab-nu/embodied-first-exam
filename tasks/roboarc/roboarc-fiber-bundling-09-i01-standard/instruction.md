@@ -57,23 +57,24 @@ r.fk(q)["poses"]["arm_tcp"]                   # forward kinematics of the 7 arm 
 r.ik({"arm_tcp": pose}, seed=q)             # inverse kinematics -> {"ok", "q", "error"}; moves nothing
 ```
 
-- One control step takes about 0.16 s of wall clock here. A request returns when all of its steps have run, or earlier:
-  a call that has run for 900 s (`spec["max_call_wall_s"]`) is stopped by the service at the next control step and
-  returns what it executed (`res.stopped` is `"max_call_wall_s"`; `res.meta["executed_rows"]` (for a hold,
-  `res.meta["duration_s"]`) says how far it got; the robot holds its last target). Check `res.stopped` before you send
-  the next rows. A `submit` of the maximum 10 s chunk, or a 10 s `hold(s)`, takes about 64 s here and fits (with a 2x
-  margin).
+- One control step takes about 0.16 s of wall clock here. A request returns when all of its steps have run, or earlier.
+  If a call has run for 900 s (`spec["max_call_wall_s"]`), the service stops it at the next control step and returns
+  what it executed. Then `res.stopped` is `"max_call_wall_s"`, `res.meta["executed_rows"]` (for a hold,
+  `res.meta["duration_s"]`) says how far it got, and the robot holds its last target. Check `res.stopped` before you
+  send the next rows. A `submit` of the maximum 10 s chunk, or a 10 s `hold(s)`, takes about 64 s here and fits (with a
+  2x margin).
 - The client waits longer than that (1800 s for `submit`, 1020 s for `get_obs`), so a client timeout or a connection
   error means the connection or the service failed, not that the call is still on its way. Do NOT send the request again
-  blindly (it could run twice): `r.operation_status()` tells what became of the last one. Its `status` is `completed` or
-  `error` (with `rows_before` and `committed_rows`, the episode's control steps before and after it, and `stopped`),
-  `interrupted` (the service restarted during it and resumes the same episode in the state after the last completed
-  call: `spec["on_service_error"]`, `r.wait_ready()`), or `admitted` (not finished); an HTTP 404 error there means the
-  service never admitted the request, so nothing ran. The service answers one request at a time, so this query waits
-  while a call is running: repeat it if it times out. If your client hangs up, the service stops the call at the next
-  control step. A request that arrives after its deadline is refused (408), and one whose operation id was already
-  admitted is refused (409); neither moves the robot. A control step that hangs for more than 60 s past the call's limit
-  ends the episode as an infrastructure error, not as your failure.
+  blindly, because it could run twice. Use `r.operation_status()` to find out what became of the last one. Its `status`
+  is one of these: `completed` or `error`, with `rows_before` and `committed_rows` (the episode's control steps before
+  and after the call) and `stopped`; `interrupted`, if the service restarted during the call (it resumes the same
+  episode in the state after the last completed call: `spec["on_service_error"]`, `r.wait_ready()`); or `admitted`, if
+  the call has not finished. An HTTP 404 error from this query means the service never admitted the request, so nothing
+  ran. The service answers one request at a time, so this query waits while a call is running: repeat it if it times
+  out. If your client hangs up, the service stops the call at the next control step. A request that arrives after its
+  deadline is refused (408), and one whose operation id was already admitted is refused (409); neither moves the robot.
+  A control step that hangs for more than 60 s past the call's limit ends the episode as an infrastructure error, not as
+  your failure.
 - `meta["reason"]` says why the episode ended: `finished` (you called finish), `task_failed` (the task's failure rule),
   `step_limit` (the step cap), `timeout`, or an error.
 - One call returns at most 2000 images.
@@ -93,59 +94,61 @@ r.ik({"arm_tcp": pose}, seed=q)             # inverse kinematics -> {"ok", "q", 
 - `joint_position` (8): `joint1`, `joint2`, `joint3`, `joint4`, `joint5`, `joint6`, `joint7`, `arm_native_gripper`. arm
   `arm`: 7 joint targets (rad), then `arm_native_gripper` = native drive target (rad, limits 0 .. 0.8: 0 = open, 0.8 =
   closed, the Robotiq 2F-85's driver joint; open/closed targets in robot_spec). Absolute targets tracked by PD
-  controllers. Rows are `dt` apart (`1/40 ≤ dt ≤ 0.5` s, a multiple of the control period); a chunk may cover at most 10
-  s; out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the spec). The gripper switches at the
-  row. Use `obs.meta["proprio"]["now"][:8]` as the starting row to move smoothly. An arm joint target moves at most 0.04
-  rad per control step (1.6 rad/s, the same speed as `ee_pose` rows): a row that asks for more takes the control steps
-  it needs, and `meta["clipped"]` says so. The proprio group `gripper_opening` (`res.group("gripper_opening")`) is the
-  measured gap between each gripper's finger pads in metres (0 = the pads touch); the gripper entries of `joint_pos` are
-  in the unit of the gripper command above.
-- `ee_pose` (8): per arm (in the order ['arm']) `x y z qw qx qy qz gripper`; world frame (origin at the robot's root
-  link on its mounting, +z up; the frame of the proprio TCP pose and the camera extrinsics); quaternions wxyz. Each row
-  is solved by inverse kinematics (no collision checking) and driven to in joint space; an arm whose IK fails holds and
-  is reported in `meta["plan"]`. The pose is each gripper's **tool frame** (TCP; its approach and finger-closing axes
-  are in `spec["robot_spec"]["tcp"]`), the same convention as the proprio TCP poses, so an observed pose is a valid
-  target. At most 50 rows per submit. A row whose IK solution lies more than 0.5 rad from the current joints on any
-  joint is refused the same way as a failed IK (for a small pose change that is another IK branch, which would swing the
-  arm): split long moves into rows a few cm and degrees apart.
-- Both action types: no gripper target goes lower than 15 mm below the tabletop; a target that would bring any part of a
-  gripper lower is stopped there and listed in `meta["clipped"]`.
+  controllers. Rows are `dt` apart (`1/40 ≤ dt ≤ 0.5` s, a multiple of the control period). A chunk may cover at most 10
+  s. Out-of-limit values are clipped and listed in `meta["clipped"]`; the limits are in the spec. The gripper command is
+  not interpolated: it switches to its new value at the start of its row. Use `obs.meta["proprio"]["now"][:8]` as the
+  starting row to move smoothly. An arm joint target moves at most 0.04 rad per control step (1.6 rad/s, the same speed
+  as `ee_pose` rows): a row that asks for more takes the control steps it needs, and `meta["clipped"]` says so. The
+  proprio group `gripper_opening` (`res.group("gripper_opening")`) is the measured gap between each gripper's finger
+  pads in metres (0 = the pads touch); the gripper entries of `joint_pos` are in the unit of the gripper command above.
+- `ee_pose` (8): per arm, in the order ['arm'], `x y z qw qx qy qz gripper`. Poses are in the world frame (origin at the
+  robot's root link on its mounting, +z up), which is also the frame of the proprio TCP pose and the camera extrinsics.
+  Quaternions are wxyz. The service solves each row by inverse kinematics (with no collision checking) and drives the
+  arm there in joint space. If the IK fails for an arm, that arm holds and the failure is reported in `meta["plan"]`.
+  The pose is each gripper's **tool frame** (TCP). Its approach and finger-closing axes are in
+  `spec["robot_spec"]["tcp"]`. This is the same convention as the proprio TCP poses, so an observed pose is a valid
+  target. At most 50 rows per submit. If a row's IK solution lies more than 0.5 rad from the current joints on any
+  joint, the row is refused, the same way as a failed IK. For a small pose change, such a jump means another IK branch,
+  which would swing the arm. Split long moves into rows a few cm and degrees apart.
+- Both action types: no gripper target goes lower than 15 mm below the tabletop. A target that would bring any part of a
+  gripper lower is stopped at that height and listed in `meta["clipped"]`.
 
 ### Observations
 - Cameras: `agentview` (static); `front_oblique` (static); `wrist` (on the robot link `hand`; it moves, so use the pose
-  that comes with each frame). Resolution 848×480. `spec["cameras"][cam]` gives the intrinsics and the mounting: a
-  static pose, or the parent link and the fixed offset (world_T_cam = FK(link) · `link_T_cam_cv`). A point (X, Y, Z) in
-  a camera's OpenCV frame (x right, y down, z forward) appears at u = fx·X/Z + cx, v = fy·Y/Z + cy; depth is that Z.
-  `spec["robot_spec"]` lists the joints with their position, velocity and effort limits, the grippers, the PD gains and
-  the tool frames; `spec["world"]` the frame conventions (the world frame: origin at the robot's root link on its
-  mounting, +z up).
-- The safety readings (`meta["safety"]`, in every response) report, since the previous call, forcing (the arms' pressing
-  loads and forcing events), the deepest task contact, the longest time above its sustained limit and the review events
-  (rigid families), the lowest rope / cord volume ratio (soft families) and the table-guard stops, each next to its
-  limit.
+  that comes with each frame). Resolution 848×480. `spec["cameras"][cam]` gives the intrinsics and the mounting. The
+  mounting is either a static pose, or the parent link and the fixed offset (world_T_cam = FK(link) · `link_T_cam_cv`).
+  A point (X, Y, Z) in a camera's OpenCV frame (x right, y down, z forward) appears at u = fx·X/Z + cx, v = fy·Y/Z + cy;
+  depth is that Z. `spec["robot_spec"]` lists the joints with their position, velocity and effort limits, the grippers,
+  the PD gains and the tool frames. `spec["world"]` gives the frame conventions: the world frame has its origin at the
+  robot's root link on its mounting, with +z up.
+- The safety readings (`meta["safety"]`, in every response) cover the time since the previous call and show each value
+  next to its limit. They report forcing (the arms' pressing loads and forcing events); for rigid families, the deepest
+  task contact, the longest time above its sustained limit and the review events; for soft families, the lowest rope /
+  cord volume ratio; and the table-guard stops.
 
 ### Grasping
-- Assisted grasping: a gripper whose command moves towards closed takes hold of a graspable part (fiber_bundle) once
-  both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most
-  2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of
-  its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its
-  held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the
-  part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for
-  example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two
-  grippers never hold the same part; other objects are grasped physically (friction).
+- Assisted grasping: a gripper whose command moves towards closed takes hold of a graspable part (fiber_bundle) once all
+  of this has held for 0.02 s: both fingers touch the same part inside its grasp region, the tool frame is within 6 cm
+  of it, and the penetration is at most 2 mm. The part then follows the gripper rigidly. Any command that opens the
+  gripper by more than 0.2 % of its travel releases the part. A hold is lost if the fingers open more than 15 %, the
+  part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged
+  over 20 ms, or no finger has touched the part for 0.2 s. The gripper must then open before it can take hold again.
+  That force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is
+  pressed into another object. Two grippers never hold the same part. Objects that are not graspable parts are grasped
+  physically (by friction).
 - Grasp regions (one sphere per graspable part): fiber_bundle: radius 25 mm. Both finger contacts must lie inside the
   part's sphere; a part touched elsewhere is grasped physically.
 
 ### Safety
 - The fingertips reach about 6 mm beyond the tool frame (TCP) along its approach axis when open and about 19 mm when
   closed (the Robotiq fingertips move forward as they close). Arm drive torques are capped (the effort limits in
-  robot_spec), so an arm pushing against an obstacle stalls at that torque. An arm with any part more than 5 mm deep in
-  a fixed object (a fixture, the table) is stopped where it is: its joint targets become its measured joints for that
-  control step, so it stops pushing (reported in clipped[]).
-- Forcing (an arm drive near its torque cap while its gripper, or a part it holds, presses hard on something) is
-  recorded as evidence (`meta["safety"]`) and shown to the reviewer when a success is reviewed; it does not end the
-  episode or change the grade by itself. A simulator breakdown ends the episode: as an infrastructure error, or as your
-  failure if an arm was forcing just before it.
+  robot_spec), so an arm pushing against an obstacle stalls at that torque. If any part of an arm is more than 5 mm deep
+  in a fixed object (a fixture, the table), the arm is stopped where it is. For that control step its joint targets are
+  set to its measured joints, so it stops pushing. These stops are reported in clipped[].
+- Forcing means an arm drive is near its torque cap while its gripper, or a part it holds, presses hard on something.
+  Forcing is recorded as evidence (`meta["safety"]`) and shown to the reviewer when a success is reviewed. By itself, it
+  does not end the episode or change the grade. If the simulator breaks down, the episode ends. This counts as your
+  failure if an arm was forcing just before the breakdown, and as an infrastructure error otherwise.
 
 ## Others
 - Objects here (the names the safety readings use): `bundling_ring`, `cable_cradle_base`, `cable_cradle_left`,

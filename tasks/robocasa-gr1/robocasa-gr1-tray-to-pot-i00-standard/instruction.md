@@ -74,9 +74,9 @@ by a few hundredths of a radian while it holds. One call returns at most 3000 im
 
 ### Hands
 Each hand command is the position target, in radians, of that finger's joints (`thumb_flexion` drives two thumb joints,
-`thumb_rotation` one): 0 is the straight, open finger, larger values bend it toward the palm (the hand closes), and
-every finger joint stops at the end of its range (1.22 to 1.74 rad), so values below 0 or above about 1.7 change nothing
-more. The grip site that the pose targets place is the origin of the hand's mounting frame (`gripper0_right_grip_site`,
+`thumb_rotation` one). 0 is the straight, open finger; larger values bend it toward the palm, closing the hand. Every
+finger joint stops at the end of its range (1.22 to 1.74 rad), so values below 0 or above about 1.7 change nothing more.
+The grip site that the pose targets place is the origin of the hand's mounting frame (`gripper0_right_grip_site`,
 `gripper0_left_grip_site`), at the wrist end of the hand, not a point between the fingertips. The four small pink
 spheres beside each hand are part of the robot model (visual markers `robot0_<side>_pinch_spheres_0..3`, about 13.5 cm
 from its grip site, with no collision): they are not objects.
