@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import os
 import sys
+import traceback
 
 import numpy as np
 
@@ -93,7 +94,7 @@ class HumanClaw:
                 "dtype": "values are rounded to 4 decimals; action_id must be a whole number 0-7",
                 "semantics": "dt must be control_dt (a row cannot span several steps); interpolate is ignored; a "
                              "row that is invalid refuses the whole request (400) and nothing runs; clamped values "
-                             "are reported in `clipped`. A hold chunk (/submit with no rows, interpolate "hold", "
+                             "are reported in `clipped`. A hold chunk (/submit with no rows, interpolate \"hold\", "
                              "seconds n) lets n seconds pass with the body standing still: no action is used",
                 "limit": f"{self.s.max_steps} actions per episode, the stop included; the {self.s.max_steps}th "
                          "action ends the episode whatever it is"}},
@@ -183,12 +184,22 @@ _service_end = rcb_service.Service._end
 
 
 def _agent_finish(self) -> dict:
-    """POST /finish: the stop action, run as the episode's last control step (it ends the episode, judged there)."""
+    """POST /finish: the stop action, run as the episode's last control step (it ends the episode, judged there). The
+    stop is a real step: a simulator error in it ends the episode as "error" and answers 500, as on every other call
+    that ran (the layer's /finish route answers only Refused, so the error is handed to it as one with code 500)."""
     if self.done or self.stopping:
         raise self._conflict()
     self._closing = "finished"
     try:
         self._step("skill", STOP_ROW)
+    except rcb_service.Refused:
+        raise
+    except Exception as exc:  # noqa: BLE001 -- it ran and failed: the episode ends, never a success
+        traceback.print_exc()
+        self.log("error", path="/finish", error=repr(exc)[:500])
+        self._closing = None
+        self._end("error")
+        raise rcb_service.Refused(500, {"error": "simulator error", "detail": repr(exc)[:200]}) from None
     finally:
         self._closing = None
     if not self.done:                    # (HumanCLAW always ends at a stop; never left running)
