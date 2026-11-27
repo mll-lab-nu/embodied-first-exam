@@ -885,13 +885,13 @@ simulator code. The `sim` sidecar (each standard task's `environment/sim/server.
 `embodied_first_exam/standard/`) serves calibrated RGB and depth, the robot's own joints, efforts and link poses and
 robot-link forward kinematics; object poses, contact forces, checker stages and scene bodies are not served. The
 reset budget is 20 (`budget.reset`, `RCB_RESET_BUDGET` in the compose file; see "Standard-mode resets" below); every
-action, watch step and reset is journaled, and a crashed service resumes the same episode from its journal, resetting
+action, hold chunk and reset is journaled, and a crashed service resumes the same episode from its journal, resetting
 where the committed resets did (resume class `exact`). The control rate is the family's (`spec()["control_hz"]`); the agent's clock
 (`meta["time_left_s"]`) counts from its first request. The collect hook (`finalize.sh` / `finalize.py`) ends the
-episode and seals `final.json` from the service's record of it (`episode.json`: the live success and end-state hash;
+episode and seals `final.json` from the service's record of it (`episode.json`: the verdict on the end state and its hash;
 no replay), then renders an evidence video (`/data/replay.mp4`) from `/data/trajectory.npz` in one
 fresh process in the collect hook's remaining time (its `timeout_sec` minus 60 s, at most `video_timeout_s`); the
-separate verifier reads only `final.json` and needs the live success. Missing trusted evidence is an infrastructure
+separate verifier reads only `final.json` and needs its verdict. Missing trusted evidence is an infrastructure
 error; the video never decides a verdict.
 
 **Oracles.** Every family uses the same oracle runners: privileged `solve.sh`
@@ -946,7 +946,7 @@ the agent has no simulator of its own in standard mode, so with one episode the 
 capability is the one of docs/protocol/standard_mode.md ("Optional reset capability"), implemented in the DexHand adapter
 `environment/sim/server.py` the way the MyoSuite 2.2 service implements it (the shared 2.2 layer has
 no reset): `POST /reset` (JSON or RCB1 `{cameras, video_fps, depth}`, no physics) calls the family's
-`Session.reset()` and returns the new episode's first frames; 409 after a success, once the budget is spent and after
+`Session.reset()` and returns the new episode's first frames; 409 after `/finish`, once the budget is spent and after
 the agent's time; `/status` and every meta add `episode`, `resets_left` and `control_steps_total`. Only the last
 episode is graded: `trajectory.npz` holds its rows, the service's verdict on that episode is the grade, and
 `reward.json` adds `resets` and `reset_budget`. `Session.reset()` restores the frozen start exactly in all ten families

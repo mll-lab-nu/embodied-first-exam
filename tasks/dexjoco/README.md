@@ -131,7 +131,7 @@ unchanged), resume class `exact`:
   `max_frames_per_call`), checked before anything is executed (400). Every frame is held until the response is sent;
   measured on the layer's Recorder with 640 x 480 frames: 2.7 GB per 1000 RGB frames, 5.1 GB per 1000 images of one
   camera with per-frame depth, on top of the simulator's 1.9 GB. The default camera at
-  the default 10 fps needs 302 images for the longest watch (30 s) and 102 for the longest chunk (10 s);
+  the default 10 fps needs 102 images for the longest chunk or hold chunk (10 s, `max_chunk_s`);
   proprioception `joint_pos`, `joint_vel`, `joint_effort` (7 + 16 per arm), `tcp_pose`, plus `tcp_target` and
   `hand_target` (the targets being tracked); no gripper-opening column (a dexterous hand).
 - **kinematics:** stateless FK of the arm links, the hand mount and the tcp; IK of each tcp over its arm's 7 joints

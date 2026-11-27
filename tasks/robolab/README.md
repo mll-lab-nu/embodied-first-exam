@@ -142,9 +142,9 @@ iterations cost more than in the other simulators.
   and stops at the first success; success = the predicate held in a replay whose rebuilt frozen scene matches the
   recorded one (`replays_succeeded`, `success_replay`; the end states across hosts above are why more than one).
 - Standard: graded by the **live episode**, with no grading replay (PROTOCOL H.4). The service judges the episode it
-  runs: RoboLab's success term after every control step (the first step where it holds ends the episode), and when the
-  agent's time is up (the collect hook's signal, after the agent's container is stopped) it holds the last command for
-  `SETTLE_STEPS` = 30 more control steps on the live simulator while the term is checked (`settle_steps`, the same hold
+  runs: RoboLab's success term after every control step (only recorded: a success never ends the episode, "Agent-ended
+  episodes" below), and at the agent's `POST /finish` or when its time is up (the collect hook's signal, after the
+  agent's container is stopped) it holds the last command for `SETTLE_STEPS` = 30 more control steps on the live simulator while the term is checked (`settle_steps`, the same hold
   the privileged replay applies after a trajectory's last row; a simulator error during the hold is recorded,
   `settle_error`, and the term is judged as it stands). It then writes `trajectory.npz` (the deliverable) and
   `episode.json` and exits; the hook (`environment/sim/finalize.sh`) writes `final.json` from it (`graded_by` "live",

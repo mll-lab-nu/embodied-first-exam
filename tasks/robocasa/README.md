@@ -67,7 +67,7 @@ Not included (82):
   as robosuite's own cameras do; the collision geoms (geom group 0) are hidden.
 
 ## Standard-mode service (`embodied_first_exam/benchmarks/robocasa/sim/server_casa.py`)
-Derived from `images/mujoco/limited/server_mj.py` (via MetaWorld+'s `server_mw.py`) and identical in protocol and
+Derived from `embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py` (via MetaWorld+'s `server_mw.py`) and identical in protocol and
 lifecycle: four endpoints, RCB1, no reset, journal + per-call checkpoints with at most two resumes, startup watchdog,
 SIGUSR1 collect hook, `/data` evidence, verdict before video. Differences (items 6, 7 and 11: the grading):
 1. The action type, channels and limits come from the instance (`casa_tool.action_spec`), not a fixed `joint_position`.

@@ -51,8 +51,8 @@ Every image is public: Harbor pulls it.
   is rendered from (not MuJoCo's left-eye camera, 3.4 cm to the side). No object poses, no reward, no success signal. Meta-World's
   per-camera views `corner*` are left out: they render upside down.
 
-## Standard-mode service (`images/metaworld/standard/server_mw.py`)
-Derived from `images/mujoco/limited/server_mj.py` and identical in protocol and lifecycle (four endpoints, RCB1, no
+## Standard-mode service (`embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py`)
+Derived from `embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py` and identical in protocol and lifecycle (four endpoints, RCB1, no
 reset, journal + per-call checkpoints with at most two resumes, startup watchdog, SIGUSR1 collect hook, `/data`
 evidence, verdict before video). Differences:
 1. The action type comes from the tool module (`mw_tool.ACTION_TYPE`: `ee_delta`) instead of a fixed `joint_position`.

@@ -1,9 +1,10 @@
 # Running evaluations
 
 Part of the task protocol ([README](README.md); its Appendix H binds every run): how runs are configured, and what
-makes a run official. The sections "Official runs" to "Results" below are the runner's rules:
-`scripts/run_agent_batch.sh` applies them by default, and a runner's scheduler (its run policy, checked at every launch
-and retry) refuses a launch that breaks one.
+makes a run official. The sections "Official runs" to "Results" below are the runner's rules, and
+a runner's scheduler (its run policy, checked at every launch and retry) refuses a launch that breaks one.
+`scripts/run_agent_batch.sh` applies most of them by default, but a batch of it is an official run only with
+`GATEWAY=1` (the default is 0) and a seed drawn for each trial (by default it runs the task's default seed: "Seeds").
 
 ## Official runs
 A result is official only when its run had all of these:
@@ -28,7 +29,8 @@ A result is official only when its run had all of these:
 The seed is the runner's, never the agent's. A task's default seed is `[metadata] instance_seed`, the task directory as
 committed; the seeds a runner may draw from are `[metadata.seeds] allowed` (a list, a range `{ from = A, to = B }` or
 `"any"`; without the table, the default seed alone), and `oracle` names the ones the reference solution is for (PROTOCOL
-§2). Official batches draw one uniformly per trial; a run on the default seed only records `default-only`. The verifier
+§2). An official batch draws one uniformly per trial; a run on the default seed only is not official and records
+`default-only`. The verifier
 grades the drawn seed's instance from its own copy (`build = "runtime"`: from its own seed file). To run another allowed
 seed, or one drawn from the allowed list, let the runner write a copy and run that:
 
@@ -40,9 +42,10 @@ harbor run -p /tmp/run1/<task> -a <agent> ...
 
 The agent never chooses or sees the list: another seed's instance lives under the privileged task's `tests/seeds/`
 (with the seed's other files and text, `seed.toml`), and the copy carries only the drawn one.
-`scripts/run_agent_batch.sh` runs each job on the task's default seed, from a stamped copy of the task as it is (with
-the gateway, the copy's egress is the gateway; with a CPU cap above the host's count, `HOST_CPUS`, the copy has that cap
-clamped, Resources below).
+`scripts/run_agent_batch.sh` runs each job on the task's default seed (`default-only`, so not an official batch on its
+own), from a stamped copy of the task as it is (with the gateway, the copy's egress is the gateway; with a CPU cap above
+the host's count, `HOST_CPUS`, the copy has that cap clamped, Resources below). For an official batch, draw each
+trial's seed with `task_seed.py materialize --seed draw` and run the copies.
 
 ## Network
 The default is the allowlist (PROTOCOL Appendix H.6); whether a task has open network is its author's decision,
@@ -114,13 +117,17 @@ The rule is PROTOCOL Appendix H.5; how the runner applies it:
 ## Results
 Results are not committed (published on the [results site](https://www.embodied-first-exam.ai) and the Hugging Face dataset, keyed by run id
 `<harness>-<model>-<effort>`, the model token with underscores: `codex-gpt6_luna-xhigh`; provider, tier and settings go
-in the metadata). `scripts/write_task_results.py` writes, per task and run id, `README.md`, `config.json` (the trial's
-effective configuration: `protocol_version`, `mode`, `cutoff_s`, `reset_budget`, `slowdown`, `seed`, `network`,
-`validated`, `set`, `oracle`, `service_protocol`, `digest`, the result, the first-attempt result `first_success`
-(standard modes: reward.json's `first_success`; a verifier that does not write it, the graded success when no reset
-was made, else 0) and whether it counts; a trial of another version of the task, whose digest is neither the task's
-DIGEST nor that of the runner's copy of it and whose seed is not known from a runner's copy, keeps only what its name says, and its other fields, `protocol_version`
-included, are `"legacy"`) and `attempts.json`. Rankings (the batch summary,
+in the metadata). `scripts/write_task_results.py` writes three files per task and run id:
+- `README.md`;
+- `config.json`, the trial's effective configuration: `protocol_version`, `mode`, `cutoff_s`, `reset_budget`,
+  `slowdown`, `seed`, `network`, `validated`, `set`, `oracle`, `service_protocol`, `digest`, the result, whether it
+  counts, and the first-attempt result `first_success` (standard modes: reward.json's `first_success`; where the
+  verifier does not write it, the graded success if no reset was made, else 0). A trial of another version of the
+  task (its digest is neither the task's DIGEST nor that of the runner's copy, and no runner's copy tells its seed)
+  keeps only what its name says; its other fields, `protocol_version` included, are `"legacy"`;
+- `attempts.json`.
+
+Rankings (the batch summary,
 the results site) compare trials only within one comparable configuration (`task_conventions.config_key`: protocol
 version, mode, cutoff, reset budget, S, network), report success together with cost (tokens, money, turns, wall clock,
 simulation steps), and align reasoning effort, `max_turns` and the token budget before comparing agents. Validated and
@@ -287,8 +294,8 @@ node-local scratch (podman's storage does not work on most network file systems)
    python3 scripts/stamp_mtimes.py "$c"
    harbor run -e podman -p "$c" -a oracle -y -o $PWD/jobs
    ```
-6. Base images built from their recipe (AM-Bench, BEHAVIOR-1K, iSpatialGym, ManiGuard, RoboDojo, RoboLab, VLABench,
-   YAMLab): their tasks' Dockerfiles start with the recipe of `efe-private:<name>-<version>` (the stage between
+6. Base images built from their recipe (AM-Bench, AutoBio, BEHAVIOR-1K, HumanCLAW, iSpatialGym, LabUtopia, ManiGuard,
+   RoboDojo, RoboLab, VLABench, YAMLab): their tasks' Dockerfiles start with the recipe of `efe-private:<name>-<version>` (the stage between
    `# >>> images/<name>/Dockerfile` and `# <<< images/<name>/Dockerfile`) and name that image as `build.cache_from`.
    Docker's BuildKit takes the image's layers from that cache; podman ignores `cache_from` and would build the whole
    recipe on every host (20-90 min, up to 150 GB). `harbor run -e podman` with this repository's set flags therefore
@@ -392,7 +399,8 @@ pages) and, for Embodied Olympics - Match's exported matches, a match's wall tim
 Every base image is a tag of one of two packages (PROTOCOL §1): `ghcr.io/mll-lab-nu/efe:<name>-<images/<name>/VERSION>` (public), or `ghcr.io/mll-lab-nu/efe-private:<name>-<VERSION>` for an image with `images/<name>/BUILD_ONLY` (org members only): `scripts/build_images.sh`
 builds them all, `scripts/push_images.sh` pushes all but the `BUILD_ONLY` ones (needs `docker login ghcr.io` with a token
 that has `write:packages`). A new image is a new tag of `efe`, which is public, so nothing needs an admin's visibility
-change (a new package would start private, and the API cannot change that). An image with `images/<name>/BUILD_ONLY` (Isaac Sim inside: RoboLab, BEHAVIOR-1K) is never
+change (a new package would start private, and the API cannot change that). An image with `images/<name>/BUILD_ONLY` is one that may not be redistributed (Isaac Sim's
+licence, assets without a licence for a public copy, or data behind a token; the marker file says which) and is never
 public: every host builds it (the marker file says how, and what licences and data it needs), and maintainers may keep
 a private package for org members.
 A task on such an image starts its Dockerfile with the image's recipe and names the private image as `build.cache_from`

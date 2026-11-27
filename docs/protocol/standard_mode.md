@@ -2,8 +2,8 @@
 
 Part of the task protocol ([README](README.md)): the wire format of the standard modes.
 
-**Version: `eai-standard/3.0`** is the current version: the rules of "Version 3.0" below, on every layer (2.1–2.4 and
-the match extension), which keeps its own version string. This document is the interoperability
+**Version: `eai-standard/3.0`** is the current version. Its rules ("Version 3.0" below) hold on every layer: 2.1–2.4
+and the match extension. Each layer keeps its own version string. This document is the interoperability
 specification of every 2.x version a task declares today: what a service answers and a client may send. Minor
 versions only add, so each part holds for the versions after it unless a later part says otherwise, and the shipped
 clients accept every 2.x service. What a task of the standard modes is, and which rules bind it, is in
@@ -163,8 +163,9 @@ in `budget.clock` or `budget.wall_clock_note`).
   types and their dtype are the benchmark's (its doc).
 - Video is captured every `physics_hz / video_fps` physics steps from the requested cameras, plus the first and last
   frame.
-- After the chunk the task predicate is evaluated; the first success ends the episode (`done`, `reason = "success"`).
-  The chunk is appended to the recorded trajectory and to `episode.jsonl`.
+- The chunk is appended to the recorded trajectory and to `episode.jsonl`. From 3.0 a success ends nothing and is not
+  shown; the agent ends the episode ("Agent-ended episodes"). Before 3.0: the task predicate was evaluated after the
+  chunk, and the first success ended the episode (`done`, `reason = "success"`).
 
 ### `/observe` semantics
 From 3.0: `last_s` ("Version 3.0"); `seconds > 0` is a 400 and a hold chunk takes its place. Before 3.0:
@@ -250,10 +251,18 @@ Depth (`include_depth`) is exact by default. `RCB_DEPTH_NOISE=realsense` (task e
 physics.
 
 ### Per-benchmark 2.1 services
-The MuJoCo service (`images/mujoco/limited/server_mj.py`: DexToolBench, MuJoCo Playground manipulation),
-the shared KinDER / HumanoidBench service (`rcb_service.py`), the MetaWorld+ and RoboCasa services serve the same
-endpoints and frames with their own action layouts, control rates and cameras: tasks/dextoolbench/README.md,
-mujoco-playground.md, kinder.md, humanoidbench.md, metaworldplus.md, robocasa.md.
+These services serve the same endpoints and frames with their own action layouts, control rates and cameras; each is
+described in its benchmark's `tasks/<benchmark>/README.md`:
+- the MuJoCo service, `embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py` (DexToolBench; the same file serves
+  the MuJoCo Playground ALOHA and Panda tasks as `embodied_first_exam/benchmarks/mujoco-playground/sim/server_mj.py`);
+- the MetaWorld+ service, `embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py`;
+- the RoboCasa service, `embodied_first_exam/benchmarks/robocasa/sim/server_casa.py` (RoboCasa and RoboCasa-GR1);
+- the RoboTwin service, `embodied_first_exam/benchmarks/robotwin-2/sim/server.py`;
+- the shared sidecar `rcb_service.py`, one copy per benchmark (`embodied_first_exam/benchmarks/<benchmark>/sim/` or
+  `standard/`, HumanCLAW's at the folder's top), with that benchmark's adapter: KinDER, HumanoidBench, Panda Dynamic
+  Scenes, LIBERO-Max, VLABench, BiGym 2.0, Embodied Olympics - Fun, Embodied Safety Exam, HumanCLAW, the realtime tasks
+  of RoboCasa365, MyoSuite and MuJoCo Playground, and ABC-Sim's realtime tasks (in its image,
+  `images/abc-sim/tools/realtime/`); the 2.3 realtime layer (`rcb_realtime.py`) runs over it.
 
 ### Optional reset capability
 Each task declares its own budget N (PROTOCOL §2): the `RCB_RESET_BUDGET` default of its `sim` service, served as
@@ -261,8 +270,9 @@ Each task declares its own budget N (PROTOCOL §2): the `RCB_RESET_BUDGET` defau
 2.x service may implement the capability; which ones do is in their benchmarks' docs. With N > 0, `/spec.budget.reset =
 N`, `/spec.reset` describes it, and `POST /reset` (RCB1 or JSON `{cameras, video}`, no physics) abandons the running
 episode and starts a new one from the same frozen state, `N` times in all; `/status` and `meta` add `episode`,
-`resets_left` and `control_steps_total`. After a success or once the agent's time is up, `/reset` returns 409, as it does
-when the budget is spent. Only the last episode is graded. With N = 0 (or no declaration) `/reset` is 404. The reset
+`resets_left` and `control_steps_total`. After `/finish` or once the agent's time is up, `/reset` returns 409, as it does
+when the budget is spent; a success changes nothing (from 3.0; before 3.0 a success ended the trial and `/reset` was a
+409 after it). Only the last episode is graded. With N = 0 (or no declaration) `/reset` is 404. The reset
 budget is part of a result's configuration: results with different budgets are not ranked together (running.md).
 
 ### Agent-ended episodes
@@ -325,14 +335,16 @@ client that never calls `/finish` is served as before, its session's end ending 
 **One implementation.** The source is [`embodied_first_exam/standard/`](../../embodied_first_exam/standard/): the service layer
 `rcb_limited.py` (HTTP, RCB1 responses, the protocol helpers, the `/spec` self-check, crash recovery), the client
 `rcb_client.py` + `rcb1.py`, the sidecar entrypoint `run.sh`, and the client image: `client.env` (the one client base,
-pinned by digest) and `client-requirements.txt` (exact pins). Every 2.2 task carries the code unchanged (`environment/rcb_client.py`, `environment/rcb1.py`, `environment/sim/{rcb_limited.py,rcb1.py,run.sh}`). Each
-benchmark writes only its adapter, `environment/sim/server.py`: the robot, the cameras, the clock (`toy_server.py` is
-the smallest complete one).
+pinned by digest) and `client-requirements.txt` (exact pins). Tasks carry no copies of it: every 2.2 task's Dockerfiles take the files unchanged from the files-only image
+`standard-files` (`COPY --from=<image@digest>`, `images/standard-files/FILES.json`): the client's `rcb_client.py` and
+`rcb1.py` to `/opt/tools/`, the sidecar's `rcb_limited.py`, `rcb1.py` and `run.sh` to `/srv/`. Each benchmark writes
+only its adapter `server.py` (the robot, the cameras, the clock), in `embodied_first_exam/benchmarks/<benchmark>/sim/`
+or in the task's `environment/sim/` (`toy_server.py` is the smallest complete one).
 
 **Design principles.**
 1. *A robot, not a simulator.* No state query, no success query, no step limit; resets only within the task's declared
-   budget; the wall clock is the budget; actions and simulated time are reported as cost; the first success ends the
-   episode.
+   budget; the wall clock is the budget; actions and simulated time are reported as cost; the agent ends the episode
+   (`/finish`) and the state it ends in is judged (before 3.0 the first success ended it).
 2. *One information line.* The agent may know the robot and its sensors (spec sheet, kinematics, camera calibration,
    proprioception), never the world's ground truth (§10).
 3. *Everything new is optional.* Depth, for example, costs a render and is off by default.
@@ -345,8 +357,9 @@ the smallest complete one).
 |---|---|---|---|
 | GET | `/spec` | — | JSON: 2.1's keys + cameras' intrinsics and mounting, proprio groups, `robot_spec`, `world`, `kinematics`, `depth`, `on_service_error`, `max_call_wall_s` |
 | GET | `/status` | — | JSON: `{step, calls, control_steps, done, reason, elapsed_s, resumes}` |
-| POST | `/observe` | RCB1 or JSON `{cameras, seconds, video_fps, video, depth}` | RCB1 |
-| POST | `/submit` | RCB1: header `{type, dt, interpolate, cameras, video_fps, video, depth, note}` + part `actions` float32 (T, dim) | RCB1 |
+| POST | `/observe` | RCB1 or JSON `{cameras, last_s, video_fps, video, depth}` (3.0; before: `seconds`) | RCB1 |
+| POST | `/submit` | RCB1: header `{type, dt, interpolate, cameras, video_fps, video, depth, note}` + part `actions` float32 (T, dim); a hold chunk (3.0): header `{type, interpolate: "hold", seconds, ...}`, no part | RCB1 |
+| POST | `/finish` (3.0) | optional, ignored | JSON: ends the episode ("Agent-ended episodes", Part 1) |
 | POST | `/kinematics` (2.2) | JSON `{op: "fk" \| "ik", ...}` (§8) | JSON |
 | POST | `/reset` | as in Part 1 | only where the task declares a reset budget N > 0 (Part 1, "Optional reset capability") |
 
@@ -435,8 +448,8 @@ that frame; `cam2world_gl` (4×4) is the camera pose with OpenGL axes = inverse(
 As 2.1 (`joint_position` rows `dt` apart, a whole multiple of the control period, `linear` or `hold`, clipped and
 reported; a chunk covers at most `max_chunk_s`). `ee_pose` rows are end-effector targets solved by the benchmark's IK or
 planner (its doc); a failed row is reported in `plan`. Not yet: `joint_delta`, `joint_velocity`, `ee_delta`,
-`joint_torque` (`spec.action_types.not_yet`). After a chunk the task predicate is evaluated; the first success ends the
-episode.
+`joint_torque` (`spec.action_types.not_yet`). From 3.0 a success ends nothing ("Agent-ended episodes", Part 1); before
+3.0 the task predicate was evaluated after a chunk and the first success ended the episode.
 
 ### 7. Depth
 z-depth = the distance from the camera plane along the optical axis, in metres, for the same pixels as the RGB frame.

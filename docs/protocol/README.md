@@ -63,7 +63,7 @@ configuration (`config_key`; running.md "Results").
 | Grading kind | the instruction, the frozen instance, `reward.json` (`replays`, `graded_by_live`) | privileged: one fresh replay, or up to `[metadata] replays` where the simulator does not replay bit-wise, any success counting (§4); standard modes: the live episode (H.4) |
 | Seeds | `[metadata] instance_seed` (the default seed); `[metadata.seeds]` `allowed` (list, `{from, to}`, `"any"`), `oracle`, `build`, only where they differ from the defaults | the default seed only (`allowed` = `oracle` = [the default seed], `oracle` = [] without a reference solution; `build = "frozen"`) |
 | Network | `[agent] network_mode` | `"allowlist"`; `"public"` (open) by the author's choice (H.6) |
-| Scene dynamics | `[metadata] dynamics` (`dynamic`: something other than the robot does work by a force other than the robot's and gravity; TAXONOMY.md "Dynamics") | none: declared by every task |
+| Scene dynamics | `[metadata] dynamics` (`dynamic`: something in the scene moves on its own, pushed by a force other than the robot and gravity, such as a thrown ball, a conveyor or an opponent; the exact rule: TAXONOMY.md "Dynamics") | none: declared by every task |
 | Validated | `[metadata] validated`, else `oracle = "full"` | a recorded marker, not part of the configuration: validated and unvalidated tasks are ranked together |
 | Stricter honour rules | `[metadata.honour] stricter` | none (never looser rules) |
 
@@ -93,53 +93,58 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
 - **Agent-ended episodes** (standard and realtime mode; **required from v3.0** for every task served by an
   `eai-standard/2.x` service of its mode: MODE_REGISTRY `agent_end`, `ci_checks/check-agent-end.py`, H.3; a task a
   benchmark exports with a runtime of its own keeps its rules; v2.2–v2.4: optional; standard_mode.md "Agent-ended
-  episodes"). The service never tells the agent whether it has succeeded and a success does not end the episode; the
-  agent ends it with `POST /finish` (an MCP front end: its `finish` tool). A task may add a step limit, a number of its
-  own control steps stated in its instruction; without one the service's own step cap (`/spec.max_control_steps`, the
-  task's episode length) ends the episode the same way. The episode ends at whichever comes first: `/finish`, the step
-  limit or cap, the agent's time limit (its cutoff, §2), its token budget (the run's, running.md "Official runs"), the
-  agent's own exit, or the task's failure rule or a simulator error as without the feature. The verdict is the task's
-  success rule on the state at that end, with the task's settle or hold window run from there; a success reached and
-  undone is 0; a goal the task judges as events (moments in a sequence, a scored goal, a check at a trigger) is judged
-  on them as they happened; a failure rule that ends the episode gives 0 on a goal judged on its end state, after a
-  success too, while on a goal judged as events an event that happened stands. In realtime mode `/finish` stops the
-  clock with the episode; a settle or hold window runs after it, off the clock. Resets work as before a success (within the
-  budget; none after `/finish`), and only the last episode is graded. The instruction says it once per section, in plain words
-  (`scripts/task_conventions.py`): the Goal, after the Success sentence, has one short paragraph, "When you are done,
-  send `/finish` to end the episode and get it graded." (`V2_AGENT_END_GOAL`) and, for a goal judged on its end state,
-  "Only the state at that point counts." (`V2_AGENT_END_STATE`), for one that counts some steps as they happen and
-  the rest at the end, "Everything else is judged on the state at that point." (`V2_AGENT_END_REST`); `## Robot
-  Interface` has one line for the endpoint (`ROBOT_FINISH`) and `## Limits` the Finish line (`LIMITS_FINISH`: what is
-  graded if the agent never sends `/finish`: the episode at the step limit or cap its Steps line states, or at the
-  session's end; with a reset budget, the last episode at the session's end), both rendered by `normalize`, with a step
-  limit or a step cap of the service also the Steps line ("at most N control steps, then the episode ends.").
-  `final.json` records `ended_by` (`finish`, `step_limit`, `session_end`: the time limit, the token budget or the
-  agent's exit, which the runner's record tells apart; `failed`, `error`) and the counters (`steps_used`,
-  `finish_time_s`).
+  episodes").
+  - *Who ends it.* The service never tells the agent whether it has succeeded, and a success does not end the episode.
+    The agent ends it with `POST /finish` (an MCP front end: its `finish` tool).
+  - *Other ends.* A task may add a step limit, a number of its own control steps stated in its instruction; without
+    one, the service's own step cap (`/spec.max_control_steps`, the task's episode length) ends the episode the same
+    way. The episode ends at whichever comes first: `/finish`, the step limit or cap, the agent's time limit (its
+    cutoff, §2), its token budget (the run's, running.md "Official runs"), the agent's own exit, or the task's failure
+    rule or a simulator error as without the feature.
+  - *The verdict.* The task's success rule on the state at that end, with the task's settle or hold window run from
+    there. A success reached and then undone is 0. A goal the task judges as events (moments in a sequence, a scored
+    goal, a check at a trigger) is judged on them as they happened. A failure rule that ends the episode gives 0 on a
+    goal judged on its end state, after a success too; on a goal judged as events, an event that happened stands.
+  - *Realtime and resets.* In realtime mode `/finish` stops the clock with the episode; a settle or hold window runs
+    after it, off the clock. Resets work as before a success (within the budget; none after `/finish`), and only the
+    last episode is graded.
+  - *The instruction* says it once per section, in plain words (`scripts/task_conventions.py`). The Goal, after the
+    Success sentence, has one short paragraph: "When you are done, send `/finish` to end the episode and get it
+    graded." (`V2_AGENT_END_GOAL`), then "Only the state at that point counts." for a goal judged on its end state
+    (`V2_AGENT_END_STATE`), or "Everything else is judged on the state at that point." for one that counts some steps
+    as they happen and the rest at the end (`V2_AGENT_END_REST`). `## Robot Interface` has one line for the endpoint
+    (`ROBOT_FINISH`), and `## Limits` the Finish line (`LIMITS_FINISH`: what is graded if the agent never sends
+    `/finish`: the episode at the step limit or cap its Steps line states, or at the session's end; with a reset
+    budget, the last episode at the session's end). `normalize` renders both, and with a step limit or a step cap of
+    the service also the Steps line ("at most N control steps, then the episode ends.").
+  - *The record.* `final.json` records `ended_by` (`finish`; `step_limit`; `session_end`: the time limit, the token
+    budget or the agent's exit, which the runner's record tells apart; `failed`; `error`) and the counters
+    (`steps_used`, `finish_time_s`).
 - **Two routes to the robot** (standard and realtime): every such task offers its service through the shipped client
   (HTTP) and, in the same task, through the MCP server `efe-robot`, one tool per agent-facing endpoint; the agent
-  chooses, and both drive the same episode (standard_mode.md "MCP tools"). RoboEngineer and the matchlow matches keep
-  only their own interface.
+  chooses, and both drive the same episode (standard_mode.md "MCP tools"). Three kinds of task keep only their own
+  interface: RoboEngineer, the matchlow matches, and a match exported without the extension (the G1 table-tennis tasks).
 - A benchmark with its own runtime may export tasks that keep it (`metadata.protocol` = its own, listed in
   `ci_checks/benchmarks/<bench>/exported.toml`); they are plain Harbor tasks, Appendix H applies to them unchanged, and their results
   are reported apart.
 
 **Images per call (standard modes).** Every call that returns images has a per-call image budget,
-`max_frames_per_call`, stated in the task (its `/spec` and its instruction). Tasks that bring their own runtime instead of
-an eai-standard service (EO Match, RoboEngineer) are outside this rule. Each camera frame is one image, and a depth
-frame one more: a service keeps depth as it is sent (uint16 millimetres or float16 metres), so it costs no more than an
-RGB frame. The count is of the frames the service really captures, at the capture stride it uses (one frame every
-`round(control rate / video_fps)` control steps, plus the call's first and last), not at the requested rate. It is
-checked before the call runs: a call over the budget is refused with an error that says so and runs nothing. A call
-whose length is known only while it runs (`ee_pose` rows, a chunk the service plans) stops
-filming at the budget instead: the motion goes on, its last frame is always taken, and `meta["frames_skipped"]` counts the frames left out of the response (the trial's video still has them). `video` = `mp4` or `frames` changes what is
-sent, not the budget. Building a response holds the captured frames plus one response body (the frames are written
-once into it, a part the response drops is let go of first, and per-frame depth is compressed only while it
-still fits), and the service's memory cap covers the largest
-response the budget allows (§6). In realtime mode the answers not yet sent (built, or being written to a client that
-reads slowly) count against one budget together, and at most 8 of them with images are outstanding; a call is never
-refused for its images: past the budget, or with 8 answers outstanding, its answer comes without its frames and
-`meta["frames_skipped"]` is set.
+`max_frames_per_call`, stated in the task (its `/spec` and its instruction). Tasks that bring their own runtime instead
+of an eai-standard service (EO Match, RoboEngineer) are outside this rule.
+- *What counts.* Each camera frame is one image, and a depth frame one more (a service keeps depth as it is sent,
+  uint16 millimetres or float16 metres, so it costs no more than an RGB frame). The count is of the frames the service
+  really captures, at the stride it uses (one frame every `round(control rate / video_fps)` control steps, plus the
+  call's first and last), not at the requested rate. `video` = `mp4` or `frames` changes what is sent, not the budget.
+- *Checked before the call.* A call over the budget is refused with an error that says so, and nothing runs. A call
+  whose length is known only while it runs (`ee_pose` rows, a chunk the service plans) instead stops filming at the
+  budget: the motion goes on, its last frame is always taken, and `meta["frames_skipped"]` counts the frames left out
+  of the response (the trial's video still has them).
+- *Memory.* Building a response holds the captured frames plus one response body (the frames are written once into
+  it, a part the response drops is let go of first, and per-frame depth is compressed only while it still fits). The
+  service's memory cap covers the largest response the budget allows (§6).
+- *Realtime mode.* The answers not yet sent (built, or being written to a client that reads slowly) count against one
+  budget together, and at most 8 of them with images are outstanding. A call is never refused for its images: past
+  the budget, or with 8 answers outstanding, its answer comes without its frames and `meta["frames_skipped"]` is set.
 
 ## 4. Grading and results
 
@@ -263,17 +268,22 @@ fields: running.md "Resources".
 ## 7. Versions
 
 This text is **v3.0**, and `eai-standard/3.0` (`EAI_STANDARD` in `scripts/task_conventions.py`) names the wire rules it
-puts on every `eai-standard/2.x` layer (standard_mode.md "Version 3.0"). 3.0 made agent-ended episodes, §3, required in
-the standard and realtime modes (the service never shows the success, the agent ends the episode with `POST /finish`, and
-the end state is graded); made `/observe` a pure read that never lets time pass (`last_s`: the current frame or the last
-seconds the service recorded; `seconds > 0` is refused) and a hold chunk (`/submit` with `interpolate = "hold"`,
-`seconds`, no rows) the way to let time pass in standard mode, which is Gym's `env.step`: the world stands still between
-calls and `/submit` answers with the chunk's video and `duration_s`; started the realtime clock at the first `/submit`;
-and offered every agent-facing endpoint as an MCP tool (`efe-robot`). The layers keep their version strings in
-`metadata.protocol` and `/spec.protocol`; `/spec.standard` says `eai-standard/3.0`. 2.4 made one fresh replay the default privileged grading, or up to N with any success where the simulator does not
-replay bit-wise, bit-wise determinism being checked when the task is built rather than in every trial, §4; 2.3 renamed the third mode `standard-realtime` to `realtime`, its task directories
+puts on every `eai-standard/2.x` layer (standard_mode.md "Version 3.0"). What 3.0 changed:
+- Agent-ended episodes (§3) are required in the standard and realtime modes: the service never shows the success, the
+  agent ends the episode with `POST /finish`, and the end state is graded.
+- Standard mode is Gym's `env.step`: the world stands still between calls, and `/submit` answers with the chunk's video
+  and `duration_s`. `/observe` only reads and never lets time pass (`last_s`: the current frame or the last seconds the
+  service recorded; `seconds > 0` is refused); a hold chunk (`/submit` with `interpolate = "hold"`, `seconds`, no rows)
+  is the way to let time pass.
+- The realtime clock starts at the first `/submit`.
+- Every agent-facing endpoint is also an MCP tool (`efe-robot`).
+
+The layers keep their version strings in `metadata.protocol` and `/spec.protocol`; `/spec.standard` says
+`eai-standard/3.0`. Earlier versions of this text: 2.4 made one fresh replay the default privileged grading, or up to
+N with any success where the simulator does not replay bit-wise (bit-wise determinism is checked when the task is
+built, not in every trial, §4); 2.3 renamed the third mode `standard-realtime` to `realtime`, its task directories
 `<base>-realtime`, with no other change to the mode, and made its default reset budget 0 as in standard mode; 2.2 added
-the optional agent-ended episodes of §3, required since 3.0); like the wire protocol's, its minor versions otherwise
+the optional agent-ended episodes of §3, required since 3.0. Like the wire protocol's, its minor versions otherwise
 only add (a recommended field, an optional feature, evidence). A
 result's `config.json` records `protocol_version`: `PROTOCOL_VERSION` in `scripts/task_conventions.py` of the checkout
 that writes the result (`"legacy"` for a trial of another version of the task), one of the keys results are compared
