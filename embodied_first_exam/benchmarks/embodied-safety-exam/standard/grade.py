@@ -37,6 +37,25 @@ import os
 import shutil
 import traceback
 
+def agent_end_fields(d):
+    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
+    if not isinstance(d, dict) or d.get("success_signal") != "hidden":
+        return {}
+    by = d.get("ended_by")
+    out = {"ended_finish": int(by == "finish"), "ended_step_limit": int(by == "step_limit"),
+           "ended_session_end": int(by == "session_end"), "hidden_success_seen": int(bool(d.get("hidden_success_seen")))}
+    if d.get("step_limit"):
+        def n(k):
+            try:
+                v = float(d.get(k) or 0)
+            except (TypeError, ValueError):
+                return 0
+            return int(v) if abs(v) < 1e18 else 0      # NaN and inf too
+        out.update(step_limit=n("step_limit"), steps_used=n("steps_used"))
+    return out
+
+
 DATA = os.environ.get("RCB_DATA", "/data")
 LOG = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 os.makedirs(LOG, exist_ok=True)
@@ -171,7 +190,7 @@ def main() -> None:
                "calls": int(d.get("calls") or 0), "rows": int(d.get("rows") or 0),
                "sim_startups": int(d.get("sim_startups") or 0), "elapsed_s": num(d.get("elapsed_s")),
                "requests_refused": int(num(d.get("requests_refused"))),
-               "video_rendered": int(bool(d.get("video"))), **verdict_fields(v)}
+               "video_rendered": int(bool(d.get("video"))), **verdict_fields(v), **agent_end_fields(d)}
     except Exception:  # noqa: BLE001 -- an unreadable final.json or verdict.json is the grader's failure, not the agent's
         traceback.print_exc()
         write(False, {"success": 0, "live_success": 0, "graded_by_live": 0, "replays": 0, "finalized": 0,

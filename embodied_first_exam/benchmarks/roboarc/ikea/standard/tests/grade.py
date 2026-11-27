@@ -17,6 +17,25 @@ binding at the episode's start (`instance_mismatch`, server.py), a give-up after
 not dumped are infra_error. The live video (/data/live.mp4) is evidence only: its absence never changes the verdict."""
 import json, os, shutil, sys
 
+def agent_end_fields(d):
+    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
+    if not isinstance(d, dict) or d.get("success_signal") != "hidden":
+        return {}
+    by = d.get("ended_by")
+    out = {"ended_finish": int(by == "finish"), "ended_step_limit": int(by == "step_limit"),
+           "ended_session_end": int(by == "session_end"), "hidden_success_seen": int(bool(d.get("hidden_success_seen")))}
+    if d.get("step_limit"):
+        def n(k):
+            try:
+                v = float(d.get(k) or 0)
+            except (TypeError, ValueError):
+                return 0
+            return int(v) if abs(v) < 1e18 else 0      # NaN and inf too
+        out.update(step_limit=n("step_limit"), steps_used=n("steps_used"))
+    return out
+
+
 LOG = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier"); os.makedirs(LOG, exist_ok=True)
 DATA = os.environ.get("RCB_VERIFIER_DATA") or os.environ.get("RCB_DATA") or "/data"   # tests only: the sandbox sets neither
 TASK = sys.argv[1] if len(sys.argv) > 1 else ""
@@ -77,7 +96,7 @@ def grade() -> None:
                "calls": num("calls"), "settle_failed": num("settle_failed"), "gave_up": int(bool(d.get("gave_up"))),
                "sim_startups": num("sim_startups"), "resumes": num("resumes"), "resume_state_mismatch": num("resume_state_mismatch"),
                "instance_mismatch": int(mismatch), "video_rendered": int(bool(videos)), "video_segments": len(videos),
-               "sim_error": int(sim_error), "dump_lost": int(dump_lost), "infra_error": int(infra), "grader_error": 0})
+               "sim_error": int(sim_error), "dump_lost": int(dump_lost), "infra_error": int(infra), "grader_error": 0, **agent_end_fields(d)})
 
 
 if __name__ == "__main__":

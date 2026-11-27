@@ -10,6 +10,25 @@ the frozen start did not rebuild (instance_mismatch, found before the agent was 
 calls (sim_crashed_on_call) and a simulator error raised by its actions (reason "error") are the agent's: 0, not infra.
 The video never decides anything. A reward is written in every case."""
 import json, os, shutil, traceback
+
+def agent_end_fields(d):
+    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
+    if not isinstance(d, dict) or d.get("success_signal") != "hidden":
+        return {}
+    by = d.get("ended_by")
+    out = {"ended_finish": int(by == "finish"), "ended_step_limit": int(by == "step_limit"),
+           "ended_session_end": int(by == "session_end"), "hidden_success_seen": int(bool(d.get("hidden_success_seen")))}
+    if d.get("step_limit"):
+        def n(k):
+            try:
+                v = float(d.get(k) or 0)
+            except (TypeError, ValueError):
+                return 0
+            return int(v) if abs(v) < 1e18 else 0      # NaN and inf too
+        out.update(step_limit=n("step_limit"), steps_used=n("steps_used"))
+    return out
+
 LOG = "/logs/verifier"
 
 
@@ -51,7 +70,9 @@ def main() -> None:
         write(False, {"success": 0, "live_success": 0, "graded_by_live": 1, "replays": 0, "finalized": 0, "missing_log": 1,
                       "infra_error": 1, "grader_error": 0}); return
     try:
-        ok, out = grade(json.load(open(p)))
+        d = json.load(open(p))
+        ok, out = grade(d)
+        out.update(agent_end_fields(d))
     except Exception:  # noqa: BLE001 -- an unreadable final.json is not the agent's failure
         traceback.print_exc()
         write(False, {"success": 0, "live_success": 0, "graded_by_live": 1, "replays": 0, "finalized": 0, "missing_log": 0,

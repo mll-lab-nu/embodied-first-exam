@@ -14,6 +14,25 @@ served). A crash inside the agent's calls (sim_crashed_on_call), a simulator err
 2026-10-16; until then the agent's 0) are the agent's. The video never decides anything. A reward is written in every
 case."""
 import json, os, shutil, traceback
+
+def agent_end_fields(d):
+    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
+    if not isinstance(d, dict) or d.get("success_signal") != "hidden":
+        return {}
+    by = d.get("ended_by")
+    out = {"ended_finish": int(by == "finish"), "ended_step_limit": int(by == "step_limit"),
+           "ended_session_end": int(by == "session_end"), "hidden_success_seen": int(bool(d.get("hidden_success_seen")))}
+    if d.get("step_limit"):
+        def n(k):
+            try:
+                v = float(d.get(k) or 0)
+            except (TypeError, ValueError):
+                return 0
+            return int(v) if abs(v) < 1e18 else 0      # NaN and inf too
+        out.update(step_limit=n("step_limit"), steps_used=n("steps_used"))
+    return out
+
 LOG = os.environ.get("RCB_VERIFIER_LOG_DIR") or "/logs/verifier"; os.makedirs(LOG, exist_ok=True)
 def write(ok, out):
     open(f"{LOG}/reward.txt", "w").write("1\n" if ok else "0\n"); json.dump(out, open(f"{LOG}/reward.json", "w")); print(out)
@@ -64,4 +83,4 @@ for f in ("live.mp4", "replay.mp4", "replay.last.png", "trajectory.npz", "episod
         if os.path.exists(f"{DATA}/{f}"): shutil.copy(f"{DATA}/{f}", f"{LOG}/{f}")
     except OSError:    # the evidence never decides the verdict
         traceback.print_exc()
-write(ok, out)
+write(ok, {**out, **agent_end_fields(d)})

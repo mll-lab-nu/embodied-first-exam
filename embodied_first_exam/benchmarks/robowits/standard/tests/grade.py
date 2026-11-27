@@ -6,6 +6,25 @@ failure (infra_error = 1: no record, no live verdict, a give-up the service caus
 not rebuild, a service that could not record the end of an episode that ended normally). Numeric-only reward.json.
 RCB_DATA / RCB_VERIFIER_LOG_DIR: test hooks (never set in tasks)."""
 import json, os, shutil
+
+def agent_end_fields(d):
+    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
+    if not isinstance(d, dict) or d.get("success_signal") != "hidden":
+        return {}
+    by = d.get("ended_by")
+    out = {"ended_finish": int(by == "finish"), "ended_step_limit": int(by == "step_limit"),
+           "ended_session_end": int(by == "session_end"), "hidden_success_seen": int(bool(d.get("hidden_success_seen")))}
+    if d.get("step_limit"):
+        def n(k):
+            try:
+                v = float(d.get(k) or 0)
+            except (TypeError, ValueError):
+                return 0
+            return int(v) if abs(v) < 1e18 else 0      # NaN and inf too
+        out.update(step_limit=n("step_limit"), steps_used=n("steps_used"))
+    return out
+
 DATA = os.environ.get("RCB_DATA", "/data"); LOG = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier"); os.makedirs(LOG, exist_ok=True)
 FAIL = {"success": 0, "live_success": 0, "graded_by_live": 0, "replays": 0, "finalized": 0, "sim_error": 0}
 def write(ok, out):
@@ -46,4 +65,4 @@ write(ok, {"success": int(ok), "live_success": int(bool(d.get("live_success", d.
            "settle_passed": int(bool((d.get("settle") or {}).get("success"))), "final_window": num("final_window"),
            "gave_up": int(bool(d.get("gave_up"))), "sim_startups": num("sim_startups"), "resumes": num("resumes"),
            "resume_state_mismatch": num("resume_state_mismatch"), "resume_max_tcp_dev_m": num("resume_max_tcp_dev_m", float),
-           "resume_max_joint_dev": num("resume_max_joint_dev", float), "grader_error": int(grade_error)})
+           "resume_max_joint_dev": num("resume_max_joint_dev", float), "grader_error": int(grade_error), **agent_end_fields(d)})

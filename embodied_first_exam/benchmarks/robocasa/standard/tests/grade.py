@@ -18,6 +18,25 @@ import json
 import os
 import shutil
 
+def agent_end_fields(d):
+    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
+    if not isinstance(d, dict) or d.get("success_signal") != "hidden":
+        return {}
+    by = d.get("ended_by")
+    out = {"ended_finish": int(by == "finish"), "ended_step_limit": int(by == "step_limit"),
+           "ended_session_end": int(by == "session_end"), "hidden_success_seen": int(bool(d.get("hidden_success_seen")))}
+    if d.get("step_limit"):
+        def n(k):
+            try:
+                v = float(d.get(k) or 0)
+            except (TypeError, ValueError):
+                return 0
+            return int(v) if abs(v) < 1e18 else 0      # NaN and inf too
+        out.update(step_limit=n("step_limit"), steps_used=n("steps_used"))
+    return out
+
+
 LOG = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 DATA = os.environ.get("RCB_DATA", "/data")
 
@@ -81,6 +100,7 @@ def main() -> None:
             "missing_log": 0,
             "infra_error": int(infra),
             "grader_error": int(finalize_error),
+            **agent_end_fields(d),
         }
     )
 

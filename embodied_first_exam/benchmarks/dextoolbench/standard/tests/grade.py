@@ -7,6 +7,25 @@ its scene did not start in the frozen state (instance_mismatch), or it failed to
 the agent's calls (sim_crashed_on_call) and a simulator error raised by a call (sim_error) are the agent's result. The
 video never decides anything."""
 import json, os, shutil, traceback
+
+def agent_end_fields(d):
+    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
+    if not isinstance(d, dict) or d.get("success_signal") != "hidden":
+        return {}
+    by = d.get("ended_by")
+    out = {"ended_finish": int(by == "finish"), "ended_step_limit": int(by == "step_limit"),
+           "ended_session_end": int(by == "session_end"), "hidden_success_seen": int(bool(d.get("hidden_success_seen")))}
+    if d.get("step_limit"):
+        def n(k):
+            try:
+                v = float(d.get(k) or 0)
+            except (TypeError, ValueError):
+                return 0
+            return int(v) if abs(v) < 1e18 else 0      # NaN and inf too
+        out.update(step_limit=n("step_limit"), steps_used=n("steps_used"))
+    return out
+
 LOG = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier"); os.makedirs(LOG, exist_ok=True)
 DATA = os.environ.get("RCB_DATA", "/data")
 BASE = {"success": 0, "live_success": 0, "graded_by_live": 1, "replays": 0, "finalized": 0, "missing_log": 0, "infra_error": 0, "sim_error": 0, "grader_error": 0}
@@ -49,4 +68,4 @@ if "progress" in d:
 else:
     out.update({k: (int(v) if isinstance(v, bool) else v) for k, v in d.items() if isinstance(v, (int, float, bool)) and k not in out and k not in BASE})
     reward = 1.0 if ok else 0.0
-write(reward, out)
+write(reward, {**out, **agent_end_fields(d)})
