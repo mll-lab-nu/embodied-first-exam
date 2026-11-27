@@ -43,9 +43,9 @@ s.save_trajectory(actions, "/app/output/trajectory.npz")
   `env.open_gripper(arm_tag)`, `env.close_gripper(arm_tag)`, `env.back_to_origin(arm_tag)`; `ArmTag("left"|"right")`,
   `Action`, and `GRASP_DIRECTION_DIC` from `envs.utils` / `envs._GLOBAL_CONFIGS`. Objects are RoboTwin `Actor`s
   (`.get_pose()`, `.get_functional_point(i)`, `.get_contact_point(i)`; articulated ones also `.get_qpos()`).
-- Every physics step these primitives take is recorded while recording is on; `env.plan_success` turns False when a plan
-  fails (later moves are skipped). Low-level control: `s.step(row)` with a row in the recorded layout (see Actions
-  below).
+- While recording is on, every physics step these primitives take is recorded. When a plan fails, `env.plan_success`
+  turns False and later moves are skipped. Low-level control: `s.step(row)` with a row in the recorded layout (see
+  Actions below).
 - The replay CLI does what the grader does; run it to check yourself:
   `python /opt/tools/rcb_traj.py replay --task adjust_bottle --instance /app/instance.json --traj /app/output/trajectory.npz`
 
@@ -53,11 +53,12 @@ s.save_trajectory(actions, "/app/output/trajectory.npz")
 - Coordinates are in the world frame (the table centre at the origin, +z up, the robot at y = -0.65 facing +y);
   quaternions are WXYZ.
 - A recorded row (`s.action_layout`) has 34 entries: 16 joint drive position targets, 16 velocity targets, and the left
-  / right gripper commands (0 = closed, 1 = open); one row per physics step (1/250 s).
-- A gripper opens and closes by its finger joints' position targets (the 7th–8th and 15th–16th of the 16), not by the
-  two gripper-command columns: a hand-written row opens or closes a gripper only through those targets;
-  `env.open_gripper`, `env.close_gripper` and the other primitives set fingers and command together.
-  `s.gripper_opening("left")` returns the (least open, most open) finger in command units (0 = closed, 1 = open).
+  / right gripper commands (0 = closed, 1 = open). There is one row per physics step (1/250 s).
+- A gripper opens and closes through its finger joints' position targets (the 7th–8th and 15th–16th of the 16), not
+  through the two gripper-command columns. So a hand-written row opens or closes a gripper only through those targets.
+  `env.open_gripper`, `env.close_gripper` and the other primitives set the fingers and the command together.
+  `s.gripper_opening("left")` returns two openings in command units (0 = closed, 1 = open): that of the least open
+  finger and that of the most open finger.
 
 ### Observations
 - Rendering (optional, slow): `Session(..., enable_render=True)`, then `s.render_frame("head_camera")`.

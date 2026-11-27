@@ -57,11 +57,11 @@ recorded), `res.proprio` (proprioception rows). A malformed request raises `Valu
 Action type `joint_position` (14): 14 numbers per control step:
 `[left_joint1..6, left_gripper, right_joint1..6, right_gripper]` -- each arm's six joint position targets (rad) and its
 gripper opening (0 = closed, 1 = open, each finger 0.0475 m from closed; up to 1.042). The joints and grippers are
-position servos that track the targets (MuJoCo position actuators with damping and force limits); a target outside a
-joint's range is clamped to it, and the simulator rounds every command to float32. One control step = 17 physics steps
-of 2 ms = 0.034 s (29.4 Hz). Columns in `spec()["action_types"]["joint_position"]["layout"]` order; rows `dt` apart,
-`interpolate="linear"` (default: a straight line from the targets in force) or `"hold"`; the realtime client sends them
-as float64.
+position servos that track the targets (MuJoCo position actuators with damping and force limits). A target outside a
+joint's range is clamped to that range. The simulator rounds every command to float32. One control step = 17 physics
+steps of 2 ms = 0.034 s (29.4 Hz). Columns in `spec()["action_types"]["joint_position"]["layout"]` order; rows `dt`
+apart, `interpolate="linear"` (default: a straight line from the targets in force) or `"hold"`; the realtime client
+sends them as float64.
 
 ### Observations
 Cameras: `top` (above and behind the arms, looking down at the table), `left` and `right` (wrist cameras on the arms),
@@ -84,10 +84,10 @@ the arms), in front = -x (nearer to them). No positions of the scene are given.
   commands it executes what you planned, then holds the last targets you sent; nothing pauses for you, not your
   thinking, not your tool calls.
 - You are far too slow to steer it turn by turn. One turn of yours (a model response, a tool call) takes seconds. Drive
-  the robot with a program: a controller of your own (Python in your container, with numpy and the client) that plans or
-  streams the targets, started in the background (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`) or in the
-  foreground if it ends with the episode. Use your turns to read what happened and improve the program while the episode
-  runs.
+  the robot with a program: your own controller (Python in your container, with numpy and the client) that plans or
+  streams the targets. Start it in the background (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`), or in the
+  foreground if it ends when the episode ends. Use your turns to read what happened and improve the program while the
+  episode runs.
 - `submit` answers at once, with the robot as it is now: the rows you sent have not run yet. They become the plan from
   control step `at` (an episode step number; by default the next step). They replace whatever was planned from `at` on
   and keep what is planned before it. When the plan runs out, the last targets are held. `res.meta["control_steps"]` is

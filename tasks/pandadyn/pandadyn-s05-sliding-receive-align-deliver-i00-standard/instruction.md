@@ -28,8 +28,8 @@ Rules:
 - Episodes and resets: you have 3 resets (the spec's reset budget is authoritative). A reset puts the robot and the
   scene back on the same frozen starting state and starts a new episode. Rebuilding the scene takes about a second; no
   robot time passes. You can reset while an episode runs (it is abandoned) or after one has ended. Only the last episode
-  is graded: an episode you reset away is never graded. Do not stop early: while the episode runs, or a reset is left,
-  the run can still pass.
+  is graded: an episode you reset away is never graded. Do not stop early: as long as the episode is still running, or
+  you have a reset left, the run can still pass.
 - You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
 ## Robot Interface

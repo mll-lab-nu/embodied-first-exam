@@ -132,7 +132,7 @@ The torso is pushed 12 times at moments you are not told (half-sine pushes of up
 horizontal directions).
 
 ## Others
-- Do not stop early: while the episode runs, or a reset is left, the run can still pass.
+- Do not stop early: as long as the episode is still running, or you have a reset left, the run can still pass.
 
 ## Limits
 - Time: 1800 s of wall-clock time from the start of your session; everything counts (waiting for the service too). At

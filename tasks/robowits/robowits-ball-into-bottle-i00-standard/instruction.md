@@ -6,8 +6,8 @@ Move the small ball from the blue container down to the bottom of the red bottle
 ## Goal
 Success: the ball rests deep inside the red bottle, at its bottom (not caught near the mouth, not fallen through the
 base), and the robot does not touch it; neither the ball nor the bottle has fallen off the table. When the episode ends,
-the service holds your last command for about three seconds (a second, then two seconds in which all of this must keep
-holding, with nothing moving).
+the service keeps your last command for about three seconds: first one second, then two seconds in which all of this
+must keep holding, with nothing moving.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -52,13 +52,13 @@ r.ik({"Gripper_Tip_R": pose}, seed=q14)       # inverse kinematics -> {"ok", "q"
 r.status(); r.wait_ready()                    # calls, control steps, done, reason; after a connection error: wait, then status
 ```
 
-A busy service has not crashed. The service answers one request at a time: while a call runs, every other request waits
-for it (`r.status()` from another process included), and a client-side timeout during that time means "busy", not
-"crashed": nothing restarts, the call runs to its end and the episode goes on from there. If the service crashes (the
-connection is refused or reset instead of an answer), it restarts and resumes the SAME episode, never a reset, in the
-state after the last call it completed. `r.wait_ready()` waits until it answers again (resuming replays the episode so
-far: about a second per 700 control steps); then check `r.status()` (`calls`, `control_steps`) before you continue. A
-call that runs longer than `spec["max_call_wall_s"]` stops at the next control step and returns what it executed
+A busy service has not crashed. The service answers one request at a time. While a call runs, every other request waits
+for it, `r.status()` from another process included. A client-side timeout during that time means "busy", not "crashed":
+nothing restarts, the call runs to its end, and the episode goes on from there. If the service crashes (the connection
+is refused or reset instead of an answer), it restarts and resumes the SAME episode, never a reset, in the state after
+the last call it completed. `r.wait_ready()` waits until the service answers again. Resuming replays the episode so far,
+about a second per 700 control steps. Then check `r.status()` (`calls`, `control_steps`) before you continue. A call
+that runs longer than `spec["max_call_wall_s"]` stops at the next control step and returns what it executed
 (`res.stopped`, `meta["executed_rows"]`). One call returns at most 1500 images.
 
 ### MCP tools
@@ -74,20 +74,20 @@ call that runs longer than `spec["max_call_wall_s"]` stops at the next control s
 
 ### Actions
 - `joint_position` (16): `Joint1_R..Joint7_R, right_gripper, Joint1_L..Joint7_L, left_gripper`; radians, gripper =
-  opening width in metres, 0 = closed .. 0.1 = open. Absolute targets tracked by PD controllers. Rows are `dt` apart
-  (`1/30 ≤ dt ≤ 0.5` s, a whole number of 1/30 s control periods: `2/30`, not `0.067`; any other `dt` is refused, never
-  rounded); a chunk may cover at most 10 s; out-of-limit values are clipped and listed in `meta["clipped"]` (limits in
-  the spec). Use `obs.meta["proprio"]["now"][:16]` as the starting row to move smoothly.
+  opening width in metres, 0 = closed .. 0.1 = open. Absolute targets tracked by PD controllers. Rows are `dt` apart,
+  with `1/30 ≤ dt ≤ 0.5` s and `dt` a whole number of 1/30 s control periods: `2/30`, not `0.067`. Any other `dt` is
+  refused, never rounded. A chunk may cover at most 10 s. Out-of-limit values are clipped and listed in
+  `meta["clipped"]` (limits in the spec). Use `obs.meta["proprio"]["now"][:16]` as the starting row to move smoothly.
 - `ee_pose` (16): right `x y z qw qx qy qz gripper`, left same; world frame (robot base at (0, 0, 1.08), x away from the
   robot, y to its left, +z up); quaternions wxyz. The service solves each row by inverse kinematics (with no collision
   checking) and drives the arm there in joint space. If the IK fails for an arm, that arm holds and the failure is
   reported in `meta["plan"]`. The pose is the **gripper tip** frame: +z is the approach direction, +x the direction the
   fingers close along (same convention as the `proprio` end-effector poses, so an observed pose is a valid target). At
   most 50 rows per submit; `dt` is ignored; a gripper width outside 0 .. 0.1 is clipped and listed in `meta["clipped"]`.
-- A request with a field of the wrong type or out of range (`dt`, `seconds` outside 0 .. 30, `video_fps` not a whole
-  number in 1 .. 30, `video`, `interpolate`, `cameras` not a list of names, `note` not a string, actions that are not
-  finite (T, 16) numbers) is answered 400 before anything is executed: the client raises `ValueError`, nothing has moved
-  and the episode goes on.
+- A request with a field of the wrong type or out of range is answered 400 before anything is executed. This covers
+  `dt`, `seconds` outside 0 .. 30, `video_fps` not a whole number in 1 .. 30, `video`, `interpolate`, `cameras` not a
+  list of names, `note` not a string, and actions that are not finite (T, 16) numbers. The client then raises
+  `ValueError`; nothing has moved and the episode goes on.
 
 ### Observations
 - Cameras: `ego` (static, above and behind the robot, looking at the table), `wrist_right` / `wrist_left` (on the

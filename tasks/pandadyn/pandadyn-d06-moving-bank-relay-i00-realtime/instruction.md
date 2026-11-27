@@ -30,8 +30,8 @@ Rules:
 - Episodes and resets: you have 3 resets (the spec's reset budget is authoritative). A reset puts the robot and the
   scene back on the same frozen starting state and starts a new episode, paused until your next command. Rebuilding the
   scene takes about a second. You can reset while an episode runs (it is abandoned) or after one has ended. Only the
-  last episode is graded: an episode you reset away is never graded. Do not stop early: while the episode runs, or a
-  reset is left, the run can still pass.
+  last episode is graded: an episode you reset away is never graded. Do not stop early: as long as the episode is still
+  running, or you have a reset left, the run can still pass.
 - You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
 ## Robot Interface
@@ -119,10 +119,10 @@ while not r.status()["done"]:
 
 ### Time and streaming
 - You are far too slow to steer it turn by turn. One turn of yours (a model response, a tool call) takes seconds of
-  wall-clock time, which is many control steps here. Drive the robot with a program: a controller of your own (Python in
-  your container, with numpy and the client) that plans or streams the targets, started in the background
-  (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`) or in the foreground if it ends with the episode. Use your turns
-  to start episodes, read what happened, and improve the program.
+  wall-clock time, which is many control steps here. Drive the robot with a program: your own controller (Python in your
+  container, with numpy and the client) that plans or streams the targets. Start it in the background
+  (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`), or in the foreground if it ends when the episode ends. Use your
+  turns to start episodes, read what happened, and improve the program.
 - `submit` answers at once, with the robot as it is now: the rows you sent have not run yet. They become the plan from
   control step `at` (an episode step number; by default the next step). They replace whatever was planned from `at` on
   and keep what is planned before it. When the plan runs out, the last targets are held. `res.meta["control_steps"]` is

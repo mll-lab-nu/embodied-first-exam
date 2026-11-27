@@ -22,17 +22,17 @@ Rules:
 - **No cheating.** Write your own fitting, training and analysis code. Do not search for, download or use any existing
   solution (published or reference solutions, trained policies for this task) or hidden evaluator information; trials
   are reviewed.
-- No reset: deployments are your only runs on the hidden evaluator, at most three rounds, each on the same 3 development
-  cases from their start; no reset or privileged-state endpoint exists.
+- No reset: deployments are your only runs on the hidden evaluator. You get at most three rounds, each on the same 3
+  development cases from their start. There is no reset or privileged-state endpoint.
 - Actual scores, completion times, contacts, success flags and the reference controller's data are not returned during
   adaptation; infer performance only from the allowed noisy observations and images. Use only these observations to
   estimate the mismatch.
 
 ## Robot Interface
 A simulated Intel Aero quadrotor (MuJoCo, with a learned ground-effect residual in the evaluator). The deployment
-simulator includes unmodeled dynamics. You tune its numeric controller on the public nominal model in your container and
-deploy it to a hidden evaluator whose dynamics differ in ways you are not told; the evaluator runs as a service you
-reach only through its client.
+simulator includes unmodeled dynamics. You tune its numeric controller on the public nominal model in your container.
+Then you deploy it to a hidden evaluator whose dynamics differ in ways you are not told. The evaluator runs as a service
+that you reach only through its client.
 
 ### Client
 - `python -m scripts.quadrotor_landing.public.client describe`: your remaining budget (counts and deadline in the live

@@ -47,12 +47,12 @@ obs = r._post("/reset", {"cameras": ["left_cam"]}, [], 900)   # POST /reset: a n
 Simulated time only advances with your commands (and `hold(s)`, which holds the last command). A reset (`POST /reset`,
 the `_post` line above) puts the body and the scene back in the same frozen starting state and starts a new episode. You
 can reset during an episode (abandoning it) or after one has ended. It takes no simulated time and returns the start's
-images and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. The wall clock is
-the run's and never restarts; `meta["episode"]` and `meta["resets_left"]` count the episodes (`meta["control_steps"]` is
-the current episode's). If the service crashes, a call fails with a connection error. The service restarts and resumes
-the same episode (never a reset), in the state after the last call it completed. `r.wait_ready()` waits for it; then
-check `r.status()`. One call returns at most 1000 images. `r.fk(q)` (`/kinematics`) gives the fingertip sites and the
-camera mounts for any joint positions.
+images and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. The wall clock
+covers the whole run and never restarts. `meta["episode"]` and `meta["resets_left"]` count the episodes;
+`meta["control_steps"]` counts only the current episode's steps. If the service crashes, a call fails with a connection
+error. The service restarts and resumes the same episode (never a reset), in the state after the last call it completed.
+`r.wait_ready()` waits for it; then check `r.status()`. One call returns at most 1000 images. `r.fk(q)` (`/kinematics`)
+gives the fingertip sites and the camera mounts for any joint positions.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,

@@ -44,10 +44,10 @@ r.status()                                     # calls, control steps, done, rea
 
 Simulated time only advances with your commands (and `hold(s)`, which holds the last command), so the scene waits while
 you think. Once the episode has ended, `submit` raises `EpisodeOver`. If the service crashes, a call fails with a
-connection error: it restarts and resumes the same episode in the state after the last call it completed.
-`r.wait_ready()` waits for it; then check `r.status()`. One call returns at most 1000 images. `r.fk(q)` (`/kinematics`)
-(`r.fk`, `r.ik`) gives the tool frames `left_tcp`, `right_tcp`, `left_grasp`, `right_grasp` and the arm links for any
-joint positions, and solves IK for the tool frames.
+connection error. The service then restarts and resumes the same episode, in the state after the last call it completed.
+`r.wait_ready()` waits for it; then check `r.status()`. One call returns at most 1000 images. `r.fk(q)` gives the tool
+frames `left_tcp`, `right_tcp`, `left_grasp`, `right_grasp` and the arm links for any joint positions, and `r.ik` solves
+IK for the tool frames (both use `/kinematics`).
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,
@@ -64,19 +64,20 @@ joint positions, and solves IK for the tool frames.
 Action type `joint_position` (14): 14 numbers per control step:
 `[left_joint1..6, left_gripper, right_joint1..6, right_gripper]` -- each arm's six joint position targets (rad) and its
 gripper opening (0 = closed, 1 = open, each finger 0.0475 m from closed; up to 1.042). The joints and grippers are
-position servos that track the targets (MuJoCo position actuators with damping and force limits); a target outside a
-joint's range is clamped to it, and the simulator rounds every command to float32. One control step = 17 physics steps
-of 2 ms = 0.034 s (29.4 Hz). Columns in `spec["action_types"]["joint_position"]["layout"]` order. Rows are `dt` apart (a
-whole multiple of the 0.034 s control period, at most 0.5 s; a chunk covers at most 10 s), `interpolate="linear"`
-(default, from the previous targets) or `"hold"`; the client sends them as float32. There is no step budget.
+position servos that track the targets (MuJoCo position actuators with damping and force limits). A target outside a
+joint's range is clamped to that range. The simulator rounds every command to float32. One control step = 17 physics
+steps of 2 ms = 0.034 s (29.4 Hz). Columns in `spec["action_types"]["joint_position"]["layout"]` order. Rows are `dt`
+apart: a whole multiple of the 0.034 s control period, at most 0.5 s. A chunk covers at most 10 s. Between rows, use
+`interpolate="linear"` (default, from the previous targets) or `"hold"`. The client sends the rows as float32. There is
+no step budget.
 
 ### Observations
 Cameras: `top` (above and behind the arms, looking down at the table), `left` and `right` (wrist cameras on the arms),
-`overhead`, `left_side`, `right_side` (640x480; default `top`, `left`, `right`); `spec["cameras"]` gives each camera's
-mounting (static, or on an arm link: the wrist cameras move with the arm, so use the pose returned with each frame) and
-intrinsics, and every response carries each frame's pose. Proprioception (`spec["proprio_groups"]`): `joint_pos`
-(`q_<entry>`, the 14 action coordinates measured), `joint_vel` (`qd_<entry>`), `gripper_opening` (m), `tcp_pose` (each
-arm's tool centre point, world frame, `wxyz`), `joint_effort` (`effort_<entry>`).
+`overhead`, `left_side`, `right_side` (640x480; default `top`, `left`, `right`). `spec["cameras"]` gives each camera's
+mounting and intrinsics. A camera is static or mounted on an arm link; the wrist cameras move with the arm, so use the
+pose returned with each frame. Every response carries each frame's pose. Proprioception (`spec["proprio_groups"]`):
+`joint_pos` (`q_<entry>`, the 14 action coordinates measured), `joint_vel` (`qd_<entry>`), `gripper_opening` (m),
+`tcp_pose` (each arm's tool centre point, world frame, `wxyz`), `joint_effort` (`effort_<entry>`).
 
 ### World frame
 The table's frame: x forward (away from the arms' bases), y to the left as the arms face the table, z up; metres,
