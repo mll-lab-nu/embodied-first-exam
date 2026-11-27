@@ -130,10 +130,6 @@ class RcbTools:
             except Exception:       # the record never breaks a call
                 pass
 
-    @property
-    def realtime(self) -> bool:
-        return bool(((self.spec or {}).get("timing") or {}).get("realtime")) or bool(self.m.get("realtime"))
-
     def _timeout(self) -> float:
         return max(1800.0, float((self.spec or {}).get("max_call_wall_s") or 900) + 120)
 
@@ -197,7 +193,10 @@ class RcbTools:
         body = rcb1.encode(meta, list(parts))
         if len(body) > MAX_BODY:
             raise ToolError(f"{path}: {len(body)} bytes, over the protocol's 64 MB: send fewer rows")
-        self._log(path, note=note) if path == "/submit" else self._log(path, seconds=meta.get("seconds"))
+        if path == "/submit":
+            self._log(path, note=note, **({"seconds": meta["seconds"]} if meta.get("seconds") is not None else {}))
+        else:
+            self._log(path, **({"last_s": meta["last_s"]} if meta.get("last_s") is not None else {}))
         try:
             r = requests.post(self.base + path, data=body, headers={"Content-Type": "application/x-rcb1"},
                               timeout=(5, self._timeout()))
@@ -288,7 +287,10 @@ class RcbTools:
 
     def _observe_meta(self, args):
         meta = self._fields(args, OBSERVE_KEYS)   # + `fields` as given
-        if float(meta.pop("seconds", 0) or 0) > 0:
+        sec = meta.pop("seconds", None)
+        if sec is not None and (isinstance(sec, bool) or not isinstance(sec, (int, float))):
+            raise ToolError(f"`seconds` must be a number (got {sec!r:.40}); observe takes `last_s` instead")
+        if sec is not None and sec > 0:
             raise ToolError("observe reads what is already recorded and returns at once: `last_s` (0 = the current "
                             "frame, n = the last n seconds); time passes only through submit")
         if not meta.get("last_s"):

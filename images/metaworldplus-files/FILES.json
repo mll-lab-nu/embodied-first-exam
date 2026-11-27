@@ -1,10 +1,10 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:metaworldplus-files-0.6.0@sha256:3dd85a27b4f1605b031ab3e5e0798e12944f8b00e5c550a6b73769e22a4177de",
+ "image": "ghcr.io/mll-lab-nu/efe:metaworldplus-files-0.6.0@sha256:09ac45aaec635d01af066796ac853efe363c142fef70ab6fad3728edfedae05f",
  "source": "embodied_first_exam/benchmarks/metaworldplus",
  "files": {
-  "privileged/environment/mw_tool.py": "899cf5f04443f20043648804f6dfb5f6cc1879f54b8fd95916497818b203e316",
+  "privileged/environment/mw_tool.py": "429a2dd34a89c2fdc5b05665fa6a40bac4e2cb6af1b28eb6bc579c2f13fe365c",
   "privileged/tests/grade.py": "0e24422f8fda297c7e4c53c6578257156f3522b4bb73d801c9d990dcdbee2f49",
-  "sim/server_mw.py": "f9ec13d87e40060c41ea0779b30563d03e7991d1d933233c357ed83086020306",
-  "standard/tests/grade.py": "6641408d444ab9ca6606c6c91798d90336071f22b943dd3bf52f0c3d8c56514a"
+  "sim/server_mw.py": "832ff0be066b1fbcd1a0af6f6d4d8807b43a52c3038694f6ae7e2bdcca736e18",
+  "standard/tests/grade.py": "c5714e8187c7e77dedc7771fb8a73d250a98d40be588752519765b5818b20bc4"
  }
 }

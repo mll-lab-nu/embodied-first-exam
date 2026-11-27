@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:mujoco-playground-files-0.8.0@sha256:217bfa3f08813087ac235b2cd1010f00db84fedc1f40073b160b47cb348105f5",
+ "image": "ghcr.io/mll-lab-nu/efe:mujoco-playground-files-0.8.0@sha256:ad457cc15a9f4bf9a29b36856825f8834a5baf907b2c6b0c6de22b67470c1ce5",
  "source": "embodied_first_exam/benchmarks/mujoco-playground",
  "files": {
   "privileged/environment/rcb_aloha.py": "a5171af6b6a9f3b2f768f385e500da06c4bfed4ec9176377242f34a9026ea4fa",
@@ -9,9 +9,9 @@
   "privileged/tests/variants/72df271117/grade.py": "2fb394e9f5e5dfa7cee7a9db284c44281afb9e8edea19c143301e841c02efafb",
   "privileged/tests/variants/c5bde2d42e/grade.py": "65f11582f4772718469281a5a39c167991fb20c681aef301463625030b62c1a4",
   "sim/finalize.sh": "dc1f2cc06692ca27cc4d695f2370a0e9884ab9aa2d7070cf21a3808eb77b3aa5",
-  "sim/rcb_service.py": "fbfa72f210dd55620a07a0e02159f8910bd078aa0f518c5bbff7f7c112519f97",
-  "sim/server.py": "71808b247678629cf1e9cc5f8ef93eaf30956bca595750c45eeb827e70f24f89",
-  "sim/server_mj.py": "0c128000c261e3ba13e32606589bd1d6e6dd0bda65434007ea65e20d7f6fae38",
+  "sim/rcb_service.py": "1ab72a9263f5ff390281c824fe62b7b4ed96944747095b759ff7d38f1014ca86",
+  "sim/server.py": "2df59311f1632e7ef8ab950e68ecf22695ecfcff1ea1453b904dc1a4c4e3ef4f",
+  "sim/server_mj.py": "60402f1da5dda60fc1f4f5928bf575e9bcb4abb3b293f9a437390868cebf0a0e",
   "sim/video.py": "11de763eafefbc383067a1922be0cb3be1ac1938b2f10d42308136ab6a68094b",
   "standard/tests/grade.py": "007b3f7dbb530c93888a256e625df60965c9a23691bb214b8e33ba9902945d84"
  }

@@ -215,7 +215,7 @@ class Server:
         self.log_call(name, args, t0, out)
         return out
 
-    def _maybe_finish_tool(self):
+    def _add_spec_tools(self):
         """/spec shows an endpoint whose tool the manifest does not list (kinematics: spec `kinematics`; reset: a reset
         budget): add the tool and tell the client (notifications/tools/list_changed)."""
         spec = getattr(self.adapter, "spec", None)
@@ -253,7 +253,7 @@ class Server:
                 result, extras = self.ops.run(name, fn, args)
             if isinstance(result, dict):
                 result["tool_s"] = round(time.time() - t0, 3)
-            self._maybe_finish_tool()
+            self._add_spec_tools()
             content = [{"type": "text", "text": json.dumps(result, separators=(",", ":"))}] + list(extras or [])
             return {"content": content, "isError": False}
         except ToolError as e:

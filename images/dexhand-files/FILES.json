@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:dexhand-files-0.8.0@sha256:7e1625b83685f06e53482f03cad922515b63c3e2d80749844be1f19786e4fd5d",
+ "image": "ghcr.io/mll-lab-nu/efe:dexhand-files-0.8.0@sha256:d1dc5f258bcd214889ef9262f8b12da2ee997b55705f77e8b717629e6634ac6f",
  "source": "embodied_first_exam/benchmarks/dexhand",
  "files": {
   "privileged/environment/arm_rig.py": "21b1ec8a66402906ae7b228db82a9b0dc8102a501a07caa153217f0f3cb765c0",
@@ -595,10 +595,10 @@
   "sim/essential_cube_layer_scene.py": "f401df79c0f6a0945bc5b60bb1fd459edebc02ced7d79f4d145ba7b91d1b8774",
   "sim/essential_cube_reorient_scene.py": "a03a96e1045180abb910370a51888fcdbb1232a52a447acef0bbf4760ff2dff4",
   "sim/essential_registry.json": "8b1b515e7d3a40be186af32ed34e85abd91fd22b985fc2a41aba311bbdc182b7",
-  "sim/finalize.py": "1c731da146bc90f0a4877d08fe602adb2173f9c48591508be217d24c16bc2ca3",
+  "sim/finalize.py": "cd5526e16e4fd6b3662f99d1f266b0c409df63bc1a1bc520ed938e4122e2c2fc",
   "sim/finalize.sh": "7c347b83c53411c1c010b8a3fb5c2b27869ec597b5231ca125ebb72702a4ef38",
   "sim/rcb_dexhand.py": "3e1bd8364414fa26e2b83710665c44152a6c7d199851f6fab361a31aeb3b9742",
-  "sim/server.py": "ee3a6fb949927ce6ffd4a73cf7b3d5cc74b00dd469b47e4e3ecf8034aa3a2fe1",
+  "sim/server.py": "185e93419b3490f5ebadcaa4db144dbecd496d5ee3b0d0f8bd5bbb0f84ab1123",
   "standard/tests/grade.py": "7891d9b4808ec9f8a6946f262a27067b4ed2559db7b92ef9e83f0b1fcfc6a14a"
  }
 }
