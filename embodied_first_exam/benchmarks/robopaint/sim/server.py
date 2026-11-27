@@ -40,7 +40,9 @@ OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 CTRL_HZ = 20; SUBSTEPS = 5
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 VIDEOS = ("mp4", "frames", "both", "none")
-MAX_VIDEO_FPS = 1000                   # the mp4 encoder's frame rate; the recorder keeps at most one frame per control step
+# The response video's frame rate: its frames are control steps of robot time (the recorder keeps at most one frame per
+# control step, recorder()), so a rate above the 20 Hz control rate would play faster than robot time: capped there
+MAX_VIDEO_FPS = CTRL_HZ
 # The images one call may hold (PROTOCOL §3 "Images per call"): every frame a call records stays in memory until its
 # response is sent, so a call without a bound could exhaust the sidecar's memory, and a service killed for memory is never
 # the agent's failure, so one large request could void a failed trial. Cameras x frames at the recorder's real stride,
@@ -106,6 +108,8 @@ def dump() -> list | None:
     n = int(E.get("episode_control_steps") or 0)
     metrics = {k: v for k, v in numbers(live).items() if not isinstance(v, bool)}
     ok = bool(live.get("success")) and err is None
+    if AE.ENABLED and ok:   # the sheet is scored only at the end: the success is seen there (final.json hidden_success_*)
+        AE.hidden_success(E, True, log, n)
     rec = {"steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
            "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": True, "task": TASK, "protocol": PROTOCOL,
            "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields(), **AE.final_fields(E, n),
@@ -163,6 +167,8 @@ except RuntimeError as exc:
     # failure. Give up at once with a record (final.json: finalized, gave_up, infra_error = 1), before the agent is served.
     traceback.print_exc(); log({"ev": "instance_mismatch", "error": str(exc)[:300]})
     EP.give_up(f"instance_mismatch: {exc}"[:300], infra=True)     # never returns
+if AE.STEP_LIMIT:                       # RCB_STEP_LIMIT (agent-ended episodes): a lower step cap than the runaway guard's
+    S.max_steps = min(int(S.max_steps), int(AE.STEP_LIMIT))
 if not S.render_enabled:
     raise SystemExit("the sim service needs a Vulkan-capable GPU for its cameras")
 LAYOUT = [f"panda_joint{i}" for i in range(1, 8)]
@@ -264,6 +270,7 @@ SPEC = {
     "task_text": TASK_TEXT,
     "control_hz": CTRL_HZ, "max_video_fps": MAX_VIDEO_FPS, "physics_substeps": SUBSTEPS, "physics_hz": CTRL_HZ * SUBSTEPS, "max_chunk_s": MAX_CHUNK_S,
     "max_frames_per_call": MAX_FRAMES,
+    "max_control_steps": int(S.max_steps),   # the step cap (the runaway guard, or RCB_STEP_LIMIT when smaller): step_limit
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT.get(c, "static"), "resolution": [int(FIRST[c].shape[1]), int(FIRST[c].shape[0])],
                     "calibration_in_obs": OBS_CALIBRATION, "intrinsic_cv": CALIB[c]["intrinsic_cv"], "depth_range_m": NEAR_FAR[c],
                     "mount": {"type": "static", "extrinsic_cv": CALIB[c]["extrinsic_cv"], "cam2world_gl": CALIB[c]["cam2world_gl"]}} for c in CAMS},
@@ -368,6 +375,8 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
         finish("step_guard"); return True
     stop = EP.journal(a)
     rec.tick()
+    if S.n_steps >= S.max_steps:
+        finish("step_guard")           # the cap reached at this step: the call that reached it ends it
     return E["done"] or stop
 
 
@@ -442,10 +451,10 @@ def note_of(meta: dict) -> str:
 
 
 def video_fps(meta: dict) -> int:
-    """Frames per second of the returned video (absent or null: 5). A rate the mp4 encoder cannot write (negative, or
-    beyond any real rate) is a 400 here, before the chunk runs (failing after it had run would end the episode)."""
+    """Frames per second of the returned video (absent or null: 5), at most the control rate (its frames are control
+    steps); anything else is a 400 here, before the chunk runs (failing after it had run would end the episode)."""
     fps = number(meta, "video_fps", 5)
-    if not (0 <= fps <= MAX_VIDEO_FPS): raise ValueError(f"video_fps must be in [0, {MAX_VIDEO_FPS}]")
+    if not (1 <= fps <= MAX_VIDEO_FPS): raise ValueError(f"video_fps must be in [1, {MAX_VIDEO_FPS}] (the control rate)")
     return int(fps)
 
 
