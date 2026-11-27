@@ -75,11 +75,9 @@ simulator thread. What a request can cost the clock is bounded:
   alone takes more than MAX_LAG_S (a stall by itself: CPU rendering) keeps the next rendering request waiting
   BEHIND_PACE times as long, clock on time or not; requests without images (cameras = [], /status) are not held
   back by it, so a controller's loop goes on. Requests can so take at most 1 / (1 + BEHIND_PACE) of the clock's time.
-- Cameras are rendered (and the proprioception read) at most once per control step, however many requests and watches
-  ask for them: all of them get that step's frames. The pending watches and the answers not yet sent (built, or
-  being written to a client that reads slowly) together hold at most max_frames_per_call images. A watch that would
-  exceed it, or that would make more than MAX_UNSENT_BODIES pending watches and unsent answers with images, is refused
-  (429, nothing ran) until one completes or is sent. A submit or an /observe now is never refused for its images:
+- Cameras are rendered (and the proprioception read) at most once per control step, however many requests ask for
+  them: all of them get that step's frames. The answers not yet sent (built, or being written to a client that reads
+  slowly) together hold at most max_frames_per_call images. A submit or an /observe is never refused for its images:
   past the budget, or with MAX_UNSENT_BODIES answers unsent, it is answered without its frames (meta
   frames_skipped). An answer whose client does not take it within SEND_TIMEOUT_S is dropped with its connection.
 More than MAX_LAG_S behind, the service drops the debt instead of fast-forwarding the robot (a stall: counted, and its
@@ -133,7 +131,7 @@ CHILD_TIMEOUT_S = 60.0   # the child process's time for one body
 CHILD_MEM = 1 << 30      # ... and its memory above what its interpreter needs (a body that needs more is refused)
 SWITCH_INTERVAL_S = 0.001   # the interpreter's thread switch interval while serving (default 0.005): HTTP threads
                             # hand the lock back to the simulator thread within a millisecond
-MAX_UNSENT_BODIES = 8    # answers with images built or being sent, with the pending watches for a watch (not for a submit or an /observe now)
+MAX_UNSENT_BODIES = 8    # answers with images built or being sent at a time (more: answered without their frames)
 SEND_TIMEOUT_S = 30.0    # a client that has not taken an answer within this loses it (and its connection)
 FIELDS = ("type", "dt", "interpolate", "at", "cameras", "video_fps", "video", "include_depth", "note", "seconds", "last_s")
 # The camera worker (module docstring, "Cameras"): used when the adapter has render_state() and render_from() and
@@ -247,17 +245,9 @@ class _Job:
         self.done.set()
 
 
-class _Watch:
-    """A pending /observe with seconds > 0: completes once its control steps have run (or the episode ended)."""
-
-    def __init__(self, job: _Job, rec: Recorder, start: int, steps: int, cameras: list[str], obs_id: int):
-        self.job, self.rec, self.cameras, self.obs_id = job, rec, cameras, obs_id
-        self.start, self.end = start, start + steps
-
-
 class _Views:
     """The simulator as the Recorders see it: the cameras are rendered, and the proprioception read, at most once per
-    control step, however many requests and watches ask (each gets that step's arrays; nobody writes into them). The
+    control step, however many requests ask (each gets that step's arrays; nobody writes into them). The
     state they show changes only with a control step or a reset, which is what the cache is keyed by."""
 
     def __init__(self, svc: "RealtimeService"):
@@ -458,7 +448,6 @@ class RealtimeService(Service):
         self.plan: collections.deque = collections.deque()   # (type, row, call id) per coming control step, or HELD
         self.running = False
         self.anchor_t = self.anchor_n = 0                  # the clock: control step anchor_n was due at anchor_t
-        self.watches: list[_Watch] = []
         self.q: queue.Queue = queue.Queue()
         self.max_lag = self.lag = 0.0
         self.stalls = self.held_steps = self.late_steps = 0
@@ -496,7 +485,7 @@ class RealtimeService(Service):
         self._render_gate = 0.0                            # ... and no rendering request before this, behind or not
         self._held: collections.deque = collections.deque()   # requests taken from the queue before their time
         # answers with images that are done but not sent yet (their HTTP thread builds and writes them): their images
-        # count against max_frames_per_call with the pending watches' until the body is sent or dropped
+        # count against max_frames_per_call until the body is sent or dropped
         self._unsent_lock = threading.Lock()
         self.unsent_images = self.unsent_bodies = 0
         self._obs_slots = threading.BoundedSemaphore(MAX_UNSENT_BODIES)   # observations with images being answered
@@ -673,7 +662,7 @@ class RealtimeService(Service):
 
     def _end(self, reason: str) -> None:
         super()._end(reason)
-        self._stop_clock(reason)                     # pending watches are completed by whoever ended it, after this
+        self._stop_clock(reason)
 
     def due_in(self, now: float) -> float | None:
         """Seconds until the next control step is due (<= 0: due now); None while the clock is stopped."""
@@ -711,12 +700,7 @@ class RealtimeService(Service):
             self.log("error", path="clock", error=repr(exc)[:500], agent=self.commanded)
             self.error_infra = not self.commanded    # after the first command: the agent's commands raised it
             self._end("error")
-            self._release_watches()
             return
-        for w in list(self.watches):
-            w.rec.step()
-            if self.done or len(self.episode) >= w.end:
-                self._complete_watch(w)
         if self.recording:
             self._publish(self.done or len(self.episode) % self.cameras.every == 0)
         if not self.done and len(self.episode) % self.ckpt_every == 0:
@@ -739,10 +723,10 @@ class RealtimeService(Service):
 
     def front(self, method: str, path: str, n: int = 0, read=None) -> tuple:
         """Everything about a request that needs no simulator, on the caller's thread (an HTTP thread): the route, the
-        body (`read(n)`, called only for a body that will be decoded), its decoding, and every check that does not
-        depend on the episode's state. Returns ("reply", status, content type, body) for a request that ends here --
-        every refusal but the ones only the episode's state can decide (409, an `at` too far ahead, too many frames) --
-        or (route, checked request) for the simulator thread."""
+        body (`read(n)`, called only for a body that will be decoded, or read and dropped: /finish's), its decoding,
+        and every check that does not depend on the episode's state. Returns ("reply", status, content type, body) for
+        a request that ends here -- every refusal but the ones only the episode's state can decide (409, an `at` too
+        far ahead, too many frames) -- or (route, checked request) for the simulator thread."""
         if self._t_seen is None:
             with self._stat_lock:
                 self._t_seen = self._t_seen or time.time()
@@ -754,10 +738,16 @@ class RealtimeService(Service):
         if method == "GET" and path == "/status":
             return ("/status", None)
         if method == "POST" and path == "/finish" and self.agent_end:   # agent-ended episodes (rcb_service.AGENT_END)
-            if n < 0:                                # its body is not read (the simulator thread ends the episode),
-                return self._refusal(Refused(400, {"error": "bad Content-Length"}))   # but its length is checked as
-            if n > MAX_BODY:                                                          # every POST's
+            if n < 0:                                # its length is checked as every POST's; its body is read and
+                return self._refusal(Refused(400, {"error": "bad Content-Length"}))   # dropped, never parsed
+            if n > MAX_BODY:
                 return self._refusal(Refused(413, {"error": f"request body over {MAX_BODY} bytes"}))
+            while n > 0:
+                got = read(min(n, 1 << 20))
+                if not got:
+                    break
+                self._count(read=len(got))
+                n -= len(got)
             return ("/finish", None)
         if method != "POST" or path not in ("/submit", "/observe") + (("/reset",) if self.reset_budget else ()):
             return self._refusal(Refused(404, {"error": "no such endpoint"}))
@@ -793,6 +783,8 @@ class RealtimeService(Service):
         a request that races the episode's end may get either answer, as it always could)."""
         if path == "/submit" and (self.done or self.stopping):
             return self._conflict()
+        if path == "/observe":
+            return self._observe_refusal()
         if path == "/reset":
             try:
                 self._reset_view({})
@@ -976,11 +968,10 @@ class RealtimeService(Service):
         = n the frames recorded in the last n seconds of robot time (at most the ring's lookback_s), video_fps apart,
         with the proprioception of their steps."""
         last_s, (cams, fps, video, depth) = req["last_s"], req["view"]
-        if self.agent_end and self.done and self.reason == "finished":
-            return self._refusal(self._conflict())   # after /finish every call but /spec and /status is refused
-        pub = self._pub
-        if pub is None:
-            return self._refusal(Refused(503, {"error": "warming up"}))
+        refused = self._observe_refusal()            # after /finish, the session's end or a give-up: 409
+        if refused:
+            return self._refusal(refused)
+        pub = self._pub                              # published by start(), before the first request is served
         cdt = self.sim.control_dt
         slot = bool(cams) and self._obs_slots.acquire(blocking=False)
         try:
@@ -1023,12 +1014,14 @@ class RealtimeService(Service):
         parts: list = []
         if cams and frames:
             last = frames[-1]
+            gap = (frames[-1]["step"] - frames[0]["step"]) / (len(frames) - 1) if len(frames) > 1 else 0
+            rate = 1.0 / (cdt * max(gap or self.cameras.every, 1e-9))   # the frames' real rate, as 2.1's
             for c in cams:
                 rgbs = [f["rgb"][c] for f in frames]
-                if window and video in ("mp4", "both") and getattr(rcb_service, "encode_mp4", None):
-                    parts.append((f"video/{c}", "mp4", rcb_service.encode_mp4(rgbs, 1.0 / max(cdt, 1e-9) / max(
-                        1, (frames[-1]["step"] - frames[0]["step"]) // max(1, len(frames) - 1))), {"n": len(rgbs)}))
-                if video in ("frames", "both") or not window:
+                if window and video in ("mp4", "both"):
+                    parts.append((f"video/{c}", "mp4", rcb_service.encode_mp4(rgbs, rate),
+                                  {"fps": round(rate, 3), "n": len(rgbs)}))
+                if video in ("frames", "both") or (not window and video == "mp4"):   # no time, no video: frames (2.1)
                     parts.append(rcb1.frames_part(f"frames/{c}", rgbs))
                 parts.append(rcb1.array_part(f"last/{c}", last["rgb"][c]))
                 if depth and c in last["dep"]:
@@ -1046,8 +1039,8 @@ class RealtimeService(Service):
 
     # ------------------------------------------------------------------ requests (simulator thread)
     def dispatch(self, job: _Job) -> None:
-        """Serve one queued request; a watch finishes later, from tick(). A job that front() has not seen (handed over
-        whole: tests, tools) is taken through it here."""
+        """Serve one queued request. A job that front() has not seen (handed over whole: tests, tools) is taken through
+        it here."""
         self.max_queue_wait = max(self.max_queue_wait, time.monotonic() - job.queued)
         try:
             if not job.req:
@@ -1059,13 +1052,12 @@ class RealtimeService(Service):
                 return job.finish("raw", *job.req[1:])
             if route == "/status":
                 return job.finish("raw", *self._reply_json(200, self.status()))
-            if route == "/finish":                   # the clock stops with the episode (no watch is pending from 3.0)
+            if route == "/finish":                   # the clock stops with the episode
                 try:
                     out = self._agent_finish()
                 except Refused as exc:
                     self._count(refused=1)
                     return job.finish("raw", *self._reply_json(exc.code, exc.body))
-                self._release_watches()
                 return job.finish("raw", *self._reply_json(200, out))
             try:
                 {"/submit": self._rt_submit, "/observe": self._rt_observe,
@@ -1079,7 +1071,6 @@ class RealtimeService(Service):
                 if not self.done:                    # a request's own work failed (a render, a reset's rebuild), not
                     self.error_infra = True          # a control step of the agent's commands: infrastructure
                 self._end("error")
-                self._release_watches()
                 if not job.done.is_set():
                     job.finish("raw", *self._reply_json(500, {"error": "simulator error", "detail": repr(exc)[:200]}))
         except Exception as exc:  # noqa: BLE001 -- never leave an HTTP thread waiting forever
@@ -1195,8 +1186,9 @@ class RealtimeService(Service):
         """/observe of a service without a recorder (record_frames not True), on the simulator thread: the present
         only (last_s is answered with it, meta.last_s = 0); never refused for its images (past the budget it comes
         without its frames, as a submit)."""
-        if self.agent_end and self.done and self.reason == "finished":
-            raise self._conflict()                   # after /finish every call but /spec and /status is refused
+        refused = self._observe_refusal()            # after /finish, the session's end or a give-up: 409
+        if refused:
+            raise refused
         with bad_request():
             cams, fps, video, depth = req["view"]
             rec = Recorder(self.views, cams, fps, depth, video if video != "mp4" else "frames")   # no time: no video
@@ -1212,35 +1204,15 @@ class RealtimeService(Service):
         self._save_call(out, None)
         return self._finish_rec(job, out, rec, rec.images_per_call(0))
 
-    def _in_flight(self, images: int) -> None:
-        """Refuse (429, nothing ran) a request whose answer would carry `images` when the pending watches and the
-        answers not yet sent hold too many already: every one of them keeps its images in memory until it is sent."""
-        if not images:
-            return
-        pending = sum(w.rec.images_per_call(w.end - w.start) for w in self.watches)
-        with self._unsent_lock:
-            unsent, bodies = self.unsent_images, self.unsent_bodies
-        if pending + unsent + images > self.max_frames:
-            raise Refused(429, {"error": f"the pending watches and the answers not sent yet hold up to {pending + unsent} "
-                                         f"images and this call would add {images}: more than max_frames_per_call = "
-                                         f"{self.max_frames} in flight; wait for a watch to complete or an answer to be "
-                                         "read, or ask for fewer cameras or a lower video_fps",
-                                "images_in_flight": pending + unsent})
-        if bodies + len(self.watches) >= MAX_UNSENT_BODIES:
-            raise Refused(429, {"error": f"{bodies} answers with images are not read yet and {len(self.watches)} "
-                                         f"watches are pending: at most {MAX_UNSENT_BODIES} at a time; read them first",
-                                "images_in_flight": pending + unsent})
-
     def _submit_fits(self, images: int) -> bool:
-        """Whether a submit's or an /observe now's answer may carry its `images`: they fit in max_frames_per_call with
-        the pending watches' and the unsent answers', and fewer than MAX_UNSENT_BODIES answers wait to be sent (pending
-        watches do not count here). Otherwise it is answered without them (meta frames_skipped), never refused."""
+        """Whether a submit's or an /observe's answer may carry its `images`: they fit in max_frames_per_call with the
+        unsent answers', and fewer than MAX_UNSENT_BODIES answers wait to be sent. Otherwise it is answered without
+        them (meta frames_skipped), never refused."""
         if not images:
             return True
-        pending = sum(w.rec.images_per_call(w.end - w.start) for w in self.watches)
         with self._unsent_lock:
             unsent, bodies = self.unsent_images, self.unsent_bodies
-        return pending + unsent + images <= self.max_frames and bodies < MAX_UNSENT_BODIES
+        return unsent + images <= self.max_frames and bodies < MAX_UNSENT_BODIES
 
     def _finish_rec(self, job: _Job, out: dict, rec: Recorder, images: int) -> None:
         """Answer with a Recorder: its images count as in flight until the HTTP thread has sent the body (_sent)."""
@@ -1259,22 +1231,8 @@ class RealtimeService(Service):
                 self.unsent_images -= n
                 self.unsent_bodies -= 1
 
-    def _complete_watch(self, w: _Watch) -> None:
-        self.watches.remove(w)
-        w.rec.finish()
-        ran = max(0, min(len(self.episode), w.end) - w.start)
-        out = {**self.meta(), "obs_id": w.obs_id, "seconds": round(ran * self.sim.control_dt, 4),
-               "control_steps_watch": ran, "ok": True}
-        self._save_call(out, None)
-        self._finish_rec(w.job, out, w.rec, w.rec.images_per_call(w.end - w.start))
-
-    def _release_watches(self) -> None:
-        for w in list(self.watches):
-            self._complete_watch(w)
-
     def _rt_reset(self, meta: dict, job: _Job) -> None:
-        self._reset_view(meta)                       # a refused reset (409, 400) changes nothing: the watches go on
-        self._release_watches()
+        self._reset_view(meta)                       # a refused reset (409, 400) changes nothing
         out, prts = self._reset(meta, {})            # 2.1's reset: abandons the episode, a new one (paused)
         self._stop_clock("reset")
         self._publish(True)                          # the new episode's start, for the readers and the cameras
@@ -1282,11 +1240,10 @@ class RealtimeService(Service):
 
     # ------------------------------------------------------------------ the loop (simulator thread) and HTTP
     def poll(self) -> None:
-        """After SIGUSR1: end the episode, answer the pending watches, finalize (Service.poll, plus the watches)."""
+        """After SIGUSR1: end the episode, finalize (Service.poll), close the camera worker."""
         if self.stopping and not self.finalized:
             if not self.done:
                 self._end("timeout")
-            self._release_watches()
             self._finalize()
             if self.cameras is not None:
                 self.cameras.close()
