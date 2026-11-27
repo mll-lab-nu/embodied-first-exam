@@ -51,8 +51,8 @@ s.start_video("/app/output/try.mp4"); ...; s.stop_video()          # film the st
 ```
 - The scene's objects (`s.objects()`, the names the primitives take): `ceramic_mug`, `mug`, `rack_l04`, `serving_bowl`,
   `utilityjug_a01`, `table`.
-- The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill
-  are yours to build from them.
+- The primitives are deliberately thin: IK moves, joint moves, gripper, hold. You build grasping, placing and every
+  other skill from them.
 - The replay CLI does what the grader does; run it to check yourself:
   `python /opt/tools/rcb_robolab.py replay --task take_mugs_off_of_shelf --instance /app/instance.json --traj /app/output/trajectory.npz`
 

@@ -52,8 +52,8 @@ s.start_video("/app/output/try.mp4"); ...; s.stop_video()          # film the st
 - The scene's objects (`s.objects()`, the names the primitives take): `rubiks_cube`, `rubiks_cube_1`, `rubiks_cube_2`,
   `grey_bin`, `lizard_figurine`, `birdhouse`, `yellow_block`, `red_block`, `green_block`, `blue_block`,
   `lizard_figurine_01`, `table`.
-- The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill
-  are yours to build from them.
+- The primitives are deliberately thin: IK moves, joint moves, gripper, hold. You build grasping, placing and every
+  other skill from them.
 - The replay CLI does what the grader does; run it to check yourself:
   `python /opt/tools/rcb_robolab.py replay --task rubiks_cubes_in_bin --instance /app/instance.json --traj /app/output/trajectory.npz`
 

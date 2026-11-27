@@ -5,8 +5,8 @@ Grip the pot by its two side handles, the left arm on the handle at the robot's 
 lift it off the table, roughly level.
 
 ## Goal
-Success: each arm holds the pot's handle on its own side, and the pot is lifted off the table and roughly level. What
-counts is how things stand after the last action of your trajectory, replayed from the fixed start.
+Success: each arm holds the pot's handle on its own side, and the pot is lifted off the table and roughly level. Your
+trajectory is replayed from the fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`: the
 recorded actions, (T, 34), one row per physics step (1/250 s); at most 200,000 rows are graded. It is replayed open-loop

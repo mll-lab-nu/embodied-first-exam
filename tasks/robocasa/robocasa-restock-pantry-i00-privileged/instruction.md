@@ -5,8 +5,8 @@ Put both cans from the counter in the cabinet, on the side where the other can a
 
 ## Goal
 Success: both cans are all the way inside the cabinet, each on the same side as the can already there and away from the
-other item, and your hand has let go and moved away from them. What counts is how things stand after the last action of
-your trajectory, replayed from the fixed start.
+other item, and your hand has let go and moved away from them. Your trajectory is replayed from the fixed start. What
+counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 12)`
 with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave
@@ -49,8 +49,8 @@ img = s.render("robot0_agentview_center")   # RGB (240, 320, 3); views in s.came
 - Labels in `s.state()`: `obj1` the first can to put away, `obj2` the second can to put away, `cab_obj1` the can already
   in the cabinet, `cab_obj2` the other item in the cabinet (`objects`; bodies `<label>_main`); the cabinet: names
   starting `cab_main_main_group`.
-- Read success with `s.check()`: the check runs after every step in your session as it does in the grader, and calling
-  the environment's own check yourself changes the run you are recording.
+- Read success with `s.check()`. It runs after every step in your session, as it does in the grader. Calling the
+  environment's own check yourself changes the run you are recording.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At

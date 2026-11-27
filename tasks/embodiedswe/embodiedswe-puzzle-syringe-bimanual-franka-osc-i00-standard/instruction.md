@@ -10,7 +10,7 @@ fifths of a full syringe; and the syringe now lies back at its starting spot on 
 
 Filling the syringe and dosing the tubes count as they happen.
 
-When you are done, send `/finish` to end the episode and get it graded. Everything else counts only as it stands at that
+When you are done, send `/finish` to end the episode and get it graded. Everything else is judged on the state at that
 point.
 
 Rules:

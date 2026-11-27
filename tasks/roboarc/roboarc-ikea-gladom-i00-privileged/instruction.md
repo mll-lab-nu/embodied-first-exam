@@ -8,9 +8,9 @@ the ring and drive its two screws, and set the tray on the ring. Then let go of 
 Success: the tray table is assembled: frame B, the ring and all four screws are seated on frame A, one screw per hole
 (the three short screws are alike, so any of them may go into the bottom hole or either of the ring's holes), and the
 tray rests loose on the ring; no arm touches any part and everything is still. Forcing parts deep into each other breaks
-the simulation and ends the episode at once, without success. What counts is how things stand after the last action of
-your trajectory, replayed from the fixed start. After your last row the grader holds it for 1 s more and requires all of
-this again: end your rows with the parts released, the arms clear of them and everything at rest.
+the simulation and ends the episode at once, without success. Your trajectory is replayed from the fixed start. What
+counts is the state after its last action. After your last row the grader holds it for 1 s more and requires all of this
+again: end your rows with the parts released, the arms clear of them and everything at rest.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`: `ctrl` (N, 16) float64, `substeps` = 4,
 `timestep` = 0.000625, at most 337,000 rows (a longer one is refused). Leave the script that produced it at

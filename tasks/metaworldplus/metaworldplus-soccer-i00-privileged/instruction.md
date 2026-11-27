@@ -4,8 +4,8 @@
 Push the ball into the goal.
 
 ## Goal
-Success: the ball is in the goal, at the target point. What counts is how things stand after the last action of your
-trajectory, replayed from the fixed start.
+Success: the ball is in the goal, at the target point. Your trajectory is replayed from the fixed start. What counts is
+the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: Meta-World's native actions, shape `(T, 4)` with 1 ≤ T ≤
 500 (Meta-World's episode length), one row per control step (1/80 s). Write it with `s.save_trajectory()` so the format

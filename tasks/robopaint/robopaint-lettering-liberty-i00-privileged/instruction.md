@@ -7,8 +7,8 @@ at most 5 strokes.
 ## Goal
 Success: the ink on the main sheet matches the exemplar's line letter for letter (every stroke inked along its whole
 length, its edges where the exemplar's are, almost no ink anywhere else), you used at most 5 strokes, and the process
-rules below hold; a small shift of the whole writing does not matter. What counts is how things stand after the last
-action of your trajectory, replayed from the fixed start.
+rules below hold; a small shift of the whole writing does not matter. Your trajectory is replayed from the fixed start.
+What counts is the state after its last action.
 
 You are scored on how closely your ink matches the exemplar's.
 

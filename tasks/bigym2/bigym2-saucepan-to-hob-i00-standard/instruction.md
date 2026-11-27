@@ -49,8 +49,8 @@ The episode starts when the service comes up, from a fixed starting state. Once 
 use up the episode's control steps. Between calls the robot waits, frozen, while you think; `get_obs()` is free. One
 call returns at most 3000 images. The answers are binary (RCB1) and come back decoded: `res.meta` (the counters, `done`,
 `reason`, `proprio["now"]`, `clipped`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the
-cameras saw during the call), `res.proprio` (proprioception rows). Values outside the bounds are clipped and reported in
-`meta["clipped"]`, never refused; a malformed request raises `ValueError` and runs nothing. The response of the call
+cameras saw during the call), `res.proprio` (proprioception rows). Values outside the bounds are clipped, not refused,
+and `meta["clipped"]` reports them. A malformed request raises `ValueError` and runs nothing. The response of the call
 that ends the episode also carries `meta["outcome"]`, BiGym's own label of how it ended (`timeout` at the step cap,
 `fell`, `terminated`, `physics_error`). Standing still is the row with the current height, lean, arm and gripper targets
 and zero `vx`, `vy`, `wz`; `hold(s)` does that from your last row. Measured here: a control step costs about 14 ms of

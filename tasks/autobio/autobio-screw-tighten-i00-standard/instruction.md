@@ -44,9 +44,9 @@ r.status()                                     # calls, control steps, done, rea
 ```
 
 Simulated time only advances with your commands (and `hold(s)`, which holds the last targets). If the service crashes, a
-call fails with a connection error: it restarts and resumes the same episode (never a reset) in the state after the last
-call it completed. `r.wait_ready()` waits for it; then check `r.status()`. One call returns at most 3000 images;
-`video_fps` is up to 50, default 10.
+call fails with a connection error. The service restarts and resumes the same episode (never a reset), in the state
+after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`. One call returns at most 3000
+images; `video_fps` is up to 50, default 10.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,

@@ -5,8 +5,8 @@ Put the bell pepper from the cutting board in the pot, and move both hands away.
 
 ## Goal
 Success: the bell pepper is in the pot, not touching the counter, with the pot still upright and both hands moved away
-from the bell pepper and the pot. What counts is how things stand after the last action of your trajectory, replayed
-from the fixed start.
+from the bell pepper and the pot. Your trajectory is replayed from the fixed start. What counts is the state after its
+last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 24)`
 with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave
@@ -50,8 +50,8 @@ img = s.render("robot0_agentview_center")   # RGB (240, 320, 3); views in s.came
 ## Others
 - Labels in `s.state()` (`objects` and body names such as `obj_main`): `obj` is the bell pepper, `container` the pot and
   `obj_container` the cutting board; `distractor_…` are other items.
-- Read success with `s.check()`: the check runs after every step in your session as it does in the grader, and calling
-  the environment's own check yourself changes the run you are recording.
+- Read success with `s.check()`. It runs after every step in your session, as it does in the grader. Calling the
+  environment's own check yourself changes the run you are recording.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At

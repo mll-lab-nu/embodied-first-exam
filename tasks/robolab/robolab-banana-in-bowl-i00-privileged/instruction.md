@@ -50,8 +50,8 @@ p["set_joint_targets"](a8, steps=1); p["get_joint_targets"]()     # raw 8-D targ
 s.start_video("/app/output/try.mp4"); ...; s.stop_video()          # film the steps in between; s.state_sha(): the state's hash
 ```
 - The scene's objects (`s.objects()`, the names the primitives take): `banana`, `bowl`, `table`.
-- The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill
-  are yours to build from them.
+- The primitives are deliberately thin: IK moves, joint moves, gripper, hold. You build grasping, placing and every
+  other skill from them.
 - The replay CLI does what the grader does; run it to check yourself:
   `python /opt/tools/rcb_robolab.py replay --task banana_in_bowl --instance /app/instance.json --traj /app/output/trajectory.npz`
 

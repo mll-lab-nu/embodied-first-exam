@@ -47,7 +47,7 @@ r.status()                                     # calls, control steps, done, rea
 Simulated time only advances with your commands (and `hold(s)`, which holds the last targets). The service needs 5 to 10
 minutes to come up (Isaac Sim prepares the stage for its renderer once; longer on a busy host): `Robot()` waits for it
 (it prints its progress to stderr), and that wait is part of your budget. If the service crashes, a call fails with a
-connection error: it restarts and resumes the same episode (never a reset) in the state after the last call it
+connection error. The service restarts and resumes the same episode (never a reset), in the state after the last call it
 completed. `r.wait_ready()` waits for it; then check `r.status()`. Ask only for the cameras you need; `video="none"`
 makes a chunk fastest. One call returns at most 1800 images; `video_fps` is up to 30, default 10.
 

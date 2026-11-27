@@ -11,7 +11,7 @@ started. Pushing or dragging a block away from its place ends the episode as a f
 
 The covering and uncovering count as they happen, in order.
 
-When you are done, send `/finish` to end the episode and get it graded. Everything else counts only as it stands at that
+When you are done, send `/finish` to end the episode and get it graded. Everything else is judged on the state at that
 point.
 
 Rules:
@@ -48,9 +48,9 @@ res.last["cam_right_wrist"]; res.proprio      # last frame per camera; float32 (
 ```
 
 The service's first start in a trial compiles Isaac's shaders and materials: `Robot()` can wait ~4-15 min (it prints its
-progress to stderr once a minute). It gives up after 3600 s (`Robot(timeout=...)`) with
-`RuntimeError("sim service unavailable ...")`: then call it again (nothing has happened in the episode yet; your wall
-clock runs from the start of the trial).
+progress to stderr once a minute). After 3600 s (`Robot(timeout=...)`) it gives up with
+`RuntimeError("sim service unavailable ...")`. Then call it again: nothing has happened in the episode yet. Your wall
+clock runs from the start of the trial.
 
 Optional inputs (ask only for what you need):
 - Depth: `r.get_obs(depth=True)` -> `obs.last_depth[cam]` float32 (H,W) z-depth in metres, 0 = no reading, pixel-aligned
@@ -63,10 +63,11 @@ Optional inputs (ask only for what you need):
   right joint1..6.
 - `res.group("joint_vel")`: proprio columns by group name (`spec["proprio_groups"]`).
 
-If the service crashes, a call fails with a connection error: the simulator restarts and resumes the SAME episode (never
-a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()` waits until it
-answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then check
-`r.status()["control_steps"]` before you continue (`spec["on_service_error"]`). One call returns at most 3000 images.
+If the service crashes, a call fails with a connection error. The simulator restarts and resumes the SAME episode (never
+a reset), in the state after the last call it completed. You may not have received that call's reply. `r.wait_ready()`
+waits until it answers again. Resuming replays the episode so far and can take minutes; the wall clock keeps running.
+Then check `r.status()["control_steps"]` before you continue (`spec["on_service_error"]`). One call returns at most 3000
+images.
 
 ### MCP tools
 - The same service is also an MCP server, `efe-robot` (in your tool list), with one tool per endpoint: `spec`,

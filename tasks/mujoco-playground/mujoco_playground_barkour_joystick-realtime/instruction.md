@@ -50,8 +50,8 @@ while True:                                     # the first submit starts the cl
     q = ...                                     # from res.meta["proprio"]["now"]
 ```
 
-One call returns at most 3000 images. No call is refused for its images: while 8 answers with images are outstanding,
-the answer of a `submit` or a `get_obs()` comes without its frames and `meta["frames_skipped"]` is set. The answers are
+One call returns at most 3000 images. No call is refused for its images. While 8 answers with images are still waiting
+to be read, a `submit` or a `get_obs()` answers without its frames and sets `meta["frames_skipped"]`. The answers are
 binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `clipped`),
 `res.last[camera]` (the last frame, uint8 (240, 320, 3)), `res.frames` or `res.video` (what the cameras recorded),
 `res.proprio` (proprioception rows). Values outside the limits are clipped and reported in `meta["clipped"]`, never
@@ -104,20 +104,20 @@ force.
   that your session is free while it runs. Use your turns to start episodes, read what happened, and improve the
   program.
 - `submit` answers at once, with the robot as it is now: the rows you sent have not run yet. They become the plan from
-  control step `at` (an episode step number; by default the next step), replacing whatever was planned from `at` on and
-  keeping what is planned before it. When the plan runs out, the last targets are held. `res.meta["control_steps"]` is
-  the number of steps run so far in this episode (so the next step has that number), `res.meta["proprio"]["now"]` the
-  proprioception now, `res.meta["plan_end_step"]` where the plan now ends.
+  control step `at` (an episode step number; by default the next step). They replace whatever was planned from `at` on
+  and keep what is planned before it. When the plan runs out, the last targets are held. `res.meta["control_steps"]` is
+  the number of steps run so far in this episode, so the next step has that number. `res.meta["proprio"]["now"]` is the
+  proprioception now. `res.meta["plan_end_step"]` is where the plan now ends.
 - Closed loop: send one row per control step, `r.submit("joint_position", a[None], cameras=[])`, and compute the next
   one from the proprioception it returns. `cameras=[]` skips the images (the fastest call); sending faster than 100 Hz
   only replaces the same step's target again.
 - Open loop: send up to 10 s of rows at once (a chunk, `dt` a multiple of 0.01 s), with `at` = the step where it should
   take over; `at` may be up to `spec()["timing"]["max_ahead_steps"]` steps ahead.
 - Latency: a reading is a few milliseconds old when it reaches you, and a row takes effect at the next control step at
-  the earliest. A row whose step has already run when the request arrives is dropped (`res.meta["late_steps"]` counts
-  them); the rest of its chunk applies from the next step.
-- `get_obs()` reads the robot now; `get_obs(last_s=n)` returns, without waiting, what the cameras recorded over the last
-  n seconds (the robot keeps executing its plan). `r.status()` shows `running` and `lag_s`.
+  the earliest. A row whose step has already run when the request arrives is dropped; `res.meta["late_steps"]` counts
+  them. The rest of the chunk applies from the next step.
+- `get_obs()` reads the robot now. `get_obs(last_s=n)` returns at once what the cameras recorded over the last n seconds
+  (the robot keeps executing its plan). `r.status()` shows `running` and `lag_s`.
 - `r.reset()` puts the robot back on the same frozen starting state and starts a new episode, paused until your next
   `submit`, either abandoning the running episode or after one has ended. Once an episode has ended, `submit` raises
   `EpisodeOver` (its message gives `resets_left`) until you reset.

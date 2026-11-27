@@ -4,9 +4,9 @@
 Set the thermal mixer to time 30 s, temperature 33 °C, mixing speed 600 rpm, with the buttons on its front panel.
 
 ## Goal
-Success: the panel is set to exactly these three values. What counts is how things stand after the last action of your
-trajectory, replayed from the fixed start. A physics warning (an unstable simulation, for instance after the robot was
-driven hard into something) ends the episode at once, as a failure.
+Success: the panel is set to exactly these three values. Your trajectory is replayed from the fixed start. What counts
+is the state after its last action. A physics warning (an unstable simulation, for instance after the robot was driven
+hard into something) ends the episode at once, as a failure.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`. It is replayed open-loop
 from the same initial state and scores 1 if its episode ends in success. Leave the script that produced it at

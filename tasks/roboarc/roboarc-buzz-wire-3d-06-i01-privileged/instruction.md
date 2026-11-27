@@ -52,8 +52,8 @@ s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
 ```
 
-- The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill
-  are yours to build from them.
+- The primitives are deliberately thin: IK moves, joint moves, gripper, hold. You build grasping, placing and every
+  other skill from them.
 - One `Session` per process (one simulator per process). Building the scene and compiling its kernels can take minutes;
   every `Session`, including the one a replay or render CLI command starts, holds its own scene in GPU memory, so keep
   one alive at a time. Do not call `s.close()` before writing every output.

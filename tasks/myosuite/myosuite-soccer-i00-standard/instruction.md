@@ -48,8 +48,8 @@ the `_post` line above) puts the body and the scene back on the same frozen star
 either abandoning the running one or after one has ended; it takes no simulated time and returns the start's images and
 proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. The wall clock is the run's
 and never restarts; `meta["episode"]` and `meta["resets_left"]` count the episodes (`meta["control_steps"]` is the
-current episode's). If the service crashes, a call fails with a connection error: it restarts and resumes the same
-episode (never a reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check
+current episode's). If the service crashes, a call fails with a connection error. The service restarts and resumes the
+same episode (never a reset), in the state after the last call it completed. `r.wait_ready()` waits for it; then check
 `r.status()`. One call returns at most 1000 images. `r.fk(q)` (`/kinematics`) gives the camera mounts for any joint
 positions.
 

@@ -4,8 +4,8 @@
 Slide the window closed.
 
 ## Goal
-Success: the window is slid closed until its handle lines up with the target point from left to right. What counts is
-how things stand after the last action of your trajectory, replayed from the fixed start.
+Success: the window is slid closed until its handle lines up with the target point from left to right. Your trajectory
+is replayed from the fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: Meta-World's native actions, shape `(T, 4)` with 1 ≤ T ≤
 500 (Meta-World's episode length), one row per control step (1/80 s). Write it with `s.save_trajectory()` so the format

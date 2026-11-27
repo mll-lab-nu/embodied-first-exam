@@ -6,9 +6,9 @@ Line up the three cubes on the table in a perfectly straight line.
 ## Goal
 Success: the three cubes rest on the table in one straight line, seen from above, spread out along it, and everything
 else, the ruler included, is still on the table; the robot has let go of the cubes, touches none of them, and they are
-at rest. What counts is how things stand after the last action of your trajectory, replayed from the fixed start. After
-your last row the grader holds its command for about three seconds (a second, then two seconds in which all of this must
-keep holding, with nothing moving).
+at rest. Your trajectory is replayed from the fixed start. What counts is the state after its last action. After your
+last row the grader holds its command for about three seconds (a second, then two seconds in which all of this must keep
+holding, with nothing moving).
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 16) actions, one row
 per control step (1/30 s), at most 200,000 rows (more score 0). It is replayed once from the fixed start, settle check
@@ -49,11 +49,11 @@ s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
 ```
 
-The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill are
-yours to build from them. `s.replay(actions)` runs exactly what the grader runs, settle check included, and returns the
-verdict as `success` (why it failed in `settle`); `s.status()["success"]` is the same conditions at one instant, without
-the settle check. One `Session` per process (Genesis initialises once). The physics runs on Genesis' bit-deterministic
-CPU backend at ~700 control steps/s; the GPU only renders camera images. Do not call `s.close()` before writing every
+The primitives are deliberately thin: IK moves, joint moves, gripper, hold. You build grasping, placing and every other
+skill from them. `s.replay(actions)` runs exactly what the grader runs, settle check included, and returns the verdict
+as `success` (why it failed in `settle`); `s.status()["success"]` is the same conditions at one instant, without the
+settle check. One `Session` per process (Genesis initialises once). The physics runs on Genesis' bit-deterministic CPU
+backend at ~700 control steps/s; the GPU only renders camera images. Do not call `s.close()` before writing every
 output. The grader replays with this command; run it to self-check:
 `python /opt/tools/rcb_robowits.py replay --task align_blocks --instance /app/instance.json --traj /app/output/trajectory.npz`
 

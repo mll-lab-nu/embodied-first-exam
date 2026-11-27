@@ -33,8 +33,8 @@ does not stop while you think: one live episode.
 | `r.submit("joint_position", A, dt=0.05, interpolate="linear", at=None, cameras=None)` | `POST /submit` | plans `A`, rows of 13 channels `dt` apart, from step `at`; answers at once; the first one starts the clock |
 | `r.get_obs(cameras=None, last_s=0, include_depth=False, video="frames")` | `POST /observe` | the robot now, or with `last_s=n` what the cameras recorded over the last n seconds; it never waits |
 
-One call returns at most 3000 images. No call is refused for its images: while 8 answers with images are outstanding,
-the answer of a `submit` or a `get_obs()` comes without its frames and `meta["frames_skipped"]` is set. The answers come
+One call returns at most 3000 images. No call is refused for its images. While 8 answers with images are still waiting
+to be read, a `submit` or a `get_obs()` answers without its frames and sets `meta["frames_skipped"]`. The answers come
 back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `clipped`), `res.last[camera]`, `res.frames`
 / `res.video`, `res.depth`, `res.proprio`. Once the episode has ended, `submit` raises `EpisodeOver`.
 
@@ -78,9 +78,9 @@ back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `cli
   steps ahead, so plan a longer movement in several chunks (`at=0`, `at=200`, ...).
 - A row whose step has already run when the request arrives is dropped (`res.meta["late_steps"]`); in a gap before `at`
   the last row in force is repeated, velocity channels included.
-- `get_obs()` reads the robot now; `get_obs(last_s=n)` returns, without waiting, what the cameras recorded over the last
-  n seconds. `cameras=[]` skips the images (the fastest call); rendering takes about 0.12 s a camera on the service's
-  CPU and the robot does not wait for it.
+- `get_obs()` reads the robot now. `get_obs(last_s=n)` returns at once what the cameras recorded over the last n
+  seconds. `cameras=[]` skips the images (the fastest call); rendering takes about 0.12 s a camera on the service's CPU
+  and the robot does not wait for it.
 
 ## Others
 - The kitchen moves on too: the timer knob, once set, slowly turns back by itself.

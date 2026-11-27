@@ -48,14 +48,14 @@ res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/<ca
 ```
 
 The service's first start in a trial compiles Isaac's shaders: `Robot()` can wait ~2-12 min (it prints its progress to
-stderr once a minute). It gives up after 3600 s (`Robot(timeout=...)`) with
-`RuntimeError("sim service unavailable ...")`: then call it again (nothing has happened in the episode yet; your wall
-clock runs from the start of the trial).
+stderr once a minute). After 3600 s (`Robot(timeout=...)`) it gives up with
+`RuntimeError("sim service unavailable ...")`. Then call it again: nothing has happened in the episode yet. Your wall
+clock runs from the start of the trial.
 
-If the service crashes, a call fails with a connection error: the simulator restarts and resumes the SAME episode (never
-a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()` waits until it
-answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then check
-`r.status()["control_steps"]` before you continue (`spec["on_service_error"]`).
+If the service crashes, a call fails with a connection error. The simulator restarts and resumes the SAME episode (never
+a reset), in the state after the last call it completed. You may not have received that call's reply. `r.wait_ready()`
+waits until it answers again. Resuming replays the episode so far and can take minutes; the wall clock keeps running.
+Then check `r.status()["control_steps"]` before you continue (`spec["on_service_error"]`).
 
 Simulated time moves only in `submit` and in `hold(s)` (the robot holds its current target for s seconds). One call
 returns at most 3000 images.

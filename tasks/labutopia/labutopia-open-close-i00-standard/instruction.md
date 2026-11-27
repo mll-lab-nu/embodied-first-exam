@@ -9,7 +9,7 @@ Success: the top drawer has been pulled out about a pen's length or more and lef
 second; then it has been pushed back in by about a pen's length or more and again left with the hand away from it for a
 second. The opening counts once it has happened.
 
-When you are done, send `/finish` to end the episode and get it graded. Everything else counts only as it stands at that
+When you are done, send `/finish` to end the episode and get it graded. Everything else is judged on the state at that
 point.
 
 Rules:
@@ -48,7 +48,7 @@ r.status()                                     # calls, control steps, done, rea
 Simulated time only advances with your commands (and `hold(s)`, which holds the last targets). The service needs 5 to 10
 minutes to come up (Isaac Sim prepares the stage for its renderer once; longer on a busy host): `Robot()` waits for it
 (it prints its progress to stderr), and that wait is part of your budget. If the service crashes, a call fails with a
-connection error: it restarts and resumes the same episode (never a reset) in the state after the last call it
+connection error. The service restarts and resumes the same episode (never a reset), in the state after the last call it
 completed. `r.wait_ready()` waits for it; then check `r.status()`. Ask only for the cameras you need; `video="none"`
 makes a chunk fastest. One call returns at most 1800 images; `video_fps` is up to 30, default 10.
 

@@ -42,13 +42,13 @@ r.status()                                     # calls, control steps, done, rea
 obs = r._post("/reset", {"cameras": ["track"]}, [], 900)   # POST /reset: a new episode (the 2.2 client has no reset())
 ```
 
-Simulated time only advances with your commands (and `hold(s)`, which holds the current targets). A reset (`POST
-/reset`, the `_post` line above) puts the robot back on the same frozen starting state and starts a new episode, either
-abandoning the running one or after one has ended; it takes no simulated time and returns the start's images and
+Simulated time only advances with your commands (and `hold(s)`, which holds the current targets). A reset
+(`POST /reset`, the `_post` line above) puts the robot back on the same frozen starting state and starts a new episode,
+either abandoning the running one or after one has ended; it takes no simulated time and returns the start's images and
 proprioception. Once an episode has ended, `submit` raises `EpisodeOver` until you reset. The wall clock is the run's
 and never restarts; `meta["episode"]` and `meta["resets_left"]` count the episodes (`meta["control_steps"]` is the
-current episode's). If the service crashes, a call fails with a connection error: it restarts and resumes the same
-episode (never a reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check
+current episode's). If the service crashes, a call fails with a connection error. The service restarts and resumes the
+same episode (never a reset), in the state after the last call it completed. `r.wait_ready()` waits for it; then check
 `r.status()`. One call returns at most 3000 images.
 
 ### MCP tools

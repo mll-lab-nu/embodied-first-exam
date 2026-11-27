@@ -6,8 +6,8 @@ and move your hand away.
 
 ## Goal
 Success: the shrimp is on the cutting board, the board and the condiment bottle are on the counter nearest the cabinet,
-and the hand has let go and moved well away from the shrimp and the bottle. What counts is how things stand after the
-last action of your trajectory, replayed from the fixed start.
+and the hand has let go and moved well away from the shrimp and the bottle. Your trajectory is replayed from the fixed
+start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 13)`
 with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave
@@ -44,8 +44,8 @@ img = s.render("robot0_agentview_center")   # RGB (240, 320, 3); views in s.came
 - Everything in `s.env`, `s.model` and `s.data` is readable (privileged mode).
 
 ## Others
-- Read success with `s.check()`: the check runs after every step in your session as it does in the grader, and calling
-  the environment's own check yourself changes the run you are recording.
+- Read success with `s.check()`. It runs after every step in your session, as it does in the grader. Calling the
+  environment's own check yourself changes the run you are recording.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session; everything counts (the simulator's start-up too). At

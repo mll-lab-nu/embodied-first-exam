@@ -7,8 +7,8 @@ paints, in at most 2507 strokes.
 ## Goal
 Success: the main sheet looks like the picture (the same colours in the same places, the same lights and darks and
 edges, and paint only where the picture has paint), you used at most 2507 strokes, and the process rules below hold; a
-small shift of the whole painting does not matter. What counts is how things stand after the last action of your
-trajectory, replayed from the fixed start.
+small shift of the whole painting does not matter. Your trajectory is replayed from the fixed start. What counts is the
+state after its last action.
 
 You are scored on how close your colours are to the picture's.
 

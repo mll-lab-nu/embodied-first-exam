@@ -58,7 +58,7 @@ those control steps are part of the episode. One call returns at most 3000 image
   limits in `spec["action_types"]["joint_position"]` (`lower` / `upper`, from `r.spec()`)); `grip` (+1 closes, -1
   opens); `base_x, base_y, base_yaw` -- the mobile base's velocities in its own frame (normalised, [-1, 1]); `torso` --
   the torso lift's velocity; `hybrid_mode` (> 0: base mode; <= 0: arm mode, the default -1). Values are clipped to the
-  limits. Rows are `dt` apart (default and minimum: `control_dt`; a chunk covers at most 10 s).
+  limits. Rows are `dt` apart (default and minimum: `control_dt`). A chunk covers at most 10 s.
 - World frame: metres, z up.
 
 ### Observations

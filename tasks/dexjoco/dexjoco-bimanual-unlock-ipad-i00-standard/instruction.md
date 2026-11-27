@@ -10,7 +10,7 @@ Pressing any digit other than the next one of 1-2-3 ends the episode as a failur
 
 The presses of 1, 2 and 3 count as they happen.
 
-When you are done, send `/finish` to end the episode and get it graded. Everything else counts only as it stands at that
+When you are done, send `/finish` to end the episode and get it graded. Everything else is judged on the state at that
 point.
 
 Rules:

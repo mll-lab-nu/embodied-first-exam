@@ -53,9 +53,9 @@ One call returns at most 3000 images (`max_frames_per_call`).
 
 The answers are binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`,
 `clipped`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during the call),
-`res.depth`, `res.proprio` (proprioception rows). Values outside the bounds are clipped and reported in
-`meta["clipped"]`, never refused; a malformed request raises `ValueError` and runs nothing. Rendering is most of a
-call's cost: a controller's call should ask for no video (`video="none"`, `cameras=["head_left"]` or fewer) and read
+`res.depth`, `res.proprio` (proprioception rows). Values outside the bounds are clipped, not refused, and
+`meta["clipped"]` reports them. A malformed request raises `ValueError` and runs nothing. Rendering is most of a call's
+cost: a controller's call should ask for no video (`video="none"`, `cameras=["head_left"]` or fewer) and read
 `res.proprio`. With `interpolate="linear"` (the default) each control step's command is a straight line from the command
 in force to the row; `"hold"` applies the row as it is.
 

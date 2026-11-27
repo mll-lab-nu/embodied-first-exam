@@ -43,9 +43,9 @@ res = r.submit("delta", A)       # A: (T, 11), one 10 Hz control step per row
 ```
 The answers come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `clipped`),
 `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during the call), `res.depth`
-(metres), `res.proprio` (one row per frame). One call returns at most 3000 images. Values outside the bounds are clipped
-and reported in `meta["clipped"]`, never refused; a malformed request raises `ValueError` and runs nothing. Once the
-episode has ended, `submit` raises `EpisodeOver`. Time per call, on a lightly loaded host: about 13.2 ms per control
+(metres), `res.proprio` (one row per frame). One call returns at most 3000 images. Values outside the bounds are
+clipped, not refused, and `meta["clipped"]` reports them. A malformed request raises `ValueError` and runs nothing. Once
+the episode has ended, `submit` raises `EpisodeOver`. Time per call, on a lightly loaded host: about 13.2 ms per control
 step in one-row calls asking for one camera, 18.1 ms with both cameras' images (and the wrist's depth), 7.6 ms per step
 in chunks of 10 rows asking for one camera (`video="none"` each time).
 

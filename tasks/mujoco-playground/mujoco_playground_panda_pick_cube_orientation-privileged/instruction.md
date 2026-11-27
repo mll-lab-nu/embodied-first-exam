@@ -4,8 +4,8 @@
 Pick up the green box and hold it at the see-through red box, tilted the same way.
 
 ## Goal
-Success: the green box is at the see-through red box, tilted the same way as it. What counts is how things stand after
-the last action of your trajectory, replayed from the fixed start.
+Success: the green box is at the see-through red box, tilted the same way as it. Your trajectory is replayed from the
+fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz`: actuator targets, shape `(T, 8)` (T at most 3000), one row per control step
 (1/50 s), each held for 4 physics steps; record it with the tooling so the layout is right. It is replayed from the

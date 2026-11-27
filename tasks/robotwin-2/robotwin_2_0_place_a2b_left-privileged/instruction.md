@@ -5,8 +5,8 @@ Put the toy car about a hand's length to the left of the bell, in line with it, 
 Then let go.
 
 ## Goal
-Success: the toy car is about a hand's length to the bell's left, in line with it, and both grippers are open. What
-counts is how things stand after the last action of your trajectory, replayed from the fixed start.
+Success: the toy car is about a hand's length to the bell's left, in line with it, and both grippers are open. Your
+trajectory is replayed from the fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`: the
 recorded actions, (T, 34), one row per physics step (1/250 s); at most 200,000 rows are graded. It is replayed open-loop

@@ -4,9 +4,9 @@
 Pull the door open, at least two-thirds of the way.
 
 ## Goal
-Success: the door is open at least two-thirds of the way. What counts is how things stand after the last action of your
-trajectory, replayed from the fixed start. Rows past the step limit (Limits) are never run: ending your trajectory once
-the task holds is how you stop there.
+Success: the door is open at least two-thirds of the way. Your trajectory is replayed from the fixed start. What counts
+is the state after its last action. Rows past the step limit (Limits) are never run: ending your trajectory once the
+task holds is how you stop there.
 
 Deliverable: `/app/output/trajectory.npz` with `actions`, float64 (T, 25), one row per control step (the layout is under
 Actions); at most 100,000 rows (a longer file scores 0). `s.save_trajectory(rows, "/app/output/trajectory.npz")` writes

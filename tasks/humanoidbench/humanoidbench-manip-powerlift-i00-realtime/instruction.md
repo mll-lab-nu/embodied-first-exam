@@ -54,8 +54,8 @@ The answers come back decoded: `res.meta` (the counters, `done`, `reason`, `prop
 `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras recorded), `res.proprio`
 (proprioception rows). Values outside [-1, 1] are clipped and reported in `meta["clipped"]`, never refused; a malformed
 request raises `ValueError` and changes nothing. One call returns at most 3000 images. No call is refused for its
-images: while 8 answers with images are outstanding, the answer of a `submit` or a `get_obs()` comes without its frames
-and `meta["frames_skipped"]` is set. Time per call (standard mode): about 6.7 ms per one-row call asking for one head
+images. While 8 answers with images are still waiting to be read, a `submit` or a `get_obs()` answers without its frames
+and sets `meta["frames_skipped"]`. Time per call (standard mode): about 6.7 ms per one-row call asking for one head
 camera, physics included; a call with `cameras=[]` skips the rendering. A control step is 20 ms. `r.reset()` puts the
 robot and the scene back on the same starting state and starts a new episode with its own 1000 control steps (either
 abandoning the running episode or after one has ended) and returns the start's images and proprioception; the new
@@ -112,9 +112,9 @@ the robot stays there depends on whether that pose is stable under gravity and c
   proprioception and sends targets, started in the background (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`). Use
   your turns to start episodes, read what happened, and improve the program.
 - `submit` answers at once, with the robot as it is now: the rows you sent have not run yet. They become the plan from
-  control step `at` (an episode step number; by default the next step), replacing whatever was planned from `at` on and
-  keeping what is planned before it. When the plan runs out, the last target is held. `res.meta["control_steps"]` is the
-  number of steps run so far in this episode (so the next step has that number), `res.meta["proprio"]["now"]` the
+  control step `at` (an episode step number; by default the next step). They replace whatever was planned from `at` on
+  and keep what is planned before it. When the plan runs out, the last target is held. `res.meta["control_steps"]` is
+  the number of steps run so far in this episode (so the next step has that number), `res.meta["proprio"]["now"]` the
   robot's proprioception now, `res.meta["plan_end_step"]` where the plan now ends.
 - Closed loop: send one row per control step, `r.submit("joint_position", a[None], cameras=[])`, and compute the next
   one from the proprioception it returns. `cameras=[]` skips the images (the fastest call); sending faster than 50 Hz
@@ -123,11 +123,10 @@ the robot stays there depends on whether that pose is stable under gravity and c
   out, with `at` = the step where it should take over; `at` may be up to `spec()["timing"]["max_ahead_steps"]` steps
   ahead.
 - Latency: a reading is a few milliseconds old when it reaches you, and a row takes effect at the next control step at
-  the earliest. A row whose step has already run when the request arrives is dropped (`res.meta["late_steps"]` counts
-  them); the rest of its chunk applies from the next step.
-- `get_obs()` reads the robot now; `get_obs(last_s=n)` returns, without waiting, what the cameras recorded over the last
-  n seconds (the robot keeps executing its plan). `spec()["timing"]` states all this; `r.status()` shows `running` and
-  `lag_s`.
+  the earliest. A row whose step has already run when the request arrives is dropped; `res.meta["late_steps"]` counts
+  them. The rest of the chunk applies from the next step.
+- `get_obs()` reads the robot now. `get_obs(last_s=n)` returns at once what the cameras recorded over the last n seconds
+  (the robot keeps executing its plan). `spec()["timing"]` states all this; `r.status()` shows `running` and `lag_s`.
 
 ## Others
 - A robot that has fallen in a way the Goal does not list (on its side, face down, sitting on the floor) is not stopped:

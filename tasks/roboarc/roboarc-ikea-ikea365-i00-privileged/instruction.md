@@ -10,8 +10,8 @@ go of everything and move both arms clear.
 Success: these steps were done in that order, and at the end the screw is seated through both members, member B lies
 across member A, and the stand is upside down on the bench with the bowl on it, standing firmly on its own; no arm
 touches any part and everything is still. Forcing parts deep into each other breaks the simulation and ends the episode
-at once, without success. What counts is how things stand after the last action of your trajectory, replayed from the
-fixed start. After your last row the grader holds it for 1 s more and requires all of this again: end your rows with the
+at once, without success. Your trajectory is replayed from the fixed start. What counts is the state after its last
+action. After your last row the grader holds it for 1 s more and requires all of this again: end your rows with the
 parts released, the arms clear of them and everything at rest.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`: `ctrl` (N, 16) float64, `substeps` = 4,

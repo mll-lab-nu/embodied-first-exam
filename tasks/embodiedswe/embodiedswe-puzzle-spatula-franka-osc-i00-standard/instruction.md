@@ -10,7 +10,7 @@ does not count.
 
 The flip and the carry on the spatula count as they happen.
 
-When you are done, send `/finish` to end the episode and get it graded. Everything else counts only as it stands at that
+When you are done, send `/finish` to end the episode and get it graded. Everything else is judged on the state at that
 point.
 
 Rules:

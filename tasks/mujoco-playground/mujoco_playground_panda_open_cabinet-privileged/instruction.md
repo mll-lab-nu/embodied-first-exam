@@ -4,8 +4,8 @@
 Pull the green handle along its slide until it is at the red ball.
 
 ## Goal
-Success: the handle has been pulled along its slide to the red ball. What counts is how things stand after the last
-action of your trajectory, replayed from the fixed start.
+Success: the handle has been pulled along its slide to the red ball. Your trajectory is replayed from the fixed start.
+What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz`: actuator targets, shape `(T, 8)` (T at most 3000), one row per control step
 (1/50 s), each held for 4 physics steps; record it with the tooling so the layout is right. It is replayed from the

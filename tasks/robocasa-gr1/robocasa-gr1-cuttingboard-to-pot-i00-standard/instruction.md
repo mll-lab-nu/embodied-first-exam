@@ -62,7 +62,7 @@ by a few hundredths of a radian while it holds. One call returns at most 3000 im
   controller (mink), limits [-10, 10]; then six commands per hand (right, then left) in the finger order
   `little, ring, middle, index, thumb_flexion, thumb_rotation` -- unscaled Fourier hand commands in [-3, 3], not a
   binary grip. The GR1 has no mobile base. Values are clipped to the limits. Rows are `dt` apart (default and minimum:
-  `control_dt`; a chunk covers at most 10 s).
+  `control_dt`). A chunk covers at most 10 s.
 - World frame: metres, z up. In the proprio, `eef_left_*` / `eef_right_*` are the grip sites' positions in the world
   frame; the action's pose targets and the `cmd_*` entries (the last command) are in the robot's base frame. The robot's
   base frame (body `robot0_base`, fixed in the world) has its origin at world (2.66899, -2.16906, 0.89825) m and is

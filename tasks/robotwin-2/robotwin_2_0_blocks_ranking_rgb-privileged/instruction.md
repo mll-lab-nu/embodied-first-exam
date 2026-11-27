@@ -6,8 +6,8 @@ Then let go.
 
 ## Goal
 Success: the red, green and blue blocks stand close together in a straight row, in that order from the robot's left to
-its right, and both grippers are open. What counts is how things stand after the last action of your trajectory,
-replayed from the fixed start.
+its right, and both grippers are open. Your trajectory is replayed from the fixed start. What counts is the state after
+its last action.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`: the
 recorded actions, (T, 34), one row per physics step (1/250 s); at most 200,000 rows are graded. It is replayed open-loop

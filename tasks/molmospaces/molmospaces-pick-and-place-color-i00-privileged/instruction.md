@@ -5,8 +5,8 @@ Put the small dark bird in the red bowl.
 
 ## Goal
 Success: the small dark bird rests in or on the red bowl, the robot has let go of it, and the red bowl has not been
-pushed far or tipped over. What counts is how things stand after the last action of your trajectory, replayed from the
-fixed start. Rows past the step limit (Limits) are never run: ending your trajectory once the task holds is how you stop
+pushed far or tipped over. Your trajectory is replayed from the fixed start. What counts is the state after its last
+action. Rows past the step limit (Limits) are never run: ending your trajectory once the task holds is how you stop
 there.
 
 Deliverable: `/app/output/trajectory.npz` with `actions`, float64 (T, 8), one row per control step (the layout is under

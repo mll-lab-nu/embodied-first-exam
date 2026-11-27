@@ -5,8 +5,7 @@ Put the shoe in the middle of the blue mat, sole down with its toe pointing to t
 
 ## Goal
 Success: the shoe lies sole down in the middle of the blue mat, its toe pointing straight to the robot's left, and both
-grippers are open. What counts is how things stand after the last action of your trajectory, replayed from the fixed
-start.
+grippers are open. Your trajectory is replayed from the fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`: the
 recorded actions, (T, 34), one row per physics step (1/250 s); at most 200,000 rows are graded. It is replayed open-loop

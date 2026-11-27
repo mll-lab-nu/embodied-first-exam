@@ -4,8 +4,8 @@
 Stand the pill bottle upright in the middle of the pad, then let go.
 
 ## Goal
-Success: the pill bottle stands upright in the middle of the pad, and both grippers are open. What counts is how things
-stand after the last action of your trajectory, replayed from the fixed start.
+Success: the pill bottle stands upright in the middle of the pad, and both grippers are open. Your trajectory is
+replayed from the fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`: the
 recorded actions, (T, 34), one row per physics step (1/250 s); at most 200,000 rows are graded. It is replayed open-loop

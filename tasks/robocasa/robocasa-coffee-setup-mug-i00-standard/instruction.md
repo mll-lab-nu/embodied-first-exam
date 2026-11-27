@@ -60,7 +60,7 @@ those control steps are part of the episode. One call returns at most 3000 image
   `torso` -- the torso lift, a joint-position controller with delta input (each step sets the lift's height target to
   its current height + 0.05 m × the value, so 1.0 = 5 cm per step; lift range 0–0.34 m); `hybrid_mode` (> 0: base mode,
   the arm's goal moves with the base; <= 0: arm mode, the default -1). Every channel is clipped to [-1, 1]. Rows are
-  `dt` apart (default and minimum: `control_dt`; a chunk covers at most 10 s).
+  `dt` apart (default and minimum: `control_dt`). A chunk covers at most 10 s.
 - World frame: metres, z up.
 
 ### Observations

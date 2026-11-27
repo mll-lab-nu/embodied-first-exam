@@ -6,8 +6,8 @@ middle and a little closer to the robot, with the bottle that started on the rob
 
 ## Goal
 Success: both bottles are held up at least a hand's length above the table, side by side near the middle and a little
-closer to the robot, the one that started on the robot's left on the left. What counts is how things stand after the
-last action of your trajectory, replayed from the fixed start.
+closer to the robot, the one that started on the robot's left on the left. Your trajectory is replayed from the fixed
+start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`: the
 recorded actions, (T, 34), one row per physics step (1/250 s); at most 200,000 rows are graded. It is replayed open-loop

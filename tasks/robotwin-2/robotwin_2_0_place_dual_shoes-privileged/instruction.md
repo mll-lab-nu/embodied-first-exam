@@ -6,8 +6,8 @@ the half nearer the robot, the other in the far half. Then let go.
 
 ## Goal
 Success: both shoes lie in the shoebox sole down, toes pointing straight to the robot's left, the one that started on
-the left in the half nearer the robot and the other in the far half, and both grippers are open. What counts is how
-things stand after the last action of your trajectory, replayed from the fixed start.
+the left in the half nearer the robot and the other in the far half, and both grippers are open. Your trajectory is
+replayed from the fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`: the
 recorded actions, (T, 34), one row per physics step (1/250 s); at most 200,000 rows are graded. It is replayed open-loop

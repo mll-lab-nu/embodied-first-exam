@@ -39,8 +39,8 @@ clock that does not stop while you think: one live episode.
 | `r.submit("whole_body", A, dt=0.02, interpolate="linear", at=None, cameras=None)` | `POST /submit` | plans `A`, rows of 21 commands `dt` seconds apart (a chunk covers at most 10 s), from step `at`; answers at once; the first one starts the clock |
 | `r.get_obs(cameras=None, last_s=0, video="frames")` | `POST /observe` | the robot now, or with `last_s=n` what the cameras recorded over the last n seconds; it never waits |
 
-One call returns at most 3000 images. No call is refused for its images: while 8 answers with images are outstanding,
-the answer of a `submit` or a `get_obs()` comes without its frames and `meta["frames_skipped"]` is set. Measured here on
+One call returns at most 3000 images. No call is refused for its images. While 8 answers with images are still waiting
+to be read, a `submit` or a `get_obs()` answers without its frames and sets `meta["frames_skipped"]`. Measured here on
 an otherwise idle host: the simulator spends about 14 ms of each 20 ms control step, so it keeps up with the clock
 (largest lag seen 0.07 s); `get_obs()` answers in about 10 ms. Values outside the bounds are clipped and reported in
 `meta["clipped"]`, never refused; a malformed request raises `ValueError` and changes nothing. The client's docstring
@@ -111,8 +111,8 @@ link.
 - A `linear` chunk starts its interpolation from the command in force just before `at`: the row planned for that step,
   or, once the plan has run out, the standing row the robot holds.
 - A row whose step has already run when the request arrives is dropped (`res.meta["late_steps"]` counts them).
-  `get_obs()` reads the robot now; `get_obs(last_s=n)` returns, without waiting, what the cameras recorded over the last
-  n seconds. `spec()["timing"]` states all this; `r.status()` shows `running` and `lag_s`.
+  `get_obs()` reads the robot now. `get_obs(last_s=n)` returns at once what the cameras recorded over the last n
+  seconds. `spec()["timing"]` states all this; `r.status()` shows `running` and `lag_s`.
 
 ### Notes
 The episode also ends when the pelvis gets more than 10 m from the scene's origin, on a simulator error, and after 1450

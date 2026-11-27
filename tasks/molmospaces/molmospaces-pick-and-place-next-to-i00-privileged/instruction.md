@@ -5,9 +5,9 @@ Put the black rail mount down right beside the bread, almost touching it.
 
 ## Goal
 Success: the black rail mount rests on the same surface as the bread, right beside it and almost touching it but not on
-it, and the bread has not been pushed far or turned much. What counts is how things stand after the last action of your
-trajectory, replayed from the fixed start. Rows past the step limit (Limits) are never run: ending your trajectory once
-the task holds is how you stop there.
+it, and the bread has not been pushed far or turned much. Your trajectory is replayed from the fixed start. What counts
+is the state after its last action. Rows past the step limit (Limits) are never run: ending your trajectory once the
+task holds is how you stop there.
 
 Deliverable: `/app/output/trajectory.npz` with `actions`, float64 (T, 8), one row per control step (the layout is under
 Actions); at most 100,000 rows (a longer file scores 0). `s.save_trajectory(rows, "/app/output/trajectory.npz")` writes

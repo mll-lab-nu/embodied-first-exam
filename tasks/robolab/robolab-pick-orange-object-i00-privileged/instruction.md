@@ -52,8 +52,8 @@ s.start_video("/app/output/try.mp4"); ...; s.stop_video()          # film the st
 - The scene's objects (`s.objects()`, the names the primitives take): `redonion`, `serving_bowl`, `clay_plates`,
   `wooden_spoons`, `spatula`, `storage_box`, `tomato_sauce_can`, `measuring_cups_1`, `pink_spaghetti_spoon`, `spoon_1`,
   `green_serving_spoon`, `storage_box_01`, `ladle`, `wooden_bowl`, `potato_masher`, `table`.
-- The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill
-  are yours to build from them.
+- The primitives are deliberately thin: IK moves, joint moves, gripper, hold. You build grasping, placing and every
+  other skill from them.
 - The replay CLI does what the grader does; run it to check yourself:
   `python /opt/tools/rcb_robolab.py replay --task pick_orange_object --instance /app/instance.json --traj /app/output/trajectory.npz`
 

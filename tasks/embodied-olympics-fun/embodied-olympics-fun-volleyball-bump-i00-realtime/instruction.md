@@ -54,14 +54,14 @@ benchmark's names: for this task `r.spec()` is authoritative.
 | `r.submit(type, A, dt=0.01, interpolate="linear", at=None, cameras=None)` | `POST /submit` | plans `A`, rows of that action type `dt` seconds apart (a multiple of 0.01; a chunk covers at most 10 s), from step `at`; answers at once; the first one starts the attempt's clock |
 | `r.reset(cameras=None)` | `POST /reset` | a new attempt from the same start, paused (see above) |
 
-One call returns at most 3000 images (`max_frames_per_call`). No call is refused for its images: while 8 answers with
-images are outstanding, the answer of a `submit` or a `get_obs()` comes without its frames and `meta["frames_skipped"]`
-is set.
+One call returns at most 3000 images (`max_frames_per_call`). No call is refused for its images. While 8 answers with
+images are still waiting to be read, a `submit` or a `get_obs()` answers without its frames and sets
+`meta["frames_skipped"]`.
 
 The answers are binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`,
 `clipped`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during the call),
-`res.depth`, `res.proprio` (proprioception rows). Values outside the bounds are clipped and reported in
-`meta["clipped"]`, never refused; a malformed request raises `ValueError` and runs nothing. `cameras=None` means every
+`res.depth`, `res.proprio` (proprioception rows). Values outside the bounds are clipped, not refused, and
+`meta["clipped"]` reports them. A malformed request raises `ValueError` and runs nothing. `cameras=None` means every
 camera: a controller's call should ask for none (`cameras=[]`) and read `res.meta["proprio"]["now"]`; the cameras are
 rendered on the service's GPU. With `interpolate="linear"` (the default) each control step's command is a straight line
 from the command in force to the row; `"hold"` applies the row as it is.
@@ -179,10 +179,10 @@ Joint order everywhere (Unitree's SDK order): `left_hip_yaw`, `left_hip_pitch`, 
 - Closed loop: send one row per control step, `r.submit(type, a[None], cameras=[])`, computed from the proprioception
   the previous call returned. `cameras=[]` skips the images (the fastest call).
 - Latency: a reading is a few milliseconds old when it reaches you, and a row takes effect at the next control step at
-  the earliest. A row whose step has already run when the request arrives is dropped (`res.meta["late_steps"]` counts
-  them); the rest of its chunk applies from the next step.
-- `get_obs()` reads the robot now; `get_obs(last_s=n)` returns, without waiting, what the cameras recorded over the last
-  n seconds. `r.status()` shows `running` and `lag_s`.
+  the earliest. A row whose step has already run when the request arrives is dropped; `res.meta["late_steps"]` counts
+  them. The rest of the chunk applies from the next step.
+- `get_obs()` reads the robot now. `get_obs(last_s=n)` returns at once what the cameras recorded over the last n
+  seconds. `r.status()` shows `running` and `lag_s`.
 
 ## Others
 - A machine across the net serves the ball to you a few seconds after the start.

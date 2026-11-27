@@ -8,8 +8,8 @@ through the shelf holes into the frames until they seat. Then let go of everythi
 Success: the four screws are screwed in (turned, not just pushed) through the shelf holes into four different holes in
 the frames and seated; the frames stand lined up under the shelf, the insert stands on the bench on its own, no arm
 touches it and everything is still. Forcing parts deep into each other breaks the simulation and ends the episode at
-once, without success. What counts is how things stand after the last action of your trajectory, replayed from the fixed
-start. After your last row the grader holds it for 1 s more and requires all of this again: end your rows with the parts
+once, without success. Your trajectory is replayed from the fixed start. What counts is the state after its last action.
+After your last row the grader holds it for 1 s more and requires all of this again: end your rows with the parts
 released, the arms clear of them and everything at rest.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`: `ctrl` (N, 16) float64, `substeps` = 4,

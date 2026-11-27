@@ -5,7 +5,7 @@ Move the playing cards out toward one side edge of the table, at least a forearm
 
 ## Goal
 Success: the playing cards are at least a forearm's length out to one side of the table's middle, and both grippers are
-open. What counts is how things stand after the last action of your trajectory, replayed from the fixed start.
+open. Your trajectory is replayed from the fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`: the
 recorded actions, (T, 34), one row per physics step (1/250 s); at most 200,000 rows are graded. It is replayed open-loop

@@ -6,8 +6,8 @@ away.
 
 ## Goal
 Success: the steak and the asparagus are on the plate, the chili pepper is still on the tray, and the hand has let go
-and moved well away from all three. What counts is how things stand after the last action of your trajectory, replayed
-from the fixed start.
+and moved well away from all three. Your trajectory is replayed from the fixed start. What counts is the state after its
+last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 13)`
 with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave
@@ -44,8 +44,8 @@ img = s.render("robot0_agentview_center")   # RGB (240, 320, 3); views in s.came
 - Everything in `s.env`, `s.model` and `s.data` is readable (privileged mode).
 
 ## Others
-- Read success with `s.check()`: the check runs after every step in your session as it does in the grader, and calling
-  the environment's own check yourself changes the run you are recording.
+- Read success with `s.check()`. It runs after every step in your session, as it does in the grader. Calling the
+  environment's own check yourself changes the run you are recording.
 - The success state of this task does not hold by itself: things settle out of it within a few control steps of holding
   still after the last move. Since only the final state counts, end the trajectory on a step where `s.check()` reports
   success.

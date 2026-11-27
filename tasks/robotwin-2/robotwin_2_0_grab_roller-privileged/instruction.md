@@ -4,8 +4,8 @@
 Grab the roller with both arms, lift it off the table and keep holding it.
 
 ## Goal
-Success: both grippers are closed and the roller is lifted off the table. What counts is how things stand after the last
-action of your trajectory, replayed from the fixed start.
+Success: both grippers are closed and the roller is lifted off the table. Your trajectory is replayed from the fixed
+start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`: the
 recorded actions, (T, 34), one row per physics step (1/250 s); at most 200,000 rows are graded. It is replayed open-loop

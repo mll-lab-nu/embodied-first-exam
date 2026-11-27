@@ -4,8 +4,8 @@
 With the left arm, open the laptop lid at least twice as far as it is now, and keep the left gripper at the lid.
 
 ## Goal
-Success: the laptop lid is open at least twice as far as at the start, and the left gripper is still at the lid. What
-counts is how things stand after the last action of your trajectory, replayed from the fixed start.
+Success: the laptop lid is open at least twice as far as at the start, and the left gripper is still at the lid. Your
+trajectory is replayed from the fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`: the
 recorded actions, (T, 34), one row per physics step (1/250 s); at most 200,000 rows are graded. It is replayed open-loop
