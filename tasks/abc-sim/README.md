@@ -14,7 +14,7 @@ harbor run -d embodied-first-exam@all -p tasks/abc-sim -a codex -m openai/gpt-6-
 ```
 The tasks need an NVIDIA GPU (the cameras render over EGL; the physics runs on the CPU). The base image is
 `ghcr.io/mll-lab-nu/efe:abc-sim-0.3.0` for the privileged tasks and `abc-sim-0.5.0` for the standard and realtime tasks
-(`images/abc-sim/`; the same simulator and scenes, 0.4.0 with the adapters of eai-standard/3.0), built from public sources.
+(`images/abc-sim/`; the same simulator and scenes, 0.5.0 with the adapters of eai-standard/3.0), built from public sources.
 
 ## Tasks
 | family | upstream task | directive of the frozen instance | reference rows |

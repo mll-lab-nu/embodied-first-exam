@@ -87,7 +87,8 @@ else:
     with open(os.path.join(d, "video.log"), "w") as log:
         p = subprocess.Popen([sys.executable, os.path.join(tools, "video.py"), "--instance", instance, "--traj",
                               os.path.join(d, "trajectory.npz"), "--out", mp4, "--result", res,
-                              "--deadline-s", str(int(left - 30.0))],
+                              "--deadline-s", str(int(left - 30.0))]
+                             + (["--agent-end"] if ep.get("success_signal") == "hidden" else []),
                              stdout=subprocess.DEVNULL, stderr=log, env=dict(os.environ, RCB_SESSION_LOG=""))
         try:
             p.wait(timeout=left)
