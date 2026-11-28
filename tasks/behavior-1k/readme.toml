@@ -182,8 +182,8 @@ cabinet, and the refrigerator and the cabinet are closed.
 # kitchen's other refrigerators (_* wildcard); not open car_1; not open electric_refrigerator_1 (the one instance only).
 success = """
 The beefsteak tomato and the carton of milk are inside one and the same refrigerator (any refrigerator of the kitchen),
-the car is closed, and the refrigerator `electric_refrigerator.n.01_1` is closed. The kitchen's other refrigerators are
-not checked for being closed.
+the car is closed, and the kitchen refrigerator (`electric_refrigerator.n.01_1`) is closed. The kitchen's other
+refrigerators are not checked for being closed.
 """
 
 [families.carrying_out_garden_furniture]

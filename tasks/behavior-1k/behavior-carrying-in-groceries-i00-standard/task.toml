@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/behavior-carrying-in-groceries-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/3.0): BEHAVIOR-1K v3.9.2 carrying_in_groceries on the same frozen instance as the privileged task (2026 challenge public_test instance 301). Put the tomato and the milk from the car into one fridge, then close the car and the kitchen fridge (`electric_refrigerator.n.01_1`). The agent only gets a client: get_obs (RGB-D + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory, resumes it after a crash, and grades the episode it ran (no replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): BEHAVIOR-1K v3.9.2 carrying_in_groceries on the same frozen instance as the privileged task (2026 challenge public_test instance 301). Put the tomato and the milk from the car into one fridge, then close the car and the kitchen fridge. The agent only gets a client: get_obs (RGB-D + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory, resumes it after a crash, and grades the episode it ran (no replay)."
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "standard-mode", "trajectory", "carrying_in_groceries"]
 
 [metadata]

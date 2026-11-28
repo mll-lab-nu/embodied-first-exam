@@ -1,13 +1,12 @@
 # BEHAVIOR-1K · carrying_in_groceries (standard)
 
 ## Task
-Put the tomato and the milk from the car into one fridge, then close the car and the kitchen fridge
-(`electric_refrigerator.n.01_1`).
+Put the tomato and the milk from the car into one fridge, then close the car and the kitchen fridge.
 
 ## Goal
 Success: the tomato and the carton of milk are both inside one and the same refrigerator, the car is closed, and the
-kitchen refrigerator the task names (`electric_refrigerator.n.01_1`) is closed. It counts only once the scene has
-settled: nothing the task names (a tool included) is still in a gripper, and everything has come to rest.
+kitchen refrigerator is closed. It counts only once the scene has settled: nothing the task names (a tool included) is
+still in a gripper, and everything has come to rest.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
