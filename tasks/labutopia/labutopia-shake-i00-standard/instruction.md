@@ -5,8 +5,9 @@ Pick up the beaker and, holding it in the air, shake it sideways five times, eac
 more; then hold it still for a second.
 
 ## Goal
-Success: the beaker, held a thumb's length or more above where it stood, has been shaken sideways five times, each shake
-moving it a thumb's length or more, and then held still for a second. The shaking counts once it has happened.
+Success: the beaker has been shaken sideways five times, each shake moving it a thumb's length or more, and then held
+still for a second; only the time it spends a thumb's length or more above where it stood counts towards this. The
+shaking counts once it has happened.
 
 When you are done, send `/finish` to end the episode and get it graded.
 

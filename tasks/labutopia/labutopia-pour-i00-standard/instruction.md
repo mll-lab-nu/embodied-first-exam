@@ -5,9 +5,9 @@ Pick up the small beaker and tip it over the large beaker as if pouring into it,
 over the large beaker for a couple of seconds.
 
 ## Goal
-Success: the small beaker, lifted about a pen's length or more, is tipped well past halfway onto its side, turned back
-nearly upright and then held up for a couple of seconds, all right above the large beaker's mouth. The pour counts once
-it has happened.
+Success: the small beaker, lifted about a pen's length or more, is tipped well past halfway onto its side and then
+turned back nearly upright, all right above the large beaker's mouth, and is then held up there for about a second and a
+half in total (not necessarily in one go). The pour counts once it has happened.
 
 When you are done, send `/finish` to end the episode and get it graded.
 

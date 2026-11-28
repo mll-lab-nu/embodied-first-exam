@@ -5,8 +5,9 @@ Pick up the beaker and, holding it in the air, shake it sideways five times, eac
 more; then hold it still for a second.
 
 ## Goal
-Success: the beaker, held a thumb's length or more above where it stood, has been shaken sideways five times, each shake
-moving it a thumb's length or more, and then held still for a second. The episode ends the moment that is reached.
+Success: the beaker has been shaken sideways five times, each shake moving it a thumb's length or more, and then held
+still for a second; only the time it spends a thumb's length or more above where it stood counts towards this. The
+episode ends the moment that is reached.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`. It is replayed open-loop
 from the same initial state and scores 1 if its episode ends in success. Leave the script that produced it at
