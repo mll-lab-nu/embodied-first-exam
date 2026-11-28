@@ -1,5 +1,5 @@
 {
- "task_text": "Run forward along the track for 29 m to the finish, MyoChallenge 2024 OSL Run's own win condition, staying on your feet and within about a metre of the track's centre line. The right leg is the prosthesis (`osl_knee_angle_r`, `osl_ankle_angle_r`) and is driven by its own controller, so you command only the 54 muscles. The episode ends in failure if you fall, leave the track sideways, or move about 2 m backwards. There is no time limit.",
+ "task_text": "Run forward along the track for 30 m to the finish, MyoChallenge 2024 OSL Run's own win condition, staying on your feet and within about a metre of the track's centre line. The right leg is the prosthesis (`osl_knee_angle_r`, `osl_ankle_angle_r`) and is driven by its own controller, so you command only the 54 muscles. The episode ends in failure if you fall, leave the track sideways, or move about 2 m backwards. There is no time limit.",
  "default_cameras": [
   "side_view"
  ],

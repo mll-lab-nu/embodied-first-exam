@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/myosuite-table-tennis-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/3.0): MyoSuite table_tennis (MyoArm with torso, 273 muscles) on the same frozen instance as myosuite-table-tennis-i00-privileged: Return the served ball: after it bounces once on your half, hit it once with the paddle so that it lands on the opponent's half, with no second paddle touch and no second bounce on your half. The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): MyoSuite table_tennis (MyoArm with torso, 273 muscles) on the same frozen instance as myosuite-table-tennis-i00-privileged: Return the served ball: hit it once with the paddle so that it lands on the opponent's half, with no second paddle touch and at most one bounce on your half before that. The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myoarm-torso", "code-as-policy", "trajectory", "table_tennis", "standard-mode"]
 
 [metadata]

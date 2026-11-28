@@ -1,5 +1,5 @@
 {
- "task_text": "Pick up the object with the MyoHand, pass it to the prosthetic hand, and place it on the goal pillar. Success needs the object within about 15 cm of the pillar top after it has touched only the pillar for a tenth of a second, and MyoChallenge 2024's contact check on the object's whole history: the MyoHand held it for at least 1 s, the prosthetic hand held it for at least 1 s, it touches only the pillar at the end, and it never touched the table or the floor. The episode ends in failure if the object is dropped below a height of about 30 cm, or after 10 s.",
+ "task_text": "Pick up the object with the MyoHand, pass it to the prosthetic hand, and place it on the goal pillar. Success needs the object within about 15 cm of the pillar top after it has touched only the pillar for a tenth of a second, and MyoChallenge 2024's contact check on the object's whole history: the MyoHand and the prosthetic hand each touched it for at least 1 s in total (in either order), it touches only the pillar at the end, and it never touched the table or the floor. The episode ends in failure if the object is dropped below a height of about 30 cm, or after 10 s.",
  "default_cameras": [
   "front_view"
  ],
