@@ -6,7 +6,7 @@ Put the sweet potato from the cutting board on the top tier of the tiered basket
 ## Goal
 Success: the sweet potato is on the top tier of the tiered basket, not touching the counter, with the tiered basket
 still upright and both hands moved away from the sweet potato and the tiered basket; the other item that started on the
-cutting board with the sweet potato is not in the tiered basket.
+cutting board with the sweet potato is not on the tiered basket's top tier.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

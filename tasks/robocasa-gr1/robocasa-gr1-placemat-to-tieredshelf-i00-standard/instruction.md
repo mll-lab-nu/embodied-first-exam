@@ -6,7 +6,7 @@ Put the tomato from the placemat on the top tier of the tiered shelf, and move b
 ## Goal
 Success: the tomato is on the top tier of the tiered shelf, not touching the counter, with the tiered shelf still
 upright and both hands moved away from the tomato and the tiered shelf; the other item that started on the placemat with
-the tomato is not on the tiered shelf.
+the tomato is not on the tiered shelf's top tier.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
