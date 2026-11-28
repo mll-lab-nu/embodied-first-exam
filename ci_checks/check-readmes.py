@@ -5,7 +5,7 @@ render_readme, tasks/<benchmark>/readme.toml).
     python3 ci_checks/check-readmes.py [task dir ...]     # default: every task
 
 - each task's README.md describes that task alone: no other task directory's name or base name appears in it (its own
-  base may), and none of the retired words (README_FORBIDDEN: Twin, Difficulty, Baselines, eai-standard/2.x);
+  base may), and none of the retired words (README_FORBIDDEN: Twin, Difficulty, Baselines, a 2.x protocol id);
 - tasks/<benchmark>/readme.toml loads with its schema, and every [families] / [tasks] entry names a family or a task
   the benchmark has (a stale entry is a finding: the README of a renamed task would lose its text silently);
 - tasks/<benchmark>/README.md has the sections of BENCH_README_SECTIONS, in that order (Others optional).

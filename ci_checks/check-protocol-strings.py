@@ -12,7 +12,10 @@ names another protocol id of this family or keeps a list of accepted old ids:
     `protocol 2.2`) or a note on what changed at 3.0 (`before 3.0`, `from 3.0`): a layer has a name (sidecar, shared,
     realtime, operations) and the rules are the current ones.
 
-Nothing is allowlisted but this file. A benchmark's own runtime of another family (roboEngineer's `eai-policy/1.x`)
+Nothing is allowlisted but this file and the files of a vendored upstream snapshot whose bytes match its pinned
+manifest (SNAPSHOTS: Embodied Safety Exam's source in images/ese/context/ese-src/, checked file by file against
+ese-src.sha256 in the image build, so an edit there would break the published image's recipe; a file that does not
+match is checked like any other). A benchmark's own runtime of another family (roboEngineer's `eai-policy/1.x`)
 is not this family and is not flagged. Before the repository, the patterns run on built-in good and bad lines (each
 pattern must flag its bad line and none may flag a good one), so a pattern that went blind fails here.
 Exit 0: clean; 1: findings; 2: the check itself could not run.
@@ -22,6 +25,7 @@ Exit 0: clean; 1: findings; 2: the check itself could not run.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import pathlib
 import re
 import subprocess
@@ -29,6 +33,7 @@ import sys
 
 HERE = pathlib.Path(__file__).resolve()
 SELF = "ci_checks/check-protocol-strings.py"
+SNAPSHOTS = {"images/ese/context/ese-src/": "images/ese/context/ese-src.sha256"}   # prefix -> its sha256 manifest
 OLD = "eai-standard/" + "2."            # (spelled in two pieces: this file names the patterns, it is never flagged)
 PATTERNS = [
     ("a 2.x protocol id", re.compile(re.escape(OLD) + r"[0-9x_]")),
@@ -73,6 +78,21 @@ def tracked(repo: pathlib.Path) -> list[str]:
         return [str(p.relative_to(repo)) for p in repo.rglob("*") if p.is_file() and ".git" not in p.parts]
 
 
+def pinned(repo: pathlib.Path) -> dict[str, str]:
+    """Each vendored snapshot file's pinned sha256, by its path in the repository (SNAPSHOTS)."""
+    out = {}
+    for prefix, manifest in SNAPSHOTS.items():
+        try:
+            lines = (repo / manifest).read_text().splitlines()
+        except OSError:
+            continue
+        for line in lines:
+            h, _, name = line.partition("  ")
+            if h and name:
+                out[prefix + name.removeprefix("./")] = h
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--repo", default=str(HERE.parents[1]))
@@ -88,6 +108,7 @@ def main() -> int:
         print("FAIL check-protocol-strings.py: no tracked files found")
         return 2
     findings = []
+    snap = pinned(repo)
     for f in files:
         if f == SELF:
             continue
@@ -96,6 +117,8 @@ def main() -> int:
             data = p.read_bytes()
         except OSError:
             continue
+        if f in snap and hashlib.sha256(data).hexdigest() == snap[f]:
+            continue                                   # upstream's bytes, as the image build checks them
         if b"\0" in data[:8192]:
             continue                                   # a binary file
         text = data.decode("utf-8", errors="replace")
