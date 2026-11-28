@@ -180,7 +180,7 @@ STEP_LIMIT = AE.STEP_LIMIT is not None
 
 SPEC = {
     "protocol": PROTOCOL, "simulator": "robodojo (RoboDojo's evaluator on Isaac Lab / Isaac Sim 5.1)",
-    "robot": "arx-x5-bimanual", "task_text": S.inst.get("goal_text") or S.instruction(), "control_hz": CTRL_HZ,
+    "robot": "arx-x5-bimanual", "task_text": S.instruction(), "control_hz": CTRL_HZ,
     "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT[c], "resolution": [int(FIRST[c].shape[1]), int(FIRST[c].shape[0])],
                     "calibration_in_obs": OBS_CALIBRATION, "intrinsic_cv": CAM0[c]["intrinsic_cv"], "mount": CAM0[c]["mount"]} for c in CAMS},

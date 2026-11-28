@@ -36,7 +36,7 @@ Python (what the agent gets)
   from rcb_robodojo import Session
   s = Session("stack_bowls", instance="/app/instance.json")   # a few minutes: Isaac Sim launch + scene build + settling
   s.reset()                          # back to the frozen layout (unlimited)
-  s.instruction()                    # RoboDojo's language instruction for this layout
+  s.instruction()                    # the language instruction for this layout (the instance's goal_text, else RoboDojo's)
   s.objects()                        # label -> category, position, orientation_wxyz, bbox corners
   s.render_frame("cam_head")         # RGB (480, 640, 3) uint8; "cam_head", "cam_left_wrist", "cam_right_wrist"
   s.step(a)                          # one action (14 entries) = one control step (1/25 s)
@@ -931,6 +931,11 @@ class Session:
         return out
 
     def instruction(self) -> str:
+        """The task's language instruction: the frozen instance's goal_text where it has one (an instance whose objects are
+        not the ones RoboDojo's layout sentence names, e.g. sort_nesting_dolls' rubber ducks: the task's own sentence), else
+        RoboDojo's own instruction for this layout."""
+        if (self.inst or {}).get("goal_text"):
+            return str(self.inst["goal_text"])
         try:
             return str(self.env.obs_manager.instruction[0])
         except Exception:  # noqa: BLE001
