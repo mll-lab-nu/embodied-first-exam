@@ -4,7 +4,8 @@
 Put the lid on the box.
 
 ## Goal
-Success: the lid is on the box, closing it, with its handle at the target point.
+Success: the lid is close to the target point, as it is when the lid rests on the box, closing it (the target point is
+then about at the top of its handle). Only the lid's position is checked, not its tilt or whether it touches the box.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

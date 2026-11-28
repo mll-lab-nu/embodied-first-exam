@@ -4,7 +4,9 @@
 Put the lid on the box.
 
 ## Goal
-Success: the lid is on the box, closing it, with its handle at the target point. Your trajectory is replayed from the
+Success: the lid is close to the target point, as it is when the lid rests on the box, closing it (the target point is
+then about at the top of its handle). Only the lid's position is checked, not its tilt or whether it touches the box.
+Your trajectory is replayed from the
 fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: Meta-World's native actions, shape `(T, 4)` with 1 ≤ T ≤
