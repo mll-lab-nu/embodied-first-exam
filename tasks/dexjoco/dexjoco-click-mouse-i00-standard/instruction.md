@@ -6,6 +6,8 @@ Put the computer mouse on the mousepad, click its button there and leave the mou
 ## Goal
 Success: the mouse is on the mousepad, its button was clicked while it was there (the monitor turns blue), and it then
 stays on the pad for a moment.
+If the hold is not yet complete when you send `/finish`, the robot keeps your last command for about one more
+second, and the hold must complete within that time.
 
 The click counts as it happens.
 

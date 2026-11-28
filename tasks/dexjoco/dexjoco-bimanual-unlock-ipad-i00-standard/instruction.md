@@ -7,6 +7,8 @@ not count.
 ## Goal
 Success: 1, 2 and 3 have been pressed in that order by right-hand fingertips and the iPad stays unlocked for a moment.
 Pressing any digit other than the next one of 1-2-3 ends the episode as a failure.
+If the hold is not yet complete when you send `/finish`, the robot keeps your last command for about one more
+second, and the hold must complete within that time.
 
 The presses of 1, 2 and 3 count as they happen.
 

@@ -5,6 +5,8 @@ Fold the glasses and put them in the open case.
 
 ## Goal
 Success: both arms of the glasses are folded and the glasses lie inside the case, and they stay so for about a second.
+If the hold is not yet complete when you send `/finish`, the robot keeps your last command for about one more
+second, and the hold must complete within that time.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

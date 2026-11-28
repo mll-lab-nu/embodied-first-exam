@@ -4,7 +4,7 @@
 Put the hot dog in the microwave, close the door and press the start button.
 
 ## Goal
-Success: the hot dog is inside the microwave, the door is fully closed and the start button is being pressed, all at
+Success: the hot dog is inside the microwave, the door is fully closed and something touches the start button, all at
 once. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(...)`, at most 50,000 rows (1000 s of robot

@@ -5,6 +5,8 @@ Push the round peg all the way down into the socket in the tray.
 
 ## Goal
 Success: the peg sits at the bottom of the socket for about half a second.
+If the hold is not yet complete when you send `/finish`, the robot keeps your last command for about one more
+second, and the hold must complete within that time.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

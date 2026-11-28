@@ -5,10 +5,10 @@ Take a picture of the logo: hold the camera a short way in front of the logo and
 at it, and press its shutter button.
 
 ## Goal
-Success: the camera is held a short way in front of the logo and well above the table, pointed straight at it, while its
-shutter button is being pressed.
+Success: the camera is held a short way in front of the logo and well above the table, pointed straight at it, while
+something touches its shutter button.
 
-The episode counts the press of the shutter as it happens, with the camera placed and aimed so at that moment.
+The episode counts the touch on the shutter as it happens, with the camera placed and aimed so at that moment.
 
 When you are done, send `/finish` to end the episode and get it graded.
 
