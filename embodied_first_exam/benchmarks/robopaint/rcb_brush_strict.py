@@ -27,7 +27,8 @@ texts; a rule whose keys are absent is off):
                       and a stroke longer than max_stroke_path_mm counts as ceil(length / max_stroke_path_mm) strokes (one
                       contact held down to write and re-write for minutes). n_strokes_counted <= max_strokes; the sweep rule
                       (max_scribble ...) is then measured on these strokes.
-success = the picture rule (image_success) and every process rule (strict_ok). final_reward = the picture rule's continuous score
+success = the picture rule (image_success; with counted strokes, taken without its own cap on inked contacts) and every process
+rule (strict_ok). final_reward = the picture rule's continuous score
 x min(1, max_path_mm / path_mm) when the colouring-in or path rule fails x (1 - scribble_share) when the sweep rule fails, with
 the stroke cap's scaling taken on the counted strokes (max_strokes / n_strokes_counted): rule-abiding work keeps the picture
 rule's score.
@@ -188,9 +189,16 @@ def apply_rules(m: dict, stats: list[tuple[float, float, float]], cfg: dict, mar
     out = dict(m)
     pm = process_metrics(stats, cfg, marks, pieces)
     out.update(pm)
-    out["image_success"] = float(bool(m.get("success")))
+    image_ok = bool(m.get("success"))
+    if "n_strokes_counted" in pm and "stroke_count_ok" in m:
+        # the cap counts the counted strokes (strokes_counted_ok, in strict_ok), not the inked contacts: the picture rule is
+        # taken without its contact cap (a touch too light to leave a mark is a contact but no stroke)
+        import rcb_brush_score as G
+        rule = G.is_success_paint if "paint_iou" in cfg else G.is_success
+        image_ok = bool(rule({**m, "stroke_count_ok": 1.0}, cfg))
+    out["image_success"] = float(image_ok)
     out["image_final_reward"] = float(m.get("final_reward") or 0.0)
-    out["success"] = float(bool(m.get("success")) and bool(pm["strict_ok"]))
+    out["success"] = float(image_ok and bool(pm["strict_ok"]))
     f = out["image_final_reward"]
     if (pm.get("colour_in") or pm.get("path_budget_ok") == 0.0) and pm["path_mm"] > pm["max_path_mm"] > 0:
         f *= pm["max_path_mm"] / pm["path_mm"]
