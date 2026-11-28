@@ -3,7 +3,7 @@
 # eai-behavior-files (images/behavior-files/, pinned by digest).
 FROM docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f
 COPY test.sh /tests/test.sh
-COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.8.0@sha256:a37c0cf3ae7ff75405e9a1481d3ab26265391f669ec1983f2cca962b13177c8d /standard/grade.py /tests/grade.py
+COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.8.0@sha256:befd6268ddf35da974c54df85ed548da1b2f061617b716f1585ff21b1463cee6 /standard/grade.py /tests/grade.py
 RUN chmod +x /tests/test.sh
 # resources (docs/protocol/resources.md) # rcb-monitor
 COPY --from=ghcr.io/mll-lab-nu/efe:monitor-0.5.0@sha256:ecc5f24f1516ca11711d7c2d3ac07c89f79cd9220812c1244498ec71e352402a /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py

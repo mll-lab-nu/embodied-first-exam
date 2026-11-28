@@ -1,9 +1,9 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.8.0@sha256:d9c06edb0e5eb9a5c72a90fd971ae469b1758feb8a3ec76722b7f7df80013e46",
+ "image": "ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.8.0@sha256:1149811a2c2d62a41af39e58acd2bd9e490459a5124d1435752b59212ec5d164",
  "source": "embodied_first_exam/benchmarks/embodied-olympics-fun",
  "files": {
-  "grade.py": "711d818b010325b2370958f376137b533e2bf56be119e104f7c15ca4bc0c3e79",
-  "rcb_rfo.py": "e732ede9bd4a08a564d1fa6beea7ab81c22ff2180a034e6e51f477a207bcc491",
+  "grade.py": "e87dd81dbd8447e196b27a8eeb6459e472d21321506742e927b03a095be2261a",
+  "rcb_rfo.py": "68d3ed27147d8d5b5b3e67e339701756ce13eeb0515b849aea03366383985eeb",
   "rfo/__init__.py": "eddb3f4e03968c348b96a32850e51a6d89caf048d0af3d682df5c8a43bbdc26f",
   "rfo/looks.py": "592465637847ae5e386fb6f99d78a63280892fbf8f19408a0f9c5de45b5eae6a",
   "rfo/realhand.py": "23c8a06c04d0f700030a862872937406f55d18e719c3c76815118ff6e12b72f3",
@@ -31,7 +31,7 @@
   "rfo/tasks/volleyball_bump.py": "747954b6b70af83db8861e065c659cbe93861668595958dd3f8e726f58c676a3",
   "rfo/tasks/volleyball_set.py": "3fd325545565b1ee299e7b217f83238739f919580e149a8630ee2f2fdb2b6839",
   "rfo/tasks/volleyball_spike.py": "f677e85cbe6d89d0563ba549f7388fead5eeffe1a1397680bd8b3cd6e95a0350",
-  "rfo/world.py": "81b354c7dd396d844623226e2c07d6a910a146d2e88bb8a523af47624fe7f8d9",
-  "standard/server.py": "3da2e12ba0aa6337ce385a61fc20676b137853269d0a8dbbd000e54b823a1a1c"
+  "rfo/world.py": "e02fab1b68db9b8bc185f6e93c50467374f894bdb924f0109094c965270314ad",
+  "standard/server.py": "3a608f0469462e343e75d4ac5c0e10135c0117735e7b7fa706673f2c4564263c"
  }
 }

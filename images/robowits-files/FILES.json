@@ -1,10 +1,10 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:robowits-files-0.7.0@sha256:7de7a210c757bfddc5694a27773b7acbdd71e074695be5ea083931a6d72fea38",
+ "image": "ghcr.io/mll-lab-nu/efe:robowits-files-0.7.0@sha256:176315afdf4be26933b49bc175d51c9b46f348c7186ac3cd434878fbfc111b7d",
  "source": "embodied_first_exam/benchmarks/robowits",
  "files": {
-  "privileged/tests/grade.py": "b86ea7826e503cb5e7f3647995b73ae697063a3da1cb778089c2d1a2739e1f7b",
-  "privileged/tests/rcb_robowits.py": "944a2ba3850083b3af891138ae3f8d1a2e4b1ce3d49cf87e070cf930647353c9",
-  "sim/server.py": "552cd926450f9b56abca896560ead204fba6386f21c55c5cf4777450903ff36f",
-  "standard/tests/grade.py": "0f08dac5aaa3e5fa83d7336ceb5c77008deafe1c16e5bbb8e41ae70b84c2b277"
+  "privileged/tests/grade.py": "570895b7831c57d2a81c37d0f1b9c9260d9a0dd88538dbeb06ad2dabdfeeed76",
+  "privileged/tests/rcb_robowits.py": "891231a1ac9193198bbf533f92fbaebda10aacf1d07cd88150ab8dbaf997b639",
+  "sim/server.py": "7e2d2e181684aa10684c888d48bbd2ca2d32998381eca41caa55be834796b109",
+  "standard/tests/grade.py": "9eee52592416873475230d54fc2efecab6d9cdaefd75ef4100e90ad8677aa61a"
  }
 }

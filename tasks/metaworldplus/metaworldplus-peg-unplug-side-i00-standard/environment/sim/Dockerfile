@@ -3,8 +3,8 @@
 # FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
 FROM ghcr.io/mll-lab-nu/efe:metaworld-0.1.0
 COPY . /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:metaworldplus-files-0.8.0@sha256:7548af1c69100c873291a277e9c0963c1e4a44f41b41f75c8d530dbba11f4f9f \
+COPY --from=ghcr.io/mll-lab-nu/efe:metaworldplus-files-0.8.0@sha256:878be5a534c592de7738ca6752ee9590f102da4c1dc143eff36ce88c8259ab24 \
      /privileged/environment/mw_tool.py \
      /sim/server_mw.py \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:6bf677373ff69d440d4640253caed50067929b8bf4a5d3a9c5f7315cd2752470 /rcb1.py /srv/rcb1.py
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:a99b04e29e96564b62a2c335b191405d8a94785d6efea2bb5765acbefde92383 /rcb1.py /srv/rcb1.py

@@ -1,11 +1,11 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:molmospaces-files-0.8.0@sha256:ccb4e9a60c9a404271f1de1bd7796895d943884d2c0113e7387c66b2072156d2",
+ "image": "ghcr.io/mll-lab-nu/efe:molmospaces-files-0.8.0@sha256:585b6553aef9333a610c08b03e880c56c7e756820e9870c62fce3a46a7e8cad4",
  "source": "embodied_first_exam/benchmarks/molmospaces",
  "files": {
   "privileged/environment/rcb_molmospaces.py": "0db129e5c8cf6dcee48ec1d04851f6a218a757e97b0b58e03a975f4d63431952",
-  "privileged/tests/grade.py": "1ee53998e889b441a5b0c6eaeb55f66a9146a2d2c1010d94172c85fe4732c422",
-  "sim/finalize.sh": "5b19d0e751c993abb8570998fba2990b96df55ef024062b5401dad450462b875",
-  "sim/server.py": "dc78ef2e023f72b4bffee9470fe57f3dbfcc9f2ce66675d942614ca12e3b5fcc",
-  "standard/tests/grade.py": "74395eea9c05f48eeb254f5b4baef3736785199d46fbb20dec9e8af2500997fd"
+  "privileged/tests/grade.py": "f335e6d2ee5edb7dc9d258cbed3c32ca8adb963a65241c645701e348ae06d240",
+  "sim/finalize.sh": "879d9e8fd4f146420b8b81d2d50c4dabae2d700da0029630ffca2840403e388f",
+  "sim/server.py": "020e157ad1cb7cca5739d8c5f666d5d8197ffb51db09fb2e2dd537cf1b397c47",
+  "standard/tests/grade.py": "1da2c237070e9fd3ef96dfb707e4a223b1306e32f5a6e5d3c5080a4a46e8d4de"
  }
 }

@@ -1,15 +1,15 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:ikea-mujoco-files-0.8.0@sha256:a4231b93ed125d76abe0e5630c2ed1877b25678878c338c0a608594cf54eda06",
+ "image": "ghcr.io/mll-lab-nu/efe:ikea-mujoco-files-0.8.0@sha256:2c981adc092ceba0d37d0c823ee21649f65146c9ea38b716d04a67cb77dabea9",
  "source": "embodied_first_exam/benchmarks/roboarc/ikea",
  "files": {
-  "privileged/environment/rcb_ikea.py": "4e1dc1aa2a611440d82b555208dcb0bbbf969680051e4d6906528394136a3d94",
-  "privileged/tests/grade.py": "f8d1319a5e23918926b831317aa27393badc64ff77a5de8e50a401c249bcd864",
-  "privileged/tests/render_video.py": "0930880a072926516f02f15e6d5a8980dd84a8aba120bb5ebfabfdd5c4682766",
+  "privileged/environment/rcb_ikea.py": "9024f6c776ddd2cf67497c1eee48a4e703ab23272899b26fd04af1c78e679de0",
+  "privileged/tests/grade.py": "1ea11cdf28f0c71f9c3c707c97acc43c304986328191db0ba9ee6ddfb74bf854",
+  "privileged/tests/render_video.py": "6718315ec42fd82c0de47274d2727c397b87ab390fe45f7d11af246eae202810",
   "sim/finalize.sh": "7aad18169115d74b56f34875e89e9a828a4451e329f501c6e72250607979e0bb",
   "sim/ikea_nyx.py": "356ff25e89494122966137e9398bf10e8f0bb9a5e9b99cc17b4f064e3ddfa795",
   "sim/ikea_rig.py": "980a1eb5996ea7762490087a8be02875e0e8da613fab80dcb4b8113e16a26310",
   "sim/rig.json": "705cbc9ff625602ffaebff7ab11d2f9594e15862bc70a92d1c9f5d7afcba3c8d",
-  "sim/server.py": "b4d9f5b03f5a1a207ddc691f23e3005743395c00c8ac098a36b6d0b226207533",
-  "standard/tests/grade.py": "b06c048aea4bee88e9f639976817b77c8ef9ca6fa09c36af810aa8097b1ab430"
+  "sim/server.py": "be0543d713e0323c824a4540abc5d2c484a761f01fae67f1a53a9bc23dc961e8",
+  "standard/tests/grade.py": "df6cf5c053dba6a2460998157b24a1efc44fd49c7aabc7f0f663a41d97ded3d1"
  }
 }

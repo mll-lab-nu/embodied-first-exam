@@ -1,12 +1,12 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:dexjoco-files-0.7.0@sha256:dbfda7d6a89e9d33e690bd699b26d0c658a20b20a94cd4ea43654e19811bb42e",
+ "image": "ghcr.io/mll-lab-nu/efe:dexjoco-files-0.7.0@sha256:ee793c1cdab95349306ce1a1bbea7cc8516098696f107edf56d27f5f2efb58cf",
  "source": "embodied_first_exam/benchmarks/dexjoco",
  "files": {
-  "privileged/environment/rcb_dexjoco.py": "574edcd7043757a319a981a02b191f45092ec9601d1f6eca79420177ce9d6286",
-  "privileged/tests/grade.py": "b477f144444e32272b5511c8cac3c4707a97af6ee4c524785c15adf369d4b650",
-  "sim/finalize.sh": "72d7a8f32f93ad60a87e9e57882cfb1c2c005f36e9f3dffe0e559a5cf98856ec",
-  "sim/server.py": "8d611f70a1ebd84440915fdd85632fb5f429f820467cba82a11a21bb0e7042f2",
-  "sim/video.py": "42146fc9e10d2f8a488042d7880117d8b71a14a6dbb3349a45ec601520bfeb45",
-  "standard/tests/grade.py": "f2bbc7d39961e907a92fa0976885e98e7e3eb948c4a584f08dca603c9408a2ae"
+  "privileged/environment/rcb_dexjoco.py": "4935bae8ff430091c30aba9b31c450b85ed0230793dcf5396950fbf470e12d4e",
+  "privileged/tests/grade.py": "cf940ff3bd83096a277cb0f2590ff2cc21f603c73c08246889c8a4a21ca4e809",
+  "sim/finalize.sh": "753e90f37eb0e8fd1662a40a15427e6540fae2c258a5d32ed3d38f698f706379",
+  "sim/server.py": "900cc8ba3295784fe59d4dec0ad04fd4828f96c73082423a2bb3e239c9941f4a",
+  "sim/video.py": "a789efb17f4efd702c274f33ffa00efaaaa46d94aeb67a27d9ca931f8ee6ec40",
+  "standard/tests/grade.py": "471342169fd9826cdbcc155e1d1bffd04a9c60dee975b5cc3deba5994adb2f11"
  }
 }

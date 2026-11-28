@@ -11,17 +11,17 @@
 | Reference solution | None |
 
 ## Task
-Stand the five nesting dolls upright in a straight row from left to right, smallest to largest, with a little space
+Stand the five penguin toys upright in a straight row from left to right, smallest to largest, with a little space
 between them. Then move both arms back to where they started.
 
 ## Success criteria
-The five dolls are ranked from smallest to largest (RoboDojo ranks them by their model's index, which follows size).
+The five toys are ranked from smallest to largest (RoboDojo ranks them by their model's index, which follows size).
 One check stage, all of these at once:
-- Row: the dolls' centres differ by at most 0.035 m along the world y axis (forward), from the most forward to the
+- Row: the toys' centres differ by at most 0.035 m along the world y axis (forward), from the most forward to the
   most rearward.
-- Order: each doll's centre is more than 0.03 m to the left (smaller world x) of the next larger one's, so the
+- Order: each toy's centre is more than 0.03 m to the left (smaller world x) of the next larger one's, so the
   smallest is leftmost and the largest rightmost.
-- Upright: each doll's up axis is within 15 degrees of vertical.
+- Upright: each toy's up axis is within 15 degrees of vertical.
 - Both arms are back home: each arm's end effector is within 0.15 m of its start position along each of x, y and z,
   and within 20 degrees of its start orientation.
 

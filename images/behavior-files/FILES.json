@@ -1,12 +1,12 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:behavior-files-0.8.0@sha256:a37c0cf3ae7ff75405e9a1481d3ab26265391f669ec1983f2cca962b13177c8d",
+ "image": "ghcr.io/mll-lab-nu/efe:behavior-files-0.8.0@sha256:befd6268ddf35da974c54df85ed548da1b2f061617b716f1585ff21b1463cee6",
  "source": "embodied_first_exam/benchmarks/behavior-1k",
  "files": {
-  "privileged/grade.py": "09be201fa726339a83a67ce4112f4a509f997d9f8fcbcfc0eeea57a6c3986301",
+  "privileged/grade.py": "8df2a0df450288489c038b4771528fbef3b343d216475905f3109b225a258095",
   "r1pro_primitives_eval.yaml": "b47a29b68ad5a5600d129c639be5d9dd14b2a85929de2204adc23d5b979345f8",
-  "rcb_behavior.py": "b37f81ad7adeb87d0644d0a76f914a1e3e470e0719cc073099825b3b1b68ddfc",
-  "sim/finalize.sh": "d6aaea7cf17f1769d149a590f09c0b5f9f064f9302d69fa1422d889147d96752",
-  "sim/server.py": "4c349c731ed5ad7b1936039ba1d7f33dc7a8b54600f26b27ad28ab20e121e0ab",
-  "standard/grade.py": "201a2c9637bca6e6dba6788579575a01b9c3ad2e3cacbf75ef8e28ef54415a1f"
+  "rcb_behavior.py": "4b6fbc013734c470a66f7afc5cebac9c1cf931c346b55ddfb4a571d3024ccc42",
+  "sim/finalize.sh": "c9127b591877dff8038c4fccfd7de2f2f48b55dd22b6c3a25d737356f2b0914f",
+  "sim/server.py": "9a1882431042994298a449b617e66c1f9cefcff9f41c596d12653c15ae6e4fe8",
+  "standard/grade.py": "20815f4df79fd1c039d79714c1fa5fa26a2c0d4d6357ccbba7514bb089e2fa0e"
  }
 }

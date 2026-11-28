@@ -4,7 +4,7 @@
 # One template for every HumanoidBench verifier (the tooling that renders it is kept outside this repository): keep the copies identical.
 FROM ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0
 COPY instance.npz rewards.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:humanoidbench-files-0.7.0@sha256:c01acde889afa98b292c8cbdff0a61023a317ce68662681841026a67748ed1bd /privileged/environment/rcb_hb.py /privileged/tests/grade.py /privileged/tests/rcb_rewards.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:humanoidbench-files-0.7.0@sha256:99d523bd2930ff6b611524347ed66b4adc154f782ee0c4c3378e66a33d1a4d88 /privileged/environment/rcb_hb.py /privileged/tests/grade.py /privileged/tests/rcb_rewards.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 WORKDIR /tests
 # resources (docs/protocol/resources.md) # rcb-monitor

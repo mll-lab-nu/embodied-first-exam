@@ -2,7 +2,7 @@
 # needs nothing but python (no simulator: nothing is replayed).
 FROM docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f
 COPY test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:ikea-mujoco-files-0.8.0@sha256:a4231b93ed125d76abe0e5630c2ed1877b25678878c338c0a608594cf54eda06 /standard/tests/grade.py /tests/grade.py
+COPY --from=ghcr.io/mll-lab-nu/efe:ikea-mujoco-files-0.8.0@sha256:2c981adc092ceba0d37d0c823ee21649f65146c9ea38b716d04a67cb77dabea9 /standard/tests/grade.py /tests/grade.py
 RUN chmod +x /tests/test.sh && mkdir -p /logs/verifier
 WORKDIR /tests
 # resources (docs/protocol/resources.md) # rcb-monitor

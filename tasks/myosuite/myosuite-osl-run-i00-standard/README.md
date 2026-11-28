@@ -11,7 +11,7 @@
 | Reference solution | None |
 
 ## Task
-Run 29 m down the track to the finish, staying on your feet and near the middle of the track.
+Run 30 m down the track to the finish, staying on your feet and near the middle of the track.
 
 ## Success criteria
 Success event (MyoChallenge 2024 `myoChallengeOslRunFixed-v0`, the finish): the body's root crosses the finish line, y

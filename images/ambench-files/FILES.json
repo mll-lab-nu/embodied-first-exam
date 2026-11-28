@@ -1,11 +1,11 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:ambench-files-0.10.0@sha256:27bb06e8599873e544e63bc1d1f78cafaf69976070680d5bea642b7ac653e762",
+ "image": "ghcr.io/mll-lab-nu/efe:ambench-files-0.10.0@sha256:e1634af9f6f9431ccc9b224d488d2b009337eb0759894893cb501327ebd21246",
  "source": "embodied_first_exam/benchmarks/ambench",
  "files": {
-  "privileged/environment/rcb_ambench.py": "9e0a5b1c95f78547c4f2b1e517db9197eda6c11c1c374ea40cc46da2528ae016",
-  "privileged/tests/grade.py": "460e5055b8481a33a34d253f6d40e79c943bec673ae8d6ed24668c7230824e74",
-  "sim/finalize.sh": "0c1bcb2b9e2ce98ebd0280a1902c7bca60f26acf87819d244974bd5521970b1e",
-  "sim/server.py": "7e5e30da0f31e62789ae9bad70fae459fdaaa3f3587b5cffe0b21ca58904f719",
-  "standard/tests/grade.py": "2654c32f3059abb07252246e387a44987c3fdb24498e5fdfcc8513f0fd7f9bfe"
+  "privileged/environment/rcb_ambench.py": "246fdad12607a7a3d9e5752cb94154304664494ebae2daa5a37caa1ab47351d2",
+  "privileged/tests/grade.py": "ed065b0977e7945de1803a282191298c561d3942fefbc585a032ea16dbbd1cb4",
+  "sim/finalize.sh": "4b4d929f8c47fff4e8065c007dd2e1251bd0c94ae248b6f2ba1332def1dea4a6",
+  "sim/server.py": "05f3467f6b03a8d212d5ebaed132c665514a9e38f9ff85fa580d86205353506b",
+  "standard/tests/grade.py": "cd9ccb110785370d1cfb95f040b03c84a642b935f4cab58a2b0af183255a242b"
  }
 }

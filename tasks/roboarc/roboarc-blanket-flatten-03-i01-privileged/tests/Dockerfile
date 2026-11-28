@@ -7,9 +7,9 @@ FROM ghcr.io/mll-lab-nu/efe:roboarc-0.2.0
 ENV NPY_DISABLE_CPU_FEATURES=AVX512F,AVX512CD,AVX512_SKX,AVX512_CLX,AVX512_CNL,AVX512_ICL,AVX512_SPR OPENBLAS_CORETYPE=Haswell
 COPY runtime_binding.json /tests/runtime_binding.json
 COPY grade.py test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:roboarc-files-0.8.0@sha256:906e6db4747259bf83aa9454b720765d155ff2c6b578ed06b815c8ef3146896e /rcb_topogym.py /tests/rcb_topogym.py
-COPY --from=ghcr.io/mll-lab-nu/efe:roboarc-files-0.8.0@sha256:906e6db4747259bf83aa9454b720765d155ff2c6b578ed06b815c8ef3146896e /render_bridge.py /tests/render_bridge.py
-COPY --from=ghcr.io/mll-lab-nu/efe:roboarc-files-0.8.0@sha256:906e6db4747259bf83aa9454b720765d155ff2c6b578ed06b815c8ef3146896e /nyx_direct.py /tests/nyx_direct.py
+COPY --from=ghcr.io/mll-lab-nu/efe:roboarc-files-0.8.0@sha256:a28792ad62a26ce226de71861d1ef8cce2de61c1e7e3fc08f13e6d5f8d4685be /rcb_topogym.py /tests/rcb_topogym.py
+COPY --from=ghcr.io/mll-lab-nu/efe:roboarc-files-0.8.0@sha256:a28792ad62a26ce226de71861d1ef8cce2de61c1e7e3fc08f13e6d5f8d4685be /render_bridge.py /tests/render_bridge.py
+COPY --from=ghcr.io/mll-lab-nu/efe:roboarc-files-0.8.0@sha256:a28792ad62a26ce226de71861d1ef8cce2de61c1e7e3fc08f13e6d5f8d4685be /nyx_direct.py /tests/nyx_direct.py
 RUN python /opt/robotangle/stage_instance.py blanket-flatten-03-i01 /tests --purge   # the frozen instance, from the image (images/roboarc/assets.json), checked against runtime_binding.json
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests:/opt/topogym
