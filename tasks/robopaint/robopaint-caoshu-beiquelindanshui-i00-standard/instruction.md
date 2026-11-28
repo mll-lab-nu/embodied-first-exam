@@ -6,7 +6,7 @@ Copy the characters 北闕臨丹水 (cursive script, 草书) in `/app/target.png
 
 ## Goal
 Success: the ink on the main sheet matches the exemplar's writing character for character (every stroke inked along its
-whole length and fully covered, its edges where the exemplar's are, almost no ink anywhere else), you used at most 12
+whole length and mostly covered, its edges where the exemplar's are, almost no ink anywhere else), you used at most 12
 strokes as the process rules count them, and the process rules below hold; a small shift of the whole writing does not
 matter. The main sheet is scored as the episode leaves it.
 

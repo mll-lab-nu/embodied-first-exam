@@ -5,8 +5,9 @@ Copy the line "Aim at improvement in every line." (English round hand) in `/app/
 and ink, in at most 11 strokes.
 
 ## Goal
-Success: the ink on the main sheet matches the exemplar's line letter for letter (every stroke inked along its whole
-length, its edges where the exemplar's are, almost no ink anywhere else), you used at most 11 strokes, and the process
+Success: the ink on the main sheet matches the exemplar's line letter for letter (every stroke inked along its length
+and mostly covered, its edges where the exemplar's are, almost no ink anywhere else),
+you used at most 11 strokes, and the process
 rules below hold; a small shift of the whole writing does not matter. Your trajectory is replayed from the fixed start.
 What counts is the state after its last action.
 
