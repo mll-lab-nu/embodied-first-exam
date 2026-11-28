@@ -1,10 +1,11 @@
 # RoboTwin 2.0 · place_cans_plasticbox (standard)
 
 ## Task
-Put both cans into the plastic box, one in its left half and one in its right half, then let go.
+Put both cans into the plastic box, each near the middle of one of its two halves, then let go.
 
 ## Goal
-Success: the two cans are in the plastic box, one in each half, and both grippers are open.
+Success: each of the two cans is in the plastic box, near the middle of one of its two halves (they may share a half),
+and both grippers are open.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

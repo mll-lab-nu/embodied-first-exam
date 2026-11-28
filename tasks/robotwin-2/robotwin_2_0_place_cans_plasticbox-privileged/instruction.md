@@ -1,10 +1,11 @@
 # RoboTwin 2.0 · place_cans_plasticbox (privileged)
 
 ## Task
-Put both cans into the plastic box, one in its left half and one in its right half, then let go.
+Put both cans into the plastic box, each near the middle of one of its two halves, then let go.
 
 ## Goal
-Success: the two cans are in the plastic box, one in each half, and both grippers are open. Your trajectory is replayed
+Success: each of the two cans is in the plastic box, near the middle of one of its two halves (they may share a half),
+and both grippers are open. Your trajectory is replayed
 from the fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`: the

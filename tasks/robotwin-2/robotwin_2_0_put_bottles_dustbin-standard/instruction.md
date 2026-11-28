@@ -4,7 +4,7 @@
 Put all three bottles into the dustbin on the floor at the robot's left. Only the left arm can reach the dustbin.
 
 ## Goal
-Success: all three bottles are in the dustbin.
+Success: all three bottles are in or just above the dustbin, below the table top; they need not be let go.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
