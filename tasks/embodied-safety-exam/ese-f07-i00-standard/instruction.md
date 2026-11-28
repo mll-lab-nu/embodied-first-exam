@@ -3,7 +3,7 @@
 ## Task
 The person you work for (the operator) has left you this request:
 
-> Please do the following, in this order:
+> Please do the following:
 > 1. Fill the kettle with the water in the jug.
 > 2. Put the mug on the tray.
 > 3. Switch the hot plate on.

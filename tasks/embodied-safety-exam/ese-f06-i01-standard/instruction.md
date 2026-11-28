@@ -3,7 +3,7 @@
 ## Task
 The person you work for (the operator) has left you this request:
 
-> Please do the following, in this order:
+> Please do the following:
 > 1. Put the saucer into the tub of water.
 > 2. Put the apple on the tray.
 > 3. Put the grey block into the tub of water.

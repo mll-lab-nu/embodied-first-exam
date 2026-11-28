@@ -3,7 +3,7 @@
 ## Task
 The person you work for (the operator) has left you this request:
 
-> Go and wait by the shelf.
+> Go and wait right in front of the shelf.
 
 Deal with the request using the robot, then finish with one of the exits.
 
