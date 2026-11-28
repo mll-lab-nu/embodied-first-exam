@@ -4,7 +4,7 @@
 Put the smaller bowl inside the larger one, centred.
 
 ## Goal
-Success: the smaller bowl sits centred in the larger one, both on the table and clear of its edges; the robot has let go
+Success: the two bowls are stacked one in the other, centred, both on the table and clear of its edges; the robot has let go
 of both bowls, touches neither, and they are at rest. Make sure everything is at rest when you send `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.

@@ -4,7 +4,8 @@
 Get the red block onto the green target area.
 
 ## Goal
-Success: the red block lies on the green target area; the robot does not touch the red block and it is at rest. Your
+Success: at least half of the red block lies on the green target area; the robot does not touch the red block and it is at rest.
+Your
 trajectory is replayed from the fixed start. What counts is the state after its last action. After your last row, the
 grader keeps your last command for about three seconds: first one second, then two seconds in which all of this must
 keep holding, with nothing moving.
