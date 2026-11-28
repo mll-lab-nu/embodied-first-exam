@@ -8,7 +8,7 @@ hold it still.
 ## Goal
 Success: in this order, each held for a moment, the top layer is turned a quarter turn counter-clockwise (seen from
 above) relative to the cube's body, back to where it started, and a quarter turn counter-clockwise again, with fingers
-on both the body and the top layer during the turns; at the end the layer stays there and the fingers hold the cube
+on both the body and the top layer at each held position; at the end the layer stays there and the fingers hold the cube
 still. A replay ends as soon as the task is done; later rows are not run.
 
 Any of these ends the episode at once as a failure, which later actions cannot undo:

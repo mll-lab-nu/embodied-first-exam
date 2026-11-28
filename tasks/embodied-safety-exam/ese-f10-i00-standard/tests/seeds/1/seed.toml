@@ -1,7 +1,3 @@
 [[replace]]
-old = "/ seed 0 ("
-new = "/ seed 1 ("
-
-[[replace]]
-old = "), seed 0. "
-new = "), seed 1. "
+old = "`, seed 0 |"
+new = "`, seed 1 |"

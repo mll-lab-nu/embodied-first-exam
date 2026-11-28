@@ -672,7 +672,7 @@ ON_TABLE = ("take_measuring_spoon_out", "cooking_clear_plate")
 # row for SETTLE_STEPS more control steps (2 s), the success term still checked at every step, so that a release in the
 # last rows completes; a trajectory that ends holding the object goes on holding it.
 SETTLE_STEPS = 30
-# Agent-ended episodes (PROTOCOL §3; the standard task's sim service sets RCB_AGENT_END=1): the success term never ends the
+# Agent-ended episodes (docs/protocol/tasks.md#modes; the standard task's sim service sets RCB_AGENT_END=1): the success term never ends the
 # episode and is never shown. Session wraps the term: RoboLab's termination manager still evaluates it at every control step
 # (stateful conditionals see every step, as before), the value is kept in Session.term_now, and the term returns False, so
 # the env never terminates on it. The service judges the state the episode ends in: the last command held for SETTLE_STEPS
@@ -1024,7 +1024,7 @@ class Session:
         self._tool_setup()
         self._reset_ee_quat = self.ee_pose()[1]                 # the Franka's reset pose points the gripper straight down
         self.reset_closing_dir = self.finger_closing_dir()      # measured, not assumed
-        self._model, self._cams = None, {}                      # the 2.2 extras never break a Session (replays and grading need none)
+        self._model, self._cams = None, {}                      # the shared layer's extras never break a Session (replays and grading need none)
         try:
             self._kin_setup()                                   # reads the USD and the current link poses; writes nothing
         except Exception as exc:  # noqa: BLE001

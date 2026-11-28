@@ -1,36 +1,36 @@
-# mujoco_playground_spot_getup-privileged
+# MuJoCo Playground · SpotGetup (privileged)
 
 | | |
 |---|---|
-| Benchmark | MuJoCo Playground |
+| Task ID | `mujoco_playground_spot_getup-privileged` |
+| Benchmark | [MuJoCo Playground](https://playground.mujoco.org/) (Zakka et al., 2025), upstream `google-deepmind/mujoco_playground@4057c14` |
+| Robot | Boston Dynamics Spot quadruped, 12 joint position actuators |
 | Mode | privileged |
-| Twin | `mujoco_playground_spot_getup-standard` |
-| Simulator / robot | `mujoco` / `boston-dynamics-spot` |
-| Family / instance | `mujoco_playground/SpotGetup` / seed 1 |
-| Oracle | `full` |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` |
+| Instance | `mujoco_playground/SpotGetup`, seed 1 |
+| Time limit | 30 min |
+| Reference solution | Included |
 
 ## Task
-MuJoCo Playground `SpotGetup` (Boston Dynamics Spot), rebuilt in plain MuJoCo from Playground's scene files: The robot has fallen over. Get it back up, standing upright at its normal height.
-It starts lying with its trunk tilted 128.4 deg (Playground's random drop, then a 0.5 s settle) and has 6 s to stand upright at its standing height. The deliverable is one replayable trajectory of joint position targets
-(`/app/output/trajectory.npz`, `(T, 12)`, 1 <= T <= 300).
+The robot has fallen over. Get it back up, standing upright at its normal height.
 
-## Difficulty
-Recovery from a fall: the robot lies on its side or back and has to turn itself over with its legs and then stand up within 6 s, with the trunk, thighs and calves all in contact with the floor (full collisions). The motion is whole-body and contact-rich, and a turn that fails leaves it on its back. Spot's trunk alone weighs 33 kg and its legs are long: a turn has to be timed against gravity.
+## Success criteria
+Pass condition, defined by this benchmark (MuJoCo Playground's `SpotGetup` has only a shaped training reward and no success
+test): the last 25 control steps (0.5 s) of the episode all have the body upright, its up axis (the IMU frame's z axis)
+within 10° of vertical, and the IMU at least 0.40 m above the floor. An episode is at most 300 control steps (6 s at
+50 Hz); an episode of fewer than 25 control steps fails. There is no termination: no pose ends the episode early, and only
+its last 25 steps are judged.
 
-## Reference solution
-A policy trained here on Playground's SpotGetup reward (PPO on the CPU; the training code is not in the image), run closed loop until the check completes: upright after 63 control steps, IMU at 0.478 m. Replayed by `solution/solve.sh` (`solution/oracle.npy`, 63 rows); the rows are float32-exact, so the
-standard twin's client executes the same targets. Re-verified: two
-fresh-process replays succeed and end in the same state.
+Graded file: `/app/output/trajectory.npz`, array `actions` of shape (T, 12) with T at most 300: one row
+of actuator targets per control step, all finite (values outside the actuator ranges are clipped). After the agent's
+session the verifier, in a separate sandbox without network, replays it once, open-loop, from its own copy of the
+frozen start (`tests/instance.json`), and checks the condition on that replay. Only the trajectory is scored (`gen.py`
+is not). A missing file, a file that is not an `.npz` with a numeric `actions` array, or an array of another width, with
+more rows or with a NaN or infinite value scores 0. A replay that does not rebuild the frozen start (its state hash
+differs) and any other error inside the grader, such as a replay that dies or times out, are reported as a grader
+error, not as the agent's score.
 
-## Verification
-`tests/grade.py` in a separate sandbox without network: one replay, in a fresh process, from the verifier's own
-copy of the instance (`tests/instance.json`; the start state is checked against its hash on every load); pass iff it
-succeeds. Oracle: success after 63 control steps. `nop`: no trajectory, reward 0.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -39,10 +39,11 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | MuJoCo Playground @ 4057c14 (Apache-2.0): `locomotion/spot/xmls/scene_mjx_flat_terrain.xml`; MuJoCo Menagerie @ 1b86ece (`boston_dynamics_spot`); simulated in MuJoCo 3.3.7 on the CPU |
-| Instance | Playground's `reset` with `jax.random.PRNGKey(1)` (a drop; the 0.5 s settle runs in the task's own MuJoCo); chosen (seed 1; skipped 0: not dropped (starts standing)) |
-| Actions | 12 joint position targets per control step (0.02 s of simulated time); kp = 400 N m/rad, joint damping 20 N m s/rad |
-| Resources | 4 CPUs, no GPU (CPU physics, EGL or OSMesa rendering) |
+## License
+MuJoCo Playground ([google-deepmind/mujoco_playground](https://github.com/google-deepmind/mujoco_playground) @
+`4057c14`) is released under the Apache License 2.0. The robot models come from MuJoCo Menagerie
+([google-deepmind/mujoco_menagerie](https://github.com/google-deepmind/mujoco_menagerie) @ `1b86ece`, the commit
+Playground pins), each under its own license: Unitree Go1 (BSD 3-Clause, Unitree Robotics), Boston Dynamics Spot
+(BSD 3-Clause, Clearpath Robotics), Google Barkour vB (Apache License 2.0, DeepMind), ALOHA 2 (BSD 3-Clause, Trossen
+Robotics), Franka Emika Panda (Apache License 2.0). The rough-terrain texture is from Poly Haven (CC0). No
+non-commercial terms apply. The simulator is MuJoCo 3.3.7 (Apache License 2.0).

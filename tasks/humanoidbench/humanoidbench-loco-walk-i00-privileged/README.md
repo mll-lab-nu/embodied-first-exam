@@ -1,78 +1,37 @@
-# humanoidbench-loco-walk-i00-privileged
+# HumanoidBench · walk (privileged)
 
 | | |
 |---|---|
-| Benchmark | HumanoidBench |
+| Task ID | `humanoidbench-loco-walk-i00-privileged` |
+| Benchmark | [HumanoidBench](https://humanoid-bench.github.io/) (Sferrazza et al., 2024), upstream `carlosferrazza/humanoid-bench@cb11890` |
+| Robot | Unitree H1 humanoid, 19 position-controlled actuators (HumanoidBench `h1`) |
 | Mode | privileged |
-| Twin | `humanoidbench-loco-walk-i00-standard` |
-| Simulator / robot | `humanoidbench` / `unitree-h1` |
-| Family / instance | `walk` / seed 0 |
-| Oracle | `none` — Claude Opus 5.5's privileged-mode trajectory (834.80 / 700 on image 0.1.6, MuJoCo 3.1.6), run `claude_code-claude_opus_5_5-medium` on the results site; it is open-loop, so it does not carry over to image 0.2.0's physics (51.46 / 700 there); published RL passes as well (SAC 854, FastTD3 928, on upstream's MuJoCo 3.1.6); human review in PR #9 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
+| Instance | `walk`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
 Walk forward and keep walking, without falling.
 
-HumanoidBench walk: produce one replayable trajectory that walks the Unitree H1 forward and keeps it walking, frozen scene instance 00.
+## Success criteria
+Pass mark: an episode return of at least 700, upstream's success bar, where the return is the sum of
+HumanoidBench's per-step `walk` reward over the episode. Each control step earns between 0 and 1, more the closer the
+robot is to walking forward at 1 m/s or faster with its head at standing height, its torso upright and little actuator
+effort. An episode is at most 1,000 control steps (20 s at 50 Hz).
 
-## Difficulty
-The pass mark is a **threshold on the whole episode's return** (`>= 700` over 1000 steps), not a
-predicate on the final state.
+Termination (the episode ends at once as a failure): the robot falls, its pelvis below 0.2 m.
 
-- **The reward is a three-way product**: `small_control × stand_reward × move`. The `move` term rises
-  linearly from 0 at standstill to 1 at 1 m/s of forward centre-of-mass speed, then is remapped to
-  `(5·move + 1)/6`. Standing still therefore caps the episode near 170/700 — staying upright earns
-  almost nothing by itself. Clearing the bar takes a *sustained* ~0.7 m/s.
-- **A gait is a limit cycle, and greedy search cannot find one.** Any first step out of a standing pose
-  is locally worse than not taking it: the centre of mass has to leave the support polygon before it
-  gains anything. A search that only accepts locally improving actions structurally never takes that
-  step. Planning with a horizon *can*, which is exactly what happened below.
-- **Nothing is given away**: the published random-policy baseline is 2.38/700, and holding the starting
-  pose scores 11.84 (1.7% of the bar).
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory(...)` writes it: this task's name (`walk`) and at
+most 1,000 rows of 19 finite servo targets, one row per control step (values outside [-1, 1] are
+clipped). After the agent's session it is replayed once, open-loop, from the frozen start (`tests/instance.npz`) in a
+fresh process of a separate verifier container without network, the only place the reward exists. The task is passed
+if the replayed episode's return reaches the pass mark. The replay stops at the first of the terminations above; rows
+after it are not run. Only the trajectory is scored (`gen.py` and `NOTES.md` are not). A missing file, a file for
+another task, or one that is not such an array scores 0; an error inside the grader is reported as `grader_error`
+(infrastructure), not as a score.
 
-**Measured with a real agent** (`mini-swe-agent` + `claude-sonnet-5`, one attempt, full 1 h budget,
-~$6, 200 steps): **passed, 784.54 / 700**, deterministic replay. What it reported trying, in order:
-open-loop sine CPG (falls before step 100), CPG + LQR linearised at the initial state (survives all
-1000 steps but caps near 200), CMA-ES over the CPG/Fourier parameters (plateaus at 190-210 -- it
-concluded the parameterisation, not the search budget, was the limit), and finally receding-horizon
-CEM-MPC against the task's own reward, which cleared the bar.
-
-🚩 **That run had the reward function.** It is the reason the image no longer does: the winning
-approach was to optimise the formula directly, which measures reading comprehension of a dense
-reward rather than control. Re-run under the scrubbed image, the same approach needs the agent to
-*write* the objective first.
-
-**Measured floors** (this instance): an all-zero
-trajectory scores **6.56 / 700** (the episode terminates at step 66 of 1000). Holding the starting
-pose instead — the floor a competent agent gets before writing a controller — scores **1.7%** of the
-bar; that is the number this task was selected on (the benchmark's give-away limit).
-**External evidence**: published RL results reach **133%** of the bar (paper SAC 854, FastTD3 928,
-bar 700) — training runs of millions of environment steps, not a one-hour coding session, so treat
-it as proof that the task *has* a solution rather than as a target.
-
-**The agent does not see the reward function.** It is deleted from the image and restored only
-inside the verifier (`images/humanoidbench/scrub_oracles.py`, `tests/rcb_rewards.py`), so the
-numbers above are upstream's own scoring (on our physics: see *Physics vs upstream*) while the agent
-works from the task statement and the physical state alone.
-
-## Reference solution
-None. Requiring one would cap the benchmark at what we can already solve, which systematically
-removes the interesting tasks. What replaces it (docs/protocol/README.md §4): the floor above
-(doing nothing cannot pass), the evidence that the task has a solution (`oracle_evidence` in
-task.toml), and a human reviewer.
-
-## Verification
-In its own container, built from `tests/Dockerfile` (no network): the agent's container is gone by
-then, and only `/app/output/` crosses over. Open-loop replay of `/app/output/trajectory.npz` from
-`tests/instance.npz` in a fresh process, once; pass iff the replay's episode return reaches
-`success_bar`. `tests/grade.py` also
-writes `/logs/verifier/replay.mp4` and, because Harbor promotes every `reward.json` key to a
-leaderboard metric, keeps the per-task numbers (`episode_return`, `success_bar`) in
-`/logs/verifier/diagnostics.json`. No oracle; human review in PR #9. `nop` scores 0.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -81,19 +40,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Capability class | C1 · flat-ground periodic gait |
-| Physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (tasks/humanoidbench/README.md, Physics). |
-
-### GPU
-Optional, and passing never depends on it: MuJoCo physics is CPU-only, so a GPU only speeds up the
-agent's own offscreen rendering (osmesa ~130 ms/frame, egl ~0.4 ms). Hand one to the agent's
-container with `--extra-docker-compose environment/gpu.docker-compose.yaml`; `rcb_hb.py` then picks
-EGL by itself unless `MUJOCO_GL` says otherwise. The overlay is not named `docker-compose.yaml`
-because Harbor would load that on every machine, and a device reservation the host cannot satisfy
-stops the container from starting.
-
-### Provenance
-The instance (`environment/instance.npz` and its byte copy `tests/instance.npz`) is seed 0 (sha `4863491aa1f3`).
+## License
+HumanoidBench (Sferrazza et al., 2024; <https://github.com/carlosferrazza/humanoid-bench>) is released under the MIT
+License, copyright (c) 2024 Robot Learning Lab, UC Berkeley. The image's notice is
+`images/humanoidbench/LICENSE.humanoid-bench`; this task's `rewards.json` carries upstream's code under that license.
+Robot models shipped with upstream: the Unitree H1 model (BSD 3-Clause, copyright Unitree Robotics) and, on the
+two-handed H1, the Shadow Hand model from MuJoCo Menagerie (Apache License 2.0). No non-commercial terms apply.

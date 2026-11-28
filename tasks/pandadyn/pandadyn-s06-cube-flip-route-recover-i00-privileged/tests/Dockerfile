@@ -1,15 +1,15 @@
-# Separate verifier sandbox (PROTOCOL §4): the same simulator image with the verifier's own copies of the tooling and the
+# Separate verifier sandbox (docs/protocol/tasks.md#grading): the same simulator image with the verifier's own copies of the tooling and the
 # frozen instance baked in. Nothing the agent did in its container reaches this one -- Harbor uploads only the declared
 # artifacts (/app/output/), so a patched success check or a swapped interpreter in the agent container cannot influence
 # the verdict.
 FROM ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0
 COPY instance.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:pandadyn-files-0.7.0@sha256:85864153ee01c45b489fd7cfe6443e467c19cd5e03104c64e9519767f3a29350 /privileged/environment/rcb_pandadyn.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:pandadyn-files-0.8.0@sha256:4ef22683df701991d883767a61bc30c2aee31bab58da90ffd47db9a97f15161e /privileged/environment/rcb_pandadyn.py /privileged/tests/grade.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests:/opt/pandadyn
 # OPENBLAS_CORETYPE: this task's start depends on the BLAS kernel (tasks/pandadyn/README.md "Determinism")
 ENV OPENBLAS_CORETYPE=Haswell
 WORKDIR /tests
-# resources (PROTOCOL §6) # rcb-monitor
+# resources (docs/protocol/resources.md) # rcb-monitor
 COPY --from=ghcr.io/mll-lab-nu/efe:monitor-0.5.0@sha256:ecc5f24f1516ca11711d7c2d3ac07c89f79cd9220812c1244498ec71e352402a /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
 COPY rcb_limits.json /tests/rcb_limits.json

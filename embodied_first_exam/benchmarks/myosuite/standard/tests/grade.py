@@ -1,10 +1,10 @@
 """Standard-mode verifier (MyoSuite): reads what the sim service (which the agent could not touch) wrote: /data/final.json,
 /data/trajectory.npz, /data/replay.mp4; with a reset budget, the record is the last episode's. The verdict is the live
-episode's (docs/protocol/README.md H.4): success = the episode the service ran ended in success
+episode's (docs/protocol/invariants.md H.4): success = the episode the service ran ended in success
 under the task's rule (its hold / track windows included), as the service judged it after the agent's container was
 stopped ("graded_by": "live"); nothing is replayed. Numeric-only reward.json.
 
-infra_error = 1 (no verdict on the agent, PROTOCOL §2.6): no final.json, one that cannot be read, one without a verdict
+infra_error = 1 (no verdict on the agent, docs/protocol/tasks.md#grading): no final.json, one that cannot be read, one without a verdict
 (the collect hook never finalized it: it ran out of time or died; or neither the live verdict nor a give-up is in it),
 a give-up the service booked as infrastructure (crashes not all inside the agent's calls, a failed resume, the service
 not ending its episode for the collect hook), and a scene that did not start at the frozen instance's recorded state
@@ -14,6 +14,25 @@ The video is rendered after the verdict and never decides anything. Every branch
 graded_by_live, replays, infra_error and grader_error."""
 
 import json, os, shutil, traceback
+
+def agent_end_fields(d):
+    """An agent-ended episode's record (docs/protocol/tasks.md#modes: final.json success_signal / ended_by, step_limit / steps_used):
+    evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
+    if not isinstance(d, dict) or d.get("success_signal") != "hidden":
+        return {}
+    by = d.get("ended_by")
+    out = {"ended_finish": int(by == "finish"), "ended_step_limit": int(by == "step_limit"),
+           "ended_session_end": int(by == "session_end"), "hidden_success_seen": int(bool(d.get("hidden_success_seen")))}
+    if d.get("step_limit"):
+        def n(k):
+            try:
+                v = float(d.get(k) or 0)
+            except (TypeError, ValueError):
+                return 0
+            return int(v) if abs(v) < 1e18 else 0      # NaN and inf too
+        out.update(step_limit=n("step_limit"), steps_used=n("steps_used"))
+    return out
+
 
 DATA = os.environ.get("RCB_DATA", "/data")  # the sim sidecar's artifacts (the variables are for the tests)
 LOG = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
@@ -54,7 +73,7 @@ live = d.get("graded_by") == "live"
 no_verdict = not d.get("finalized") or not (live or d.get("gave_up"))
 mismatch = bool(d.get("instance_mismatch")) or reason.startswith("instance_mismatch")
 infra = bool(d.get("infra_error")) or no_verdict or mismatch
-ok = live and bool(d.get("success")) and bool(d.get("live_success", d.get("success"))) and not infra and reason != "error"   # PROTOCOL §4: a simulator error is the agent's 0
+ok = live and bool(d.get("success")) and bool(d.get("live_success", d.get("success"))) and not infra and reason != "error"   # docs/protocol/tasks.md#grading: a simulator error is the agent's 0
 num = lambda k: float(d.get(k) or 0)  # noqa: E731
 write(
     ok,
@@ -71,7 +90,7 @@ write(
         "physics_steps": int(d.get("physics_steps") or 0),
         "steps": int(d.get("steps") or 0),
         "calls": int(d.get("calls") or 0),
-        # the reset budget (PROTOCOL §4.5; MyoSuite standard: 10): only the last episode is graded; results under
+        # the reset budget (docs/protocol/eai-standard.md#post-reset-reset-capability; MyoSuite standard: 10): only the last episode is graded; results under
         # different budgets are reported separately
         "episodes": int(d.get("episodes") or 1),
         "resets": int(d.get("resets") or 0),
@@ -84,8 +103,8 @@ write(
         # the image no longer builds the frozen start (checked when the episode began): not the agent's 0
         "grader_error": int(mismatch),
         "instance_mismatch": int(mismatch),
-        # an infrastructure failure, not the agent's (PROTOCOL §2.6): a give-up after crashes between calls or a failed
-        # resume (docs/protocol/standard_mode.md §13), the service not ending its episode for the collect hook, a scene that did
+        # an infrastructure failure, not the agent's (docs/protocol/tasks.md#grading): a give-up after crashes between calls or a failed
+        # resume (embodied_first_exam/standard/README.md#crash-recovery), the service not ending its episode for the collect hook, a scene that did
         # not start at the instance's recorded state, a final.json without a verdict
         "infra_error": int(infra),
         "gave_up": int(bool(d.get("gave_up"))),
@@ -95,5 +114,6 @@ write(
         "resumes": int(d.get("resumes") or 0),
         "resume_state_mismatch": int(d.get("resume_state_mismatch") or 0),
         "resume_max_joint_dev": num("resume_max_joint_dev"),
+        **agent_end_fields(d),
     },
 )

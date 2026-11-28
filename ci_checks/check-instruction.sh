@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # instruction.md never leaks the verifier's /tests/ copy, and a privileged one names the deliverable under /app/output/
 # (a standard mode has no deliverable: the service grades the live episode).
-# Standard modes (the sidecar modes of the mode registry; PROTOCOL §5, "written in terms the agent can observe"): the
+# Standard modes (the sidecar modes of the mode registry; docs/protocol/tasks.md#instructionmd, "written in terms the agent can observe"): the
 # instruction's prose names no code-like term on its own: an object-local axis (`local +y`), a predicate function
 # (`is_A_in_B`, `all_robot_back_to_origin`), a label with an index suffix (`cube_0`, `mahjong9_0`) or a bare indexed label
 # (`block3`), asset metadata (`place_tag`, `model_id`, `category_idx`, a model / category index) or an asset point
@@ -66,7 +66,7 @@ for kind, rx in PATTERNS:
 bad = [h for h in hits if h[1] not in defined]
 if bad:
     print(f"FAIL {t}: the standard-mode instruction names code-like terms without a physical description next to them "
-          "(PROTOCOL §5: name objects by appearance or starting place, describe axes and points physically, upstream "
+          "(docs/protocol/tasks.md#instructionmd: name objects by appearance or starting place, describe axes and points physically, upstream "
           "identifiers only in brackets after that):")
     for kind, key, s, e in bad[:12]:
         line = text[:s].count("\n") + 1

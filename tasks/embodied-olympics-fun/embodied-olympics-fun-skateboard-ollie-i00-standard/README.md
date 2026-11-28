@@ -1,34 +1,49 @@
-# embodied-olympics-fun-skateboard-ollie-i00-standard
+# Embodied Olympics · skateboard ollie (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
-| Twin | `embodied-olympics-fun-skateboard-ollie-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `skateboard_ollie` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: positive by injection (a real ankle and hip balance controller holds the robot on the resting board, and at t = 1.2 s one upward velocity of 1.25 m/s is written to the robot's floating base and to the board's; the 6.2 cm clearance, the landing and the 1 s stand are physics under the same controller), for a stationary ollie (the board at rest; clear 5 cm, land on four wheels with both feet, stand still 1 s). No real ollie: 5291 scripted stationary ollies (IK pop, drag, level and land; parameter searches) cleared 5 cm in 565 runs (the board up to about 0.9 m), but only 6 landed and none stood 1 s; of 4810 rolling attempts none rode away; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-skateboard-ollie-i00-standard` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
+| Mode | standard |
+| Instance | `skateboard_ollie`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Do an ollie: pop the skateboard into the air with your feet, land on it with both feet and all four wheels down, and stand still on it. (Embodied Olympics `skateboard-ollie`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Do an ollie: pop the skateboard into the air with your feet, land on it with both feet and all four wheels down, and
+stand still on it.
 
-## Difficulty
-The ollie is a timed whole-body skill on a free board: the tail has to be snapped down with the front foot unloaded, the front foot has to drag the rising board up and level it while the robot is in the air, and the robot has to land on a narrow deck that rolls and steers when it tilts. Even standing still, the board is unstable under a rigid rider (its trucks tilt and steer), so the ankles have to balance it before and after the trick. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
+## Success criteria
+A skateboard (0.8 m deck with a kicktail and a turned-up nose, four wheels on steering trucks) rests on a level
+plaza; the robot stands across it, feet on the deck. Nothing holds the feet to it but grip tape. The referee's stages,
+in order: pop, clear, landed, stand.
+- Pop: the board leaves the ground (no part of it touching anything but the robot) with a foot on its deck as it
+  leaves.
+- Clear: in that same flight of the board, every part of it (deck, trucks, wheels) is at least 0.05 m above the
+  ground. A pop that does not clear may be followed by another.
+- Landed: then all four wheels are on the ground (each within 0.005 m of it) with both feet on the deck.
+- Stand: for 1 s without a break, both feet on the deck (contact breaks of at most 0.05 s), all four wheels on the
+  ground and the pelvis slower than 0.35 m/s. The success is called when the 1 s is complete.
 
-## Reference solution
-None (as `embodied-olympics-fun-skateboard-ollie-i00-privileged`).
+Fouls (each fails the attempt): any part of the robot other than the feet and shins touches the board; the board
+touches the ground with its deck tilted more than 60 degrees from level; after the landing, a foot off the deck for
+more than 0.2 s, or the torso tilted more than about 37 degrees from upright (the cosine of its tilt below 0.8).
+Fall (a bail, a failure at any time): any part of the robot, a foot included, touching the ground, or the pelvis
+below 0.3 m. Time limit: 8 s (800 control steps).
 
-## Verification
-The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
-infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
-`/data/final.json`: pass iff the live attempt succeeded. The
-rules: The skateboard: a 0.8 m deck, 0.19 m wide, with a kicktail and a nose turned up 18.0 degrees, on two trucks 0.356 m apart with four 0.026 m-radius wheels; the trucks steer when the deck tilts (pivot axis 63.0 degrees, 100.0 N m/rad of bushing stiffness, a stop at 12.0 degrees of tilt). Nothing holds your feet to it: grip tape (friction 1.0) only. The attempt, in this order: (1) pop: the board leaves the ground (no part of it touching anything but you) with a foot on its deck as it leaves; (2) clear: in the same flight of the board, every part of it (deck, trucks, wheels) is at least 0.05 m above the ground; (3) landed: then all four wheels on the ground (each within 0.005 m of it) with both feet on the deck; (4) stand: for 1.0 s without a break, both feet on the deck (contact breaks of at most 0.05 s), all four wheels on the ground, your torso within about 37 degrees of upright (the cosine of its tilt at least 0.8) and your pelvis slower than 0.35 m/s. You succeed at (4). A pop that does not clear may be followed by another. You fail if any part of you other than the feet and shins touches the board (an ollie is done without hands), if any part of you, a foot included, touches the ground or your pelvis drops below 0.3 m (a bail), if the board touches the ground upside down, after the landing if a foot stays off the deck for more than 0.2 s or your torso tilts beyond that limit, and at 8 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The referee's
+success call is an event: once it is made at some control step, the attempt is a success. It is never shown to the
+agent and does not end the attempt: the physics goes on until the agent's `/finish`, the attempt's time limit, or the
+end of the agent's time (2 h), and nothing after the call undoes it. A failure the referee calls before any
+success (a foul, a fall, the physics diverging) ends the attempt at once with 0. Reaching the time limit or the end of
+the session without a success call scores 0. The agent has 5 resets, each starting a new attempt from the
+frozen start; only the last attempt (the one after the last reset) is graded, and a success in an earlier attempt does
+not count. A simulator error raised by the agent's own call ends the attempt with 0. An attempt that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,13 +53,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | parkour-apparatus-balance |
-| Rule book | World Skate, Skateboarding Technical Commission, Street & Park Competition Rules (update of April 2025): Technical Specifications of Materials, Skateboard (a deck with four wheels attached by trucks; it cannot be physically attached to the skater's feet); the Runs + Tricks format (single tricks, one attempt each); Makes versus Bails (the Head Judge decides whether a trick is landed); deviations: Runs + Tricks format: one trick, a stationary ollie on flat ground (the board at rest at the start, no obstacle), the whole board rising at least 0.05 m above the ground, instead of an ollie at speed onto or over a street course's obstacle: 0.05 m is this benchmark's round number (the robot's measured pops lift the board higher), and the stationary form is the one this robot can attempt without a push-off on one leg, which it has no balance for · Makes versus Bails: the Head Judge's call is replaced by fixed criteria (a make: the board leaves the ground with a foot on it and rises clear by 0.05 m, all four wheels come down with both feet on the deck, and the robot stands still on the board for 1.0 s; World Skate judges an ollie made when the rider lands on the board); the judges' score (difficulty, execution, style) is not given · the skateboard is rigid bodies: the deck is three boxes (no concave, no flex), the wheels cylinders, the truck a hinge about its pivot axis with a linear torsion spring for the bushings and a hard stop at 12.0 degrees of deck tilt (the bushings' progressive stiffening is not modelled) · the robot is the size of a child (1.32 m), so the deck is a 7.5 in board, the width skate shops give for that height, instead of an adult's 8 to 8.5 in |
-| Stages | pop → clear → landed → stand |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 800 control steps (8 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

@@ -1,5 +1,5 @@
 {
- "task_text": "Return the served ball: after it bounces once on your half, hit it once with the paddle so that it lands on the opponent's half, with no second paddle touch and no second bounce on your half.",
+ "task_text": "Return the served ball: hit it once with the paddle so that it lands on the opponent's half, with no second paddle touch and at most one bounce on your half before that.",
  "default_cameras": [
   "default"
  ],

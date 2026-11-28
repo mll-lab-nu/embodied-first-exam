@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): every standard and realtime task offers its
+"""The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): every standard and realtime task offers its
 robot service through its client (HTTP) and through the `efe-robot` MCP server, and every agent-facing endpoint has a
 tool.
 
@@ -11,9 +11,11 @@ tool.
      The match extension likewise: every endpoint its layer serves (embodied-olympics-match/eai_std/serve.py STD_GET,
      STD_POST; NOT_OFFERED are its 404s) is in inject.EO_ENDPOINTS with its tool (inject.EO_TOOLS, EO_TEAM_TOOLS) or the
      reason it has none (inject.EO_NO_TOOL), and the endpoints the layer's /spec lists (adapter.py ENDPOINTS) too.
-  2. Per task: a standard or realtime task has environment/efe_mcp/ (the server files byte-identical to their source,
-     manifest.json what inject.manifest gives), the Dockerfile line, the task.toml entry and `### MCP tools` in Robot
-     Interface; a task inject.EXCEPTIONS names (RoboEngineer, the matchlow matches, an exported match without the
+  2. Per task: a standard or realtime task has environment/efe_mcp/manifest.json (what inject.manifest gives, the
+     directory's only file), the Dockerfile lines (inject.docker_lines: the server files from the pinned files-only
+     image standard-files at /opt/tools/efe_mcp/, which scripts/files_image.py resolves to their one source in
+     embodied_first_exam/standard/mcp/, then `COPY efe_mcp /opt/tools/efe_mcp`), the task.toml entry and `### MCP tools`
+     in Robot Interface; a task inject.EXCEPTIONS names (RoboEngineer, the matchlow matches, an exported match without the
      match extension) has none of them. A manifest's tools: spec, observe, submit and finish, reset where the task
      declares a reset budget, kinematics where its service serves it; a match (kind eo-match): spec, observe, submit
      and the extension's calls, no finish, and its service is the extension's (environment/sim/eai_std/).
@@ -33,6 +35,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as tc  # noqa: E402
+import files_image  # noqa: E402  (the server's files come from the files-only image standard-files)
 
 I = tc.efe_mcp_inject
 MCP = ROOT / "embodied_first_exam/standard/mcp"
@@ -146,18 +149,21 @@ def check_task(task: Path) -> list[str]:
     toml = tc.read_text(task / "task.toml") or ""
     ins = tc.read_text(task / "instruction.md") or ""
     if m is None:
-        why = I.exception(tc.bench_dir(task), task.name, str(tc.metadata_of(task).get("protocol") or ""))
+        why = I.exception(tc.bench_dir(task), task.name, str(tc.metadata_of(task).get("protocol") or ""), task)
         if tc.mode_of(task) in ("standard", "realtime") and not why:
             errs.append(f"{task.name}: a standard or realtime task with no MCP tools and no exception (inject.EXCEPTIONS)")
-        if d.exists() or I.DOCKER_LINE in df or I.TOML_MARK in toml or I.SECTION in ins:
+        if d.exists() or I.DOCKER_LINE in df or "/opt/tools/efe_mcp/" in df or I.TOML_MARK in toml or I.SECTION in ins:
             errs.append(f"{task.name}: has MCP tool files or text but no MCP tools ({why or 'not a standard mode'})")
         return errs
     if not d.is_dir():
         return [f"{task.name}: no {I.DIR}/ (python3 scripts/task_conventions.py {task})"]
+    got, problems = files_image.copied_from(task / "environment/Dockerfile")
+    errs += [f"{task.name}: {p}" for p in problems]
     for f in I.files_for(m):
-        p = d / f
-        if not p.is_file() or p.read_bytes() != (MCP / f).read_bytes():
-            errs.append(f"{task.name}: {I.DIR}/{f} is not embodied_first_exam/standard/mcp/{f}")
+        src = got.get(I.DEST + f)
+        if src is None or src.resolve() != (MCP / f).resolve():
+            errs.append(f"{task.name}: environment/Dockerfile does not take {I.DEST}{f} from the pinned standard-files "
+                        f"image (embodied_first_exam/standard/mcp/{f}; python3 scripts/task_conventions.py {task})")
     try:
         have = json.loads((d / "manifest.json").read_text())
     except (OSError, ValueError):
@@ -165,11 +171,15 @@ def check_task(task: Path) -> list[str]:
     if have != m:
         errs.append(f"{task.name}: {I.DIR}/manifest.json is not what inject.manifest gives")
     extra = sorted(p.relative_to(d).as_posix() for p in d.rglob("*")
-                   if p.is_file() and p.relative_to(d).as_posix() not in (*I.files_for(m), "manifest.json"))
+                   if p.is_file() and p.relative_to(d).as_posix() != "manifest.json")
     if extra:
-        errs.append(f"{task.name}: {I.DIR}/ has files of no source: {extra}")
-    if I.DOCKER_LINE not in df.splitlines():
-        errs.append(f"{task.name}: environment/Dockerfile lacks `{I.DOCKER_LINE}`")
+        errs.append(f"{task.name}: {I.DIR}/ has files besides manifest.json (the server comes from standard-files): {extra}")
+    want = I.docker_lines(m)
+    have = [ln.strip() for ln in df.splitlines()]
+    at = next((k for k in range(len(have)) if have[k:k + len(want)] == want), None)
+    if at is None:
+        errs.append(f"{task.name}: environment/Dockerfile lacks the MCP lines of inject.docker_lines (`{I.DOCKER_LINE}` "
+                    "after the server's files from the pinned standard-files image)")
     try:
         servers = (tomllib.loads(toml).get("environment") or {}).get("mcp_servers") or []
     except ValueError:
@@ -206,7 +216,7 @@ def main(argv: list[str]) -> int:
             n += 1
         errs += check_task(task)
     if errs:
-        print("FAIL MCP tools (docs/protocol/standard_mode.md \"MCP tools\": every standard and realtime task has them; "
+        print("FAIL MCP tools (docs/protocol/eai-standard.md \"MCP tools\": every standard and realtime task has them; "
               "every agent-facing endpoint has a tool):")
         for e in errs[:60]:
             print("  -", e)

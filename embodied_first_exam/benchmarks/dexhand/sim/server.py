@@ -1,16 +1,16 @@
-"""DexHand adapter of the shared eai-standard/2.2 layer; physics stays in this process.
+"""DexHand adapter of the shared layer; physics stays in this process.
 
-The optional reset capability (docs/protocol/standard_mode.md "Optional reset capability", PROTOCOL §4.5) is added here, as the
-MyoSuite 2.2 service adds it (the shared layer has none): with RCB_RESET_BUDGET = N > 0 (DexHand's compose files: 20),
+The optional reset capability (docs/protocol/eai-standard.md "POST /reset", docs/protocol/eai-standard.md#post-reset-reset-capability) is added here, as the
+MyoSuite service adds it (the shared layer has none): with RCB_RESET_BUDGET = N > 0 (DexHand's compose files: 20),
 POST /reset abandons the running episode, or follows one that has ended, and starts a new one from the frozen start
 (Session.reset(): the same state hash as a fresh process); only the last episode is graded. A crash resume replays the
 journal and resets where the committed resets did (their journal rows are checkpointed, `persist`).
 
 The frozen start is checked against the instance's record (instance.json `start_state_sha`, one hash per hand) when a
 fresh episode begins and after every reset: a scene that does not start there is no trial of this task (instance_mismatch,
-an infrastructure failure; PROTOCOL H.4).
+an infrastructure failure; docs/protocol/invariants.md H.4).
 
-Agent-ended episodes (RCB_AGENT_END=1, PROTOCOL §3): a success never ends the episode and is never shown. Each family's
+Episodes are agent-ended (docs/protocol/tasks.md#modes): a success never ends the episode and is never shown. Each family's
 runtime latches its success and then executes nothing more, so after every control step that latches it the service
 puts the family's verdict state (the checker's, or the runtime's own for the families that keep it there:
 RUNTIME_VERDICT) back to where it was before that step, the physics going on: the success then holds again only while
@@ -18,7 +18,7 @@ the task's last stage (its terminal hold) keeps holding, the steps already held 
 being checked (a failure, also after a success, ends the episode as one). The episode ends at the agent's POST /finish
 (no /reset after it), at a failure, at the family's episode budget (reason step_limit, judged on the state), on a
 simulator error or at the session's end, and is judged on the state it ends in: from there the robot holds its targets
-for up to END_WINDOW_S while the success does not yet hold. Resets work as before, and only the last episode is graded.
+for up to END_WINDOW_S while the success does not yet hold. Only the last episode is graded.
 """
 
 from __future__ import annotations
@@ -51,7 +51,7 @@ try:
 except hands.HandError as exc:  # a hand this task does not offer (task.toml `hands`): refused below, no episode
     HAND, HAND_ERROR = os.environ.get("DEXHAND_HAND", "").strip(), exc
 WALL = float(os.environ.get("RCB_WALL_CLOCK_S", "5400"))
-RESET_BUDGET = max(0, int(os.environ.get("RCB_RESET_BUDGET") or 0))  # the compose files' default: 20 (PROTOCOL §4.5)
+RESET_BUDGET = max(0, int(os.environ.get("RCB_RESET_BUDGET") or 0))  # the compose files' default: 20 (docs/protocol/eai-standard.md#post-reset-reset-capability)
 HZ = 50
 N = 6 + 22  # replaced by the selected hand's width once the scene is built
 LOCK = threading.Lock()
@@ -210,7 +210,6 @@ GAINS = {
 }
 SPEC = {
     "protocol": L.PROTOCOL,
-    "protocol_compat": L.COMPAT,
     "simulator": "MuJoCo 3.4.0",
     "robot": ROBOT,
     "hand": HAND,
@@ -271,7 +270,7 @@ SPEC = {
     },
 }
 
-if RESET_BUDGET and AE.ENABLED:
+if RESET_BUDGET:
     SPEC["reset"] = (
         f"POST /reset (JSON or RCB1 {{cameras, video_fps, depth}}; no physics) abandons the running episode, or follows "
         f"one that has ended, and starts a new one from the same frozen starting state, {RESET_BUDGET} times in all; it "
@@ -280,15 +279,6 @@ if RESET_BUDGET and AE.ENABLED:
         "(409 after it, /reset too), and when your time is up the episode then running is the one graded. The wall "
         "clock never restarts. /status and every meta add `episode`, `resets_left` and `control_steps_total` (all "
         "episodes); `control_steps` counts the current episode's."
-    )
-elif RESET_BUDGET:
-    SPEC["reset"] = (
-        f"POST /reset (JSON or RCB1 {{cameras, video_fps, depth}}; no physics) abandons the running episode, or follows "
-        f"one that has ended, and starts a new one from the same frozen starting state, {RESET_BUDGET} times in all; it "
-        "returns the new episode's first frames and proprioception. Only the last episode is graded: an episode you "
-        "reset away is never graded, a success ends the trial (409 after it), and when your time is up the episode then "
-        "running is the one graded. The wall clock never restarts. /status and every meta add `episode`, `resets_left` "
-        "and `control_steps_total` (all episodes); `control_steps` counts the current episode's."
     )
 
 
@@ -330,7 +320,7 @@ REPLAYING = {"on": False}  # a crash resume is replaying journaled rows: their e
 RUNTIME_VERDICT = ("success", "failure", "failure_detail", "stage", "stage_steps", "hold", "hold_ref", "released_hold",
                    "peak_stage", "lift_steps", "hold_steps")
 END_WINDOW_S = 3.0
-BUDGET_REASONS = ("episode_budget", "step_budget")   # a family's episode budget: under agent_end, the step limit
+BUDGET_REASONS = ("episode_budget", "step_budget")   # a family's episode budget: it ends the episode as the step limit
 
 
 def family_budget() -> int | None:
@@ -343,7 +333,7 @@ def family_budget() -> int | None:
 
 
 def step_cap() -> int | None:
-    """The episode's step cap: the family's episode budget (an essential family has none) and, agent-ended,
+    """The episode's step cap: the family's episode budget (an essential family has none) and
     RCB_STEP_LIMIT, the smaller of the two."""
     caps = [c for c in (family_budget(), AE.STEP_LIMIT) if c]
     return min(caps) if caps else None
@@ -399,12 +389,11 @@ def end_window(reason: str) -> bool:
 def finish(reason: str) -> None:
     if E["done"]:
         return
-    if AE.ENABLED:   # agent-ended: the state it ends in (a failure or a simulator error is never a success)
-        try:
-            E["success"] = reason in AE.END_STATE_REASONS and end_window(reason)
-        except Exception:  # noqa: BLE001
-            traceback.print_exc()
-            E["success"] = False
+    try:   # judged on the state it ends in (a failure or a simulator error is never a success)
+        E["success"] = reason in AE.END_STATE_REASONS and end_window(reason)
+    except Exception:  # noqa: BLE001
+        traceback.print_exc()
+        E["success"] = False
     E.update(done=True, reason=reason)
     if reason == "error":
         E["success"] = False   # a simulator error ends the episode: the state after it is never judged a success
@@ -415,31 +404,24 @@ def finish(reason: str) -> None:
 
 
 def execute(action, recorder=None, journal=False) -> bool:
-    saved = verdict_save() if AE.ENABLED else None
+    saved = verdict_save()
     S.step(action)
     ROWS.append(np.asarray(action, dtype=np.float64).copy())
     # journaled before the episode's end is logged, so the end's journal_rows counts the row that ended it
     stop = EP.journal(action) if (recorder is not None or journal) and not REPLAYING["on"] else False
     state = S.status()
-    if AE.ENABLED:   # agent-ended: a latched success is recorded and put back (the physics goes on); a failure ends it
-        now = bool(state["success"]) and not state.get("failed")
-        if now:
-            verdict_restore(saved)
-        AE.hidden_success(E, now, None if REPLAYING["on"] else EP.log, clock())
-        failure = bool(state.get("failed")) or (bool(state["done"]) and not now)
-        E["ae_failed"] = failure
-        if failure and not E["done"] and not E.get("judging"):
-            budget = str(state.get("failure") or state.get("reason") or "") in BUDGET_REASONS
-            finish("step_limit" if budget else "task_failure")
-        elif BUDGET and clock() >= BUDGET and not E["done"] and not E.get("judging"):
-            finish("step_limit")   # the budget reached with the success holding: judged on that state
-        if recorder is not None:
-            recorder.tick()
-            return bool(E["done"] or stop)
-        return bool(E["done"])
-    E["success"] = bool(state["success"])
-    if state["done"]:
-        finish("success" if state["success"] else "task_failure")
+    # a latched success is recorded and put back (the physics goes on); a failure ends it
+    now = bool(state["success"]) and not state.get("failed")
+    if now:
+        verdict_restore(saved)
+    AE.hidden_success(E, now, None if REPLAYING["on"] else EP.log, clock())
+    failure = bool(state.get("failed")) or (bool(state["done"]) and not now)
+    E["ae_failed"] = failure
+    if failure and not E["done"] and not E.get("judging"):
+        budget = str(state.get("failure") or state.get("reason") or "") in BUDGET_REASONS
+        finish("step_limit" if budget else "task_failure")
+    elif BUDGET and clock() >= BUDGET and not E["done"] and not E.get("judging"):
+        finish("step_limit")   # the budget reached with the success holding: judged on that state
     if recorder is not None:
         recorder.tick()
         return bool(E["done"] or stop)
@@ -583,16 +565,10 @@ def kinematics(request):
     return L.fk_response({link: pose(KIN_DATA, LINK_IDS[link]) for link in request["links"]}, "world")
 
 
-def success_shown() -> bool:
-    """The success as an answer may let it show (the trial over, no reset after it): never with agent-ended episodes on
-    (an episode the step budget ended keeps its resets as before a success; rcb_service._success_shown)."""
-    return bool(E["success"]) and not AE.ENABLED
-
-
 def reset_counters() -> dict:
     if not RESET_BUDGET:
         return {}
-    left = 0 if (success_shown() or E.get("exiting") or AE.finished(E)) else RESET_BUDGET - E["resets"]
+    left = 0 if (E.get("exiting") or AE.finished(E)) else RESET_BUDGET - E["resets"]
     return {"episode": E["resets"] + 1, "resets_left": left, "control_steps_total": EP.rows}
 
 
@@ -623,8 +599,6 @@ def do_reset(meta):
         raise ValueError("the request must be a JSON object")
     # every field first: a malformed request is a 400 before anything changes (one frame per camera here)
     recorder, _, fps = options({key: meta[key] for key in ("cameras", "video_fps", "depth") if key in meta}, 0)
-    if success_shown():
-        raise Refused({"error": "trial finished: an episode succeeded", "reason": E["reason"], "resets_left": 0})
     if E["resets"] >= RESET_BUDGET:
         raise Refused({"error": "reset budget exhausted", "reason": "reset budget exhausted", "budget": RESET_BUDGET,
                        "resets_left": 0})
@@ -634,8 +608,8 @@ def do_reset(meta):
     E["resets"] += 1
     E["reset_at"] = list(E["reset_at"]) + [EP.rows]
     E.update(done=False, reason=None, success=False)
-    if AE.ENABLED:   # a new episode: its own hidden success (the trial's record stays)
-        E.update(now_success=False, seen_step=None, ae_failed=False, end_window_steps=0)
+    # a new episode: its own hidden success (the trial's record stays)
+    E.update(now_success=False, seen_step=None, ae_failed=False, end_window_steps=0)
     EP._ck = None  # the state changed without a journal row: the checkpoint after this call must hash it anew
     E["calls"] += 1
     got = S.state_sha()
@@ -690,7 +664,7 @@ def end_episode():
                 "start_sha": next((event.get("state_sha") for event in EP.events() if event.get("ev") == "start"), None),
                 **EP.final_fields(),
                 **AE.final_fields(E, clock()),
-                **({"end_window_steps": int(E.get("end_window_steps") or 0)} if AE.ENABLED else {}),
+                "end_window_steps": int(E.get("end_window_steps") or 0),
             },
         )
         os._exit(0)
@@ -708,8 +682,7 @@ def _resume_resets() -> None:
         S.reset()
         ROWS.clear()
         E.update(done=False, reason=None, success=False)
-        if AE.ENABLED:
-            E.update(now_success=False, seen_step=None, ae_failed=False, end_window_steps=0)
+        E.update(now_success=False, seen_step=None, ae_failed=False, end_window_steps=0)
 
 
 def replay_row(row) -> None:
@@ -784,7 +757,7 @@ if not any(event.get("ev") == "start" for event in EP.events()):   # a fresh epi
 else:
     INSTANCE = {}
 
-BUDGET = step_cap() if AE.ENABLED else None
+BUDGET = step_cap()
 RESUMED = EP.begin(
     state=E,
     step=replay_row if RESET_BUDGET else execute,
@@ -806,7 +779,7 @@ E["ready"] = True
 
 
 def make_handler(svc: L.Service):
-    """The shared 2.2 handler (rcb_agent_end's: POST /finish when the feature is on), plus POST /reset when the run grants
+    """The shared layer's handler (rcb_agent_end's, with POST /finish), plus POST /reset when the run grants
     resets (the shared layer has no reset)."""
     base = AE.make_handler(svc)
 
@@ -862,10 +835,10 @@ def serve(svc: AE.Service, port: int) -> None:
     """L.serve with this service's handler (the same spec defaults and check, and L.bind)."""
     svc.spec.setdefault("on_service_error", L.ON_SERVICE_ERROR)
     svc.spec.setdefault("max_call_wall_s", EP.max_call_wall_s)
-    if AE.ENABLED:   # as rcb_agent_end.serve: fail closed without finish(), and /spec states the success signal
-        if getattr(svc, "finish", None) is None:
-            raise RuntimeError("RCB_AGENT_END=1, but this service has no finish(): it does not implement agent-ended episodes")
-        svc.spec["success_signal"] = AE.SUCCESS_SIGNAL_NOTE
+    # as rcb_agent_end.serve: fail closed without finish(), and /spec states the success signal
+    if getattr(svc, "finish", None) is None:
+        raise RuntimeError("this service has no finish(): it does not implement agent-ended episodes")
+    svc.spec["success_signal"] = AE.SUCCESS_SIGNAL_NOTE
     L.check_spec(svc.spec)
     L.bind(port, make_handler(svc)).serve_forever()
 
@@ -885,8 +858,8 @@ serve(
         episode=EP,
         state_sha=S.state_sha,
         proprio=proprio_row,
-        **({"finish": lambda: finish("finished"),
-            "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {}),
+        finish=lambda: finish("finished"),
+        end_step_limit=lambda: finish("step_limit"),
     ),
     port=int(os.environ.get("RCB_PORT", "8000")),
 )

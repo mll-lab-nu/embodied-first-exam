@@ -1,32 +1,46 @@
-# abc-sim-ball-tray-i00-realtime
+# ABC Sim · ball-tray balancing (realtime)
 
 | | |
 |---|---|
-| Benchmark | ABC Sim |
-| Mode | realtime (`eai-standard/2.3`) |
-| Twin | `abc-sim-ball-tray-i00-privileged` |
-| Simulator / robot | `mujoco` / `i2rt-yam-bimanual` |
-| Family / instance | `ball_tray` / seed 0 (allowed seeds: [0, 16, 19]; PROTOCOL §2) |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 0 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §3) |
-| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.5.1` |
+| Task ID | `abc-sim-ball-tray-i00-realtime` |
+| Benchmark | [ABC Sim](https://github.com/amazon-far/abc) (Allshire et al., 2026), upstream `amazon-far/abc@d0832d1` |
+| Robot | Two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each), side by side at a table |
+| Mode | realtime, slowdown 1 |
+| Instance | `ball_tray`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-ABC Sim `ball_tray_balancing` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Hold the tray by both handles, one gripper on each, and keep the ball on the tray until the episode ends.
-A flat tray with a handle bar along each side lies on the table with a small ball on it. The robot is a service; the episode it runs is graded.
+Hold the tray by both handles, one gripper on each, and keep the ball on the tray until the episode ends.
 
-## Difficulty
-First-pass rating: hard. A bimanual grasp of both handles, then closed-loop balancing for 11 s against random pushes the agent cannot predict, with the ball's position known only from the cameras (standard modes). The action is joint-level (two 6-joint arms and two grippers; no motion primitives).
+## Success criteria
+The ball stays on the tray, and both handles are held for the whole countdown. The countdown (11 s of simulated time)
+starts at the first control step at which the left gripper's fingers touch one handle bar and the right gripper's
+fingers touch the other. During it, both handles count as held at a control step when both were touched within the
+last 0.1 s. The ball is on the tray while its origin, in the frame of the tray's centre, is within 12.9 cm of the
+centre along the tray's x axis and 12.4 cm along its y axis, and at least 8 mm above the centre along the tray's
+normal.
 
-## Reference solution
-The privileged twin's reference (the commanded actions of one of upstream's validation demonstrations of this task): `solution/oracle.npy`, 453 rows, planned into the episode at the control steps where they ran in the privileged replay (`submit(..., at=step)`, sent ahead of the clock; `solution/oracle_plan.py`), so the service executes exactly those rows at S = 1.
+Success: when the episode ends, the countdown has completed and the ball has been on the tray at every control step.
+The episode ends as a failure at the first control step at which the ball is off the tray (also after the countdown
+has completed), or at which a handle is not held during the countdown; after the countdown, letting go of a handle is
+no failure. There is no hold window.
 
-## Verification
-The live episode's verdict, judged by the sim sidecar (the shared realtime layer and this benchmark's adapter) on the episode it ran; the collect hook waits for `final.json`; the verifier (the shared `v2_1/grade.py`) transcribes it. `nop`: the episode times out, reward 0.
+Graded: the live episode the simulator service ran; nothing is replayed. The clock does not stop: the episode starts
+paused at the frozen start, and from the agent's first `submit` one control step runs every 0.034 s × S of wall time
+(slowdown S = 1) whether or not the agent sends anything; when the planned targets run out, the last ones
+are held. There is one episode and no reset. The episode ends when the agent sends `/finish` or when its session ends
+(at the latest after 1 h); the task's own failure, where the rule above has one, and a simulator error also end
+it. Success is never shown and never ends the episode. The verdict is on the state the episode ends in. Where the
+condition must hold for 30 consecutive control steps, the service, after the agent is gone, keeps the robot's last
+command for 30 more control steps (1.02 s), and the condition must hold at every one of them. An episode ended by the
+task's failure or by a simulator error scores 0.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The scene is checked to start at the frozen instance (its state hash) before the agent is served; a mismatch is an
+infrastructure failure, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -37,14 +51,11 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any NVIDIA GPU with EGL (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Upstream | ABC Sim, `abc_sim` of github.com/amazon-far/abc @ d0832d1 (Apache-2.0; assets CC BY 4.0 / MIT), on MuJoCo 3.6.0 |
-| Instance | the scene of one of upstream's validation demonstrations (its assembled scene XML, initial qpos and randomization record); the model-side state its randomizer sets outside the XML written into the scene; state hash `6cdaa86a450092e7`, checked on every load |
-| Actions | 14 joint-position targets per control step (0.034 s, 17 physics substeps of 2 ms) |
-| Success | the upstream evaluator `ball_tray_balancing` held 30 control steps (ball tray: its own rule, tasks/abc-sim/README.md) |
-
-### Provenance
-The frozen instance (`instance.npz`) and the reference solution (`solution/oracle.npy`) were made at generation time from
-an upstream validation demonstration; see `tasks/abc-sim/README.md`.
+## License
+ABC Sim (`abc_sim` of [amazon-far/abc](https://github.com/amazon-far/abc) @ `d0832d1`) is released under the
+[Apache License 2.0](https://github.com/amazon-far/abc/blob/d0832d12651d1b260a652861a14648dc5f3660c7/LICENSE). Its
+simulator assets are under CC BY 4.0 (RoboCasa's Objaverse, LightWheel and AI-generated packs, Google Scanned Objects,
+individually credited Sketchfab creators), CC0 (freepoly.org), MIT (the I2RT YAM robot model, a LIBERO drawer fixture)
+and Apache-2.0 (everything modelled in-house); no non-commercial terms apply. The licences and credits ship in the image
+at `/opt/abc/ASSET_LICENSES.md` (`images/abc-sim/ASSET_LICENSES.md`). The simulator is MuJoCo 3.6.0 (Apache License
+2.0).

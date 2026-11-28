@@ -1,6 +1,6 @@
 # roboEngineer control transfer
 
-> roboEngineer task names: [README.md](README.md) (the package names of #329 used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `ci_checks/benchmarks/roboengineer/exported.toml`).
+> roboEngineer task names: [README.md](README.md) (the package names used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `ci_checks/benchmarks/roboengineer/exported.toml`).
 
 The shared `eai-policy/1.1` service supports repeated nominal-training → deployment-feedback → revision rounds, followed by private held-out evaluation. See the [collection roadmap](README.md) for task readiness; implementation, successful control, native Harbor isolation and LLM evaluation are separate claims.
 

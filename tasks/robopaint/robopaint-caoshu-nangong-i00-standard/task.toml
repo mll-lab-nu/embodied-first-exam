@@ -16,7 +16,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robopaint-caoshu-nangong-i00-standard"
-description = "RoboPaint 草书 臨帖 (cursive script), STANDARD MODE (robot as a service, eai-standard/2.2): embodied robotic calligraphy (ManiSkill 3.0.1 Franka Panda with a Chinese writing brush; the mark is the dynamic virtual brush of Wang et al., IROS 2020, re-implemented) on the same frozen instance as the privileged task: Copy the characters 南宮 (cursive script, 草书) in `/app/target.png` onto the main sheet with brush and ink, in at most 5 strokes, with a practice sheet for test strokes. The agent only gets a client: get_obs (camera RGB + proprioception), submit (ee_pose or joint_position chunks). No reset, no sheet readout, no brush model, no score; the sim service records the episode and scores its main sheet against the picture after the best single shift of the sheet, at most 5 mm along each axis (success iff IoU >= 0.80, boundary F within 1 mm >= 0.75, every region of the exemplar's ink covered >= 0.80, stray ink <= 0.04 and at most 5 strokes, i.e. continuous brush contacts). Process rules: write with brush strokes the way a person writes; colouring in or filling the shapes, zigzag, serpentine or contour-offset fills fail: a brush-tip path on the main sheet longer than 2680 mm made of marks narrower than 0.93 mm on average is colouring in. The stroke cap counts strokes as written (a contact is cut where the brush moves more than 5 mm without marking; a stroke longer than 1960 mm counts as several), and strokes must be sweeps."
+description = "RoboPaint 草书 臨帖 (cursive script), STANDARD MODE (robot as a service, eai-standard/3.0): embodied robotic calligraphy (ManiSkill 3.0.1 Franka Panda with a Chinese writing brush; the mark is the dynamic virtual brush of Wang et al., IROS 2020, re-implemented) on the same frozen instance as the privileged task: Copy the characters 南宮 (cursive script, 草书) in `/app/target.png` onto the main sheet with brush and ink, in at most 5 strokes, with a practice sheet for test strokes. The agent only gets a client: get_obs (camera RGB + proprioception), submit (ee_pose or joint_position chunks). No reset, no sheet readout, no brush model, no score; the sim service records the episode and scores its main sheet against the picture after the best single shift of the sheet, at most 5 mm along each axis (success iff IoU >= 0.80, boundary F within 1 mm >= 0.75, every region of the exemplar's ink covered >= 0.80, stray ink <= 0.04 and at most 5 strokes, i.e. continuous brush contacts). Process rules: write with brush strokes the way a person writes; colouring in or filling the shapes, zigzag, serpentine or contour-offset fills fail: a brush-tip path on the main sheet longer than 2680 mm made of marks narrower than 0.93 mm on average is colouring in. The stroke cap counts strokes as written (a contact is cut where the brush moves more than 5 mm without marking; a stroke longer than 1960 mm counts as several), and strokes must be sweeps."
 keywords = ["robotics", "robopaint", "maniskill", "sapien", "calligraphy", "chinese-calligraphy", "caoshu", "cursive-script", "brush", "franka", "standard-mode", "trajectory", "robopaint_caoshu_nangong"]
 
 [metadata]
@@ -24,10 +24,10 @@ task_type = "trajectory"
 simulator = "maniskill"
 robot = "franka-panda"
 family = "robopaint_caoshu_nangong"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
+protocol = "eai-standard/3.0"
 oracle = "partial"                # solution/: the privileged oracle's joint targets, streamed through the client
-oracle_evidence = "Reference solution in solution/ (streams the privileged reference's joint targets; generated with the current tooling): the same trajectory scores 1 under the process rules in the verifier (the graders' rcb_brush_strict.py, with which the sim service also scores the live sheet): path_mm 890 and mark_width_mm 3.11, against the colouring-in limits 2680 mm and 0.93 mm. Harbor oracle and nop runs: tasks/robopaint/README.md (Caoshu)."
+oracle_evidence = "Reference solution in solution/ (streams the privileged reference's joint targets; generated with the current tooling): the same trajectory scores 1 under the process rules in the verifier (the graders' rcb_brush_strict.py, with which the sim service also scores the live sheet): path_mm 890 and mark_width_mm 3.11, against the colouring-in limits 2680 mm and 0.93 mm. Harbor oracle and nop runs: tasks/robopaint/README.md at ca87144a078 (Caoshu)."
 instance_seed = 0
 expert_time_estimate_hours = 6.0
 difficulty = "extreme"          # RoboPaint tiers: line easy; caoshu singles and works extreme
@@ -41,7 +41,7 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -60,8 +60,8 @@ command = "sh /srv/finalize.sh"   # end the episode: the service scores its live
 timeout_sec = 2820                # ending a service that is resuming (up to 1500 s) + one render pass of at most 72,000 control steps
 
 [agent]
-timeout_sec = 3600.0              # the agent's cutoff, this task's own (PROTOCOL §2)
-network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL Appendix H.6
+timeout_sec = 3600.0              # the agent's cutoff, this task's own (docs/protocol/tasks.md)
+network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); docs/protocol/invariants.md H.6
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 
 [environment]
@@ -70,7 +70,7 @@ cpus = 8
 memory_mb = 5120
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

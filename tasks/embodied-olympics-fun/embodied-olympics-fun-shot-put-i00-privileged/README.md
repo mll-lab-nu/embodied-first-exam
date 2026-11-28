@@ -1,31 +1,59 @@
-# embodied-olympics-fun-shot-put-i00-privileged
+# Embodied Olympics · shot put (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-shot-put-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree H1-2 humanoid (1.78 m, 67 kg, 27 joints), with Unitree's walking policy |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-shot-put-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-h1-2` |
-| Family / instance | `shot_put` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: No reference solution: a CMA-ES search over the four key poses, their times and the legs' drive keys (about 160 generations) finds legal puts of 6.1-6.8 m only with a hand passing through the robot's own body (the right thumb up to 4.7 cm into the right shoulder during the crouch, the left hand up to 6.8 cm into the right hip in the follow-through), which the robot's self-collision rules out; with a penalty for that, no clean put was found. Positive by a declared magic action. The real parts: the stance held by the walking policy with the shot on the open right palm, then after the release the walk backwards out of the rear half and the stand. The injected part, once at 0.5 s: the shot's velocity on the palm set to 8.0 m/s at 38 deg along the robot's heading. It leaves the palm at 7.9 m/s from 1.58 m (push fraction 0.78) and lands 6.29 m from the rim; the same state hash twice. Negatives: nop (time), a 1 m/s put (touched after the release), 30 deg to the side (outside the sector), the arm lowered or taken back, the other hand, the stop board, short, a fall after the landing.; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Instance | `shot_put`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Put the shot from the circle so that it lands inside the sector at least 6 m out, then leave the circle from its back half and stand. (Embodied Olympics `shot-put`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Put the shot from the circle so that it lands inside the sector at least 6 m out, then leave the circle from its back
+half and stand.
 
-## Difficulty
-The shot weighs 7.26 kg and rests on a flat palm without fingers: every move of the trunk or the arm that tilts the palm or accelerates the hand sideways rolls it off, and the H1-2's arm motors (40 N m at the shoulder, 18 N m at the elbow, soft servos) only just carry it, so the legs and the trunk have to drive the put while the palm stays under and behind the shot, inside a circle two steps wide. 6.0 m needs a release near 7 m/s at about 40 degrees.
+## Success criteria
+The robot stands in the rear half of a throwing circle (2.135 m across inside its rim, a stop board at the front),
+facing a 34.92-degree sector, with a 7.26 kg shot resting on its open right palm against its neck. The hands have no
+grip. The referee's stages, in order: release, landing, exit.
+- Release: the right hand's last contact with the shot before a break of at least 0.03 s (shorter breaks count as
+  still holding). At that moment the shot touches no part of the robot, and it is moving away from the right shoulder
+  joint with at least half of its speed relative to that joint (a push, not a throw or a sling). Until the release,
+  the shot's centre never goes below or behind the line of the shoulders, and nothing but the right hand and the
+  trunk touches it.
+- Landing: the shot's first touch of the ground is inside the sector lines (on a line is out), at least 6 m from the
+  inside of the rim, measured along the line through the circle's centre.
+- Exit: after the landing, the robot's first touch of the rim's top or of the ground outside the circle is in the
+  circle's rear half.
+Then the robot stands for 1 s without a break (only the feet on the ground, the torso within 20 degrees of vertical,
+the pelvis slower than 0.35 m/s). The success is called when the 1 s is complete.
 
-## Reference solution
-None. No reference controller exists for this family yet: No reference solution: a CMA-ES search over the four key poses, their times and the legs' drive keys (about 160 generations) finds legal puts of 6.1-6.8 m only with a hand passing through the robot's own body (the right thumb up to 4.7 cm into the right shoulder during the crouch, the left hand up to 6.8 cm into the right hip in the follow-through), which the robot's self-collision rules out; with a penalty for that, no clean put was found. Positive by a declared magic action. The real parts: the stance held by the walking policy with the shot on the open right palm, then after the release the walk backwards out of the rear half and the stand. The injected part, once at 0.5 s: the shot's velocity on the palm set to 8.0 m/s at 38 deg along the robot's heading. It leaves the palm at 7.9 m/s from 1.58 m (push fraction 0.78) and lands 6.29 m from the rim; the same state hash twice. Negatives: nop (time), a 1 m/s put (touched after the release), 30 deg to the side (outside the sector), the arm lowered or taken back, the other hand, the stop board, short, a fall after the landing..
+Fouls (each fails the attempt): before the landing, any touch of the rim's top (its top inside edge included) or of
+the ground outside the circle; touching the stop board anywhere but its inner side, or touching outside the circle in
+its front half, before the exit; the shot below or behind the shoulder line, touched by anything other than the right
+hand and the trunk, left resting on the trunk, or not pushed, before or at the release; the robot touching the shot
+after the release, before it lands; a landing outside the sector or short of 6 m. Fall (a failure at any time): the
+pelvis below 0.5 m, or any part other than the feet on the ground. Time limit: 60 s (6,000 control steps).
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: The men's shot (7.26 kg, 0.12 m across) starts resting on your open right palm beside your neck, leaning against the neck: you have taken your stance. Your hands have no fingers and no grip (the grip columns do nothing; nothing is grippable): only the palm's support, your neck and friction hold the shot, and it rolls or slides off when the palm does not carry it. The circle is 2.135 m across inside its rim; the ground outside is 0.02 m higher than its inside. At the front, a stop board 1.21 m long, 0.112 m wide and 0.1 m high follows the rim. The sector opens from the circle's centre, 34.92 degrees wide, symmetric about the direction you face at the start. Holding: the shot touches your right hand (the palm pad and the wrist); breaks of that contact shorter than 0.03 s are part of the hold. The release is the hand's last contact before a break of at least 0.03 s; at that moment of the break's end the shot must touch no part of you (a shot that leaves the hand but still rests on your trunk is a failure). The put (TR 33.1), judged on the shot's centre relative to your trunk (the line through your two shoulder joints, your trunk's up and forward directions) from the start to the release: the centre never below the line of the shoulders and never behind it; nothing but your right hand and your trunk touches the shot; and at the release the shot must be moving away from your right shoulder joint with at least 0.5 of its speed relative to that joint (a push from the shoulder, not a throw or a sling). There is one release: after it nothing of you may touch the shot. The shot's first touch of the ground must be inside the sector lines (on a line is out); the put is measured from that point to the inside of the rim along the line through the circle's centre. You succeed when a valid put measures at least 6.0 m and you have then left the circle correctly and stood for 1.0 s. Leaving correctly: after the shot has landed, your first touch of the rim's top or of the ground outside the circle is behind the line through the circle's centre across the putting direction (the rear half). Standing: only your feet on the ground, the torso within about 20 degrees of upright, the pelvis slower than 0.35 m/s. You fail if any part of you touches the rim's top (its top inside edge included), the ground outside the circle or any part of the stop board other than its inner side (its top edge is not its inner side) before the shot has landed, or in the front half before you have left correctly; if the shot drops below or goes behind the line of the shoulders (falling off the palm included), is touched by anything but the right hand and the trunk, leaves the hand onto the trunk, or is not pushed at the release; if it lands outside the sector or short of 6.0 m; if any part of you touches it after the release; if you fall (your pelvis lower than 0.5 m above the circle's floor, or any part of you other than your feet on the ground); or after 60 s. Where you touch the ground is judged on the points of contact; a contact within 0.003 m of the rim's top, or that far outside the stop board's inner side, counts as on the top. The neck line of the stance runs from 0.08 m above the middle of the shoulder line to the chin, 0.2 m above and 0.09 m in front of it; at the start the shot's centre is within 0.22 m of it. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +62,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | throwing-catching-striking |
-| Rule book | World Athletics Competition and Technical Rules 2024: TR 32.5-32.8 (the circle), TR 32.12 (the sector), TR 32.13, 32.14, 32.16, 32.17 and 32.20 (throwing events: the start, failures, the landing, leaving the circle, the measurement), TR 33.1 (the put from the shoulder), TR 33.2 (the stop board), TR 33.4-33.5 (the men's shot); deviations: TR 33.1 ("the shot shall touch or be in close proximity to the neck or the chin"; the hand that holds it): the H1-2's hand is a flat rubber palm pad without fingers and nothing grips: the shot rests on the open right palm, which faces up and in towards the neck, and leans against the neck (the trunk's hull: the H1-2's trunk and head are one hull), held only by the palm's support, the neck and friction; it rolls or slides off when the palm does not carry it. The stance is given at the start (the shot's centre within 0.22 m of the line from the base of the neck to the chin). From then to the release the rule is judged on the shot's centre in the trunk's frame: "the hand shall not be dropped below this position" as not below the line of the two shoulder joints, "not behind the line of the shoulders" as not behind that line, and "put" (not thrown or slung) as: at the release (the right hand's last contact) the shot moves away from the putting shoulder's joint with at least 0.5 of its speed relative to that joint. · The hand: the palm pad's contact with the shot is that of a ball on a human hand (a ball thrown at a still palm keeps 0.10 of its speed, as a volleyball dropped onto a supported, relaxed hand does: Ivanova, ISBS 2000; friction 0.7); the shot's contact with the rest of the robot, the ground and the stop board is its own (rebound 0.10). · TR 32.5-32.6: the ground outside the circle is level with the rim's top for 1 m and then falls to the field's level over 1 m (the circle's inside is the field's level, 0.02 m below the rim, instead of the field being level with the rim). · TR 32.20: the mark is the point where the shot first touches the ground, not the nearest edge of its dent. · TR 32.15 (interrupting a trial, laying the implement down): not modelled; the first release is the put, and nothing of the robot may touch the shot again. · TR 32.14 names no fall: here a fall ends the trial as a failure, as in every task of this benchmark; the trial ends when the robot has left the circle correctly and stands. · TR 25.17 (one minute for a trial): the whole trial, leaving the circle included, has 60 s. · Flight: the shot's drag in still air (MuJoCo's ellipsoid fluid model, a quasi-steady model), no wind. · The qualifying mark of 6.0 m is this benchmark's (a school standard for the 7.26 kg shot); the rule book only measures. |
-| Stages | release → landing → exit |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `8ce18cde5db3c8a041beb731427263ed62344cd044abb875b8b3e7392dbed7ea` |
-| Episode | 6000 control steps (60 s at 100 Hz) |
-| Action | sim rows of 141 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

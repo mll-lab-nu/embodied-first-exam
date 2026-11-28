@@ -1,10 +1,10 @@
 # BEHAVIOR-1K · carrying_in_groceries (standard)
 
 ## Task
-Put the tomato and the milk from the car into one fridge, then close the car and every kitchen fridge.
+Put the tomato and the milk from the car into one fridge, then close the car and the kitchen fridge.
 
 ## Goal
-Success: the tomato and the carton of milk are both inside one and the same refrigerator, the car is closed, and every
+Success: the tomato and the carton of milk are both inside one and the same refrigerator, the car is closed, and the
 kitchen refrigerator is closed. It counts only once the scene has settled: nothing the task names (a tool included) is
 still in a gripper, and everything has come to rest.
 
@@ -25,7 +25,7 @@ you reach through its client or its MCP tools, as if it were real hardware: one 
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`):
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and loads the scene (3-12 min measured; the

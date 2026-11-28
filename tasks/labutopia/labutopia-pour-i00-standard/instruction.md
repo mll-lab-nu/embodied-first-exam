@@ -2,12 +2,12 @@
 
 ## Task
 Pick up the small beaker and tip it over the large beaker as if pouring into it, then turn it back upright and hold it
-over the large beaker for a couple of seconds.
+over the large beaker for about a second and a half.
 
 ## Goal
-Success: the small beaker, lifted about a pen's length or more, is tipped well past halfway onto its side, turned back
-nearly upright and then held up for a couple of seconds, all right above the large beaker's mouth. The pour counts once
-it has happened.
+Success: the small beaker, lifted about a pen's length or more, is tipped well past halfway onto its side and then
+turned back nearly upright, all right above the large beaker's mouth, and is then held up there for about a second and a
+half in total (not necessarily in one go). The pour counts once it has happened.
 
 When you are done, send `/finish` to end the episode and get it graded.
 
@@ -27,7 +27,7 @@ if it were real hardware: one live episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                    # connects; waits while the service starts (5 to 10 minutes; it gives up after 3600 s)

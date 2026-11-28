@@ -26,8 +26,9 @@ Rules:
   signal.
 
 The attempt fails at once if:
-- you foul at the foul line, or the ball goes into a gutter
-- before the release the ball touches you anywhere but your hands, or you touch it after the release
+- you foul at the foul line, or the ball goes into a gutter before it reaches the pins
+- before the release the ball touches you anywhere but your hands, or you touch it after the release before it
+  reaches the pins
 - you fall before the pins are counted
 
 ## Robot Interface
@@ -37,7 +38,7 @@ MuJoCo). The robot runs as a service you reach through its client or its MCP too
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`) is your whole interface to the robot. Its docstring is the full
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`) is your whole interface to the robot. Its docstring is the full
 reference (`python -c "import rcb_client; help(rcb_client)"`); its examples use another benchmark's names: for this task
 `r.spec()` is authoritative.
 

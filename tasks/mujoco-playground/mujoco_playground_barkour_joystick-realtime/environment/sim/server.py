@@ -1,10 +1,10 @@
-"""eai-standard/2.3 sim service for MuJoCo Playground's quadruped realtime tasks -- the adapter behind the shared
-realtime layer (`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/README.md §3,
+"""eai-standard/3.0 sim service for MuJoCo Playground's quadruped realtime tasks -- the adapter behind the shared
+realtime layer (`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/tasks.md#modes,
 tasks/mujoco-playground/README.md "Realtime").
 
 The simulator-specific half only: `Quadruped` implements rcb_service.Sim (the contract documented in rcb_service.py) for
 one frozen instance, on the benchmark's own tooling module rcb_quadruped.Session -- the same scene, command schedule,
-pushes, termination rule and success check as the standard twin's eai-standard/2.2 service
+pushes, termination rule and success check as the standard twin's eai-standard/3.0 service
 (environment/sim/server.py of `-standard`). The protocol, the clock, the plan, the episode, crash recovery and the
 finalize are rcb_realtime.py's and rcb_service.py's, unchanged copies of the HumanoidBench sources
 (ci_checks/check-tooling-identity.sh).
@@ -15,15 +15,11 @@ stands' 100-step hold are inside it; a joystick episode passes only at the horiz
 recorded episode applied, so no live_verdict() is needed. `start_sha` is the frozen instance's recorded state hash:
 rcb_service refuses a fresh episode that does not start there (instance_mismatch, an infrastructure failure).
 
-What the agent gets is what the standard twin gives, minus the 2.2 additions the realtime layer does not serve
+What the agent gets is what the standard twin gives, minus the shared layer's additions the realtime layer does not serve
 (`/kinematics`, per-frame camera poses, depth modes, the `done` action): the cameras (RGB and depth), the robot's own
 proprioception (joint positions, velocities and torques, the IMU's gyro, accelerometer, gravity direction and
 velocimeter, the feet's contacts) with the joystick command in force (the standard twin's `meta["command_now"]`) and joint position targets (clipped to the actuator ranges and reported). The joystick
 command schedule and, for gait tracking, the gait are in /spec, as in standard mode; nothing about the pushes is.
-
-An episode ends as the standard twin's does: after the horizon (judged then: success or failure), when the robot meets
-the environment's termination rule (a failure), at a getup / stand task's success, when the agent's time is up, or on a
-simulator error.
 
 Rendering: MuJoCo on the GPU (EGL) when the container reaches the NVIDIA driver, else OSMesa. On a clock that does not
 stop a render is time the simulator thread cannot step. The image's NVIDIA EGL ICD manifest may be missing (the toolkit
@@ -31,14 +27,14 @@ mounts the library under NVIDIA_DRIVER_CAPABILITIES=graphics but not always the 
 /tmp and points libglvnd at it before rcb_quadruped probes EGL (RCB_GL=egl|osmesa forces one).
 
 Settings (environment/docker-compose.yaml): RCB_INSTANCE (the frozen instance.json), RCB_DATA, RCB_RESET_BUDGET,
-RCB_WALL_CLOCK_S, RCB_SLOWDOWN (rcb_realtime / rcb_service), RCB_GL, RCB_AGENT_END.
+RCB_WALL_CLOCK_S, RCB_SLOWDOWN (rcb_realtime / rcb_service), RCB_GL.
 
-Agent-ended episodes (RCB_AGENT_END=1, rcb_service.py's AGENT_END): step() reports the check after every control step as
-before; rcb_service only records it, and the episode ends at the agent's POST /finish, at the horizon (info["step_cap"]:
-the task's episode length, judged as it stands, reason "step_limit"), at the termination rule (a done without a success:
-0) or when the agent's time is up. The judgement is the check on the state the episode ends in (end_judgement "state",
-no settle window: the getup / stand holds are inside the check, over the last steps executed; a joystick episode passes
-only at the horizon). This adapter only words /spec's episode for it.
+Agent-ended episodes (docs/protocol/tasks.md#modes): step() reports the check after every control step; rcb_service only records it,
+and the episode ends at the agent's POST /finish, at the horizon (info["step_cap"]: the task's episode length, judged
+as it stands, reason "step_limit"), at the termination rule (a done without a success: 0), when the agent's time is up,
+or on a simulator error. The judgement is the check on the state the episode ends in (end_judgement "state", no settle
+window: the getup / stand holds are inside the check, over the last steps executed; a joystick episode passes only at
+the horizon). This adapter only words /spec's episode for it.
 """
 from __future__ import annotations
 
@@ -85,7 +81,6 @@ from rcb_service import main  # noqa: E402
 GL_BACKEND = os.environ.get("MUJOCO_GL", "?")
 CAM_W, CAM_H = 320, 240                    # the standard twin's
 GL2CV = np.diag([1.0, -1.0, -1.0])
-AGENT_END = os.environ.get("RCB_AGENT_END") == "1"     # rcb_service.py's: here only for /spec's wording
 
 
 class Quadruped:
@@ -119,26 +114,15 @@ class Quadruped:
             {"from_s": round(int(c["start_step"]) * self.control_dt, 2), "from_step": int(c["start_step"]),
              "vx_mps": round(c["vx"], 4), "vy_mps": round(c["vy"], 4), "wz_radps": round(c["wz"], 4)}
             for c in s.inst["commands"]]
-        episode = {
-            "joystick": f"an episode lasts {s.horizon} control steps (the {s.horizon * self.control_dt:g} s command "
-                        f"schedule) and is judged then; it ends early as a failure when the robot meets its termination "
-                        f"rule ({s.spec.get('term_text')}), or when your time is up",
-            "getup": f"an episode ends the moment the robot has stood upright for {Q.HOLD_STEPS} control steps in a row "
-                     f"(success), after {s.horizon} control steps, or when your time is up",
-            "stand_on_two": f"an episode ends the moment the pose has been held for {Q.POSE_HOLD_STEPS} control steps in "
-                            f"a row (success), when the robot meets the termination rule (a failure), after {s.horizon} "
-                            "control steps, or when your time is up",
-        }[s.kind]
-        if AGENT_END:
-            fail = {"joystick": f"when the robot meets its termination rule ({s.spec.get('term_text')}: a failure), ",
-                    "stand_on_two": "when the robot meets the termination rule (a failure), "}.get(s.kind, "")
-            episode = (f"an episode ends at your POST /finish, after {s.horizon} control steps (reason step_limit), {fail}"
-                       "or when your time is up; the task's check on the steps executed is graded then" + {
-                           "joystick": f" (it passes only once the whole {s.horizon * self.control_dt:g} s schedule has "
-                                       "been tracked)",
-                           "getup": f" (the robot must have stood upright for the last {Q.HOLD_STEPS} control steps)",
-                           "stand_on_two": f" (the pose must have been held for the last {Q.POSE_HOLD_STEPS} control "
-                                           "steps)"}[s.kind])
+        fail = {"joystick": f"when the robot meets its termination rule ({s.spec.get('term_text')}: a failure), ",
+                "stand_on_two": "when the robot meets the termination rule (a failure), "}.get(s.kind, "")
+        episode = (f"an episode ends at your POST /finish, after {s.horizon} control steps (reason step_limit), {fail}"
+                   "or when your time is up; the task's check on the steps executed is graded then" + {
+                       "joystick": f" (it passes only once the whole {s.horizon * self.control_dt:g} s schedule has "
+                                   "been tracked)",
+                       "getup": f" (the robot must have stood upright for the last {Q.HOLD_STEPS} control steps)",
+                       "stand_on_two": f" (the pose must have been held for the last {Q.POSE_HOLD_STEPS} control "
+                                       "steps)"}[s.kind])
         cams = {}
         for c in self.cameras:
             i = m.camera(c).id
@@ -236,8 +220,8 @@ class Quadruped:
         s = self.s
         fell = s.kind in ("joystick", "stand_on_two") and s.fell_at is not None
         success = bool(chk["success"]) and (s.kind != "joystick" or s.done)
-        # the horizon is the task's episode length (agent-ended: a step cap, judged as it stands), not a failure
-        return bool(fell or s.done or success), success, ({"step_cap": True} if AGENT_END and s.done and not fell else {})
+        # the horizon is the task's episode length (a step cap, judged as it stands), not a failure
+        return bool(fell or s.done or success), success, ({"step_cap": True} if s.done and not fell else {})
 
     def reset(self) -> None:
         self.s.reset()

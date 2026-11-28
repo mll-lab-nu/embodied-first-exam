@@ -1,31 +1,36 @@
-# autobio-thermal-cycler-open-i00-privileged
+# AutoBio · thermal_cycler_open (privileged)
 
 | | |
 |---|---|
-| Benchmark | AutoBio |
+| Task ID | `autobio-thermal-cycler-open-i00-privileged` |
+| Benchmark | [AutoBio](https://github.com/autobio-bench/AutoBio) (Lan et al., 2025), upstream `autobio-bench/AutoBio@0850421` |
+| Robot | Universal Robots UR5e arm with a Robotiq 2F-85 gripper |
 | Mode | privileged |
-| Twin | `autobio-thermal-cycler-open-i00-standard` |
-| Simulator / robot | `autobio` / `ur5e-robotiq-2f85` |
-| Family / instance | `thermal_cycler_open` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |
+| Instance | `thermal_cycler_open`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-AutoBio's `thermal_cycler_open` (Open thermal cycler lid), with a UR5e arm (6 joints) with a Robotiq 2F-85 gripper, fixed to the bench: Unlock the thermal cycler's lid with the lever on it and open the lid all the way.
-On the bench: a thermal cycler (a Bio-Rad C1000 model) with its lid closed and locked by the lever on the lid. The deliverable is one replayable trajectory of joint position targets (`/app/output/trajectory.npz`, `(T, 7)`, one row per 2 ms control step).
+Unlock the thermal cycler's lid with the lever on it and open the lid all the way.
 
-## Difficulty
-AutoBio's level: easy. Two articulated parts have to come back to their open end stops within 0.003 rad: the lever that locks the lid, and the lid. The agent has full access to the simulator and to AutoBio's task code, but not to its scripted expert: it has to build the motion itself from joint position targets at the physics rate.
+## Success criteria
+At one control step, the thermal cycler's lid hinge and the lid's lever joint are both within 0.003 rad of 0 (open and
+unlocked); they start at -1.9 rad and -0.94 rad. The first such step ends the replay as a success.
 
-## Reference solution
-AutoBio's scripted expert (mani_thermal_cycler.py @ 0850421), seed 0: the position targets it sends, recorded at every physics step, clipped to the actuators' ranges, rounded to float32 (so the standard twin's client executes the same rows), cut at the first success: `solution/oracle.npz`, 8251 rows, success after 8251 control steps. Replayed and saved by `solution/solve.sh`; re-checked by the privileged verifier (`harbor run -a oracle`: two fresh-process replays, same final state).
+The verifier replays `/app/output/trajectory.npz` (array `actions`, shape (T, n) with n the robot's controlled
+actuators, 1 ≤ T ≤ 600,000, finite values) once, open-loop, in a fresh process in a separate sandbox without network,
+from its own copy of the frozen instance. Each row is one control step of 2 ms (one physics step), with one position
+target per actuator, clipped to the actuators' ranges. AutoBio's `check()` is evaluated after every control step. A
+MuJoCo physics warning (an unstable state) ends the replay at once as a failure; the renderer's own warning
+(`VGEOMFULL`) does not count. A replay that reaches 600,000 control steps ends there.
 
-## Verification
-`tests/grade.py` in a separate sandbox without network: one replay of `/app/output/trajectory.npz`, in a fresh process, from the verifier's own copy of the instance (`tests/instance.json`; the compiled model and the rebuilt start state are checked against its recorded hashes); pass iff the episode succeeds (the first control step at which AutoBio's check holds ends the episode in success). `nop`: no trajectory, reward 0.
+A missing file scores 0, and so does an invalid one: not a readable `.npz`, no `actions` array, a `task` entry that
+names another task, the wrong shape, a non-finite value, or more than 600,000 rows. A replay that gives no result, and
+a replay whose model or start state does not match the instance's recorded hashes, are infrastructure failures, not a
+score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,10 +39,11 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | AutoBio (github.com/autobio-bench/AutoBio @ 0850421, no licence stated: the image is built locally, images/autobio/BUILD_ONLY) on MuJoCo 3.3.0 |
-| Instance | `ThermalCyclerManipulate` (`mani_thermal_cycler.py`) after AutoBio's `reset(seed=0)`; model hash `67478954d8efa27b`, start-state hash `af233b90fd79689a`, checked on every load |
-| Actions | 7 position targets per control step (2 ms, one physics step); success rule `first` (tasks/autobio/README.md) |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
+## License
+AutoBio ([autobio-bench/AutoBio](https://github.com/autobio-bench/AutoBio) @ `0850421`) states **no licence** for its
+code or its own assets (the digitized instruments, tubes, racks and pipette, and two binaries without source: the
+thread and detent MuJoCo plugins `libmjlab.so.3.3.0` and the liquid-surface solver `meshplane.so`). No file of AutoBio
+is in this repository, and the simulator image is built locally and never published; it is used here for research
+evaluation only. The robot models AutoBio bundles keep their own licences: UR5e and Robotiq 2F-85 (BSD), ALOHA 2
+(BSD), DexHand021 (Apache-2.0); the display font is under the SIL OFL. The simulator is MuJoCo 3.3.0 (Apache License
+2.0). Details: `images/autobio/BUILD_ONLY`.

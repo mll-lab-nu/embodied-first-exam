@@ -798,6 +798,18 @@ class Session:
         res.update(success=True, why="the goal held, released and at rest, through the check window", steps=n, max_move_m=round(move, 5))
         return res
 
+    def settle_past_cap(self, step: Callable | None = None) -> dict[str, Any]:
+        """settle_check run past the step cap: the settle window judges an episode or a trajectory and is not part of it, so
+        one that ends up to max_steps control steps in (the documented maximum) is judged like any other, never cut short by
+        the runaway guard. replay() runs its window this way, and so does the standard service's live window (sim/server.py
+        settle(): a /finish at control step 199,910 or later would otherwise run into the cap). The cap holds again after it."""
+        cap = self.max_steps
+        self.max_steps, self.episode_done = max(cap, self.n_steps + SETTLE_STEPS + CHECK_STEPS + 1), False
+        try:
+            return self.settle_check(step=step)
+        finally:
+            self.max_steps, self.episode_done = cap, self.n_steps >= cap
+
     # ---- recording / trajectories
     def record_start(self) -> None:
         self._recording = []
@@ -824,7 +836,10 @@ class Session:
         st = self.status()
         st["goal_at_end"] = st["success"]; st["state_sha_rows"] = st["state_sha"]
         if settle:
-            sc = self.settle_check()
+            # the settle window judges the trajectory and is not part of it: it runs past the step cap (settle_past_cap), so
+            # a trajectory of up to max_steps rows (the documented maximum) is judged like any other, not cut short or
+            # stopped by the guard (a longer one, which the grader rejects, still meets the guard)
+            sc = self.settle_past_cap() if len(actions) <= self.max_steps else self.settle_check()
             st.update(success=sc["success"], settle=sc, state_sha=self.state_sha(), sim_steps=int(self.n_steps))
         _slog("replay", task=self.task, n_actions=int(len(actions)), success=st["success"])
         return st
@@ -1003,7 +1018,7 @@ class Session:
         return q_arm.astype(np.float64), float(np.linalg.norm(p - target)), rot_angle(R, rot)
 
     # ---- cameras, depth, robot spec, stateless kinematics (the same data the limited service's /spec and /kinematics
-    # serve, docs/protocol/standard_mode.md rcb-limited/2.2). Nothing here steps physics or changes the simulator state.
+    # serve, docs/protocol/eai-standard.md). Nothing here steps physics or changes the simulator state.
     def _link_T(self, link) -> np.ndarray:
         p = link.get_pos(); q = link.get_quat()
         T = np.eye(4)

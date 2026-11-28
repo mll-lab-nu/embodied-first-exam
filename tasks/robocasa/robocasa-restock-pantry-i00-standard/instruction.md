@@ -5,7 +5,7 @@ Put both cans from the counter in the cabinet, on the side where the other can a
 
 ## Goal
 Success: both cans are all the way inside the cabinet, each on the same side as the can already there and away from the
-other item, and your hand has let go and moved away from them.
+other item, and your hand has let go and moved well away from them (what counts is how far the hand is from them).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -22,7 +22,7 @@ robot runs as a service you reach through its client or its MCP tools, as if it 
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service starts: about a minute)

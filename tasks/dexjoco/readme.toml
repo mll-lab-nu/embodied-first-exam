@@ -1,0 +1,273 @@
+# README data for tasks/dexjoco/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every text below (upstream DexJoCo at 8d23b0f, read-only clone; line numbers are the pinned
+# files'):
+#   upstream   dexjoco/dexjoco/sim/envs/panda_<env>_env.py: step() (its `terminated` and info["succeed"]) and
+#              _compute_success / _compute_success_metrics; constructor defaults (tasks/<task>/config.py passes none
+#              of the thresholds). Every upstream episode cap (`env_step >= N`) is lifted: rcb_dexjoco.Session.step
+#              sets env.env_step = 0 before every step.
+#   tooling    embodied_first_exam/benchmarks/dexjoco/privileged/environment/rcb_dexjoco.py Session.step L413-459
+#              (water_plant's aim and 30-step count, failures, hide_success), Session.replay L492-503,
+#              _failure_reason L730-737, MAX_STEPS = 10,000,000, MAX_TRAJECTORY_ROWS = 50,000, MIN_BLAS_THREADS = 4.
+#   graders    .../privileged/tests/grade.py main() (one fresh-process replay); .../sim/server.py finish() L520-539,
+#              judge_end() L500-517, END_JUDGEMENT / END_WINDOW L491-493 (RCB_AGENT_END=1 in every standard compose);
+#              embodied_first_exam/standard/agent_end/rcb_agent_end.py END_STATE_REASONS / ENDED_BY L40-43;
+#              .../standard/tests/grade.py verdict().
+# Object names in backticks are the keys of `s.objects()` (rcb_dexjoco.OBJECTS) where one exists, else MuJoCo names.
+
+[benchmark]
+name = "DexJoCo"
+citation = "Wang et al., 2026"     # upstream README "Citation": arXiv:2605.16257
+url = "https://dexjoco.github.io/"
+repo = "brave-eai/dexjoco"
+commit = "8d23b0f"
+others = """
+The simulation repeats exactly only for one OpenBLAS thread count (DexJoCo's controller does its linear algebra in
+numpy): every container that runs it sets `OPENBLAS_NUM_THREADS=4` and needs at least 4 CPUs in its CPU affinity (a
+cpuset or `taskset` narrows it; a CPU quota does not). A grading process that runs fewer than 4 OpenBLAS threads gives
+no verdict (`too_few_cpus`, an infrastructure failure).
+"""
+
+[license]
+text = """
+DexJoCo ([brave-eai/dexjoco](https://github.com/brave-eai/dexjoco) @ `8d23b0f`; Wang et al., 2026, "DexJoCo: A
+Benchmark and Toolkit for Task-Oriented Dexterous Manipulation on MuJoCo", arXiv:2605.16257) is released under the MIT
+License (copyright 2026 Dexjoco contributors). Bundled robot models keep their own terms: the Franka Emika Panda model
+(Apache License 2.0) and the Wonik Allegro hand model (BSD 2-Clause). Upstream's teleoperation stack includes GeoRT
+under a **non-commercial** license (CC BY-NC); it is removed from the task image and not used. The simulator is MuJoCo
+3.4.0 (Apache License 2.0).
+"""
+
+[robots]
+franka-allegro = "Franka Emika Panda arm with a 16-DoF Wonik Allegro hand"
+franka-allegro-bimanual = "Two Franka Emika Panda arms side by side, each with a 16-DoF Wonik Allegro hand"
+
+# privileged/tests/grade.py main(): no file -> missing_trajectory; load_deliverable (zip with task.npy + actions.npy,
+# allow_pickle=False, size bound) -> bad_trajectory; task != --family -> wrong_family; not 2-D, > MAX_TRAJECTORY_ROWS or
+# non-finite -> bad_trajectory; blas_threads() < 4 -> too_few_cpus + grader_error + infra_error (no replay);
+# not instance_exact -> instance_mismatch + grader_error + infra_error; width != action_dim -> bad_trajectory;
+# Session.replay ValueError (zero-norm tcp quaternion) -> bad_trajectory; success = the replay's status()["success"]
+# (Session.step: done at the first success or task failure, replay stops there); any exception -> grader_error +
+# infra_error.
+[modes.privileged]
+success = """
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory(...)` writes it: this task's name (`{family}`) and at
+most 50,000 action rows of {vars[adim]} finite values, one row per control step (50 Hz). After the agent's session the
+verifier replays it once, open-loop, from its own copy of the frozen start (`tests/instance.npz`), in a fresh process
+of a separate container without network. As in DexJoCo's own evaluation, the replay ends at the first control step on
+which the success check above passes or a task failure above happens; rows after that step are not run. The task is
+passed if the replay ends in success; a replay whose rows run out before that scores 0. A missing file scores 0, and so
+does a file for another task or one that is not such an array (not an npz, pickled or object arrays, no `task` or
+`actions` entry, a wrong number of columns, NaN or infinite values, more than 50,000 rows, a row with a zero tcp
+quaternion). Only the trajectory is scored (`gen.py` is not). A start that does not rebuild to the instance's recorded
+state hash, a verifier that runs fewer than 4 OpenBLAS threads, or an error inside the grader is an infrastructure
+failure, not a score.
+"""
+
+# sim/server.py: RCB_AGENT_END=1 -> Session(hide_success=True): a success never ends the episode (now_success only);
+# spec budget reset 0 (no reset endpoint); finish("finished") on POST /finish, finish("timeout") on the collect hook's
+# SIGUSR1, finish("step_limit") at MAX_STEPS, finish("error") on a simulator error in a submit (on_submit_error),
+# finish("failure: ...") at a task failure. finish(): success = (reason in END_STATE_REASONS or an event task's task
+# failure) and judge_end(); "error" never succeeds. standard/tests/grade.py: success = final.json success, graded_by
+# "live", finalized, no instance_mismatch / too_few_cpus / infra_error, reason != "error"; infra_error for no verdict,
+# sim_crashed / resume_failed; sim_crashed_on_call is the agent's 0.
+[modes.standard]
+success = """
+Graded: the live episode the simulator service ran; nothing is replayed. There is one episode and no reset. A success
+never ends the episode and is never shown to the agent. The episode ends at the agent's `/finish`, when the agent's
+time ({timeout}) runs out, or at a task failure where the task has one; there is no step limit (a runaway guard at
+10,000,000 control steps ends it like `/finish`).
+
+{vars[std_end]}
+
+An episode ended by a simulator error raised by the agent's own call scores 0, and so does a service that crashed only
+inside the agent's calls. An episode that does not start from the frozen instance (its state hash differs), a service
+that runs fewer than 4 OpenBLAS threads, or a service crash outside the agent's calls is an infrastructure failure,
+not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families. `adim` = action columns (rcb_dexjoco: 23 single arm, 46 bimanual). `std_end` = how sim/server.py judges an
+# agent-ended episode: END_JUDGEMENT "event" (seen_step: the check passed at some control step), END_WINDOW (hold the
+# last command up to int(1.2 * 50) = 60 control steps from the end state, success if now_success and not done within
+# them; a task failure (S.done) -> 0), else "state" (now_success on the end state). Upstream counters are consecutive
+# control steps; "at the end of each control step" = after the 10 physics substeps of env.step().
+
+[families.water_plant]
+# panda_water_plant_env.py step() L511-517: trigger hysteresis on sensor spray_joint_0_pos (pulled above
+# _TRIGGER_PULL_THRESHOLD 0.34, released below _TRIGGER_RELEASE_THRESHOLD 0.25); _compute_success L557-575: site
+# ref_point vs body plant xpos, dx^2 + dy^2 <= 0.2^2 and -0.2 <= dz <= 0.2; failed_trigger_outside = not inside and
+# pulled; upstream success = 30 steps (_SUCCESS_STEPS_REQUIRED). rcb_dexjoco.Session.step L438-446: zone_and_trigger =
+# _success_counter > 0, AND water_aim_deg (body link_2 xmat column z vs plant - ref_point) <= WATER_AIM_MAX_DEG 45,
+# counted 30 steps; upstream's own success no longer ends the episode; failure = trigger pulled outside the zone.
+# server.py END_JUDGEMENT water_plant = "event".
+vars = { adim = 23, std_end = "The check is judged as an event: the episode is a success if the 30-step count is reached at some control step, even if a task failure ends the episode later; a task failure before that scores 0." }
+success = """
+Success: for 30 consecutive control steps (0.6 s), all of these hold at the end of each step:
+- the trigger is pulled: the trigger joint (`spray_trigger`) has risen above 0.34 rad and not dropped below 0.25 rad
+  since;
+- the nozzle is in the zone around the plant: the nozzle's reference point (`spray_nozzle`) is at most 0.20 m from the
+  plant's origin (`plant`) horizontally and within ±0.20 m of its height;
+- the spray points at the plant: the spray direction (the bottle body's local +z axis; its long axis, bottom to head, is
+  local +y) is within 45° of the line from the nozzle's reference point to the plant's origin.
+
+The trigger and zone conditions are DexJoCo's own check; the aim condition is added by this benchmark, and DexJoCo's
+own success (trigger and zone alone) does not end the episode.
+
+Task failure (ends the episode at once, scoring 0): the trigger is pulled while the nozzle is outside the zone.
+"""
+
+[families.click_mouse]
+# panda_click_mouse_env.py: _mouse_in_mousepad L623-634 (sensor mouse_pos = geom mouse; mousepad geom radius
+# geom_size[0] = 0.15, |dz| <= _MOUSEPAD_Z_TOL 0.05); _detect_click L616-621 (mouse_joint0_pos - its value at reset
+# > _CLICK_THRESHOLD 0.001); step() L591-592: in pad and click and not blue -> _set_display_blue (never cleared but by
+# reset); _compute_success L636-645: in pad and blue, _success_trigger_target 10 consecutive steps. No failure:
+# terminated only by success or the lifted 1200-step cap. server.py END_WINDOW.
+vars = { adim = 23, std_end = "The check is judged on the state the episode ends in: if it does not pass at that moment, the robot holds its last command for up to 60 more control steps (1.2 s), and the episode is a success if the check passes within them; the control steps already held count towards the 10." }
+success = """
+Success: for 10 consecutive control steps (0.2 s), the mouse is on the mousepad and the monitor is blue, at the end of
+each step. The mouse is on the pad when the mouse's position is at most the pad's radius (0.15 m) from the pad's centre
+horizontally and within ±0.05 m of it vertically. The monitor turns blue at the end of the first control step on which
+the mouse is on the pad and its button is pressed (the button joint `mouse_button` more than 0.001 rad past its
+starting angle), and stays blue for the rest of the episode. There is no task failure.
+"""
+
+[families.hammer_nail]
+# panda_hammer_nail_env.py: _compute_success L600-601 (_nail_depth >= success_depth 0.04); depth only grows:
+# _apply_hammer_nail_interaction L615-648: contact of a hammer geom (face, head, neck, claw) with nail_head /
+# nail_shaft after the step, preimpact_vz = min of the face's vz over the last 12 physics substeps (vz = per-substep
+# drop / control_dt 0.02, i.e. a tenth of the speed; threshold impact_vel_threshold 0.02 -> 0.2 m/s), delta =
+# impact_insert_step 0.008 x min(3, |vz| / 0.02), capped at max_insert_depth 0.0726. No failure. server.py: "state"
+# (not in END_JUDGEMENT / END_WINDOW).
+vars = { adim = 23, std_end = "The check is judged once, on the state the episode ends in." }
+success = """
+Success: the nail is driven at least 4 cm deep (DexJoCo's nail depth ≥ 0.04 m); the depth never decreases. The depth is
+DexJoCo's model of strikes, not free physics: on each control step that ends with the hammer's head (its face, head,
+neck or claw) touching the nail, while the hammer face's fastest downward speed over the last 12 physics substeps is
+above 0.2 m/s, the nail goes 0.8 cm × (that speed / 0.2 m/s, at most 3) deeper, up to 7.26 cm in all. There is no
+task failure.
+"""
+
+[families.pick_bucket]
+# panda_pick_bucket_env.py _compute_success L586-597: sensor boxed_food_0_pos (body) within min / max of the 8 sites
+# bucket_ref_0..7 (world, per axis); lifted: sites bucket_ref_0, 2, 4, 6 (L270-272) each >= 0.15 above
+# _bucket_bottom_z0 (re-baselined at the frozen start by state_restorers._restore_pick_bucket L157-163). One step, no
+# counter; no failure. server.py: "state".
+vars = { adim = 23, std_end = "The check is judged once, on the state the episode ends in." }
+success = """
+Success, at the end of a single control step (no hold): the boxed food's origin (`boxed_food`) lies inside the bucket,
+that is, inside the box along the world axes spanned by the bucket's eight reference corners (sites `bucket_ref_0` to
+`bucket_ref_7`), and the bucket is lifted: each of four of those corners (`bucket_ref_0`, `_2`, `_4`, `_6`) is at least
+0.15 m above its height at the start. There is no task failure.
+"""
+
+[families.pinch_tongs]
+# panda_pinch_tongs_env.py _update_pinch_count L568-578 (sensor tongs_joint_0_pos: count when <= -0.07 and armed,
+# armed again when >= 0.1; _pinch_in_progress is False at the frozen start, so the first pinch needs an opening first);
+# _compute_success L582-605: geom tongs z >= _lift_z = table_top site z + _LIFT_HEIGHT 0.1, pinch_count >=
+# _REQUIRED_PINCHES 3, 30 consecutive steps. No failure. server.py END_WINDOW.
+vars = { adim = 23, std_end = "The check is judged on the state the episode ends in: if it does not pass at that moment, the robot holds its last command for up to 60 more control steps (1.2 s), and the episode is a success if the check passes within them; the control steps already held count towards the 30." }
+success = """
+Success: for 30 consecutive control steps (0.6 s), at the end of each step, the tongs have counted at least three
+pinches and are held up: the tongs' position at least 0.10 m above the table top (`table_top`). A pinch counts when the
+tongs' hinge (`tongs_hinge`) closes to −0.07 rad or less after having been open at 0.10 rad or more (since the start or
+the last counted pinch); the count never goes down. There is no task failure.
+"""
+
+[families.fold_glasses]
+# panda_fold_glasses_env.py _compute_success L512-564: sensors glass_joint_0_pos, glass_joint_1_pos > 1.1; sensor
+# glass_pos (body glass) minus model body_pos of open_box (a fixed body, no joint): |x|, |y| <= 0.145, -0.045 <= z <=
+# 0.0475 - 0.02; _success_trigger_target 50 consecutive steps. No failure. server.py END_WINDOW.
+vars = { adim = 23, std_end = "The check is judged on the state the episode ends in: if it does not pass at that moment, the robot holds its last command for up to 60 more control steps (1.2 s), and the episode is a success if the check passes within them; the control steps already held count towards the 50." }
+success = """
+Success: for 50 consecutive control steps (1.0 s), at the end of each step, both temples are folded (the hinge joints
+`temple_0` and `temple_1` each above 1.1 rad) and the glasses' origin (`glasses`) is inside the case: within 0.145 m of
+the case's origin (`case`, fixed to the table) along the world x and y axes, and from 0.045 m below to 0.0275 m above
+it. There is no task failure.
+"""
+
+[families.bimanual_hanoi]
+# panda_bimanual_hanoi_env.py defaults L68-73: post_assignment_tol 0.040, placement_height_tol 0.012, static_qvel_tol
+# 0.35, success_trigger_target 20, illegal_trigger_target 10. _reconstruct_tower_state L702-741 (nearest post site
+# horizontally within 0.04, else "table" if z <= base top + 0.06, else floating; towers sorted by z);
+# _tower_geometry_errors L746-765; _compute_success_metrics L767-846 (illegal: a post whose bottom-to-top size ranks
+# increase, all its disks static and seated, or, all disks static, a disk on the table; same reason 10 consecutive
+# steps; success: C == [large, medium, small], A and B empty, seated, all static, not illegal, 20 consecutive steps).
+# step() L665: terminated on illegal_state; rcb_dexjoco: failure "failure: illegal_stack_<post>" / "disk_on_table";
+# the wall-clock auto-reset never fires. Post C is hanoi_post_c_site at local y = -0.208 (hanoi_base.xml), the right
+# arm's side. server.py END_WINDOW.
+vars = { adim = 46, std_end = "The check is judged on the state the episode ends in: if it does not pass at that moment, the robot holds its last command for up to 60 more control steps (1.2 s), and the episode is a success if the check passes within them with no task failure; the control steps already held count towards the 20. A task failure ends the episode with 0, also after the check has passed." }
+success = """
+Each disk belongs to the post (A, B or C; C is on the right arm's side) whose axis its centre is nearest horizontally,
+if it is within 0.04 m of it. A disk farther from every post is on the table when its centre is at most 0.06 m above
+the top of the base, else in the air. A disk is at rest when the norm of its six free-joint velocities is at most 0.35.
+A disk is seated when its centre is within 0.04 m of its post's axis horizontally and within 0.012 m of the height it
+has in a stack resting on the base.
+
+Success: for 20 consecutive control steps (0.4 s), at the end of each step, post C holds the large, the medium and the
+small disk in that order from the bottom up, posts A and B are empty, and all three disks are seated and at rest.
+
+Task failure (ends the episode, scoring 0), once the same one has lasted 10 consecutive control steps: a larger disk
+above a smaller one on a post whose disks are all seated and at rest; or, with all three disks at rest, a disk on the
+table.
+"""
+
+[families.bimanual_microwave_cook]
+# panda_bimanual_microwave_cook_env.py _compute_success L592-606: |qpos(microjoint)| < 1e-2; hot_dog_inside_microwave
+# L706-725 (sensor hot_dog_pos = body hot_dog, in the microwave_object frame, between sites int_p0 and int_px / int_py
+# / int_pz, margin 0.01); _geom_in_contact("start_button") L420-453: any contact with dist <= 0. One step, no counter;
+# no failure. server.py END_JUDGEMENT "event".
+vars = { adim = 46, std_end = "The check is judged as an event: the episode is a success if it passes at the end of at least one control step of the episode." }
+success = """
+Success, at the end of a single control step (no hold): the door is closed (its hinge, `door_hinge`, within 0.01 rad
+of shut), the hot dog's origin (`hot_dog`) is inside the microwave's interior box (sites `int_p0`, `int_px`, `int_py`
+and `int_pz`, in the microwave's frame) enlarged by 0.01 m on every side, and the start button (`start_button`) is in
+contact with any other geom. There is no task failure.
+"""
+
+[families.bimanual_unlock_ipad]
+# panda_bimanual_unlock_ipad_env.py: _finger_geom_ids L385-390 (fingertip_ff/mf/rf_right, thumbtip_right);
+# _update_button_visuals L786-816 (button <-> fingertip contacts only); _update_unlock_sequence L818-850 (rising edge;
+# the expected digit advances, sequence [1, 2, 3] L308; any other digit -> _unlock_failed; ipad_screen_effect False ->
+# unlocked at once, buttons hidden); step() L727: terminated on _unlock_failed; _compute_success L942-951: unlocked,
+# _success_trigger_target 10 consecutive steps. rcb_dexjoco: "failure: wrong passcode". server.py END_WINDOW.
+vars = { adim = 46, std_end = "The check is judged on the state the episode ends in: if it does not pass at that moment, the robot holds its last command for up to 60 more control steps (1.2 s), and the episode is a success if the check passes within them with no task failure; the control steps already held count towards the 10. A task failure ends the episode with 0, also after the check has passed." }
+success = """
+A press is the start of a contact between one of the iPad's digit buttons and a fingertip of the right hand (the index,
+middle or ring fingertip or the thumb tip); contacts by anything else, the left hand included, are not presses.
+
+Success: the presses are 1, 2 and 3 in that order; the screen unlocks at the press of 3 and stays unlocked, and the
+check passes once it has been unlocked for 10 consecutive control steps (0.2 s; the step of the press of 3 counts).
+
+Task failure (ends the episode at once, scoring 0): a press of any digit other than the next one of 1-2-3.
+"""
+
+[families.bimanual_assembly]
+# panda_bimanual_assembly_env.py _compute_success_metrics L550-578: a contact between geom
+# industreal_round_peg_8mm_collision and geom industreal_tray_insert_round_peg_8mm_bottom_contact (L151-152), 30
+# consecutive steps. No failure. server.py END_WINDOW.
+vars = { adim = 46, std_end = "The check is judged on the state the episode ends in: if it does not pass at that moment, the robot holds its last command for up to 60 more control steps (1.2 s), and the episode is a success if the check passes within them; the control steps already held count towards the 30." }
+success = """
+Success: for 30 consecutive control steps (0.6 s), at the end of each step, the peg (`peg`, its collision geom) is in
+contact with the bottom of the tray's socket (geom `industreal_tray_insert_round_peg_8mm_bottom_contact`). There is no
+task failure.
+"""
+
+[families.bimanual_photograph]
+# panda_bimanual_photograph_env.py _compute_success_metrics L882-927: site view_direction_site in the frame of geom
+# photograph_target_region_visual (a cylinder whose axis is world x: euler 0 -90 0; centre = the logo's position +
+# _TARGET_REGION_OFFSET (-0.40, 0, 0), reset L738): radial <= _TARGET_REGION_RADIUS 0.16, |axial| <=
+# _TARGET_REGION_HALF_HEIGHT 0.10; geom camera_axis_z's z axis within _TARGET_ANGLE_DEG 10 of world +x; geom
+# camera_body_top_cap in contact with a geom not of the camera body tree. One step, no counter; no failure.
+# server.py END_JUDGEMENT "event".
+vars = { adim = 46, std_end = "The check is judged as an event: the episode is a success if it passes at the end of at least one control step of the episode." }
+success = """
+Success, at the end of a single control step (no hold), all three hold:
+- the camera is placed: its view point (site `view_direction_site`) is within 0.16 m of the line along the world x axis
+  through the point 0.40 m in front of the logo (towards the robot), and within 0.10 m of that point along the line;
+- the camera is aimed: its optical axis (the local z axis of geom `camera_axis_z`) is within 10° of the world +x
+  direction, towards the logo;
+- the shutter is pressed: the shutter button (`shutter`) is in contact with a geom that is not part of the camera.
+
+There is no task failure.
+"""

@@ -1,52 +1,53 @@
-# dexhand-pancake-serve-i00-privileged
+# DexHand · Serve a pancake from a frying pan with a spatula (privileged)
 
 | | |
 |---|---|
-| Benchmark | DexHand |
+| Task ID | `dexhand-pancake-serve-i00-privileged` |
+| Benchmark | [DexHand](https://www.embodied-first-exam.ai/suite/dexhand/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | Tianji Marvin fixed stand with two 7-joint arms and a dexterous hand on each wrist: Sharpa Wave (22 finger actuators each) by default, or Wuji Hand 2.2 (20 each) |
 | Mode | privileged |
-| Twin | `dexhand-pancake-serve-i00-standard` |
-| Simulator / robot | `mujoco` / `marvin-bimanual-sharpa-wave` |
-| Family / instance | `pancake_serve` / seed 0 |
-| Oracle | `full` — solution/ replays the validated Sharpa Wave authoring trajectory on the Marvin arm rig (1,167 controls; the turner is picked up from the counter, the replay ends at success after 1,017 controls) in both modes; it succeeds in two fresh processes with identical state hashes, also with float32-rounded rows. |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
+| Instance | `pancake_serve`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-Serve the pancake from the frying pan onto the plate with the kitchen turner (a spatula). The turner starts on the counter in front of the plate and both hands start open, so first pick the turner up with one hand of the two-arm robot. The pancake lies in the frying pan, the empty ceramic plate stands beside it on the counter. Only the turner may move the pancake: slide its blade under the pancake, lift it out of the pan on the blade, carry it to the plate, set it down in the plate and withdraw the turner. Success requires three stages in this order. (1) On the blade: the pancake touches the turner blade and no other object (no pan, plate, hand, counter or floor contact), its origin is at least 0.015 m above its starting height and it is tilted at most 30 degrees, for 10 consecutive controls. (2) Over the plate: later, while still touching only the turner, the pancake centre is within 0.058 m (horizontally) of the plate centre and above the plate floor. (3) Served: later, the pancake touches only the plate, its centre is within 0.058 m of the plate centre horizontally (the whole pancake inside the plate's 0.128 m rim radius), it is tilted at most 20 degrees from flat, its linear speed is at most 0.02 m/s and angular speed at most 0.3 rad/s, the turner does not touch it and every point of the blade outline is at least 0.08 m from the pancake centre horizontally (withdrawn); this complete condition must hold for 50 consecutive controls (1 s). The episode ends with success at that moment; skipping or reordering a stage never counts. The episode ends immediately with failure, checked after every 1 ms physics substep with no grace period, when the pancake touches the counter top or the floor, falls freely (touching nothing while its centre of mass moves down faster than 0.35 m/s, i.e. after about 6 mm of free fall) or its origin falls below the counter top (z < 0.85 m), when any part of the robot (hands, arm links, stand) touches the pancake, when the turner touches the floor, falls out of the hand (no hand contact while its centre of mass moves down faster than 0.35 m/s) or its origin falls below the counter top, when the pan or the plate moves more than 0.03 m from its starting position or tilts more than 15 degrees, when the pancake, pan, plate or turner leaves the workspace box x in [0.23, 1.13] m, y in [-0.65, 0.45] m, z in [0.80, 1.50] m, or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct object forces. The pancake is a rigid coherent disk and the turner blade bends through three passive spring hinges. The episode allows at most 3000 controls at 50 Hz; reaching that limit without success is a failure.
+Serve the pancake from the frying pan onto the plate with the kitchen turner (a spatula).
 
-## Difficulty
-The turner is a tool held only by contact: its flexible blade has to be landed steeply over the pan wall, pressed so
-its passive strips flatten on the pan floor, and slid under a rigid pancake without pushing it up the far wall. The
-pancake then rides on a low-friction blade that is narrower than the pancake, so lifting, carrying and setting it
-down need controlled blade pitch and gentle accelerations, and the turner must be withdrawn without dragging the
-pancake off the plate. Any drop onto the counter, direct hand contact with the food, or a knocked pan or plate ends
-the episode as a failure at once.
+## Success criteria
+Three stages, in this order, checked at the end of each control step (50 Hz, twenty 1 ms physics substeps):
+1. On the blade, for 10 consecutive control steps: the pancake touches the turner's blade and nothing but the turner,
+   it is at least 15 mm above its start height, and it tilts at most 30°.
+2. Over the plate: still touching the blade and nothing but the turner, the pancake's centre is within 58 mm of the
+   plate's centre horizontally and more than 6 mm above the plate's origin.
+3. Served, for 50 consecutive control steps (1 s): the pancake touches the plate and nothing else; its centre is
+   within 58 mm of the plate's centre horizontally; it tilts at most 20°; it moves at most 0.02 m/s and turns at most
+   0.3 rad/s; the turner does not touch it, and every corner and the tip of the turner's blade is more than 80 mm from
+   the pancake's centre horizontally (10 mm beyond its rim).
 
-## Reference solution
-`solution/trajectory.npz` replays a physical serving trajectory of the Sharpa Wave on the right Marvin arm (1,167 rows;
-the replay ends at success after 1,017 controls, the remaining rows hold the robot still). It was recorded from an
-authoring controller : the open
-right hand comes down palm-first over the resting turner's handle near its neck, closes a power grasp and lifts the
-turner, then the hand pose is computed every control from the measured turner pose so that the blade follows scripted
-waypoints (nudge the pancake off the near wall, slide under it, scoop, lift, carry, lower into the plate, tilt and
-withdraw), converted to arm joint targets by damped least-squares IK with a joint integral; it records plain actuator
-targets, never sets an object pose or applies an object force, and is never copied into the agent's environment or
-image.
+The episode fails at once, checked after every physics substep, when: the pancake touches nothing while its centre of
+mass falls faster than 0.35 m/s; the turner does not touch the robot while its centre of mass falls faster than
+0.35 m/s; the pancake touches the counter top or the floor; any part of the robot touches the pancake; the turner
+touches the floor; the pancake's or the turner's origin is below the counter top (z = 0.85 m); the pan or the plate
+moves more than 30 mm from its start or tilts more than 15°; the pancake, the pan, the plate or the turner leaves the
+box x 0.23 to 1.13 m, y -0.65 to 0.45 m, z 0.80 to 1.50 m; or the physics becomes unstable. The step budget is
+3,000 control steps (60 s).
 
-## Verification
-privileged mode. The verifier rebuilds the frozen scene with the recorded hand (`hand` member of the trajectory archive
-in privileged mode; the hand of the trusted service episode in standard mode) and replays only numeric motor targets
-in one fresh process, which must succeed;
-in standard mode nothing is replayed: the live episode is graded. A replay ends at the first success or the first failure.
-Failures are fail-fast and permanent, checked after every 1 ms substep with no grace window: the pancake touching
-the counter or floor, falling freely (touching nothing while moving down faster than 0.35 m/s) or falling below the
-counter top, any hand contact with the pancake, the turner on the floor, falling out of the hand or below the counter
-top, the pan or plate moved more than 3 cm or tilted more than 15 degrees, a task body leaving the workspace box,
-unstable physics, or the 3,000-control budget. The frozen thresholds come from the task, never from an agent archive. A no-op fails. Human review and full
-agent-trial calibration remain pending; report this task as provisional.
+The graded file is `/app/output/trajectory.npz`, as `s.save_trajectory` writes it: a finite numeric `actions` array
+with one row of motor targets per control step (58 values for the Sharpa Wave hand, 54 for
+the Wuji Hand 2.2), 1 to 3,000 rows, and a `hand` member that names the hand (an archive without it counts as
+Sharpa Wave). After the agent's session, the verifier rebuilds the frozen scene with that hand in a fresh process of a
+separate container without network and replays the rows once, open-loop. The replay stops at the first success or the
+first failure, and later rows are not run. The task is passed if the replay ends in success; rows that run out first,
+or the step budget reached first, leave it failed. Only the motor targets are read: no other member of the archive
+changes the verdict.
 
-## Resources
-Caps per container (PROTOCOL §6).
+A missing file scores 0, and so does a rejected one: larger than 64 MB, a row width that does not match the hand, a
+non-finite value, no rows or too many, a target outside its actuator's range, or a `task` or `actuator_names` member
+that does not match this task. A frozen scene that does not build to its recorded start is an infrastructure error,
+not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -55,21 +56,14 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-
-### Notes
-Source: the DexHand family of this task. The scene is the T16
-"Serve food from a frying pan with a spatula" scene: Fiskars Hard Face 22 cm pan, OXO Good Grips large flexible
-turner (SKU 1071534), ceramic plate and a coherent cooked pancake; their meshes and texture are copied unchanged
-(sha256 manifest in `assets/manifest.json`). Masses, inertias and the turner's three passive bending strips follow
-the source; pan and plate interiors use convex sector contacts. Pair frictions are declared estimates (pancake-pan
-0.45, pancake-blade 0.20, blade-pan 0.20, pancake-plate 0.60, grip 1.2). The pancake is rigid: no deformation,
-tearing, heat or fluid model. The Sharpa Wave assets are pinned to MuJoCo Menagerie commit
-`0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0); the Wuji Hand 2.2 model (`hand2/hand2_2`) is pinned to
-wuji-technology/wuji-description commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT) and mounted on the same
-flanges. The robot is the Tianji Marvin stand of `pot_shelf_transfer` (two 7-DoF position-servo arms, no gravity
-compensation) at the world origin facing +x; the right arm serves, the left arm is parked (`arm_rig.py`). The turner
-starts at rest on the counter at the source's pose (settled under physics) and must be picked up; there is no weld.
-Not reproduced from the source: the other hand supporting and tilting the pan (about 8 degrees and 4 cm in the source
-film); here the pan stands free and the left arm stays parked. This is a physical tool-use task for an arm-mounted
-dexterous hand, not a zero-shot claim.
+## License
+DexHand's scenes, checkers and graders are original to this repository (MIT License). Robot models: the Sharpa Wave
+hand from [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie/tree/0059d4335f8156206f63a35662313385f7ad6d74/sharpa_wave)
+@ `0059d43` (Apache License 2.0); the Wuji Hand 2.2 from
+[wuji-technology/wuji-description](https://github.com/wuji-technology/wuji-description/tree/829c9aa27cb12c3a49d5b8d63c9869dd8f656702)
+@ `829c9aa` (MIT License); the Tianji Marvin arm meshes from DexForce `embodichain_data` (Apache License 2.0) with
+inertias from Genesis' `dual_arms_primitives.urdf` (MIT License), see `images/dexhand/tianji/NOTICE.md`. Object
+assets are original geometry of this repository, CC0 (the Poly Haven rubber boot, the Innerscene stockpot, Monet's
+public-domain Water Lilies, original page and letter artwork) or CC BY 4.0 (the Joy-Con, pen, rotary-knob and walnut
+meshes; credits in each task's `object_assets/*/CREDITS.txt`); printed text uses the DejaVu fonts (Bitstream Vera
+license). No non-commercial terms apply.

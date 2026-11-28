@@ -5,7 +5,7 @@ Take the egg out of the sink and put it on the plate on the counter, and move yo
 
 ## Goal
 Success: the egg is on the plate, the plate is on the counter next to the sink, and the hand has let go of the egg and
-moved well away.
+moved well away (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -23,7 +23,7 @@ episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service starts: about a minute)

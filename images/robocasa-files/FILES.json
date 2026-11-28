@@ -1,11 +1,11 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:robocasa-files-0.7.0@sha256:bb997aaf05146f51c3db1683a44d951771d122de25c530b524083b0b990ef080",
+ "image": "ghcr.io/mll-lab-nu/efe:robocasa-files-0.8.0@sha256:8c68a8d3b23102075be994147efc623c0ee493d178dade743699782b4bcb1a80",
  "source": "embodied_first_exam/benchmarks/robocasa",
  "files": {
   "privileged/environment/casa_tool.py": "957e74617fcd88abb534bcb4fcd04339c8156225889822b879f5717363d1df21",
   "privileged/tests/grade.py": "c85859844c37a3cbd5e94fe31e3b531691c62fad16956e4f1d318ae9b44aba48",
   "sim/finalize.sh": "5d962167951ecc53bf38fe3f2e0636ddeff12c967dc82e0218836a152a811595",
-  "sim/server_casa.py": "977da4ed470dc4422472c7b14c9c8e6a9d827c65556c82894371a5538cc77081",
-  "standard/tests/grade.py": "206763410985bb3829094c5a834a032bc99f2b621fcbeb6d0387bb68e9db1a83"
+  "sim/server_casa.py": "cb1c9be1526401d5bb1ad0e9dcbc73c94802e7818e1c82b174597c9e80587fac",
+  "standard/tests/grade.py": "a2a67fb887c144e74f85282686edfaf3412a99a84db1a6a7566a7f55991c0597"
  }
 }

@@ -36,7 +36,7 @@ Python (what the agent gets)
   from rcb_robodojo import Session
   s = Session("stack_bowls", instance="/app/instance.json")   # a few minutes: Isaac Sim launch + scene build + settling
   s.reset()                          # back to the frozen layout (unlimited)
-  s.instruction()                    # RoboDojo's language instruction for this layout
+  s.instruction()                    # the language instruction for this layout (the instance's goal_text, else RoboDojo's)
   s.objects()                        # label -> category, position, orientation_wxyz, bbox corners
   s.render_frame("cam_head")         # RGB (480, 640, 3) uint8; "cam_head", "cam_left_wrist", "cam_right_wrist"
   s.step(a)                          # one action (14 entries) = one control step (1/25 s)
@@ -70,7 +70,7 @@ CONFIG_NAME = "arx_x5"                 # RoboDojo's simulation embodiment: two A
 CONTROL_HZ = 25
 ACTION_DIM = 14
 MAX_ACTIONS = 15000                    # no step budget (PROTOCOL D1; the wall clock is): this only stops a runaway episode (10 min of simulated time)
-# Agent-ended episodes (PROTOCOL §3; the standard task's sim service sets RCB_AGENT_END=1, RCB_STEP_LIMIT=<RoboDojo's
+# Agent-ended episodes (docs/protocol/tasks.md#modes; the standard task's sim service sets RCB_AGENT_END=1, RCB_STEP_LIMIT=<RoboDojo's
 # step_lim>; without them nothing below changes). RoboDojo's evaluator ends an episode at the action whose reward reaches 1
 # (every staged check passed: RoboDojo pops each stage once it passes, so the stages are latched) or after step_lim
 # actions; a policy never sees the reward. With RCB_AGENT_END the checks never end the episode: _hidden_episode_end
@@ -208,6 +208,75 @@ def _end_stage_holds(env, env_idx: int) -> bool:
         if not rm.check_once(check, env_idx):
             return False
     return True
+
+
+# RoboDojo's is_axis_aligned (env/reward_manager/func_parser.py) measures B's axis in B's FIRST frame of the functional
+# point it is given. hang_mugs(_random) is the only task that gives functional points on both objects, on a B (the mug rack,
+# "handle_support_point") with six frames, one per arm: its distance check (is_A_functional_point_close_to_B_functional_point)
+# accepts a mug's handle at any of the six, but the orientation check always compared with arm 0, so a mug hung on an arm
+# pointing front or back failed. _axis_aligned_nearest_B: with functional points on both A and B, and B's functional point
+# having more than one frame, the B frame nearest to A's (first) frame is the one compared; every other call (no
+# functional_point_B, a single B frame, a world axis) is RoboDojo's own unchanged.
+class _LayoutView:
+    """The layout manager, with B's functional-point frames reordered (the nearest first) for the one object and tag."""
+
+    def __init__(self, lm, obj_name, tag, typ, frames):
+        self._lm, self._key, self._frames = lm, (obj_name, tag, typ), frames
+
+    def __getattr__(self, name):
+        return getattr(self._lm, name)
+
+    def get_functional_points(self, tag, type, config=None, ret="list", obj_name=None, env_idx=None):  # noqa: A002
+        if (obj_name, tag, type) == self._key and ret == "list":
+            return [list(f) for f in self._frames]
+        return self._lm.get_functional_points(tag=tag, type=type, config=config, ret=ret, obj_name=obj_name, env_idx=env_idx)
+
+
+class _ParserView:
+    def __init__(self, parser, lm):
+        self._parser, self.layout_manager = parser, lm
+
+    def __getattr__(self, name):
+        return getattr(self._parser, name)
+
+
+def _axis_aligned_nearest_B(orig, parser, args):
+    fp_A, fp_B = args.get("functional_point_A"), args.get("functional_point_B")
+    if fp_A is None or fp_B is None or args.get("world_axis") is not None or args.get("label_B") is None:
+        return orig(parser, args)
+    lm, env_idx = parser.layout_manager, args["env_idx"]
+
+    def frames(label, tag, typ):
+        name = lm.get_instance_name(label=label, env_idx=env_idx)
+        if lm.get_scene_object(inst_name=name, env_idx=env_idx) is None:
+            return name, []
+        return name, lm.get_functional_points(tag=tag, type=typ, config=lm.get_instance_metadata(inst_name=name, env_idx=env_idx),
+                                              ret="list", obj_name=name, env_idx=env_idx) or []
+
+    _, fa = frames(args["label_A"], fp_A, args.get("functional_point_A_type", "passive"))
+    type_B = args.get("functional_point_B_type", "passive")
+    name_B, fb = frames(args["label_B"], fp_B, type_B)
+    if not fa or len(fb) < 2:
+        return orig(parser, args)
+    pa = np.asarray(fa[0][:3], dtype=float)
+    k = int(np.argmin([np.linalg.norm(np.asarray(f[:3], dtype=float) - pa) for f in fb]))
+    if k == 0:
+        return orig(parser, args)
+    view = _LayoutView(lm, name_B, fp_B, type_B, [fb[k]] + fb[:k] + fb[k + 1:])
+    return orig(_ParserView(parser, view), args)
+
+
+def _patch_axis_aligned(func_parser_cls) -> None:
+    orig = func_parser_cls.is_axis_aligned
+    if getattr(orig, "_rcb_nearest_B", False):
+        return
+
+    def is_axis_aligned(self, args):
+        return _axis_aligned_nearest_B(orig, self, args)
+
+    is_axis_aligned._rcb_nearest_B = True
+    is_axis_aligned.__doc__ = orig.__doc__
+    func_parser_cls.is_axis_aligned = is_axis_aligned
 ARMS = ("left", "right")
 ARM_SLICE = {"left": slice(0, 6), "right": slice(7, 13)}
 GRIP_INDEX = {"left": 6, "right": 13}
@@ -452,6 +521,8 @@ class Session:
         from omegaconf import OmegaConf
         import src.eval_client.eval_env as ee
         ee.WsModelClient = _NoPolicy
+        from env.reward_manager.func_parser import Func_Parser
+        _patch_axis_aligned(Func_Parser)       # hang_mugs: the rack arm the handle is at (above _axis_aligned_nearest_B)
         from env.global_configs import BENCHMARK, ENV_CONFIG_PATH, ROOT_DIR
         from utils.load_file import load_yaml
         from utils.pipeline_utils import process_config, process_randomization
@@ -860,6 +931,11 @@ class Session:
         return out
 
     def instruction(self) -> str:
+        """The task's language instruction: the frozen instance's goal_text where it has one (an instance whose objects are
+        not the ones RoboDojo's layout sentence names, e.g. sort_nesting_dolls' rubber ducks: the task's own sentence), else
+        RoboDojo's own instruction for this layout."""
+        if (self.inst or {}).get("goal_text"):
+            return str(self.inst["goal_text"])
         try:
             return str(self.env.obs_manager.instruction[0])
         except Exception:  # noqa: BLE001

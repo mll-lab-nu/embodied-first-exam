@@ -1,34 +1,50 @@
-# embodied-olympics-fun-goalkeeper-save-i00-standard
+# Embodied Olympics · goalkeeper save (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
-| Twin | `embodied-olympics-fun-goalkeeper-save-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-h1-2` |
-| Family / instance | `goalkeeper_save` / seed 0 |
-| Oracle | `full` — Reference: the H1-2 walks along the goal line into each shot's line (walking policy, closed loop on the pelvis), feet on the line at each kick; three 20 m/s machine shots hit the body and stay out. It learns each machine's real crossing (scatter up to 0.4 m) and side offsets over privileged resets (2-6 attempts); 10 of 10 perturbations (aims, speeds 19 and 21 m/s, kick time) succeed. The privileged twin's reference rows (2670 control steps, success after 26.7 s) streamed through the client. |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-goalkeeper-save-i00-standard` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree H1-2 humanoid (1.78 m, 67 kg, 27 joints), with Unitree's walking policy |
+| Mode | standard |
+| Opponent | Three ball machines on the penalty mark line (scripted), each shooting one penalty at the goal |
+| Instance | `goalkeeper_save`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | Included |
 
 ## Task
-Keep goal: stop all 3 penalty kicks, with a foot on the goal line at each kick, and stay inside the goal area. (Embodied Olympics `goalkeeper-save`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Keep goal: stop all 3 penalty kicks, with a foot on the goal line at each kick, and stay inside the goal area.
 
-## Difficulty
-Each ball arrives about 0.55 s after it leaves the machine at 20 m/s and 0.43 kg: the body has to be in its line when it is kicked, standing with a foot on the line, and the ball must come off it away from the goal; between the kicks a 67 kg robot whose walking policy makes about 0.3 m/s sideways has to cross up to 2.5 m of goal and stop on the line again in time. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
+## Success criteria
+The robot is the goalkeeper, on the goal line in the middle of a goal 7.32 m wide and 2.44 m high. Three ball
+machines stand 11 m in front, 0.6 m apart (the middle one over the penalty mark). Each shoots one size 5 football at
+20 m/s without spin: the first is fed at 6 s, the second 9 s later, the third 9 s after that (a shot is kicked when
+its ball leaves the machine's wheels, about 0.1 s after the feed). They aim at points of the goal's plane, (sideways,
+height) from the goal's centre with + to the robot's left: (-0.8 m, 0.9 m), (0.8 m, 1.1 m), (-0.5 m, 0.95 m). The
+referee's stages, in order: save 1, save 2, save 3.
+- At each kick: the robot is on its feet (something touches the ground, and nothing but the feet), part of one foot
+  is touching or above the goal line between the posts, and the robot does not touch the posts, the crossbar or the
+  net. After the kick it may move as it likes, use any part of itself, and go to ground.
+- Save k: 2.5 s have passed since kick k without a goal. Save 3 is success.
 
-## Reference solution
-`solution/oracle_replay.py` streams the privileged twin's reference solution, row by row, through the client (`solution/rows.npz`, recorded at generation time). Reference: the H1-2 walks along the goal line into each shot's line (walking policy, closed loop on the pelvis), feet on the line at each kick; three 20 m/s machine shots hit the body and stay out. It learns each machine's real crossing (scatter up to 0.4 m) and side offsets over privileged resets (2-6 attempts); 10 of 10 perturbations (aims, speeds 19 and 21 m/s, kick time) succeed. The privileged twin's reference rows (2670 control steps, success after 26.7 s) streamed through the client.
+Opponent and loss conditions: the shots. The attempt fails at the first goal (the whole ball over the goal line
+between the posts and under the bar) by any of the three balls at any time after its kick, also a ball that comes
+back off the robot or the posts. Fouls (each fails the attempt): the robot's position at a kick is not as above; it
+touches a ball machine, or a ball before that ball's kick; its pelvis leaves the goal area (more than 5.5 m in front
+of the goal line, more than 2.0 m behind it, or more than 9.16 m to either side of the goal's centre). The generic
+fall rule is off. Time limit: 27 s (2,700 control steps).
 
-## Verification
-The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
-infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
-`/data/final.json`: pass iff the live attempt succeeded. The
-rules: You are the goalkeeper. You stand on the goal line, in the middle of the goal, facing the penalty mark 11.0 m in front of you (+x). The goal behind you is 7.32 m wide between the posts and 2.44 m high under the crossbar (posts and bar 0.12 m thick, on the goal line, the net 2.0 m deep). Three ball machines stand on the line through the penalty mark, 0.6 m apart (the middle one over the mark), their exits 0.6 m above the ground; each holds one size-5 football (0.22 m across, 0.43 kg, in air) and shoots it once, at 20.0 m/s with no spin: the first (on your right as you face them, at y = -0.6 m) is fed at 6.0 s and aimed at the point of the goal's plane -0.8 m to your left (negative: to your right) and 0.9 m above the ground; the middle one 9.0 s later, aimed at 0.8 m and 1.1 m; the third (on your left) 9.0 s after that, aimed at -0.5 m and 0.95 m. A shot is kicked when its ball leaves the machine's wheels (about 0.1 s after it is fed). At that moment (Law 14) you must be on your feet (nothing but the feet on the ground), with at least part of one foot touching or above the goal line between the posts, and touching neither the posts, the crossbar nor the net; otherwise you fail. After the kick you may move as you like and use any part of you: hands, arms, body, legs, no grip is needed, and you may go to ground. A goal is the whole ball over the goal line between the posts and under the crossbar; you fail at the first goal, by any of the three balls at any time (also a ball that comes back off you or the posts). A shot is saved when 2.5 s have passed since its kick without a goal; you succeed when all three are saved. You also fail if your pelvis leaves the goal area (5.5 m in front of the goal line, 9.16 m to each side of the goal's centre), if you touch a machine or a ball that has not yet been kicked, or after 27 s.
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The referee's
+success call is an event: once it is made at some control step, the attempt is a success. It is never shown to the
+agent and does not end the attempt: the physics goes on until the agent's `/finish`, the attempt's time limit, or the
+end of the agent's time (2 h), and nothing after the call undoes it. A failure the referee calls before any
+success (a foul, a fall, the physics diverging) ends the attempt at once with 0. Reaching the time limit or the end of
+the session without a success call scores 0. The agent has 5 resets, each starting a new attempt from the
+frozen start; only the last attempt (the one after the last reset) is graded, and a success in an earlier attempt does
+not count. A simulator error raised by the agent's own call ends the attempt with 0. An attempt that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,13 +54,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | football-and-volleyball |
-| Rule book | IFAB Laws of the Game 2025/26: Law 1 (the goal 7.32 m x 2.44 m with posts and crossbar 12 cm wide on the goal line, the penalty mark 11 m from the goal line, the goal area 5.5 m x 18.32 m), Law 2 (a size-5 ball: 68-70 cm round, 410-450 g), Law 10 (a goal: the whole ball over the goal line between the posts and under the crossbar), Law 12 (a goalkeeper may handle the ball in their own penalty area) and Law 14 (the penalty kick: the goalkeeper remains on the goal line, facing the kicker, between the goalposts, without touching the goalposts, crossbar or goal net, until the ball has been kicked; when the ball is kicked the goalkeeper must have at least part of one foot touching, or in line with, the goal line); deviations: Law 14 (the kicker): each penalty is shot by a two-wheel ball machine instead of a kicker: three machines, one ball each (a machine holds one ball per load), their exits 0.6 m above the ground on the penalty mark's line, 0.6 m apart across it (the middle one over the mark; the Law puts the ball on the mark). Each is aimed before the attempt at a point of the goal's plane that the rules state, and throws at 20.0 m/s, no spin: a real keeper reads a kicker; here the aim is stated instead. The elevation is computed for the ball's drag in air and trimmed by 0.45 degrees (measured in this venue: untrimmed, the shots crossed the line about 0.1 m low); a machine's own scatter (about 2 percent in speed and 2 degrees in direction, its maker's measurement) stays. · Law 10 (kicks from the penalty mark): three penalties against the same goalkeeper, 9.0 s apart, in one attempt; every one must be saved. · Law 14 (the goalkeeper between kicks): between the penalties the goalkeeper stays inside the goal area (only the moment of each kick is regulated by the Law). · Law 1: only the goal end of the field is there (the penalty area, the goal area and the mark are painted); the goal's net is a rigid cage 2.0 m deep. |
-| Stages | save 1 → save 2 → save 3 |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 2700 control steps (27 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

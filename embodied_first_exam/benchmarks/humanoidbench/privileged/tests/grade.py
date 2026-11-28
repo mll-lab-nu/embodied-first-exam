@@ -4,10 +4,10 @@
 
 Scoring happens here and nowhere else: the task image has upstream's reward functions deleted, and this
 process patches the one this task needs back in (rcb_rewards.py) before it replays anything. It runs in its
-own container, built from tests/Dockerfile (docs/protocol/README.md §4): the agent's container is gone by then, and
+own container, built from tests/Dockerfile (docs/protocol/tasks.md#grading): the agent's container is gone by then, and
 only /app/output/ crosses over.
 
-Writes /logs/verifier/reward.txt (1/0), reward.json (the numeric fields of docs/protocol/README.md §3 -- Harbor turns
+Writes /logs/verifier/reward.txt (1/0), reward.json (the numeric fields of docs/protocol/tasks.md#modes -- Harbor turns
 every key into a leaderboard metric, so HumanoidBench's own numbers go to diagnostics.json instead), and a
 human-viewable replay video /logs/verifier/replay.mp4 plus replay.last.png.
 ONE replay in this fresh process decides: success = it reaches the task's success_bar. With one replay
@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 def write(ok: bool, out: dict, diagnostics: dict | None = None) -> None:
     os.makedirs(LOG_DIR, exist_ok=True)
-    out = {**out, "deterministic": int(out.get("deterministic", 0))}   # in every branch (PROTOCOL §2.6)
+    out = {**out, "deterministic": int(out.get("deterministic", 0))}   # in every branch (docs/protocol/tasks.md#grading)
     open(os.path.join(LOG_DIR, "reward.txt"), "w").write("1\n" if ok else "0\n")
     json.dump(out, open(os.path.join(LOG_DIR, "reward.json"), "w"))
     if diagnostics:

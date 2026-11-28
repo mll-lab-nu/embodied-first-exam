@@ -6,8 +6,8 @@ your hand away.
 
 ## Goal
 Success: the item that was in the left basin is now in the right basin, the cup is in the left basin, and the hand has
-let go and moved well away from both. Your trajectory is replayed from the fixed start. What counts is the state after
-its last action.
+let go and moved well away from both (what counts is how far away the hand is). Your trajectory is replayed from the
+fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 13)`
 with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave

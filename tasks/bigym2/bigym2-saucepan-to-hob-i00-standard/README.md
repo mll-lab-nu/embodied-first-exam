@@ -1,37 +1,37 @@
-# bigym2-saucepan-to-hob-i00-standard
+# BiGym 2.0 · saucepan-to-hob (standard)
 
 | | |
 |---|---|
-| Benchmark | BiGym 2.0 |
-| Mode | standard (`eai-standard/2.1`) |
-| Twin | `bigym2-saucepan-to-hob-i00-privileged` |
-| Simulator / robot | `bigym2` / `unitree-g1-dex1` |
-| Family / instance | `saucepan-to-hob` / seed 0 (allowed seeds: [0, 620100, 620101]; PROTOCOL §2) |
-| Oracle | `none` — no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); no positive example yet; human review in PR #123 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
+| Task ID | `bigym2-saucepan-to-hob-i00-standard` |
+| Benchmark | [BiGym 2.0](https://github.com/swirl-uk/BiGym2) (Zhang et al., 2026), upstream `swirl-uk/BiGym2@93ad4b3` |
+| Robot | Unitree G1 humanoid (29 DoF) with Dex1-1 two-finger grippers; legs and waist driven by NVIDIA's GR00T-WBC walking policy |
+| Mode | standard |
+| Instance | `saucepan-to-hob`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-Take the saucepan out of the cabinet under the counter, set it on the hob and let go. (BiGym 2.0 `saucepan_to_hob`; the robot as a service: its three onboard cameras and its proprioception only, one
-episode.)
+Take the saucepan out of the cabinet under the counter, set it on the hob and let go.
 
-## Difficulty
-Two stages low and high: open the cabinet under the counter, take the saucepan out, set it on the hob, released. In standard mode the agent sees only the robot's cameras (the head camera looks down at the hands at the
-start) and proprioception, acts through the client, and gets one episode, no reset.
+## Success criteria
+Success predicate (upstream `SaucepanToHobG1`), both at once: the saucepan touches the hob, and no finger of either
+gripper touches it. Held for 1 s (50 consecutive control steps), with no fall in the episode: the pelvis tilting past
+about 53° or dropping below 0.30 m makes the episode a failure without ending it.
 
-## Reference solution
-None (as `bigym2-saucepan-to-hob-i00-privileged`).
+Failure (ends the episode at once with 0): the pelvis more than 10 m from the scene's origin.
 
-## Verification
-The sim sidecar judges the live episode with BiGym's own success check (`is_success`: the task's success held for 1 s,
-no fall) and writes that verdict to `/data/final.json` (`graded_by = "live"`); nothing is replayed to grade it (owner,
-2026-10-17). The scene's start is checked against the frozen instance (`instance.json`'s `t0`) when an
-episode begins (a mismatch is `instance_mismatch`, infrastructure). `tests/grade.py` reads `final.json`: pass iff the
-live episode succeeded. The video (`replay.mp4`) is rendered from `trajectory.npz` in one pass after the verdict and
-never changes it. Success condition: the saucepan touches the hob and is held by neither gripper (it starts inside the closed cabinet under the counter). No oracle; human review in PR #123 (PROTOCOL §4).
+Graded: the live episode, judged by the simulator service; nothing is replayed. Reaching the goal does not end the
+episode and is not shown to the agent. The episode ends at the agent's `/finish`, at the horizon (4,650
+control steps, 93 s of robot time), when the agent's time (1 h) runs out, or at a failure above,
+which scores 0. After it ends, the robot holds its last command, standing still, for 1 s more (50 control steps).
+The task is passed if at the end of that second upstream's success predicate has held for 50 consecutive control
+steps and the robot has not fallen at any time in the episode or the hold; a failure during the hold scores 0.
+Resets granted: 0. A reset starts a new episode from the frozen start; only the episode after the last reset
+is graded. A simulator error raised by the agent's own call ends the episode with 0. An episode that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -42,9 +42,10 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Service | `environment/sim/server.py` (the BiGym 2.0 adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_bigym2.py`, `instance.json` (= the privileged twin's) |
-| Observations | three onboard RGB cameras (`RCB_IMAGE_HW`, default 84 px square, as upstream renders them, 60° field of view); upstream's low-dimensional observation (joints, grippers, tracked pelvis pose) |
-| Horizon | 4650 control steps (93 s at 50 Hz) |
+## License
+BiGym 2.0 ([swirl-uk/BiGym2](https://github.com/swirl-uk/BiGym2) @ `93ad4b3`, `bigym` 1.0.0) is released under the
+Apache License 2.0. Bundled components keep their own licences: the Unitree G1 description (BSD 3-Clause) in AMO's
+MuJoCo packaging (Apache License 2.0); the scene props (CC0 or CC BY 4.0, attributions in upstream's
+`bigym/envs/xmls/3D_MODELS_ATTRIBUTION.md`); NVIDIA's GR00T-WBC weights, redistributed under the NVIDIA Open Model
+License (upstream's `NOTICE` and `THIRD_PARTY_NOTICES.md`). The simulator is MuJoCo 3.8.1 (Apache License 2.0). No
+non-commercial terms apply.

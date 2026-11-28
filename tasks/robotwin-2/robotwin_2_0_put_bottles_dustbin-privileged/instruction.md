@@ -4,7 +4,8 @@
 Put all three bottles into the dustbin on the floor at the robot's left. Only the left arm can reach the dustbin.
 
 ## Goal
-Success: all three bottles are in the dustbin. Your trajectory is replayed from the fixed start. What counts is the
+Success: all three bottles are in or just above the dustbin, below the table top; they need not be let go. Your
+trajectory is replayed from the fixed start. What counts is the
 state after its last action.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`: the

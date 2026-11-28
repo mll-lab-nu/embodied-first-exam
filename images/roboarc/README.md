@@ -7,7 +7,7 @@
 `ghcr.io/mll-lab-nu/efe:roboarc-<images/roboarc/VERSION>` is a public image: RoboARC's simulator (the pruned
 `topogym` package of the release commit), Genesis 1.2.1, libuipc (the audited determinism-patched wheel, plus an sm_86 build
 of the same recipe), PyTorch, Nyx and every task's frozen instance. The tasks `FROM` it, and the standard `sim` service runs
-it. Maintainers push it with `scripts/push_images.sh` after validating a build.
+it. Maintainers push it with `scripts/images.sh push` after validating a build.
 
 - **Nyx.** The image contains Genesis AI's Nyx renderer (the `gs-nyx` wheels on PyPI). The benchmark owner has permission to
   redistribute it in this image.
@@ -34,15 +34,14 @@ it. Maintainers push it with `scripts/push_images.sh` after validating a build.
   the toolkit mount the driver's graphics libraries, and the image's Vulkan ICD and EGL vendor files point the loaders at
   them, as in `images/robopaint/`. `VK_ICD_FILENAMES` names the image's ICD file: a toolkit in CDI mode also mounts the
   host's `/etc/vulkan/icd.d/nvidia_icd.json`, which would list the GPU twice.
-- `count: 1` is host GPU 0 unless the runner pins GPUs; IPC sims (knot_untying, rope_threading) run alone on a 24 GB GPU
-  (`tasks/roboarc/README.md`, Image).
-- GPU architecture (`tasks/roboarc/README.md`, Image, has the table):
+- `count: 1` is host GPU 0 unless the runner pins GPUs; IPC sims (knot_untying, rope_threading) run alone on a 24 GB GPU.
+- GPU architecture:
   - knot_untying and rope_threading run libuipc: the audited wheel on compute capability 8.9 and 12.x, the sm_86 build on
     any other GPU (native on 8.6, e.g. RTX A6000; untested elsewhere). 7.5 (T4, RTX 20xx) can run neither;
   - GPUs without RT cores (e.g. A100, H100) cannot run Nyx, so they run no RoboARC task;
   - the driver must include its graphics (GL/Vulkan) user-space libraries.
 - blanket_flatten: on a GPU other than the one its frozen PBD states were prepared on (an RTX PRO 6000 Blackwell), the task
-  generates the birth state from the recipe frozen in the instance (`tasks/roboarc/README.md`, GPU portability).
+  generates the birth state from the recipe frozen in the instance.
 - Build:
   - about 25 GB of free disk: the 11.3 GB image plus BuildKit cache;
   - BuildKit with the default `docker` driver;
@@ -51,17 +50,12 @@ it. Maintainers push it with `scripts/push_images.sh` after validating a build.
 
 ## Build (from the repository root)
 
-0.2.22 was published as a delta of the published 0.2.21: `FROM ghcr.io/mll-lab-nu/efe:robotangle-0.2.21@sha256:4fd681598e07a7a29201b8f30ccbee9944baaa856a5b05b045e48522c138f7ab` plus one `COPY` layer with the eight IPC instances'
-`instance_assets/frozen_assets/rope_volume.npz` (mode 0644). Its files are those of a full build from the pinned dataset
-revision, and a host that has 0.2.21 pulls only that layer (13 MB). A full build with the commands below gives the same
-files in other layers.
-
 ```bash
 images/roboarc/fetch_image_context.sh [<download dir>]     # images/roboarc/context/ from the pinned dataset, checked
 docker build -f images/roboarc/Dockerfile -t ghcr.io/mll-lab-nu/efe:roboarc-$(cat images/roboarc/VERSION) images/roboarc/context
 ```
 
-`scripts/build_images.sh` builds it from `images/roboarc/BUILD_CONTEXT` once the context exists, and skips it otherwise.
+`scripts/images.sh build` builds it from `images/roboarc/BUILD_CONTEXT` once the context exists, and skips it otherwise.
 The image is not cache-warmed: every container compiles its kernels on first use, and scene ready took 67-296 s for the
 rigid families on a shared 4090, against the 1800 s startup watchdog. The release tree's `images/topogym/warm_cache.sh`
 does not apply here. It expects `topogym-*` task directories with their own `instance.json`, and RoboARC's tasks stage

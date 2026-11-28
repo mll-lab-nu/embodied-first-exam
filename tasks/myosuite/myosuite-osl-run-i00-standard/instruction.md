@@ -1,10 +1,10 @@
 # MyoSuite · osl_run (standard)
 
 ## Task
-Run 29 m down the track to the finish, staying on your feet and near the middle of the track.
+Run 30 m down the track to the finish, staying on your feet and near the middle of the track.
 
 ## Goal
-Success: you reach the finish, 29 m down the track. Once this has happened the task is passed, whatever happens
+Success: you reach the finish, 30 m down the track. Once this has happened the task is passed, whatever happens
 afterwards. Before that, the episode ends as a failure if you fall, stray from the middle of the track, or run
 backwards. There is no time limit.
 
@@ -28,7 +28,7 @@ tools, as if it were real hardware.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                    # connects (waits while the service starts)

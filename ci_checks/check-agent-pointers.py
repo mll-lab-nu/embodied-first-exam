@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""No pointer to an upstream solution in what the agent can read (PROTOCOL Appendix H.2: nothing the agent can reach
+"""No pointer to an upstream solution in what the agent can read (docs/protocol/invariants.md H.2: nothing the agent can reach
 contains "a solution of the task or a pointer to one").
 
 The agent reads `instruction.md` and what `environment/` puts in its container (not environment/Dockerfile itself, unless it
@@ -51,7 +51,7 @@ FILES = re.compile(r"""(?<![\w.-])(?:[\w.-]+\.(?:hdf5|h5|mcap|parquet|rlds|tfrec
 ALLOW = [
     (r"^maniguard-", r"^environment/instance/NOTICE$", r"datasets/IDEAS-Lab-Northwestern/ManiGuard-Bench|github\.com/NU-IDEAS-Lab/ManiGuard",
      "CC BY-NC 4.0 attribution the licence requires, of the scene files' dataset (its demonstrations are other datasets, not named)"),
-    (r"^roboengineer-anycar-", r"^(?:environment/public/(?:scripts/control_transfer/components/)?anycarbench/(?:NOTICE|circuits\.json)|files:roboengineer-files/anycarbench/circuits\.json|files:roboengineer-files/standard/environment/public/anycarbench/NOTICE)$",
+    (r"^roboengineer-anycar-", r"^(?:environment/public/(?:scripts/control_transfer/components/)?anycarbench/(?:NOTICE|circuits\.json)|files:roboengineer-files/anycarbench/circuits\.json|files:roboengineer-files/anycarbench/NOTICE)$",
      r"^https://github\.com/f1db/f1db/?$",
      "CC BY 4.0 attribution the licence requires, of F1DB's historical circuit outlines (track geometry the instruction "
      "gives the agent, not a controller or a demonstration)"),
@@ -190,12 +190,12 @@ def main(argv):
             print(f"FAIL {t.name}: {problem} (the agent's files from a files-only image cannot be scanned)")
             bad += 1
         for rel, line, kind, hit in findings(t):
-            print(f"FAIL {t.name}: {rel}:{line}: {kind} `{hit}` locates upstream material in a file the agent reads (PROTOCOL H.2)")
+            print(f"FAIL {t.name}: {rel}:{line}: {kind} `{hit}` locates upstream material in a file the agent reads (docs/protocol/invariants.md H.2)")
             bad += 1
     if bad:
         print(f"{bad} pointer(s). Remove them from the agent's files, or list a legitimate one in ALLOW with its reason.")
     else:
-        print(f"agent pointers: the agent's files of {len(tasks)} task(s) locate no upstream material (PROTOCOL H.2)")
+        print(f"agent pointers: the agent's files of {len(tasks)} task(s) locate no upstream material (docs/protocol/invariants.md H.2)")
     return 1 if bad else 0
 
 

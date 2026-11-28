@@ -1,31 +1,37 @@
-# abc-sim-drawer-search-i00-standard
+# ABC Sim · multi-drawer search (standard)
 
 | | |
 |---|---|
-| Benchmark | ABC Sim |
-| Mode | standard (`eai-standard/2.2`) |
-| Twin | `abc-sim-drawer-search-i00-privileged` |
-| Simulator / robot | `mujoco` / `i2rt-yam-bimanual` |
-| Family / instance | `drawer_search` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.5.1` |
+| Task ID | `abc-sim-drawer-search-i00-standard` |
+| Benchmark | [ABC Sim](https://github.com/amazon-far/abc) (Allshire et al., 2026), upstream `amazon-far/abc@d0832d1` |
+| Robot | Two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each), side by side at a table |
+| Mode | standard |
+| Instance | `drawer_search`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-ABC Sim `multi_drawer_search` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Find the measuring cup in the drawers and put it in the bin, then do the same with the dish brush.
-A stack of three closed drawers stands on the table; kitchen tools are hidden in its drawers (some drawers hold more than one, one is empty). A small bin stands on the table on the right. The robot is a service; the episode it runs is graded.
+Find the measuring cup in the drawers and put it in the bin, then do the same with the dish brush.
 
-## Difficulty
-First-pass rating: hard. Search with memory: opening drawers to see what is inside, remembering where each object was, and retrieving the targets in order with a drawer pulled open. The action is joint-level (two 6-joint arms and two grippers; no motion primitives), and the goal has to hold, so passing through it does not count.
+## Success criteria
+The measuring cup and then the dish brush have been counted in the bin. An object counts when its origin lies inside
+the bin's goal region (a box fixed in the bin's frame). The dish brush is looked at only from the control step at which
+the measuring cup is first counted: at that step or any later one at which it is in the region, it is counted too.
+Once both are counted, the condition stays met for the rest of the episode, whether or not they stay in the bin; it
+must then hold for 30 consecutive control steps (1.02 s).
 
-## Reference solution
-The privileged twin's reference (the commanded actions of one of upstream's validation demonstrations of this task): `solution/oracle.npy`, 432 rows, streamed as `joint_position` chunks through the client (`solution/oracle_stream.py`); the service executes exactly those rows and ends at the same state as the privileged replay.
+Graded: the live episode the simulator service ran; nothing is replayed. There is one episode and no reset. The
+episode ends when the agent sends `/finish` or when its session ends (at the latest after 1 h); the task's own
+failure, where the rule above has one, and a simulator error also end it. Success is never shown and never ends the
+episode. The verdict is on the state the episode ends in. Where the condition must hold for 30 consecutive control
+steps, the service, after the agent is gone, keeps the robot's last command for 30 more control steps (1.02 s), and
+the condition must hold at every one of them. An episode ended by the task's failure or by a simulator error scores 0.
 
-## Verification
-The live episode's verdict (PROTOCOL H.4): the sim sidecar judges the episode it ran by the task's rule (the 1.02 s hold included) and the collect hook (`/opt/abc-tools/standard/finalize.sh`) writes it to `final.json`; the verifier (the shared `v2_1/grade.py`) transcribes it. Nothing is replayed to grade it; the video is rendered from the trajectory afterwards. `nop`: the episode times out, reward 0.
+The scene is checked to start at the frozen instance (its state hash) before the agent is served; a mismatch is an
+infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -36,14 +42,11 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any NVIDIA GPU with EGL (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Upstream | ABC Sim, `abc_sim` of github.com/amazon-far/abc @ d0832d1 (Apache-2.0; assets CC BY 4.0 / MIT), on MuJoCo 3.6.0 |
-| Instance | the scene of one of upstream's validation demonstrations (its assembled scene XML, initial qpos and randomization record); the model-side state its randomizer sets outside the XML written into the scene; state hash `c2f19b21de544dd2`, checked on every load |
-| Actions | 14 joint-position targets per control step (0.034 s, 17 physics substeps of 2 ms) |
-| Success | the upstream evaluator `multi_drawer_search` held 30 control steps |
-
-### Provenance
-The frozen instance (`instance.npz`) and the reference solution (`solution/oracle.npy`) were made at generation time from
-an upstream validation demonstration; see `tasks/abc-sim/README.md`.
+## License
+ABC Sim (`abc_sim` of [amazon-far/abc](https://github.com/amazon-far/abc) @ `d0832d1`) is released under the
+[Apache License 2.0](https://github.com/amazon-far/abc/blob/d0832d12651d1b260a652861a14648dc5f3660c7/LICENSE). Its
+simulator assets are under CC BY 4.0 (RoboCasa's Objaverse, LightWheel and AI-generated packs, Google Scanned Objects,
+individually credited Sketchfab creators), CC0 (freepoly.org), MIT (the I2RT YAM robot model, a LIBERO drawer fixture)
+and Apache-2.0 (everything modelled in-house); no non-commercial terms apply. The licences and credits ship in the image
+at `/opt/abc/ASSET_LICENSES.md` (`images/abc-sim/ASSET_LICENSES.md`). The simulator is MuJoCo 3.6.0 (Apache License
+2.0).

@@ -1,50 +1,76 @@
-# pandadyn-s07-conveyor-load-brake-unload-i00-realtime
+# Panda Dynamic Scenes · Conveyor pick, carriage load, braking and dock unload (S07) (realtime)
 
 | | |
 |---|---|
-| Benchmark | Panda Dynamic Scenes |
-| Mode | realtime (`eai-standard/2.3`) |
-| Twin | `pandadyn-s07-conveyor-load-brake-unload-i00-privileged` |
-| Simulator / robot | `maniskill` / `franka-panda` |
-| Family / instance | `s07_conveyor_load_brake_unload` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Real time | slowdown S = 4 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 3 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §3) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
+| Task ID | `pandadyn-s07-conveyor-load-brake-unload-i00-realtime` |
+| Benchmark | [Panda Dynamic Scenes](https://www.embodied-first-exam.ai/suite/pandadyn/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | Franka Emika Panda (FER), one 7-joint arm with its standard two-finger hand |
+| Mode | realtime, slowdown 4 |
+| Instance | `s07_conveyor_load_brake_unload`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-Realtime twin of `pandadyn-s07-conveyor-load-brake-unload-i00-privileged` (same frozen instance and success check as it and as `pandadyn-s07-conveyor-load-brake-unload-i00-standard`): the agent gets only
-the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
-that does not stop, at slowdown **S = 4** (one 10 ms control step every 40 ms of wall-clock time), with
-3 resets (only the last episode is graded). Grasp the part from the moving conveyor, lift it about a hand's length and set it on the coasting carriage, letting go while the carriage is moving. Then grip the carriage's handle and stop it, with the part still on it, before it reaches the end of its rail; finally lift the part off and set it down in the dock.
+Grasp the part from the moving conveyor, lift it about a hand's width and set it on the coasting carriage, letting go
+while the carriage is moving. Then grip the carriage's handle and stop it, with the part still on it, before it reaches
+the end of its rail; finally lift the part off and set it down in the dock.
 
-## Difficulty
-That of `pandadyn-s07-conveyor-load-brake-unload-i00-standard`, but the scene does not wait between calls: once an episode's clock starts, the moving objects and
-the robot's servos run whatever the agent does, so the agent has to plan or stream the targets from a program of its own
-(the task's horizon is 25 s of robot time, about 100 s of wall-clock time at S = 4), and
-learn the scene from 4 real attempts.
+## Success criteria
+The arm has no tool (its bare hand). The hand grips an object when both of its fingers touch it (impulse above 1e-7 N s
+in that physics step). The part is a 36 mm cube.
 
-## Reference solution
-`solution/oracle_plan.py` plans the privileged oracle's rows (`solution/oracle_qpos.npy`, one row per control step,
-`hold`) into the episode from control step 0 through the realtime client, one chunk of at most 10 s at a time, each at
-its own step (`at`), so every row runs at the control step it was recorded for; it uses no privileged information at run
-time. Checked at S = 4: live success, fresh-process replay success, the
-same final state.
+Phases, in order:
+1. `moving_acquisition`: the hand grips the part while the part moves faster than 0.025 m/s; after that, gripped, the
+   part's centre is above z = 0.20 m.
+2. `loaded_carriage_release`: the part touches the carriage, is not gripped, and the carriage moves faster than 0.025
+   m/s.
+3. `handle_braking`: the hand grips the carriage with every finger–carriage contact point of that physics step on the
+   carriage's vertical handle (its box grown by 2 mm); the carriage moves slower than 0.012 m/s; and the part touches
+   the carriage within 70 mm of its centre in x and y (carriage frame); for 0.25 s.
+4. `payload_regrasp`: the part is gripped, its centre above z = 0.20 m, not touching the carriage.
+5. `dock_deposit`: the part is not gripped, touches the dock, its centre is within 40 mm of (0.20, -0.23)
+   horizontally, and it moves slower than 0.03 m/s, for 0.5 s.
 
-## Verification
-The sim service (`environment/sim/rcb_realtime.py` + `rcb_service.py`, the shared eai-standard/2.3 layer, with
-`environment/sim/server.py`, this benchmark's adapter on `rcb_pandadyn.Session`) judges the episode live and records
-every control step it ran (`trajectory_live.f64`); after the agent's time the collect hook stops the agent's programs and
-signals the service, which writes the live episode's verdict into `final.json` (`graded_by` = `live`, `replays` = 0;
-nothing is replayed to grade it) and then renders the video from the graded episode's rows;
-`tests/grade.py` (separate sandbox, no network) passes iff the last episode ended in the task's success (every phase in
-order, no failure: the episode's end, so there is no settle window to add). The frozen start is checked when the first
-episode begins (the state hash against the instance's `initial_sha`; a mismatch is `instance_mismatch`, an infrastructure
-failure). The clock's record (`stalls`, `max_lag_s`, `late_steps`, ...) is copied into `reward.json`
-and decides nothing. `nop`: the episode never starts (its clock starts at the first submit), reward 0.
+Task failures: the carriage within 5 mm of either end of its rail (±0.42 m) before phase 4 starts; the part's centre
+below z = 0.09 m during phases 3 and 4.
+Allowed contacts: the fingers may touch the part and the carriage's moving body (its tray and handle); no other robot
+part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
 
-## Resources
-Caps per container (PROTOCOL §6).
+Phases count only in order: each phase's condition is checked after every 1 ms physics step, and only once the phase
+before it is complete. A condition "for t s" must hold at every physics step over t s; a break restarts it. Positions
+are in the world frame (metres, z up, the table top is the plane z = 0); "horizontally" means in x and y.
+
+Failures shared by every task (each ends the episode at once, in any phase):
+- a forbidden contact: two arms touching each other (tools included); an arm touching itself, except its two fingers
+  touching each other (a finger touching the arm's own tool counts); any robot part, tool included, touching anything
+  the allowed contacts above do not list (the table, the floor and the arm pedestals included); any contact in the
+  scene that penetrates deeper than 4 mm;
+- a violation of the Franka Panda's safety limits by an arm, checked at every physics step: a joint more than 0.002 rad
+  beyond its position limits; measured joint speeds above 101 % of the limits (2.175 rad/s for joints 1-4, 2.61 rad/s
+  for joints 5-7); a finger faster than 0.051 m/s; the hand's TCP faster than 1.01 x 1.7 m/s or 1.01 x 2.5 rad/s,
+  measured or in the servo's reference motion; a motor torque above 87 N m (joints 1-4) or 12 N m (joints 5-7), or one
+  changing faster than 1000 N m/s; reference joint speeds, accelerations or jerks above the Panda's limits; measured
+  joint accelerations or jerks, or measured or reference TCP accelerations (13 m/s², 25 rad/s²), averaged over 20 ms,
+  above 105 % of the limits;
+- an object leaving the workspace (its centre below z = -0.2 m or more than 1.8 m from the world origin horizontally),
+  or a non-finite object position.
+
+Graded: the live episode, judged by the simulator service as it runs; nothing is replayed. The clock does not stop: an
+episode starts paused at the frozen start, and from the agent's first `submit` one 10 ms control step runs every 10 ms
+× S of wall time (slowdown S = 4) whether or not the agent sends anything; when the planned targets run out
+the last ones are held. The task is judged as an event: once the last phase is complete at some control step with no
+failure recorded by then, the episode is a success, even if a failure above ends it afterwards; a failure before that
+scores 0. Completing the task neither ends the episode nor is shown to the agent. Otherwise the episode ends at the
+agent's `/finish`, at the task's horizon (whether or not every phase is done by then), after 4,500 control steps, or
+when the agent's time (1 h) runs out, and it is a success only if the task was completed by then. The agent has
+3 resets, each starting a new, paused episode from the frozen start; only the last episode (the one after the
+last reset) is graded. After the agent's first command, a simulator error or a simulator crash inside a control step
+is the agent's 0; anything before the first command, a killed service, a failed resume or a reset that does not
+rebuild the scene is an infrastructure failure, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -55,12 +81,8 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU with Vulkan (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Episode | it ends at the first control step where the task has succeeded or failed (the task's horizon, 25 s of robot time, is a failure), when the agent's time is up, or on a simulator error; 3 resets (`POST /reset`: the scene rebuilt from the frozen instance, paused) |
-| Action space | `submit` chunks of `joint_position` (8: per arm 7 joint targets + the aperture, one row per 10 ms control step or `dt` apart) planned from step `at`; `observe` now or the last seconds recorded (`last_s`); binary RCB1 responses |
-| Cameras | `overview` and `closeup` (static), 640×480 RGB, z-depth on request, rendered by SAPIEN on the sidecar's GPU |
-| Images | the `sim` sidecar runs efe:pandadyn (`images/pandadyn/`); the agent container and the verifier run the shared client image with its pip pins (`embodied_first_exam/standard/client.env`) |
-| Crash recovery | the shared realtime layer's: a checkpoint every second of robot time, `restart: on-failure:6`, the service resumes the same episode, paused |
-| Benchmark notes | tasks/pandadyn/README.md |
+## License
+Panda Dynamic Scenes is an original suite of Embodied First Exam. Its environment package (`images/pandadyn/panda_dynamics/`) is released
+with this repository under the repository's MIT License. The simulation stack in the image: ManiSkill 3 and its Franka
+Panda model (Apache License 2.0), SAPIEN (MIT), Ruckig community version (MIT), PyTorch (BSD 3-Clause). No
+non-commercial terms apply.

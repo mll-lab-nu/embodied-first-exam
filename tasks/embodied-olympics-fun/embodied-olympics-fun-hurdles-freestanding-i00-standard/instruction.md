@@ -2,11 +2,11 @@
 
 ## Task
 Run the 50 m hurdles: go over each of the four hurdles in your lane and reach the finish line, leaving at least one
-hurdle standing.
+hurdle in place.
 
 ## Goal
 Success: you go over all four hurdles in your lane, none passed beside, under or after pushing it away, leave at least
-one standing, and your torso reaches the finish line.
+one of them in place (no point of its top bar moved more than 10 cm), and your torso reaches the finish line.
 
 The referee in the service judges these stages, in order: **hurdle 1 → hurdle 2 → hurdle 3 → hurdle 4 → finish**. Once
 the referee calls success, it stays; the attempt continues until you finish. The first foul before a success ends the
@@ -33,7 +33,7 @@ The attempt fails at once if:
 - you knock a hurdle over with a hand, an arm, your trunk or your hips, climb on a hurdle, or push, kick or shove a
   hurdle along the track before you have gone over it
 - you leave your lane, or your torso reaches the finish line before you have gone over every hurdle
-- every hurdle is knocked down, or you are down for 10 s
+- every hurdle is knocked or moved out of place, or you are down for 10 s
 
 ## Robot Interface
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on
@@ -42,7 +42,7 @@ MuJoCo). The robot runs as a service you reach through its client or its MCP too
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`) is your whole interface to the robot. Its docstring is the full
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`) is your whole interface to the robot. Its docstring is the full
 reference (`python -c "import rcb_client; help(rcb_client)"`); its examples use another benchmark's names: for this task
 `r.spec()` is authoritative.
 

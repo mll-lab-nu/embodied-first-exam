@@ -17,7 +17,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/pandadyn-d03-cooperative-puck-course-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): Panda Dynamic Scenes D03 Cooperative puck course (two Franka Pandas) on the same frozen instance as the privileged task. Task: Hit the sliding puck with the paddles in turn, left, right, left, right: first through the end gap of the row of posts away from the side rail, then back through the end gap next to the side rail, then through the middle gap, and with the last hit across the goal line in front of the middle of the backstop. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position chunks at 100 Hz) and reset; between calls the world is frozen. 3 resets (the benchmark's budget in both standard modes), only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): Panda Dynamic Scenes D03 Cooperative puck course (two Franka Pandas) on the same frozen instance as the privileged task. Task: Hit the sliding puck with the paddles in turn, left, right, left, right: first through the end gap of the row of posts away from the side rail, then back through the end gap next to the side rail, then through the middle gap, and with the last hit across the goal line in front of the middle of the backstop. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position chunks at 100 Hz) and reset; between calls the world is frozen. 3 resets (the benchmark's budget in both standard modes), only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
 keywords = ["robotics", "pandadyn", "maniskill", "sapien", "franka-panda", "bimanual", "dynamic-manipulation", "standard-mode", "trajectory"]
 
 [metadata]
@@ -25,8 +25,8 @@ task_type = "trajectory"
 simulator = "maniskill"
 robot = "franka-panda-bimanual"
 family = "d03_cooperative_puck_course"
-dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+dynamics = "dynamic"              # scene dynamics (docs/protocol/tasks.md): the task's own declaration
+protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 6.0
@@ -36,7 +36,7 @@ timeout_sec = 600.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -62,7 +62,7 @@ command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) 
 timeout_sec = 2200
 
 [agent]
-timeout_sec = 3600.0              # the agent's cutoff, this task's own (PROTOCOL §2), as the service's RCB_WALL_CLOCK_S
+timeout_sec = 3600.0              # the agent's cutoff, this task's own (docs/protocol/tasks.md), as the service's RCB_WALL_CLOCK_S
 # The agent reaches the model APIs and the package registries, nothing else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
@@ -73,7 +73,7 @@ cpus = 4
 memory_mb = 10240
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

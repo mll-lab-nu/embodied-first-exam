@@ -1,43 +1,38 @@
-# libero-max-spatial-akita-black-bowl-on-plate-sensor-noise-onset-i00-privileged
+# LIBERO-MAX · libero_spatial · sensor-noise onset (privileged)
 
 | | |
 |---|---|
-| Benchmark | LIBERO-MAX |
+| Task ID | `libero-max-spatial-akita-black-bowl-on-plate-sensor-noise-onset-i00-privileged` |
+| Benchmark | [LIBERO-MAX](https://github.com/liberomax/LIBERO-MAX) (Zhang et al., 2026), upstream `liberomax/LIBERO-MAX@a1e3cef` |
+| Robot | Franka Emika Panda arm on a fixed mount with its two-finger gripper (LIBERO's OSC_POSE controller) |
 | Mode | privileged |
-| Twin | `libero-max-spatial-akita-black-bowl-on-plate-sensor-noise-onset-i00-standard` |
-| Simulator / robot | `robosuite` / `franka-panda` |
-| Family / instance | `libero-max/libero_spatial/sensor_noise_onset` / seed 195 (allowed seeds: [195, 0, 1]; PROTOCOL §2) |
-| Oracle | `full` |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
+| Instance | `libero-max/libero_spatial/sensor_noise_onset`, seed 195 |
+| Time limit | 30 min |
+| Reference solution | Included |
 
 ## Task
-LIBERO-MAX case `pro-visual-noise-glare-spatial-t01-i09-sensor_noise_onset-d1-p195`: a Franka Panda arm at a table, instructed **"Pick up the black bowl next to the ramekin and put it on the plate."**, on a LIBERO-PRO variant
-of a libero_spatial task (visual_noise_glare). Online event (sensor-noise onset): the first time the gripper comes within
-0.18 m of `akita_black_bowl_1`, LIBERO-MAX changes the scene once (the camera images get noise (std 36 on 0..255) and a blocked patch (16% of the image)). The deliverable is one
-replayable trajectory of LIBERO's OSC control steps (`/app/output/trajectory.npz`, `(T, 7)`, T ≤ 220), graded by
-LIBERO's success check at its end.
+Pick up the black bowl next to the ramekin and put it on the plate.
 
-## Difficulty
-Privileged mode: every object's pose, the goal, the simulator, unlimited restarts (one simulator per process) and
-self-replay. The task itself is short; what makes it harder than LIBERO is the change mid-task, which a plan made at the
-start has to survive. This mode is the control for the standard twin, which removes the privileged state.
+## Success criteria
+Goal: the bowl the task names (`akita_black_bowl_1`) is on the plate (`plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally.
 
-## Reference solution
-199 control steps on this instance (`solution/oracle.npy`), replayed by `solution/solve.sh`: a scripted
-controller with privileged state (not in the image) that re-reads the objects' poses
-every step and so follows the change; the event fired at step 18. LIBERO's demonstrations are not in the
-image. Re-verified at freeze time: the replay ends with LIBERO's success at its last step.
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of the bowl the task names (`akita_black_bowl_1`): LIBERO-MAX adds noise and occluding patches to the camera images. Only the camera images change; the goal check does not use them.
 
-## Verification
-`tests/grade.py` in a separate sandbox without network: one replay, in a fresh process, from the verifier's own
-copy of the instance (`tests/instance.json`; the rebuilt start is checked against its hash on every load); pass iff
-LIBERO's success check holds at the last action (actions after it make the
-trajectory invalid). Oracle: the replay ends in the live state (hash `e6a83b63940a…`) and succeed. `nop`: no trajectory,
-reward 0; the instance is not solved at the start.
+An object's origin is its body's position in the simulator. A control step is 1/20 s. LIBERO checks the goal after
+every control step, and the episode ends at the first step on which it holds.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The graded file is `/app/output/trajectory.npz` with an `actions` array of shape (T, 7), 1 ≤ T ≤ 220 (LIBERO's
+step limit for this suite), one row per control step after LIBERO's 10 warm-up steps; values outside [-1, 1] are
+clipped. The verifier replays it once, open-loop, in a fresh process from the frozen start, with the scene change
+applied as above. It passes when the goal first holds on the step of the last row. Rows left after the step on which the
+goal first holds make the trajectory invalid, and a replay whose last row leaves the goal unmet scores 0.
+
+A missing file, a file that is not a plain npz (at most 2 MB, only `.npy` members) with a finite `actions` array of that
+shape, or more than 220 rows scores 0, as does a replay process that fails or runs over its 1 h limit (a grader
+error). A host on which the frozen start does not rebuild bit-exactly is an infrastructure error, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -46,14 +41,12 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | LIBERO-PRO @ 2b910b5 (MIT; task data `zhouxueyang/LIBERO-Pro` @ c86fc3b, CC-BY-4.0); LIBERO-MAX @ a1e3cef (event runtime and this case's parameters; no licence file upstream); robosuite 1.4.0, MuJoCo 3.2.6 |
-| Case | `pro-visual-noise-glare-spatial-t01-i09-sensor_noise_onset-d1-p195` (LIBERO-MAX 8,000-case manifest; LIBERO-PRO category `visual_noise_glare`, task 1, initial state 9) |
-| Event | `sensor_noise_onset`: the camera images get noise (std 36 on 0..255) and a blocked patch (16% of the image); trigger: gripper within 0.18 m of `akita_black_bowl_1` |
-| Actions | 7 per control step (1/20 s): OSC hand-target delta (1.0 = 0.05 m, 0.5 rad) and gripper |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
-
-### Provenance
-The case was chosen and frozen in `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1`.
+## License
+LIBERO-MAX ([liberomax/LIBERO-MAX](https://github.com/liberomax/LIBERO-MAX) @ `a1e3cef`; Zhang et al., 2026,
+arXiv:2609.36518) has no licence file. Its authors gave written permission to redistribute the two parts used here, the
+event parameters and case choice (the frozen instance) and the event runtime in the image, with attribution (cite the
+paper and link the repository). The LIBERO package and object assets come from LIBERO-PRO
+([Zxy-MLlab/LIBERO-PRO](https://github.com/Zxy-MLlab/LIBERO-PRO) @ `2b910b5`, MIT), built on
+[LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO) (MIT); the task data (BDDL and initial-state files) is
+LIBERO-PRO's dataset `zhouxueyang/LIBERO-Pro` @ `c86fc3b` (CC BY 4.0). robosuite 1.4.0: MIT; MuJoCo 3.2.6: Apache-2.0.
+No part is under a non-commercial licence.

@@ -1,4 +1,4 @@
-"""eai-standard/2.3 client (realtime mode): your whole interface to the robot (installed at /opt/tools/rcb_client.py, on
+"""eai-standard/3.0 client (realtime mode): your whole interface to the robot (installed at /opt/tools/rcb_client.py, on
 PYTHONPATH).
 
     from rcb_client import Robot, EpisodeOver
@@ -86,7 +86,7 @@ import requests
 
 import rcb1
 
-PROTOCOLS = ("eai-standard/2.", "rcb-limited/2.")   # any 2.x service, under either name (rcb-limited is the old one)
+PROTOCOL = "eai-standard/3.0"
 MAX_BODY = 64 * 1024 * 1024                          # the protocol's request limit: a larger request is refused
 
 
@@ -180,8 +180,8 @@ class Robot:
                         raise EpisodeOver(_over(r))
                     r.raise_for_status()
                     self.base, self._spec = b, r.json()
-                    if not str(self._spec.get("protocol", "")).startswith(PROTOCOLS):
-                        raise RuntimeError(f"not an eai-standard/2.x service: {self._spec.get('protocol')}")
+                    if self._spec.get("protocol") != PROTOCOL:
+                        raise RuntimeError(f"not an {PROTOCOL} service: {self._spec.get('protocol')}")
                     return
                 except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
                     last = e                         # not up yet (the scene takes about a minute), or busy

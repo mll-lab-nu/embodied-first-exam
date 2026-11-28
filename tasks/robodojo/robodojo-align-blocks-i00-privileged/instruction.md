@@ -6,8 +6,9 @@ arms back to where they started.
 
 ## Goal
 Success: the three cubes stand in one straight row, each turned square to it, and both arms are back where they started.
-Lifting, tipping or flipping a cube, or letting it ride up onto the set square or another cube, ends the episode as a
-failure. A replay ends as soon as the task is done; later rows are not run.
+Raising any cube's centre more than a few millimetres above where it started (by lifting it, tipping it up onto an edge,
+or letting it ride up onto the set square or another cube) ends the episode as a failure. A replay ends as soon as the
+task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave

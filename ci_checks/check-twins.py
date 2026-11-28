@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""INVARIANT (docs/protocol/README.md Appendix H.7, comparable twins): part of the required CI job `invariants`
+"""INVARIANT (docs/protocol/invariants.md H.7, comparable twins): part of the required CI job `invariants`
 (ci_checks/run_invariants.sh); no task value can turn it off. Where a task's privileged and standard versions both
 exist (the mode registry's `same_cutoff_as` and `twin`, scripts/task_conventions.py MODE_REGISTRY):
   - they have the same cutoff, `[agent] timeout_sec`;
@@ -40,7 +40,7 @@ def errors(tasks: list[Path]) -> list[str]:
             sa, sb = tc.cutoff_for(a), tc.cutoff_for(b)
             if sa != sb:
                 errs.append(f"{a.name} has a cutoff of {sa} s and {b.name} {sb} s; the twins have the same cutoff "
-                            "(PROTOCOL Appendix H.7; mode registry `same_cutoff_as`)")
+                            "(docs/protocol/invariants.md H.7; mode registry `same_cutoff_as`)")
         twin = tc.twin_of(t)
         if twin is not None and (twin / "task.toml").is_file():
             try:
@@ -50,7 +50,7 @@ def errors(tasks: list[Path]) -> list[str]:
                 continue
             if mine != theirs:
                 errs.append(f"{t.name}: seeds (instance_seed, [metadata.seeds] allowed and build) {mine} differ from its privileged twin's {theirs} "
-                            "(PROTOCOL Appendix H.7: twins share instance, success rule and seeds)")
+                            "(docs/protocol/invariants.md H.7: twins share instance, success rule and seeds)")
     return errs
 
 

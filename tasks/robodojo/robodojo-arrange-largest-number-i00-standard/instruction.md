@@ -2,11 +2,13 @@
 
 ## Task
 Put the four digit blocks on the four mats, one per mat, so that they read the largest possible number from left to
-right. Keep each block face up and turned as it is now. Then move both arms back to where they started.
+right. Keep each block face up with its digit upright, turned roughly square to the row of mats. Then move both arms
+back to where they started.
 
 ## Goal
 Success: each digit block lies on its own mat, the mats read the largest possible number from left to right, each block
-is face up and turned as at the start, and both arms are back where they started.
+is face up with its digit upright and turned roughly square to the row of mats, and both arms are back where they
+started.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -22,9 +24,9 @@ Rules:
 - The four mats are 8 cm across and 0.5 cm thick, in a left-to-right row with their centres about 8.5 cm apart.
 - On its mat: each block's centre (the middle of its bounding box) less than 0.02 m horizontally from the centre of its
   mat.
-- Face up and turned as at the start: each numeral's bottom-to-top direction less than 45° from world +y, measured in
-  3-D (for a 0 the reverse also counts), and, except for 0 and 8, its left-to-right direction less than 45° from world
-  +x.
+- Turned as at the start: each numeral's bottom-to-top direction less than 45° from world +y, measured in 3-D (for a 0
+  the reverse also counts), and, except for 0 and 8, its left-to-right direction less than 45° from world +x (which
+  keeps those blocks face up).
 - Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
   starting orientation.
 - The 1,050-step limit is 42 s of simulated time.
@@ -36,7 +38,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)

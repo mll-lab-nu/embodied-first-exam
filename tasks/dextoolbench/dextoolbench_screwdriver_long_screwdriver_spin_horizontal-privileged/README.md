@@ -1,32 +1,44 @@
-# dextoolbench_screwdriver_long_screwdriver_spin_horizontal-privileged
+# DexToolBench · long screwdriver · spin_horizontal (privileged)
 
 | | |
 |---|---|
-| Benchmark | DexToolBench |
+| Task ID | `dextoolbench_screwdriver_long_screwdriver_spin_horizontal-privileged` |
+| Benchmark | [DexToolBench](https://simtoolreal.github.io/) (Kedia, Lum et al., 2026), upstream `tylerlum/simtoolreal@313d5ae` |
+| Robot | KUKA iiwa 14 arm with a left Sharpa HA4 dexterous hand (22 joints): 29 position-controlled joints |
 | Mode | privileged |
-| Twin | `dextoolbench_screwdriver_long_screwdriver_spin_horizontal-standard` |
-| Simulator / robot | `mujoco` / `kuka-iiwa14-sharpa-ha4` |
-| Family / instance | `dextoolbench/screwdriver/long_screwdriver/spin_horizontal` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
+| Instance | `dextoolbench/screwdriver/long_screwdriver/spin_horizontal`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-Pick up the screwdriver and spin it around a horizontal axis, following the green ghost screwdriver through its poses in order.
+Pick up the screwdriver and spin it around a horizontal axis, following the green ghost screwdriver through its poses in
+order.
 
-DexToolBench task `screwdriver / long_screwdriver / spin_horizontal` (SimToolReal, MIT) ported to plain MuJoCo for this benchmark.
+## Success criteria
+The goal is a fixed sequence of 31 poses of the long screwdriver (position and orientation in the
+world frame), from DexToolBench's `long_screwdriver / spin_horizontal` demonstration; the scene shows the current
+pose as a green ghost tool. The task passes only when all 31 poses have been reached, one after
+another in the given order.
 
-## Difficulty
-Dexterous tool use: a KUKA iiwa 14 arm with a 22-DoF Sharpa HA4 hand (29 position-controlled joints) must carry the tool along DexToolBench's goal trajectory, every goal within 1.5 cm on all keypoints, and success needs every goal. SimToolReal's pretrained policy reaches 31/31 goals here.
+A pose is reached at a control step when each of the 8 corners of a box fixed to the tool (21.15 × 4.54 × 4.07 cm,
+centred on the tool's frame origin; the same box for every tool) is less than 1.5 cm from where that corner is with the
+tool at the pose. Only the current pose is tested, once after every control step; when it is reached, the next pose
+becomes current from the next control step on.
 
-## Reference solution
-`solution/`: SimToolReal's pretrained policy run in this exact scene, recorded targets replayed: **31/31 goals** in 1631 control steps (the policy's own sim2sim progress; a task's reference, not a ceiling); nop 0/31
+Graded file: `/app/output/trajectory.npz`, array `actions` of shape (T, 29) with T at most 360,000: one row of joint
+position targets per control step (1/60 s); targets outside the joint limits are clipped. After the agent's session
+the verifier, in a separate container without network, replays it once, open-loop, from the frozen start with its own
+copy of the tooling and the instance. Each pose must be reached within 1,800 control steps (30 s) after the previous
+one was reached (the first pose: after the start); otherwise the replay stops there and the task fails. The replay also
+stops when the last pose is reached; later rows are not run. A trajectory whose rows run out before the last pose is
+reached fails.
 
-## Verification
-DexToolBench task progress: goal reached when all 8 grasp-box keypoints are within 1.5 cm; 30 s per goal (upstream 10 s); `reward.txt` = 1 iff every goal is reached; `progress` = goals / 31 in `reward.json`
+A missing file scores 0, and so does one that cannot be read as an `.npz` with a numeric `actions` array, or whose
+array has another shape, more than 360,000 rows, or a NaN or infinite value. An error inside the grader also scores 0
+and is flagged as `grader_error`.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -36,12 +48,10 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `main`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| source | [SimToolReal / DexToolBench](https://github.com/tylerlum/simtoolreal) @ 313d5ae: object meshes, goal trajectory (31 goals); MuJoCo scene rebuilt from its sim2sim `deployment/mujoco/mujoco_sim.py` |
-| robot | KUKA iiwa 14 (MuJoCo Menagerie @ 1b86ece) + left Sharpa HA4 hand, 29 position-controlled joints |
-| physics | MuJoCo 3.3.7, 600 Hz, implicitfast, elliptic cones; control 60 Hz (10 substeps) |
-| deliverable | `(T, 29)` joint targets per control step; bit-exact replay |
-| table props | none (plain table) |
-| egress | allowlist (the model APIs and the package registries): the pretrained policy is publicly downloadable |
+## License
+DexToolBench is part of SimToolReal ([tylerlum/simtoolreal](https://github.com/tylerlum/simtoolreal) @ `313d5ae`),
+released under the [MIT License](https://github.com/tylerlum/simtoolreal/blob/313d5aea1f507c6cfe097b672b62945d7b0bbff5/LICENSE)
+(Copyright (c) 2026 Tyler Lum). The tool meshes, the goal trajectories and the Sharpa HA4 hand model used here ship in
+that repository. The KUKA iiwa 14 model is from [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie/tree/1b86ece576591213e2b666ebf59508454200ca97/kuka_iiwa_14)
+@ `1b86ece` (BSD 3-Clause License). The simulator is MuJoCo 3.3.7 (Apache License 2.0). No non-commercial terms apply.
+SimToolReal's training code and pretrained policy are not part of the task image.

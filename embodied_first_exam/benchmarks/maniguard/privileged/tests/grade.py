@@ -56,7 +56,7 @@ import numpy as np
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 OUTCOMES = ("idle", "reached", "manipulated", "success")
 REPLAY_START_S = 900.0     # Isaac Sim launch + scene load of one fresh process (cold cache on a loaded host: 8-12 min)
-REPLAY_STEP_S = 0.2        # per replayed control step, the slowest measured (tasks/maniguard/README.md, "Other hosts")
+REPLAY_STEP_S = 0.2        # per replayed control step, the slowest measured
 REPLAY_FLOOR_S = 3600.0    # the least any replay may take, however few its rows
 BUDGET_S = 22800.0         # all replays: task.toml [verifier].timeout_sec (23400) minus 600 s for the start and the write
 MAX_MEMBER_MARGIN = 1 << 20   # bytes an .npz entry may hold beyond MAX_STEPS x ACTION_DIM float64 numbers (the .npy header)
@@ -126,7 +126,7 @@ def load_trajectory(path: str, task: str, action_dim: int, max_steps: int):
 
 def write(ok: bool, out: dict) -> None:
     os.makedirs(LOG_DIR, exist_ok=True)
-    out.setdefault("infra_error", int(bool(out.get("grader_error"))))   # every grader_error here is the host's, never the agent's (PROTOCOL §2.6)
+    out.setdefault("infra_error", int(bool(out.get("grader_error"))))   # every grader_error here is the host's, never the agent's (docs/protocol/tasks.md#grading)
     open(os.path.join(LOG_DIR, "reward.txt"), "w").write("1\n" if ok else "0\n")
     json.dump(out, open(os.path.join(LOG_DIR, "reward.json"), "w"))
     print(json.dumps(out), flush=True)

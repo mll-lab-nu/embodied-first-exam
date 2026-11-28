@@ -6,9 +6,9 @@ back to where they started and keep them there until the opponent has placed its
 filled.
 
 ## Goal
-Success: all nine cells hold one piece each, lying flat in the middle of its cell: your five gold rings and the
-opponent's four crosses; no winner is needed. If one of your arms is away from where it started while the opponent arm
-is out, the episode ends at once as a failure.
+Success: your five gold rings and the opponent's four crosses each lie low on the board near the middle of a cell; no
+winner is needed. If one of your arms is away from where it started while the opponent arm is out, the episode ends at
+once as a failure.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -44,7 +44,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)

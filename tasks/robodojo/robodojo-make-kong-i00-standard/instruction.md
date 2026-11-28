@@ -7,11 +7,12 @@ grippers.
 
 ## Goal
 Success: the three tiles in your row that match the discarded tile are face up and the other nine tiles of your four
-sets of three still stand; then the tile from the front stack stands on its short end at the right end of your row, its
-right end up; and both grippers are open. Leave the front stack untouched until all three matching tiles are face up.
-Moving one of your arms far from where it started while the opponent's arm is out ends the episode as a failure.
+sets of three still stand, while the top tile of the front stack at the far left still lies as it started; then that
+tile stands on its short end in the next place at the right end of your row, its right end up; and both grippers are
+open. Moving one of your arms far from where it started while the opponent's arm is out ends the episode as a failure.
 
-Turning the three matching tiles face up before the front stack is touched counts as it happens.
+Turning the three matching tiles face up while the top tile of the front stack still lies as it started counts as it
+happens.
 
 When you are done, send `/finish` to end the episode and get it graded. Everything else is judged on the state at that
 point.
@@ -47,7 +48,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)

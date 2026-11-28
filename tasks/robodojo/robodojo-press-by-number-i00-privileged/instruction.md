@@ -8,9 +8,9 @@ where they started.
 ## Goal
 Success: the left red button has been pressed exactly as many times as the left card shows, then the blue button once,
 then the middle red button exactly as many times as the middle card shows, then the blue button once more. Each press
-pushes the button all the way down and lets it spring all the way back up, long enough to be seen (a quick tap can be
-missed). When the last blue press is released, both arms are back where they started. One press too many on any button
-ends the episode at once as a failure. A replay ends as soon as the task is done; later rows are not run.
+pushes the button at least halfway down and lets it spring all the way back up, long enough to be seen (a quick tap can
+be missed). When the last blue press is released, both arms are back where they started. One press too many on any
+button ends the episode at once as a failure. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave

@@ -1,5 +1,5 @@
-"""eai-standard/2.2 sim service for the RoboPaint brush tasks (ManiSkill 3.0.1 Panda with a brush; the mark is the task's
-brush model in rcb_brush.py; see docs/protocol/standard_mode.md). Owns the scene and the sheets. HTTP surface (rcb_limited.py, the
+"""eai-standard/3.0 sim service for the RoboPaint brush tasks (ManiSkill 3.0.1 Panda with a brush; the mark is the task's
+brush model in rcb_brush.py; see docs/protocol/eai-standard.md). Owns the scene and the sheets. HTTP surface (rcb_limited.py, the
 services' shared layer): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies, RCB1 responses: videos / frames / depth /
 proprio as raw blobs, never base64), POST /kinematics (stateless FK / IK of the robot's model). Logs every call to /data/episode.jsonl.
 Nothing about the sheets except camera images ever leaves this process: no score, no record of the strokes, no exact canvas, no brush state,
@@ -12,15 +12,15 @@ Differences from the RoboLab service, all from the task:
   target at the 20 Hz control rate, one IK solve per control step (SAPIEN's Pinocchio CLIK, no collision checking), at most
   0.25 m/s (a faster row is slowed down and reported);
 - painting has no terminal state: the episode ends only when the agent phase ends (the collect hook), at the agent's POST
-  /finish (agent-ended episodes, PROTOCOL §3: RCB_AGENT_END, rcb_agent_end.py) or on a simulator error;
-- the verdict is the live episode's (docs/protocol/README.md H.4): when the collect hook ends the episode
+  /finish (agent-ended episodes, docs/protocol/tasks.md#modes: rcb_agent_end.py) or on a simulator error;
+- the verdict is the live episode's (docs/protocol/invariants.md H.4): when the collect hook ends the episode
   (environment/sim/finalize.sh, after the agent's container is stopped) this service commits a stroke still pressed, scores its
   live main sheet with the graders' scorer and rules (rcb_brush_strict.py: the picture rule and the process rules, the same
   Session.score() the privileged verifier's replays use) and writes final.json at once ("graded_by": "live"); nothing is
   replayed to grade it. Then it renders the recorded trajectory once into replay.mp4 ("video_pending" while it runs; it never
   changes the verdict), sets "video_done" and exits; a frozen instance that does not rebuild here is refused at the start
   (instance_mismatch, an infrastructure failure), before the agent is served;
-- crash recovery (rcb_limited.Episode, docs/protocol/standard_mode.md §13): every executed control step (the 7 joint targets given to
+- crash recovery (rcb_limited.Episode, embodied_first_exam/standard/README.md#crash-recovery): every executed control step (the 7 joint targets given to
   Session.step) is journaled and every completed call checkpointed with the state hash; after a crash compose restarts the
   container and this service replays the journal in its fresh process and continues the SAME episode. Resume class `exact`
   (PhysX on the CPU and the CPU brush models repeat bit for bit in a fresh process); the last ee_pose tip target is persisted
@@ -43,7 +43,7 @@ VIDEOS = ("mp4", "frames", "both", "none")
 # The response video's frame rate: its frames are control steps of robot time (the recorder keeps at most one frame per
 # control step, recorder()), so a rate above the 20 Hz control rate would play faster than robot time: capped there
 MAX_VIDEO_FPS = CTRL_HZ
-# The images one call may hold (PROTOCOL §3 "Images per call"): every frame a call records stays in memory until its
+# The images one call may hold (docs/protocol/tasks.md#modes "Images per call"): every frame a call records stays in memory until its
 # response is sent, so a call without a bound could exhaust the sidecar's memory, and a service killed for memory is never
 # the agent's failure, so one large request could void a failed trial. Cameras x frames at the recorder's real stride,
 # its first and last frames included; a frame with per-frame depth counts once more (L.check_frames). The longest default
@@ -108,7 +108,7 @@ def dump() -> list | None:
     n = int(E.get("episode_control_steps") or 0)
     metrics = {k: v for k, v in numbers(live).items() if not isinstance(v, bool)}
     ok = bool(live.get("success")) and err is None
-    if AE.ENABLED and ok:   # the sheet is scored only at the end: the success is seen there (final.json hidden_success_*)
+    if ok:                  # the sheet is scored only at the end: the success is seen there (final.json hidden_success_*)
         AE.hidden_success(E, True, log, n)
     rec = {"steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
            "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": True, "task": TASK, "protocol": PROTOCOL,
@@ -145,10 +145,10 @@ def render(acts) -> None:
 
 def finish(reason: str) -> None:
     """The episode ends. Painting has no terminal state, so the verdict is always the sheet as the episode leaves it (dump(),
-    at the collect hook): agent-ended episodes (PROTOCOL §3, RCB_AGENT_END) add only POST /finish (reason "finished"), after
+    at the collect hook): agent-ended episodes (docs/protocol/tasks.md#modes) add only POST /finish (reason "finished"), after
     which the robot does nothing more, and the runaway guard's end is called "step_limit" (judged as it stands)."""
     if E["done"]: return
-    if AE.ENABLED and reason == "step_guard":
+    if reason == "step_guard":
         reason = "step_limit"
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
     log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1)})
@@ -173,7 +173,7 @@ if not S.render_enabled:
     raise SystemExit("the sim service needs a Vulkan-capable GPU for its cameras")
 LAYOUT = [f"panda_joint{i}" for i in range(1, 8)]
 CAMS = list(M.VIDEO_CAMERAS)
-DEFAULT_CAMS = ["canvas_cam", "scene_cam", "side_cam"]           # what the 2.0 client asked for when a call named no camera
+DEFAULT_CAMS = ["canvas_cam", "scene_cam", "side_cam"]           # the cameras a call that names none gets
 MOUNT = {"canvas_cam": "static, straight above the main sheet, looking down; image top = the sheet's far edge (+x), image left = +y",
          "practice_cam": "static, straight above the practice sheet, looking down; image top = +x, image left = +y (portrait)",
          "scene_cam": "static, across the table facing the robot (from +x), looking down at the board",
@@ -262,10 +262,10 @@ CALIB = calib(CAMS)                     # static cameras: computed once (meta["c
 EXT = {c: np.asarray(CALIB[c]["extrinsic_cv"], np.float64) for c in CAMS}
 NEAR_FAR = {c: [float(S.u.scene.human_render_cameras[c].config.near), float(S.u.scene.human_render_cameras[c].config.far)] for c in CAMS}
 TIP = M.TOOL_FRAME
-PROPRIO = (LAYOUT + ["tip_x", "tip_y", "tip_z", "tip_qw", "tip_qx", "tip_qy", "tip_qz"]          # the 2.0 columns, unchanged
+PROPRIO = (LAYOUT + ["tip_x", "tip_y", "tip_z", "tip_qw", "tip_qx", "tip_qy", "tip_qz"]          # the base columns, unchanged
            + [f"{j}_vel" for j in LAYOUT] + [f"{j}_effort" for j in LAYOUT])                      # 2.2
 SPEC = {
-    "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "maniskill 3.0.1 (SAPIEN 3.0.3, PhysX CPU) + a virtual brush",
+    "protocol": PROTOCOL, "simulator": "maniskill 3.0.1 (SAPIEN 3.0.3, PhysX CPU) + a virtual brush",
     "robot": ROBOT_TEXT,
     "task_text": TASK_TEXT,
     "control_hz": CTRL_HZ, "max_video_fps": MAX_VIDEO_FPS, "physics_substeps": SUBSTEPS, "physics_hz": CTRL_HZ * SUBSTEPS, "max_chunk_s": MAX_CHUNK_S,
@@ -419,7 +419,7 @@ def run_ee_pose(A: np.ndarray, dt: float, rec: L.Recorder, plan: list) -> None:
 
 def checked(parse):
     """A request is checked in full before anything is executed. The layer answers a ValueError with 400 and takes any other
-    exception for a simulator error that ends the episode (PROTOCOL §4.6), so whatever a malformed field raises while it is
+    exception for a simulator error that ends the episode (docs/protocol/eai-standard.md#errors), so whatever a malformed field raises while it is
     being checked (null, a list where a number belongs, a number too large for a float) is a ValueError."""
     def run(*args):
         try:
@@ -577,7 +577,7 @@ def _end_from_signal():
     os._exit(0)          # run.sh keeps the container up for the collect hook
 
 
-L.check_spec(SPEC)                     # a spec that misses a 2.2 field or names a forbidden one never serves
+L.check_spec(SPEC)                     # a spec that misses a required field or names a forbidden one never serves
 EP.scene_built()                       # the startup watchdog stands down: a long resume replay is not a hang
 S.record_start()                       # before begin(): a resume's journal replay is part of the recorded trajectory
 resumed = EP.begin(state=E, step=S.step, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC,
@@ -589,5 +589,4 @@ open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes}{', resumed at control step %d' % ctrl_steps() if resumed else ''})", flush=True)
 AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
                     on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row,
-                    **({"finish": lambda: finish("finished"),
-                        "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})))
+                    finish=lambda: finish("finished"), end_step_limit=lambda: finish("step_limit")))

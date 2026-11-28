@@ -9,6 +9,25 @@ crashes outside a call, never ended the episode, or found the scene was not the 
 A give-up after crashes during a call (`sim_crashed_on_call`) and a simulator error raised by the agent's actions
 (reason "error") stay the agent's 0."""
 import json, os, shutil, traceback
+
+def agent_end_fields(d):
+    """An agent-ended episode's record (docs/protocol/tasks.md#modes: final.json success_signal / ended_by, step_limit / steps_used):
+    evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
+    if not isinstance(d, dict) or d.get("success_signal") != "hidden":
+        return {}
+    by = d.get("ended_by")
+    out = {"ended_finish": int(by == "finish"), "ended_step_limit": int(by == "step_limit"),
+           "ended_session_end": int(by == "session_end"), "hidden_success_seen": int(bool(d.get("hidden_success_seen")))}
+    if d.get("step_limit"):
+        def n(k):
+            try:
+                v = float(d.get(k) or 0)
+            except (TypeError, ValueError):
+                return 0
+            return int(v) if abs(v) < 1e18 else 0      # NaN and inf too
+        out.update(step_limit=n("step_limit"), steps_used=n("steps_used"))
+    return out
+
 LOG = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier"); DATA = os.environ.get("RCB_DATA", "/data")
 os.makedirs(LOG, exist_ok=True)
 
@@ -59,4 +78,4 @@ write(ok, {"success": int(ok), "progress": 0.0 if infra else num("progress"), "l
            "sim_crashed_on_call": int(d.get("reason") == "sim_crashed_on_call"),
            "sim_startups": int(num("sim_startups")), "resumes": int(num("resumes")),
            "resume_state_mismatch": int(num("resume_state_mismatch")), "resume_max_tcp_dev_m": num("resume_max_tcp_dev_m"),
-           "resume_max_joint_dev": num("resume_max_joint_dev")})
+           "resume_max_joint_dev": num("resume_max_joint_dev"), **agent_end_fields(d)})

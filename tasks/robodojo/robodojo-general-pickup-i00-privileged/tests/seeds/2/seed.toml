@@ -19,10 +19,6 @@ old = "arx_x5/0/general_pickup_0.json"
 new = "arx_x5/2/general_pickup_0.json"
 
 [[replace]]
-old = "sha256 `7a3ecf189e248f99`"
-new = "sha256 `c6b966250360fe10`"
-
-[[replace]]
 old = "\"Pick up the mint green scissors by"
 new = "\"Pick up the wooden owl figurine by"
 

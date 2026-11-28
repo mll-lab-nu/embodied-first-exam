@@ -6,8 +6,8 @@ arms back to where they started.
 
 ## Goal
 Success: the three cubes stand in one straight row, each turned square to it, and both arms are back where they started.
-Lifting, tipping or flipping a cube, or letting it ride up onto the set square or another cube, ends the episode as a
-failure.
+Raising any cube's centre more than a few millimetres above where it started (by lifting it, tipping it up onto an edge,
+or letting it ride up onto the set square or another cube) ends the episode as a failure.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -38,7 +38,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)

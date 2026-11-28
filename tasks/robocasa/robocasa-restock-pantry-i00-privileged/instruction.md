@@ -5,7 +5,8 @@ Put both cans from the counter in the cabinet, on the side where the other can a
 
 ## Goal
 Success: both cans are all the way inside the cabinet, each on the same side as the can already there and away from the
-other item, and your hand has let go and moved away from them. Your trajectory is replayed from the fixed start. What
+other item, and your hand has let go and moved well away from them (what counts is how far the hand is from them). Your
+trajectory is replayed from the fixed start. What
 counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 12)`

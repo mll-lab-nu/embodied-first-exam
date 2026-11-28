@@ -1,6 +1,6 @@
-"""Standard-mode verifier (eai-standard/2.1): grades what the sim service -- which the agent could not touch -- wrote.
+"""Standard-mode verifier (eai-standard/3.0): grades what the sim service -- which the agent could not touch -- wrote.
 
-The verdict is the live episode's (docs/protocol/README.md H.4): /data/final.json holds the
+The verdict is the live episode's (docs/protocol/invariants.md H.4): /data/final.json holds the
 episode the service ran and its verdict, nothing is replayed. success = the live episode ended in LIBERO's success
 (`live_success`; the service ends the episode the moment the success check holds) and the service graded it live
 (`graded_by = "live"`, its `success`). Writes /logs/verifier/reward.txt (1/0) and a numeric-only reward.json, and copies
@@ -20,6 +20,25 @@ import json
 import os
 import shutil
 import traceback
+
+def agent_end_fields(d):
+    """An agent-ended episode's record (docs/protocol/tasks.md#modes: final.json success_signal / ended_by, step_limit / steps_used):
+    evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
+    if not isinstance(d, dict) or d.get("success_signal") != "hidden":
+        return {}
+    by = d.get("ended_by")
+    out = {"ended_finish": int(by == "finish"), "ended_step_limit": int(by == "step_limit"),
+           "ended_session_end": int(by == "session_end"), "hidden_success_seen": int(bool(d.get("hidden_success_seen")))}
+    if d.get("step_limit"):
+        def n(k):
+            try:
+                v = float(d.get(k) or 0)
+            except (TypeError, ValueError):
+                return 0
+            return int(v) if abs(v) < 1e18 else 0      # NaN and inf too
+        out.update(step_limit=n("step_limit"), steps_used=n("steps_used"))
+    return out
+
 
 DATA = os.environ.get("RCB_DATA", "/data")
 LOG = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
@@ -55,7 +74,7 @@ def main() -> None:
         failed_finalize = bool(d.get("finalize_error"))
         reason = str(d.get("reason") or "")
         infra = bool(d.get("infra_error")) or not finalized or failed_finalize
-        ok = bool(d.get("success")) and live and by_live and not infra and reason != "error"   # PROTOCOL §4: a simulator error is the agent's 0
+        ok = bool(d.get("success")) and live and by_live and not infra and reason != "error"   # docs/protocol/tasks.md#grading: a simulator error is the agent's 0
         out = {"success": int(ok), "live_success": int(live), "graded_by_live": int(by_live),
                "replays": int(d.get("replays") or 0), "finalized": int(finalized), "missing_log": 0,
                "infra_error": int(infra), "grader_error": int(failed_finalize),
@@ -78,7 +97,7 @@ def main() -> None:
                 shutil.copy(os.path.join(DATA, name), os.path.join(LOG, name))
         except OSError:
             traceback.print_exc()
-    write(ok, out)
+    write(ok, {**out, **agent_end_fields(d)})
 
 
 if __name__ == "__main__":

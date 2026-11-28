@@ -1,31 +1,60 @@
-# embodied-olympics-fun-vertical-jump-i00-privileged
+# Embodied Olympics · vertical jump (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-vertical-jump-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-vertical-jump-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `vertical_jump` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: positive by injection (the arm raised by the robot's own motors, then 2.8 m/s up: the hand touches the vane 0.30 m above its standing reach, lands and stands); negatives: no touch, lifted without a jump, a step before the take-off, the stand touched, the vane touched without a jump or with another part. A balanced open-loop jump of ours raises the pelvis 0.23 m of the 0.31 m needed; an unbalanced one reaches the vane and falls; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Instance | `vertical_jump`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Jump straight up from both feet without a step, touch the vane above you with a hand, land on your feet and stand. (Embodied Olympics `vertical-jump`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Jump straight up from both feet without a step, touch the vane above you with a hand, land on your feet and stand.
 
-## Difficulty
-Neither built-in gait can jump. The robot has to raise its hand 0.30 m beyond its reach: a take-off at more than 2 m/s straight up from legs with real torque limits, an arm that is over the right place at the top, and a landing from that height that ends standing.
+## Success criteria
+The robot's standing reach (the top of a hand, flat-footed, legs straight, arm stretched up) is 1.66 m. A light vane
+(0.05 kg, 0.9 m long from the robot's left to its right, 0.08 m wide) hangs over it with its underside 0.3 m above
+that, hinged at its left end so that it swings away when touched, on a stand (a post and a base plate). The jump is
+the robot's first flight (nothing of it touching the ground or the stand) of at least 0.1 s. The referee's stages,
+in order: take-off, touch, landing, stand.
+- Take-off: until the jump, every point where a foot touches the ground lies within 0.03 m of where that sole stood
+  at t = 0, and neither foot is off the ground for more than 0.05 s while the other is on it (a two-foot take-off;
+  rising on the toes is allowed). In the flight the pelvis rises at least 0.05 m above its height at lift-off.
+- Touch: during that flight a hand (the fist or the wrist beyond the forearm) touches the vane.
+- Landing: the first contact after the flight is with the feet only.
+- Stand: afterwards (stepping is allowed) the robot stands for 1.0 s without a break: only the feet on the ground,
+  the torso within about 20 degrees of upright, the pelvis slower than 0.35 m/s. The success is called at the end of the
+  1.0 s.
 
-## Reference solution
-None. No reference controller exists for this family yet: positive by injection (the arm raised by the robot's own motors, then 2.8 m/s up: the hand touches the vane 0.30 m above its standing reach, lands and stands); negatives: no touch, lifted without a jump, a step before the take-off, the stand touched, the vane touched without a jump or with another part. A balanced open-loop jump of ours raises the pelvis 0.23 m of the 0.31 m needed; an unbalanced one reaches the vane and falls.
+Fouls (each fails the attempt at once):
+- before the take-off, a step or shuffle (a foot contact more than 0.03 m from its starting place), or one foot off
+  the ground for more than 0.05 s while the other is on it;
+- before the landing, a touch of the vane by any part other than a hand, or outside the jump's flight;
+- any touch of the stand (its post or its base plate), also after the landing;
+- a jump in which the pelvis rises less than 0.05 m, a jump that lands without having touched the vane, or a landing
+  that is not on the feet only.
+Fall (a failure at any time): the pelvis lower than 0.35 m, or any part other than the feet on the ground. Time limit:
+20 s (2,000 control steps).
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: Your standing reach (the top of a hand, flat-footed, legs straight, arm stretched up) is 1.66 m. A vane hangs over you with its underside 0.3 m above that: a light plate (0.05 kg) 0.9 m long from your left to your right and 0.08 m wide, on a hinge at its left end, so that it swings away when it is touched. Your jump is your first flight (nothing of you touches the ground or the stand) of at least 0.1 s. Until then: no step and no run-up: every point where a foot touches the ground must lie within 0.03 m of the place where that foot's sole stood at t = 0, and neither foot may be off the ground for more than 0.05 s while the other is on it (so both feet leave the ground within 0.05 s of each other: a two-foot take-off). Rising on the toes is allowed. The flight must be a jump: your pelvis has to rise at least 0.05 m above its height at lift-off. The touch: during that flight a hand (the fist or the wrist beyond the forearm) touches the vane. The first contact after the flight must be with your feet only. After the landing you may step; you succeed once you stand for 1.0 s without a break: only your feet on the ground, your torso within about 20 degrees of vertical, your pelvis slower than 0.35 m/s. A fall fails the attempt at any time: your pelvis lower than 0.35 m, or any part of you other than your feet on the ground. You fail on a step or shuffle before the take-off, a foot that leaves the ground before the other, a touch of the vane that is not in the jump's flight or not with a hand, any touch of the stand (its post or its base plate on the floor, also after the landing), a jump that lands without having touched the vane, a flight that is not a jump, a landing that is not on the feet, a fall, or after 20 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +63,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | track-and-jumps |
-| Rule book | The Sargent jump (the jump-and-reach vertical jump test of school and club fitness batteries; Sargent 1921): the standing reach is measured flat-footed with one arm stretched overhead; from a standstill, with no step or preliminary hop, the athlete jumps off both feet and touches a vane of the measuring stand (Vertec) at the top of the jump; the result is the height touched above the standing reach; deviations: the standing reach is not measured in the attempt: it is this robot's, 1.66 m (the top of a hand above the soles with the legs straight and the arm in its highest pose, from the robot's kinematics), and the stand has one vane, set 0.3 m above it · the athlete cannot walk up to the stand: any step before the take-off is a foul, so the vane is placed over the place where the standing robot's raised hand is · a jump is told from a loss of contact by two numbers the test does not have: a flight of at least 0.1 s in which the pelvis rises at least 0.05 m above its height at lift-off · the test ends at the touch; here the robot must also land on its feet and stand for 1.0 s (FAMILIES.md: land and stand) · the qualifying height, 0.3 m, is a round number below the adult average of the test (about 0.4 to 0.5 m for men, 0.3 to 0.4 m for women) |
-| Stages | take-off → touch → landing → stand |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `a314a2832e1ecf27b7fa8c9c0b543c808dddbec48090d476e1c75984632c7991` |
-| Episode | 2000 control steps (20 s at 100 Hz) |
-| Action | sim rows of 151 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

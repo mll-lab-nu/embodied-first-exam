@@ -1,11 +1,12 @@
-"""The efe-robot MCP server on the toy eai-standard/2.1 (standard) and 2.3 (realtime) services (CPU, ~40 s):
+"""The efe-robot MCP server on the toy sidecar (standard) and realtime services (CPU, ~40 s):
 
-0. 2.1, standard mode (a benchmark's own rcb_service.py): a closed-loop oracle over HTTP and through the tools leaves
+0. The sidecar layer, standard mode (a benchmark's own rcb_service.py): a closed-loop oracle over HTTP and through the tools leaves
    the same record and verdict.
 
 1. API path vs MCP path: an oracle written for the realtime rcb_client (a plan with `at`, the robot's own
    proprioception, a read after the plan has run) runs once over HTTP and once through the endpoint tools; the executed trajectory, every submitted
-   row and the verdict are the same (tests/equivalence.py; the clock's own timings are left out, they are wall time).
+   row and the verdict are the same (tests/equivalence.py; the clock's own timings are left out, they are wall time, and so
+   is the number of steps held after the plan before the oracle's read: same_executed).
 2. The tools hold no clock: `submit` answers at once (the plan is the service's), and the tool's own time on top of the
    HTTP call is measured: observe(cameras=[]) over HTTP vs through the tool (`tool_s`, and the client's round trip).
 3. The eai-standard/3.0 rules of the realtime layer, in process (rules_v3): /observe never starts the clock and refuses
@@ -27,7 +28,7 @@ ORACLE = textwrap.dedent('''
     import time
     import numpy as np
     r = Robot(); spec = r.spec()
-    assert spec["protocol"] == "eai-standard/2.3", spec["protocol"]
+    assert spec["protocol"] == "eai-standard/3.0" and spec["timing"]["realtime"], spec["protocol"]
     o = r.get_obs(cameras=[])
     print("now", o.meta["proprio"]["now"])
     dx = 1 / 64                             # exact in binary: x reaches 1 at the 64th row in both runs
@@ -42,28 +43,32 @@ ORACLE = textwrap.dedent('''
     time.sleep(2.5)                         # the plan (1.6 s) runs out on the clock; then a read of the robot as it is
     w = r.get_obs(cameras=["top"])
     print("watched", round(w.meta["proprio"]["now"][0], 4), w.meta["done"], w.meta["reason"], int(w.last["top"].sum()))
+    f = r.finish()                          # the agent ends the episode: the state it is in is judged
+    print("finish", f["done"], f["reason"])
 ''')
 
 ORACLE_21 = textwrap.dedent('''
     from rcb_client import Robot
     import numpy as np
     r = Robot(); spec = r.spec()
-    assert spec["protocol"] == "eai-standard/2.1", spec["protocol"]
+    assert spec["protocol"] == "eai-standard/3.0" and not spec.get("timing", {}).get("realtime"), spec["protocol"]
     o = r.get_obs(cameras=["top"])
     x = o.meta["proprio"]["now"][0]
     print("now", x, int(o.last["top"].sum()))
     while True:                              # closed loop on the measured x: steps of at most 0.05 (the toy's clip)
         n = 10
-        rows = np.zeros((n, 2)); rows[:, 0] = min(0.05, (1.0 - x) / n + 1e-6)
+        rows = np.zeros((n, 2)); rows[:, 0] = min(0.05, (1.0 - x) / n + 1e-4)   # past 1 by a margin float32 proprio shows
         res = r.submit("joint_position", rows, cameras=["top"], video="frames")
         x = res.meta["proprio"]["now"][0]
         print("step", round(x, 6), res.meta["done"], res.meta["reason"], int(res.last["top"].sum()))
-        if res.meta["done"]:
+        if x >= 1.0 or res.meta["done"]:
             break
+    f = r.finish()                           # the agent ends the episode: the state it is in is judged
+    print("finish", f["done"], f["reason"])
 ''')
 
 TIMING = ("max_lag_s,clock_s,max_queue_wait_s,request_busy_s,stalled_s,lag_s,stalled_share,request_mb,stalls,"
-          "elapsed_s,control_steps,control_steps_total,held_steps,render_s_max,render_s_p50")   # render_s_*: camera_worker's
+          "elapsed_s,control_steps,control_steps_total,held_steps,render_s_max,render_s_p50,finish_time_s")   # render_s_*: camera_worker's
 
 
 def free_port():
@@ -78,7 +83,7 @@ def tools_dir(tmp):
 
 def manifest(tmp):
     m = {"manifest": "efe-mcp-manifest/1", "kind": "rcb", "suite": "toy", "task": "toy-realtime",
-         "protocol": "eai-standard/2.3", "realtime": True, "tools": ["spec", "observe", "submit", "finish"]}
+         "protocol": "eai-standard/3.0", "realtime": True, "tools": ["spec", "observe", "submit", "finish"]}
     p = tmp / "manifest.json"; p.write_text(json.dumps(m)); return p
 
 
@@ -86,32 +91,57 @@ def equivalence(tmp, tools, man):
     (tmp / "oracle.py").write_text(ORACLE)
     cmd = [sys.executable, str(HERE / "equivalence.py"), "--service", f"{sys.executable} {HERE / 'toy_realtime.py'} {{port}}",
            "--tools", str(tools), "--manifest", str(man), "--oracle", f"{sys.executable} {tmp / 'oracle.py'}",
-           "--out", str(tmp), "--compare", "trajectory_live.f64,submitted.f64,final.json", "--ignore-keys", TIMING]
+           "--out", str(tmp), "--compare", "submitted.f64,final.json", "--ignore-keys", TIMING]
     p = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
     s = json.loads(p.stdout.strip().splitlines()[-1])
     assert p.returncode == 0, p.stdout + p.stderr
-    assert {"trajectory_live.f64", "submitted.f64", "final.json"} <= set(s["same"]), s
+    assert {"submitted.f64", "final.json"} <= set(s["same"]), s
+    same_executed(pathlib.Path(s["out"]))
+    s["same"].insert(0, "trajectory_live.f64 (the planned rows; the held tail's length is wall time)")
     out = (pathlib.Path(s["out"]) / "mcp" / "oracle.out").read_text()
-    assert "True success" in out and "plan 48 80 0" in out, out
+    assert "finish True finished" in out and "plan 48 80 0" in out, out
+    assert s["verdict"]["api"].get("reason") == "finished", s   # (the verdict itself is written at the session's end)
     return s
 
 
+def same_executed(out):
+    """trajectory_live.f64 holds every executed control step. Its first `rows` steps run the submitted plan and must be the
+    same bytes on both paths; after the plan the clock keeps running and the robot holds its last target until the
+    oracle's read and finish arrive, so the number of held steps is wall time (a loaded host adds one or two) and is
+    not compared. Every held step must still be the same hold row on both paths."""
+    from array import array
+    rec = {}
+    for m in ("api", "mcp"):
+        d = out / m / "data"
+        fin = json.loads((d / "final.json").read_text())
+        a = array("d"); a.frombytes((d / "trajectory_live.f64").read_bytes())
+        n, steps = int(fin["rows"]), int(fin["control_steps"])
+        assert steps > 0 and len(a) % steps == 0 and steps >= n, (m, len(a), steps, n)
+        w = len(a) // steps
+        rows = [tuple(a[i * w:(i + 1) * w]) for i in range(steps)]
+        rec[m] = (rows[:n], set(rows[n:]))
+    (pa, ha), (pm, hm) = rec["api"], rec["mcp"]
+    assert pa == pm, "the executed plan differs between the API and the MCP path"
+    assert ha == hm and len(ha) <= 1, ("the held steps after the plan differ", ha, hm)
+
+
 def standard_21(tmp):
-    """The same toy robot behind the 2.1 service itself (a benchmark's own 2.1 service, standard mode)."""
+    """The same toy robot behind the sidecar service itself (a benchmark's own sidecar service, standard mode)."""
     d = tmp / "v21"; d.mkdir()
-    shutil.copy(STD / "v2_1/rcb_client.py", d / "rcb_client.py"); shutil.copy(STD / "rcb1.py", d / "rcb1.py")
+    shutil.copy(STD / "sidecar/rcb_client.py", d / "rcb_client.py"); shutil.copy(STD / "rcb1.py", d / "rcb1.py")
     m = {"manifest": "efe-mcp-manifest/1", "kind": "rcb", "suite": "toy", "task": "toy-standard",
-         "protocol": "eai-standard/2.1", "realtime": False, "tools": ["spec", "observe", "submit", "finish"]}
+         "protocol": "eai-standard/3.0", "realtime": False, "tools": ["spec", "observe", "submit", "finish"]}
     (d / "manifest.json").write_text(json.dumps(m))
     (d / "oracle.py").write_text(ORACLE_21)
     cmd = [sys.executable, str(HERE / "equivalence.py"),
            "--service", f"{sys.executable} {HERE / 'toy_realtime.py'} {{port}} --standard",
            "--tools", str(d), "--manifest", str(d / "manifest.json"), "--oracle", f"{sys.executable} {d / 'oracle.py'}",
-           "--out", str(d)]
+           "--out", str(d), "--ignore-keys", "elapsed_s,finish_time_s"]   # wall time
     p = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
     s = json.loads(p.stdout.strip().splitlines()[-1])
     assert p.returncode == 0, p.stdout + p.stderr
     assert s["same"] and s["verdict"]["api"] == s["verdict"]["mcp"] and s["verdict"]["api"].get("done"), s
+    assert s["verdict"]["api"].get("reason") == "finished", s   # (the verdict itself is written at the session's end)
     return s
 
 
@@ -170,10 +200,10 @@ def rules_v3(tmp):
         return mod
 
     toy = load(HERE / "toy_realtime.py", "toy_realtime_v3")
-    load(STD.parent / "benchmarks/humanoidbench/sim/rcb_service.py", "rcb_service")
+    load(STD / "sidecar/rcb_service.py", "rcb_service")
     R = load(STD / "realtime/rcb_realtime.py", "rcb_realtime")
     d = tmp / "v3"; d.mkdir()
-    svc = R.RealtimeService(toy.Toy(), data=str(d), slowdown=1.0, agent_end=True)
+    svc = R.RealtimeService(toy.Toy(), data=str(d), slowdown=1.0)
     svc.start()
 
     def call(svc, path, body):
@@ -193,7 +223,7 @@ def rules_v3(tmp):
     req = lambda path, body: call(svc, path, body)  # noqa: E731
 
     sp = svc.spec
-    assert sp["standard"] == "eai-standard/3.0" and sp["timing"]["recorder"]["cameras"] == ["top"], sp["timing"]
+    assert sp["protocol"] == "eai-standard/3.0" and sp["timing"]["recorder"]["cameras"] == ["top"], sp["timing"]
     assert "first submit" in sp["timing"]["clock"], sp["timing"]["clock"]
     code, m, _ = req("/observe", {"seconds": 1.0})
     assert code == 400 and "never waits" in m["error"], (code, m)
@@ -220,12 +250,12 @@ def rules_v3(tmp):
     assert code == 409, (code, m)
     svc.on_sigusr1(); svc.poll()
 
-    # depth with last_s > 0 only for cameras the recorder keeps depth for (as 2.1 and 2.2/2.4): mixed cameras are a 400
+    # depth with last_s > 0 only for cameras the recorder keeps depth for (as every layer): mixed cameras are a 400
     t2 = toy.Toy(); t2.cameras = ["top", "side"]; t2.depth_cameras = ["top"]
     t2.spec = lambda: {"cameras": {"top": {"shape": [8, 8, 3]}, "side": {"shape": [8, 8, 3]}},
                        "action_types": {"joint_position": {"dim": 2, "layout": ["dx", "unused"]}}}
     d2 = tmp / "v3_depth"; d2.mkdir()
-    svc2 = R.RealtimeService(t2, data=str(d2), slowdown=1.0, agent_end=True)
+    svc2 = R.RealtimeService(t2, data=str(d2), slowdown=1.0)
     svc2.start()
     assert svc2.spec["timing"]["recorder"]["depth"] == ["top"], svc2.spec["timing"]["recorder"]
     code, m, _ = call(svc2, "/observe", {"last_s": 0.4, "cameras": ["top", "side"], "include_depth": True})
@@ -237,7 +267,7 @@ def rules_v3(tmp):
     # a service without a recorder (record_frames not True) still answers /submit's images with meta.frame_step
     t3 = toy.Toy(); t3.record_frames = False
     d3 = tmp / "v3_norec"; d3.mkdir()
-    svc3 = R.RealtimeService(t3, data=str(d3), slowdown=1.0, agent_end=True)
+    svc3 = R.RealtimeService(t3, data=str(d3), slowdown=1.0)
     svc3.start()
     assert not svc3.recording
     code, m, _ = call(svc3, "/submit", {"type": "joint_position", "dt": 0.04, "actions": [[0.01, 0]] * 2, "cameras": ["top"]})
@@ -255,7 +285,7 @@ def main():
     print("ok realtime eai-standard/3.0 rules:", json.dumps(v3))
     tools, man = tools_dir(tmp), manifest(tmp)
     s21 = standard_21(tmp)
-    print("ok eai-standard/2.1 (standard): API path = MCP path:", ", ".join(s21["same"]), "identical; verdicts",
+    print("ok sidecar layer (standard): API path = MCP path:", ", ".join(s21["same"]), "identical; verdicts",
           s21["verdict"], "; evidence", s21["out"])
     s = equivalence(tmp, tools, man)
     lat = latency(tmp, tools, man)

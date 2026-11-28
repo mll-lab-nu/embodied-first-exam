@@ -1,4 +1,4 @@
-"""Protocol eai-standard-realtime/1.0: a continuous world paced at slowdown S (one control step every dt x S wall
+"""The realtime service: a continuous world paced at slowdown S (one control step every dt x S wall
 seconds), frozen at every unit end for the reviews of the seats the referee names (Phase.review).
 
 Phases (core 0.4.0, fw_pattern §7 decision 3; core/phases.py): prepare (until every seat sent start/ready; the
@@ -232,7 +232,7 @@ def plan_workers_report(raw: dict) -> dict:
 
 class RealtimeService(Service):
     protocol = "realtime"
-    protocol_id = "eai-standard-realtime/1.0"
+    protocol_id = "eai-standard/3.0"
     draw_images = True                           # core 0.5.4: False (a practice world without cameras): no images
 
     def __init__(self, *a, **kw):

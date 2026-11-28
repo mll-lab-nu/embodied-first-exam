@@ -1,0 +1,893 @@
+# README data for tasks/embodied-olympics-match/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every text below (B/ = embodied_first_exam/benchmarks/embodied-olympics-match/; each task's own
+# exported files under tasks/embodied-olympics-match/<task>/, listed in ci_checks/benchmarks/embodied-olympics-match/
+# exported.toml):
+#   standard, realtime  B/shared/tests/grade.py grade() L96-172 (valid = valid_trial, finalized, live or replay
+#               agreeing, complete = reason in match_over / ready_timeout / clock / abandoned / no_show with a winner,
+#               no errors; success against a scripted opponent = valid and the agent's side won; a real-time match's
+#               world_step error after the agent's first applied act = valid, 0); B/standard-realtime/tests/
+#               fexam_reward.py (duels: success = valid_trial and A_won; infra_error = technical_failure or
+#               grader_error); each task's environment/docker-compose.yaml (RO_VERDICT_REPLAY=0: graded live).
+#   privileged  B/privileged/tests/grade.py (tools.fullsim.formal.evaluate; a verifier failure -> infra_error) and
+#               B/privileged/environment/fullsim/tools/fullsim/formal.py evaluate() L130-360 (the program as nobody in
+#               its own process, a fresh match on the original clock; success = valid (valid_trial, reason match_over,
+#               the core's fresh-process replay agreeing, no program error) and match_winner A; a program error, a
+#               call over 5 s, not one command response per observation, the wall cutoff, a process left behind -> 0;
+#               the trusted service's own failure or a disagreeing replay -> infra_error). The G1 table tennis twins
+#               use their own runner (tests/formal.py): see that family's comment.
+
+[benchmark]
+name = "Embodied Olympics - Match"
+citation = "Embodied Olympics authors, 2026"   # no paper; the private upstream repository
+url = "https://github.com/CHIGUI0/roboolympics"
+repo = "CHIGUI0/roboolympics"
+commit = "0d7f680"                             # the export commit of the privileged twins' full simulator (tools/fullsim/session.py FROZEN); each task's own export commit: [benchmark] others
+others = """
+Exported by the {md[exporter]} from its task `{md[source_task]}` (upstream commit
+`{md[source_commits][0]}`). The files changed here after the export are listed for this task in
+`ci_checks/benchmarks/embodied-olympics-match/exported.toml`.
+"""
+
+[license]
+text = """
+Embodied Olympics ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics), a private repository) is released
+under the MIT License; its exported match services, referees, scripted opponents and graders inside this task are MIT
+too. The simulator is MuJoCo (Apache License 2.0). No non-commercial terms apply.
+"""
+
+[modes.privileged]
+success = """
+Graded: one formal match, played after the agent's session in a separate verifier container without network by the
+agent's final program, from a fresh, unmodified start against the same opponent; nothing the agent played during its
+session counts. The task is passed only if that match ends by the rules above with the program's side as the winner.
+A program that fails to load, raises, breaks the call rules above, or leaves a process behind scores 0. A failure of
+the verifier or of the trusted match service, or a replay of the match record that disagrees with the match, is an
+infrastructure failure, not a score.
+"""
+
+[modes.standard]
+success = """
+Graded: the live match, as the trusted match service recorded it while it was played; nothing is replayed. There is
+one match and no reset, and the agent cannot end it with `/finish`: the match's rules end it. A technical failure of
+the match service (a crash, an error in its bookkeeping, rendering or metering) voids the trial as an infrastructure
+failure, not a score.
+"""
+
+[modes.realtime]
+success = """
+Graded: the live match, as the trusted match service recorded it while it was played; nothing is replayed. The world
+runs on a clock that does not stop: one second of game time takes {slowdown} s of real time. There is one match and no reset,
+and the agent cannot end it with `/finish`: the match's rules end it. A technical failure of the match service (a
+crash, an error in its bookkeeping, rendering or metering) voids the trial as an infrastructure failure, not a score.
+"""
+
+[robots]
+franka-panda = "Franka Emika Panda arm on a moving base (an x-y rail in table tennis, a gantry in badminton), holding a paddle or racket"
+unitree-g1 = "Unitree G1 humanoid"
+booster-t1 = "Booster T1 humanoids (the agent's team)"
+ssl-robot = "RoboCup Small Size League omnidirectional wheeled robots (the agent's team of five)"
+foosball-rods = "The four rods of one side of a foosball table"
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families: one exported match each. Every family has an `opponent`, and per-mode texts (`privileged`, `standard`,
+# `realtime`) where the modes differ.
+
+# Embodied Olympics - Match: families, part A (tabletennis_match, tabletennis_duel, tabletennis_matchlow,
+# tabletennisg1_match, foosball_match, fencing_bout). Merged after eom_head.toml into tasks/embodied-olympics-match/
+# readme.toml. B/ = embodied_first_exam/benchmarks/embodied-olympics-match/; T/<task>/ = tasks/embodied-olympics-match/
+# embodied-olympics-match-<task>/. Every family sets per-mode texts (no shared `success`); `vars[win]` is the match's
+# own end rule, shared by the modes (vars are not formatted again: no placeholders inside them).
+#
+# Common to the families graded by B/shared/tests/grade.py (all but tabletennisg1_match):
+#   standard, realtime  grade() L96-172: complete = reason in (match_over, ready_timeout, clock, abandoned, no_show)
+#               L108; valid L110; agent_sim_error L116-122 (live, finalized, slowdown set, reason technical_error, every
+#               error where "world_step", seat A applied > 0: valid, success 0); single side: success = valid and the
+#               winner is A L134-135; duel (two seats): success = valid L137, then the duel's fexam_reward.py (B/
+#               standard-realtime/tests/fexam_reward.py L18: valid_trial and A_won). No sport_grade.py sets `success`.
+#               Forfeits: B/sim/core/service.py close_start_window L323-347 (no_show at START_TIMEOUT_S = 1800, a single
+#               side's window from the service start), no_show_at_collect L349-369 (the session ends before the start),
+#               abandon_single L371-388 (the session ends in play; a built-in seat counts as no session: the duel's A
+#               loses); B/privileged/environment/fullsim/core/realtime.py timeout L344-370 (ready_timeout at
+#               READY_TIMEOUT_S = 300). The collect: each standard/realtime task.toml [[verifier.collect]] (kill the
+#               agent's container, then SIGUSR1 = Service.collect). The lockstep standard service tags its step errors
+#               "world_step" (T/<task>-standard/environment/sim/core/lockstep.py L139-144) and keeps the realtime
+#               final's `slowdown` (realtime.py extra_final L443-446): the world_step rule holds in standard too.
+#   privileged  T/<task>-privileged/tests/trusted/tools/fullsim/formal.py (= B/privileged/environment/fullsim/tools/
+#               fullsim/formal.py) evaluate(): sanitize (program.py L180-200: 512 regular files, 32 MiB, no links ->
+#               policy_error, 0); READY_TIMEOUT_S / START_TIMEOUT_S 30 L152-153; the wall cutoff -> policy_wall_timeout
+#               L203-205; a call over 5 s L231-238; not exactly {"command": ...} L243-244; at most MAX_COMMANDS (1)
+#               commands, L56-66; success = valid (valid_trial, reason match_over, the replay equal, no program error,
+#               no other reason) and winner A L326-331; a world_step error after the first applied command = valid 0
+#               L113-123, L348-350; a disagreeing replay or a trusted failure = infra L335-336, L353-356; a process left
+#               behind = 0 L357-359. Constants: tests/trusted/tools/fullsim/sports/<sport>.py and adapter.py DEFAULTS
+#               (EVERY 5, MAX_COMMANDS 1, READY_TIMEOUT_S 300). Instance: tests/match_instance.json.
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# tabletennis_match: T/tabletennis-match-i04-{privileged,standard,realtime}. Compose (standard, realtime): RO_FORMAT
+# match, RO_SEATS A, RO_LEVEL = [metadata] opponent_level, RO_SLOWDOWN 10, START_TIMEOUT_S 1800, READY_TIMEOUT_S 300,
+# RO_VERDICT_REPLAY 0; standard runs core.lockstep (environment/sim/core/lockstep.py), realtime core.realtime (from
+# B/privileged/environment/fullsim/core/realtime.py, which tags "world_step" L414-418). Match rules: tests/trusted/
+# sports/tabletennis/sport.toml [[deviations]] (one game to 5, 40-point cap), [tiebreaks] L210-213 (third undue-delay
+# fault), [timing] L153-156. Privileged: sports/tabletennis.py SLOWDOWN 10, READY_TIMEOUT_S 300, MATCH_WALL_S 7200,
+# EVERY 5 (default), ACTION_LEVEL high. Tests: grade.py + sport_grade.py from the files image; the task's own
+# fexam_reward.py does not set success.
+[families.tabletennis_match]
+opponent = "Scripted robot at level {md[opponent_level]} of 4, with the same robot and limits as the agent's"
+vars.win = """One game of table tennis: the first to 5 points wins, with a lead of 2 from 4:4, or the first to 7 (at 6:6 \
+the next point wins). At 40 points played (lets included) the player ahead wins; at a level score, the player who won \
+the last point. A player's third undue-delay fault (no toss within 5 s of the serve opening) loses it the match. There \
+are no draws."""
+privileged = """
+The instance: the agent's robot (seat A) against the scripted opponent at level {md[opponent_level]}, seed {seed}.
+{vars[win]}
+
+Deliverable: `/app/output/policy/program.py`, with any helper files in the same folder (at most 512 regular files and
+32 MiB; no links or special files, else 0). It defines `make_policy(config)`; the object it returns gets `act(view)`
+with the full state every 5 control steps. Call rules: each call must answer within 5 s, with one command or none; a
+slower call or another answer ends the match with 0. The world runs at 1/10 of real speed while the program computes.
+After every point the program must answer `{{"type": "ready"}}` within 300 s, or its side loses the match
+(`ready_timeout`). The formal match is cut off after 7200 s of wall time; an unfinished match scores 0.
+
+Success: the match ends by the rules (`match_over`) with the program's side as the winner. A forfeit scores 0. A
+simulator error in a control step, after the program's first applied command, also scores 0.
+"""
+standard = """
+The instance: the agent's robot (seat A) against the scripted opponent at level {md[opponent_level]}, seed {seed}.
+{vars[win]} The world runs in lockstep: it advances only during the agent's waits and up to the step at which its
+action takes effect.
+
+Success: the match ends by the rules (`match_over`) with the agent's side as the winner. The agent's side loses the
+match, a valid 0, by any of these forfeits:
+- `no_show`: no `game start` within 1800 s of real time after the match service starts, or the session ends before
+  the start;
+- `ready_timeout`: no `game ready` review within 300 s of real time after a point, even when ahead;
+- `abandoned`: the agent's session ends while the match is in play.
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+realtime = """
+The instance: the agent's robot (seat A) against the scripted opponent at level {md[opponent_level]}, seed {seed}.
+{vars[win]}
+
+Success: the match ends by the rules (`match_over`) with the agent's side as the winner. The agent's side loses the
+match, a valid 0, by any of these forfeits:
+- `no_show`: no `game start` within 1800 s of real time after the match service starts, or the session ends before
+  the start;
+- `ready_timeout`: no `game ready` review within 300 s of real time after a point, even when ahead;
+- `abandoned`: the agent's session ends while the match is in play.
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# tabletennis_duel: T/tabletennis-duelrl-i01-{privileged,standard,realtime}. Compose: RO_FORMAT duel, RO_SEATS A,B,
+# RO_BUILTIN_SEATS B=builtin_players:RLOpponentV2, RO_SLOWDOWN 10, START_TIMEOUT_S 1800, READY_TIMEOUT_S 300; service
+# B/sim/core/service.py (Dockerfile; abandon_single L371-388: the built-in seat B never ends a session, so A's session
+# end in play = abandoned). Tests: tests/test.sh writes 0 first, then B/standard-realtime/tests/fexam_reward.py
+# (success = valid_trial and A_won) or 0 with infra on its failure. Privileged: tests/grade.py runs the generic grader
+# with tools/fullsim/duel.py evaluate (formal.evaluate on a service that starts the built-in seat B; scores B read as
+# "opponent"); sports/tabletennis.py FORMAT duel, LEVELS (0,), SLOWDOWN 10, READY_TIMEOUT_S 300, MATCH_WALL_S 7200.
+[families.tabletennis_duel]
+opponent = "Built-in player (seat B): the same robot, limits and rules as the agent's; it reads the true ball state and picks its shots with a learned policy"
+vars.win = """One game of table tennis: the first to 5 points wins, with a lead of 2 from 4:4, or the first to 7 (at 6:6 \
+the next point wins). At 40 points played (lets included) the player ahead wins; at a level score, the player who won \
+the last point. A player's third undue-delay fault (no toss within 5 s of the serve opening) loses it the match. There \
+are no draws."""
+privileged = """
+The instance: a duel on seed {seed}, the agent's seat A against the built-in player in seat B. {vars[win]}
+
+Deliverable: `/app/output/policy/program.py`, with any helper files in the same folder (at most 512 regular files and
+32 MiB; no links or special files, else 0). It defines `make_policy(config)`; the object it returns gets `act(view)`
+with the full state every 5 control steps. Call rules: each call must answer within 5 s, with one command or none; a
+slower call or another answer ends the match with 0. The world runs at 1/10 of real speed while the program computes.
+After every point the program must answer `{{"type": "ready"}}` within 300 s, or its side loses the match
+(`ready_timeout`). The formal match is cut off after 7200 s of wall time; an unfinished match scores 0.
+
+Success: seat A wins a match that ends by the rules (`match_over`). A forfeit scores 0. A simulator error in a control
+step, after the program's first applied command, also scores 0.
+"""
+standard = """
+The instance: a duel on seed {seed}, the agent's seat A against the built-in player in seat B. {vars[win]} The world
+runs in lockstep: it advances only while every seat lets it (the agent's waits, and up to the step at which an action
+takes effect).
+
+Success: seat A wins the match. Seat A loses the match, a valid 0, by any of these forfeits:
+- `no_show`: no `game start` within 1800 s of real time after the match service starts, or the session ends before
+  the start;
+- `ready_timeout`: no `game ready` review within 300 s of real time after a point, even when ahead;
+- `abandoned`: the agent's session ends while the match is in play.
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+realtime = """
+The instance: a duel on seed {seed}, the agent's seat A against the built-in player in seat B. {vars[win]}
+
+Success: seat A wins the match. Seat A loses the match, a valid 0, by any of these forfeits:
+- `no_show`: no `game start` within 1800 s of real time after the match service starts, or the session ends before
+  the start;
+- `ready_timeout`: no `game ready` review within 300 s of real time after a point, even when ahead;
+- `abandoned`: the agent's session ends while the match is in play.
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# tabletennis_matchlow: T/tabletennis-matchlow-i01-{privileged,standard,realtime}. Compose: RO_FORMAT match, RO_LEVEL 1,
+# RCB_ACTION_LEVEL low, RCB_SKILL_INLOOP_A tcp:127.0.0.1:8765, RCB_SKILL_INLOOP_TIMING sync, RCB_SKILL_REMOTE_ONLY 1,
+# RO_SLOWDOWN 10, START_TIMEOUT_S 1800, READY_TIMEOUT_S 300; standard command core.lockstep; realtime core B/sim/
+# variants/7d590e169f/core/realtime.py (tags "world_step" L414-418). The skill in the loop as instruction.md "The skill
+# in the loop" states it (a failed, late or invalid call: no command). The task's own tests/fexam_reward.py only counts
+# skill calls (skill_calls, skill_calls_failed, ...): success is grade.py's. Privileged: sports/tabletennis.py
+# ACTION_LEVEL low (no in-loop skill: the program sends traj / slew / hold / toss), EVERY 2, SLOWDOWN 10,
+# READY_TIMEOUT_S 300, MATCH_WALL_S 7200.
+[families.tabletennis_matchlow]
+opponent = "Scripted robot at level {md[opponent_level]} of 4, with the same robot and limits as the agent's"
+vars.win = """One game of table tennis: the first to 5 points wins, with a lead of 2 from 4:4, or the first to 7 (at 6:6 \
+the next point wins). At 40 points played (lets included) the player ahead wins; at a level score, the player who won \
+the last point. A player's third undue-delay fault (no toss within 5 s of the serve opening) loses it the match. There \
+are no draws."""
+privileged = """
+The instance: the agent's robot (seat A) against the scripted opponent at level {md[opponent_level]}, seed {seed}, at
+the low action level. {vars[win]}
+
+Deliverable: `/app/output/policy/program.py`, with any helper files in the same folder (at most 512 regular files and
+32 MiB; no links or special files, else 0). It defines `make_policy(config)`; the object it returns gets `act(view)`
+with the full state every 2 control steps and returns the robot's low-level commands itself (`traj`, `slew`, `hold`,
+`toss`); there is no hit skill. Call rules: each call must answer within 5 s, with one command or none; a slower call or
+another answer ends the match with 0. The world runs at 1/10 of real speed while the program computes. After every
+point the program must answer `{{"type": "ready"}}` within 300 s, or its side loses the match (`ready_timeout`). The
+formal match is cut off after 7200 s of wall time; an unfinished match scores 0.
+
+Success: the match ends by the rules (`match_over`) with the program's side as the winner. A forfeit scores 0. A
+simulator error in a control step, after the program's first applied command, also scores 0.
+"""
+standard = """
+The instance: the agent's robot (seat A) against the scripted opponent at level {md[opponent_level]}, seed {seed}, at
+the low action level. {vars[win]} Every stroke is a `hit` that the simulator hands, in the loop, to the agent's own
+skill server in the agent's own container; a call that fails, is late or returns no valid command gives no command.
+The world runs in lockstep: it advances only during the agent's waits and up to the step at which an action takes
+effect, and it waits for each skill call.
+
+Success: the match ends by the rules (`match_over`) with the agent's side as the winner. The grader checks only the
+match result. The agent's side loses the match, a valid 0, by any of these forfeits:
+- `no_show`: no `game start` within 1800 s of real time after the match service starts, or the session ends before
+  the start;
+- `ready_timeout`: no `game ready` review within 300 s of real time after a point, even when ahead;
+- `abandoned`: the agent's session ends while the match is in play.
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+realtime = """
+The instance: the agent's robot (seat A) against the scripted opponent at level {md[opponent_level]}, seed {seed}, at
+the low action level. {vars[win]} Every stroke is a `hit` that the simulator hands, in the loop, to the agent's own
+skill server in the agent's own container; a call that fails, is late or returns no valid command gives no command.
+The world does not wait for a skill call.
+
+Success: the match ends by the rules (`match_over`) with the agent's side as the winner. The grader checks only the
+match result. The agent's side loses the match, a valid 0, by any of these forfeits:
+- `no_show`: no `game start` within 1800 s of real time after the match service starts, or the session ends before
+  the start;
+- `ready_timeout`: no `game ready` review within 300 s of real time after a point, even when ahead;
+- `abandoned`: the agent's session ends while the match is in play.
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# tabletennisg1_match: T/tabletennisg1-match{cpu,gpu}-i01-{privileged,standard,realtime} (the two tiers' tests are
+# identical: match_instance.json, formal.py, eo_judge/). Not B/shared/tests/grade.py: the Embodied Olympics Judge
+# (tests/grade.py -> tests/eo_judge/verifier.py _main L89-147, project.reward L75-118: success = valid and the winner
+# is A; verdict.py end_faults L485-608: match_over and clock -> completed; resigned (`game resign`) and abandoned with
+# session_end_decides (RO_COLLECT_ENDS_MATCH 1, core/service.py L741) -> the side loses; no_show at the preparation
+# deadline or at a session end before the start -> the side loses (_absence L611-631); ready_timeout, wall_cap,
+# integrity_abort, technical_error, aborted -> platform_fault / void (L501-503, L536-549, L581-582; rules.py R-REVIEW,
+# R-WALLCAP, R-INTEGRITY, R-WORLD; valid = no void fault L1070); a world error is undetermined -> void (error_faults
+# L715-727): no agent's-0 rule for simulator errors. tests/fexam_reward.py: infra unless graded live, success 0 on
+# infra. Compose: RO_SPORT tabletennis_g1, RO_LEVEL 4, RO_SLOWDOWN 1, START_TIMEOUT_S 1800 (taskspec timing.prepare_s
+# 1800, from t0 = the seat's first request: core/phases.py L79-90, L440), READY_TIMEOUT_S 300 (review_s),
+# MATCH_TIMEOUT_S 6360, RO_VERDICT_REPLAY 0; standard core.lockstep, realtime core/launch.py. Rules: instruction.md
+# (16-point cap; `game rules`). Privileged: tests/formal.py main L98-165 (no deliverable -> 0; the runner's failure or a
+# disagreeing replay -> infra; a surviving process -> 0; success = finished and winner A), g1tt_priv/match.py Seat.act
+# L54-80 (over budget_s 1800 of program time -> None; an error or a call over call_limit_s 0.5 -> no command),
+# MAX_STEPS 636000 L81; match_instance.json.
+[families.tabletennisg1_match]
+others = """
+Ported from Embodied Olympics core 0.5, which has no exporter: its task `{md[source_task]}` (revision
+`{md[revision]}`, upstream commit `{md[source_commits][0]}`). The files changed here are listed for this task in
+`ci_checks/benchmarks/embodied-olympics-match/exported.toml`.
+"""
+opponent = "Scripted Unitree G1 at level {md[opponent_level]} of 4 (the BOSS), which reads the ball's true position, velocity and spin"
+vars.win = """One game of table tennis between two Unitree G1s: the first to 5 points with a lead of 2, or the first to \
+7, wins. At 16 points played (lets included) the player ahead wins; at a level score, the player who won the last \
+point. A player's third undue-delay fault loses it the match. There are no draws."""
+privileged = """
+The instance: the agent's G1 (seat A) against the scripted G1 at level {md[opponent_level]}, seed {seed}. {vars[win]}
+
+Deliverable: `/app/output/policy/program.py`, with any helper files in the same folder (at most 512 regular files and
+32 MiB; no links). It defines `make_policy(config)`; the object it returns gets `act(view)` with the seat's state, the
+camera images and the ground truth at every control step (10 ms of game time). The sport's in-process runner waits for
+each answer. An answer later than 0.5 s of wall time, a program error or no answer is no command at that step; after
+1800 s of the program's own time in total it sends no more commands. A missing `program.py` scores 0.
+
+Success: the match ends by the rules with the program's side as the winner. A match still unfinished after 636,000
+control steps is not won. A process of the program left running after the match scores 0. A failure of the trusted
+runner, or a fresh-process replay that disagrees with the match, is an infrastructure failure, not a score.
+"""
+standard = """
+The instance: the agent's G1 (seat A) against the scripted G1 at level {md[opponent_level]}, seed {seed}. {vars[win]}
+The world runs in lockstep: it advances only during the agent's waits and up to the step at which its command takes
+effect.
+
+Success: the match ends with the agent's side as the winner. The agent's side loses, a valid 0, by:
+- `no_show`: no `game start` within the 1800 s preparation counted from the seat's first `game` request, or the
+  session ends before the start;
+- `abandoned`: the agent's session ends while the match is in play;
+- `resigned`: the agent sends `game resign`.
+
+A missed review never loses: the match resumes at the review's 300 s deadline. A failure of the world, the match
+service or the platform, and a match the wall-clock cap stops, void the trial as an infrastructure failure; a
+simulator error is one of these, never the agent's 0.
+"""
+realtime = """
+The instance: the agent's G1 (seat A) against the scripted G1 at level {md[opponent_level]}, seed {seed}. {vars[win]}
+
+Success: the match ends with the agent's side as the winner. The agent's side loses, a valid 0, by:
+- `no_show`: no `game start` within the 1800 s preparation counted from the seat's first `game` request, or the
+  session ends before the start;
+- `abandoned`: the agent's session ends while the match is in play;
+- `resigned`: the agent sends `game resign`.
+
+A missed review never loses: the match resumes at the review's 300 s deadline. A failure of the world, the match
+service or the platform, a breach of the real-time integrity checks, and a match the wall-clock cap stops, void the
+trial as an infrastructure failure; a simulator error is one of these, never the agent's 0.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# foosball_match: T/foosball-match-i01-{privileged,standard,realtime}. Compose: RO_SPORT foosball, RO_FORMAT match,
+# RO_LEVEL 3, RCB_ACTION_LEVEL low, RO_SLOWDOWN 20, START_TIMEOUT_S 1800, READY_TIMEOUT_S 300, RO_VERDICT_REPLAY 0,
+# RCB_WALL_CLOCK_S 14400; standard runs the lockstep service (environment/sim/core/lockstep.py), realtime the fullsim
+# core realtime.py. Rules: environment/sim/sport/sport.toml [[deviations]] L30-50, [formats.match] L83-99 (reviews after
+# every rally), [spec] format L114, [tiebreaks] L128-129. The task's own tests/sport_grade.py and fexam_reward.py do
+# not set success. Privileged: sports/foosball.py SLOWDOWN 20, EVERY 1, MAX_COMMANDS 1, READY_TIMEOUT_S 300,
+# MATCH_WALL_S 6000.
+[families.foosball_match]
+opponent = "Scripted computer team at level {md[opponent_level]} of 4, playing on the true ball position a short reaction delay ago, with the same rods"
+vars.win = """One game of foosball: the first to 5 goals wins. The game also ends after 240 s of play (frozen time does \
+not count) or 40 rallies; then the player with more goals wins; at equal goals, the player who scored the last goal; if \
+nobody scored, the player with the ball less time in its own half; as a last resort, the player who did not have the \
+first kick-off. There are no draws."""
+privileged = """
+The instance: the agent's four rods (seat A) against the computer team at level {md[opponent_level]}, seed {seed}.
+{vars[win]}
+
+Deliverable: `/app/output/policy/program.py`, with any helper files in the same folder (at most 512 regular files and
+32 MiB; no links or special files, else 0). It defines `make_policy(config)`; the object it returns gets `act(view)`
+with the full state at every control step. Call rules: each call must answer within 5 s, with one command or none; a
+slower call or another answer ends the game with 0. The world runs at 1/20 of real speed while the program computes.
+After every rally the program must answer `{{"type": "ready"}}` within 300 s, or its side loses the game
+(`ready_timeout`). The formal game is cut off after 6000 s of wall time; an unfinished game scores 0.
+
+Success: the game ends by the rules (`match_over`) with the program's side as the winner. A forfeit scores 0. A
+simulator error in a control step, after the program's first applied command, also scores 0.
+"""
+standard = """
+The instance: the agent's four rods (seat A) against the computer team at level {md[opponent_level]}, seed {seed}.
+{vars[win]} The world runs in lockstep: it advances only during the agent's waits and up to the step at which its
+action takes effect.
+
+Success: the game ends by the rules (`match_over`) with the agent's side as the winner. The agent's side loses the
+game, a valid 0, by any of these forfeits:
+- `no_show`: no `game start` within 1800 s of real time after the match service starts, or the session ends before
+  the start;
+- `ready_timeout`: no `game ready` review within 300 s of real time after a rally, even when ahead;
+- `abandoned`: the agent's session ends while the game is in play.
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+realtime = """
+The instance: the agent's four rods (seat A) against the computer team at level {md[opponent_level]}, seed {seed}.
+{vars[win]}
+
+Success: the game ends by the rules (`match_over`) with the agent's side as the winner. The agent's side loses the
+game, a valid 0, by any of these forfeits:
+- `no_show`: no `game start` within 1800 s of real time after the match service starts, or the session ends before
+  the start;
+- `ready_timeout`: no `game ready` review within 300 s of real time after a rally, even when ahead;
+- `abandoned`: the agent's session ends while the game is in play.
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# fencing_bout: T/fencing-bout-i02-{privileged,standard} (no realtime: a turn sport). Compose (standard): RO_SPORT
+# fencing, RO_FORMAT bout, RO_LEVEL 2, no RO_SLOWDOWN, CLOCK_S 3600, START_TIMEOUT_S 1800, RO_VERDICT_REPLAY 0;
+# service core/turn.py (B/privileged/environment/fullsim/core/turn.py: chess clock on the seat's own turn L38, out of
+# time -> clock L259, L302, L333; no review time limit (no READY_TIMEOUT_S); at the collect: on turn -> clock or
+# abandoned L340, before the start -> no_show L341, off turn -> abandoned L343). grade.py: the final has no slowdown,
+# so the world_step rule does not apply (L116): any service error is infra. B/standard/tests/fexam_reward.py does not
+# set success. Rules: tests/trusted/sports/fencing/sport.toml [tiebreaks] L140-141, bout L133, unwillingness L86.
+# Privileged: tests/grade.py runs the generic grader with tools/fullsim/turn.py evaluate (L65-261: the program called
+# on its turn and at each review after its action, EXCHANGE_S 5 per call, the wall cutoff MATCH_WALL_S 4200 ->
+# policy_wall_timeout, success = valid (reason match_over ...) and winner A L234-238); sports/fencing.py CLOCK_S 3600,
+# LEVELS (1, 2), MATCH_WALL_S 4200.
+[families.fencing_bout]
+opponent = "Scripted fencer at level {md[opponent_level]} (the higher of its two levels), which picks its intention before each phrase from what it has seen, never from the agent's choice for that phrase"
+vars.win = """One epee bout between two Unitree G1s: the first to 15 touches wins. After 9 minutes of fencing time the \
+fencer ahead wins; at equal scores one more minute is fenced, the first touch decides, else the fencer with priority \
+(drawn by lot before it) wins. A second minute of fencing time without a touch (unwillingness to fight) loses the bout \
+for the fencer with the lower score; at equal scores a seeded lot decides. There are no draws."""
+privileged = """
+The instance: the agent's fencer (seat A) against the scripted fencer at level {md[opponent_level]}, seed {seed}.
+{vars[win]}
+
+Deliverable: `/app/output/policy/program.py`, with any helper files in the same folder (at most 512 regular files and
+32 MiB; no links or special files, else 0). It defines `make_policy(config)`; the object it returns gets `act(view)`
+with the full state on each of its turns (one phrase intention) and at the review after each of its phrases (answer
+`{{"type": "ready"}}`). Call rules: each call must answer within 5 s, with one command or none; a slower call or
+another answer ends the bout with 0. The program's chess clock (3600 s in all) runs while it computes on its turn; out
+of time loses the bout (`clock`). The formal bout is cut off after 4200 s of wall time; an unfinished bout scores 0.
+
+Success: the bout ends by the rules (`match_over`) with the program's side as the winner. A forfeit scores 0.
+"""
+standard = """
+The instance: the agent's fencer (seat A) against the scripted fencer at level {md[opponent_level]}, seed {seed}.
+{vars[win]} The bout is played in turns: one action per turn, then the agent's review (`game ready`) before play goes
+on.
+
+Success: the bout ends by the rules (`match_over`) with the agent's side as the winner. The agent's side loses the
+bout, a valid 0, by any of these forfeits:
+- `no_show`: no `game start` within 1800 s of real time after the match service starts, or the session ends before
+  the start;
+- `clock`: the agent's chess clock (3600 s of real time, running only on its own turn: its actions and its reviews)
+  runs out;
+- `abandoned`: the agent's session ends while the bout is in play.
+
+Any error of the match service, the simulator included, is an infrastructure failure, not a score.
+"""
+
+# Families, part B: badminton_match, badminton_duel, badminton_matchlow, soccer_match, soccer_jointmatch,
+# soccer_ssl_match. Keys: opponent, success (standard and realtime), privileged (the formal match). Literal braces are
+# doubled ({{ }}): every text goes through str.format_map.
+#
+# Sources checked (T/ = tasks/embodied-olympics-match/embodied-olympics-match-; B/ = embodied_first_exam/benchmarks/
+# embodied-olympics-match/):
+#   forfeits    B/sim/core/service.py close_start_window L323-347, no_show_at_collect L349-364, abandon_single L372-387
+#               (a built-in seat B counts as no session: the duel's seat A alone loses "abandoned");
+#               B/sim/core/realtime.py timeout L339-361 (ready_timeout); T/<task>-standard/environment/sim/core/
+#               lockstep.py (the same rules, the world waits); each task's docker-compose.yaml START_TIMEOUT_S,
+#               READY_TIMEOUT_S; task.toml [[verifier.collect]] SIGUSR1 = the collect (the session has ended).
+#               B/shared/tests/grade.py grade(): a forfeit is complete with a winner = a valid 0 for the agent.
+#   privileged  T/<task>-privileged/tests/trusted/tools/fullsim/formal.py evaluate() (identical in all six families):
+#               START/READY env, the loop (a view when k >= next_at, next_at = k + EVERY after each answer; reviews:
+#               every loop turn), 5 s per call, {"command": ...} only, commands_of (<= MAX_COMMANDS, ready alone),
+#               a view from a finished unit -> dropped, wall_limit -> policy_wall_timeout, success = valid (reason
+#               match_over, replay equal, no program error) and winner A; program.py (load 30 s, 1 MiB per message,
+#               512 files / 32 MiB, no links); tools/fullsim/sports/<sport>.py constants (EVERY / MAX_COMMANDS default
+#               5 / 1, tools/fullsim/adapter.py L21-22). badminton_duel: tests/grade.py -> tools/fullsim/duel.py (seat
+#               B built in, scores B read as "opponent").
+#   badminton   trusted/sports/badminton/sim/bm.py L170-176 (11, cap 15, 400 hits, 40 points, LEG_STEPS 600), _referee
+#               L1594-1700, match_over / _end_point L1703-1729 (the cap's last resort: "opponent"); sim/bduel.py
+#               L285-288, L339-368 (last resort OTHER[FIRST_SERVER]), L491-508 (both moved -> let), L538 (6 s);
+#               sport/plugin.py phase L183-188 (a cap end is FINISHED too: the core ends it "match_over"),
+#               EXPORT_LEVELS L71-72 (4/5 on level 2: reaction 0.22 s, recover 2.0, kill 0.7/0.9); bm.py LEVELS L193-
+#               216; builtin_players.py RLOpponent L838-866.
+#   soccer      trusted/sports/soccer/soccer.py L76-101 (HALF_S 300, MERCY 10, KICKOFF_FREE_S 10, BALL_STOP_EXT_S 3,
+#               PSO 3 / 3 / 20 s), L1032 (0.15 m), L1113-1117 (half end), L1273 (kick-off touch), L1288 (mercy),
+#               L1363 (keeper 0.6 m), _pso_winner L1408-1429; COACH_LEVELS L1534-1552 (level 2: 0.3 s, 0.65 m/s,
+#               in-walk kick); plugin.py tiebreaks L239-249.
+#   joint       T/soccer-joint{cpu,gpu}-i01-*/tests/fexam_reward.py L19-49 (fingerprint.json; flag -> 0; a win with
+#               applied acts and no audit -> infra), task.toml collect (policy_fingerprint.py --every 20, timeout
+#               1100 s), B/sim/audit/policy_fingerprint.py (FLAG_RAD 0.02, LAGS 4, --max 600, flag = a robot with more
+#               than half its samples below FLAG_RAD; only when the seat won); trusted soccer.py L1681-1698 and
+#               rl_joint.py (level 5: PPO gait under joint control, a learned plan).
+#   soccer_ssl  trusted/sports/soccer_ssl/sim/referee.py L29-68 (300 s halves, EARLY_END_GOALS 10 with a lead > 1 L514,
+#               5 kicks, 10 rounds then coin L1107-1125); plugin.py phase L332-337, tiebreaks L357-376; opponents/
+#               rl.py (level 4 = scripted L3 + an option network, DELAY 0) and opponents/__init__.py LEVELS L49-57.
+
+[families.badminton_match]
+opponent = "Scripted robot at level 5 (a tier above the sport's levels 1-3) with the same arm, racket and gantry limits: it plays from the simulator's true state, predicts the shuttle's flight exactly, reacts 0.22 s after your hit, returns every shuttle it can reach, places most shots away from your base and reads habits in your shots"
+standard = """
+One game of singles badminton with rally scoring against the scripted opponent; you serve the first point. The first
+to 11 points wins; from 10-10 a player must lead by 2, and at 14-14 the next point wins (at most 15). The match also
+ends after 400 hits (both sides) or 40 points played (lets included): then the player with more points wins; at equal
+points, the winner of the last point that was not a let; if no point was won, the opponent. There are no draws.
+
+You lose a point when your shot goes into the net, comes down on your own side or lands outside the opponent's singles
+court (lines are in); when a shuttle that is yours to hit lands in your court, or is still unplayed 6 s after the
+opponent played it; and on your own service fault: no toss within 3 s (the window opens 1 s after play resumes), a
+miss (the shuttle lands, or 6 s pass after the toss), a hit above 1.15 m or not upwards, a serve into the net or outside
+the opponent's diagonal service court. Your base more than 5 cm from its serve spot before the serve is delivered also
+loses you the point. You win the point when the opponent's shot lands out or in the net, or its serve is a fault.
+
+The world runs in lockstep: it advances only during the agent's waits and up to the step at which its action
+takes effect.
+
+Success: the match ends by these rules and you won it. Your side loses the match at once, a valid 0, if you do not send
+`game start` within 1800 s of real time after the match service starts or before your session ends (`no_show`); if a
+review is not sent with `game ready` within 300 s of real time after a point (`ready_timeout`, even when you are
+ahead); or if your session ends before the match is over (`abandoned`).
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+realtime = """
+One game of singles badminton with rally scoring against the scripted opponent; you serve the first point. The first
+to 11 points wins; from 10-10 a player must lead by 2, and at 14-14 the next point wins (at most 15). The match also
+ends after 400 hits (both sides) or 40 points played (lets included): then the player with more points wins; at equal
+points, the winner of the last point that was not a let; if no point was won, the opponent. There are no draws.
+
+You lose a point when your shot goes into the net, comes down on your own side or lands outside the opponent's singles
+court (lines are in); when a shuttle that is yours to hit lands in your court, or is still unplayed 6 s after the
+opponent played it; and on your own service fault: no toss within 3 s (the window opens 1 s after play resumes), a
+miss (the shuttle lands, or 6 s pass after the toss), a hit above 1.15 m or not upwards, a serve into the net or outside
+the opponent's diagonal service court. Your base more than 5 cm from its serve spot before the serve is delivered also
+loses you the point. You win the point when the opponent's shot lands out or in the net, or its serve is a fault.
+
+Success: the match ends by these rules and you won it. Your side loses the match at once, a valid 0, if you do not send
+`game start` within 1800 s of real time after the match service starts or before your session ends (`no_show`); if a
+review is not sent with `game ready` within 300 s of real time after a point (`ready_timeout`, even when you are
+ahead); or if your session ends before the match is over (`abandoned`).
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+privileged = """
+The match and its point rules: one game of singles badminton with rally scoring against the scripted opponent; you
+serve the first point. The first to 11 points wins; from 10-10 a player must lead by 2, and at 14-14 the next point
+wins (at most 15). The match also ends after 400 hits (both sides) or 40 points played (lets included): then the player
+with more points wins; at equal points, the winner of the last point that was not a let; if no point was won, the
+opponent. You lose a point when your shot goes into the net, comes down on your own side or lands out; when a shuttle
+that is yours to hit lands in your court or is still unplayed 6 s after the opponent played it; on your own service
+fault (no toss within 3 s of the window opening 1 s after play resumes, a miss, a hit above 1.15 m or not upwards, a
+serve into the net or outside the diagonal service court); and when your base leaves its serve spot by more than 5 cm
+before the serve is delivered.
+
+The call rules: the files under `/app/output/policy/` (at most 512 regular files and 32 MiB, no links or special
+files, with `program.py`) are copied and run as an unprivileged process. `make_policy(config)` must be ready within
+30 s. The match runs at 1/20 of real speed while the program computes. After each answer, the next view comes once 5
+more control steps (0.05 s of game time) have passed; during a review the program is asked again and again. Each call
+must answer within 5 s with exactly one response of at most 1 MiB: None, one command, or `{{"type": "ready"}}` alone. A
+command the match refuses does not end the match; one that answers a view from a point that has ended is dropped. A
+review not ended with `ready` within 300 s loses the match (`ready_timeout`), and a match not over within 7200 s of
+wall time from the start of the evaluation scores 0. Only a match that ends by its rules (`match_over`) can pass.
+
+A simulator error in a control step, after the program's first applied command, also scores 0.
+"""
+
+[families.badminton_duel]
+opponent = "Built-in player (seat B) with the same robot, limits, rules and stroke controller as yours: it reads the true shuttle state and your base position instead of the cameras, and a policy trained by the cross-entropy method picks its contact, its shot and where its base waits"
+standard = """
+One game of singles badminton with rally scoring between you (seat `A`) and the built-in player (seat `B`); `A`
+serves the first point. The first to 11 points wins; from 10-10 a player must lead by 2, and at 14-14 the next point
+wins (at most 15). The match also ends after 400 hits (both sides) or 40 points played (lets included): then the
+player with more points wins; at equal points, the winner of the last point that was not a let; if no point was won,
+`B` (the player who received first). There are no draws.
+
+The rules are the same for both players. A player loses the point when its shot goes into the net, comes down on its
+own side or lands outside the other singles court (lines are in); when a shuttle that is its to hit lands in its court,
+or is still unplayed more than 6 s after it was last played; and on its own service fault: no toss within 3 s (the
+window opens 1 s after play resumes), a miss, a hit above 1.15 m or not upwards, a serve into the net or outside the
+receiver's diagonal service court. A base more than 5 cm from its serve spot before the serve is delivered loses that
+player the point; if both bases move, the point is a let and is replayed.
+
+The world runs in lockstep: it advances only during the agent's waits and up to the step at which its action
+takes effect.
+
+Success: the match ends by these rules and seat `A` won it. Seat `A` loses the match at once, a valid 0, if it does not
+send `game start` within 1800 s of real time after the match service starts or before the session ends (`no_show`); if
+its review is not sent with `game ready` within 300 s of real time after a point (`ready_timeout`, even when ahead); or
+if the session ends before the match is over (`abandoned`). The built-in player never ends a session.
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+realtime = """
+One game of singles badminton with rally scoring between you (seat `A`) and the built-in player (seat `B`); `A`
+serves the first point. The first to 11 points wins; from 10-10 a player must lead by 2, and at 14-14 the next point
+wins (at most 15). The match also ends after 400 hits (both sides) or 40 points played (lets included): then the
+player with more points wins; at equal points, the winner of the last point that was not a let; if no point was won,
+`B` (the player who received first). There are no draws.
+
+The rules are the same for both players. A player loses the point when its shot goes into the net, comes down on its
+own side or lands outside the other singles court (lines are in); when a shuttle that is its to hit lands in its court,
+or is still unplayed more than 6 s after it was last played; and on its own service fault: no toss within 3 s (the
+window opens 1 s after play resumes), a miss, a hit above 1.15 m or not upwards, a serve into the net or outside the
+receiver's diagonal service court. A base more than 5 cm from its serve spot before the serve is delivered loses that
+player the point; if both bases move, the point is a let and is replayed.
+
+Success: the match ends by these rules and seat `A` won it. Seat `A` loses the match at once, a valid 0, if it does not
+send `game start` within 1800 s of real time after the match service starts or before the session ends (`no_show`); if
+its review is not sent with `game ready` within 300 s of real time after a point (`ready_timeout`, even when ahead); or
+if the session ends before the match is over (`abandoned`). The built-in player never ends a session.
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+privileged = """
+The match and its point rules: one game of singles badminton with rally scoring between your program (seat `A`) and
+the built-in player (seat `B`), which runs inside the match service as in the live match; `A` serves the first point.
+The first to 11 points wins; from 10-10 a player must lead by 2, and at 14-14 the next point wins (at most 15). The
+match also ends after 400 hits (both sides) or 40 points played (lets included): then the player with more points
+wins; at equal points, the winner of the last point that was not a let; if no point was won, `B`. Both players lose a
+point by the same faults: a shot into the net, down on its own side or out; a shuttle that is its to hit landing in its
+court or unplayed for more than 6 s; a service fault (no toss within 3 s of the window opening 1 s after play resumes,
+a miss, a hit above 1.15 m or not upwards, a serve into the net or outside the diagonal service court); a base more than
+5 cm off its serve spot before the serve is delivered (both: a let).
+
+The call rules: the files under `/app/output/policy/` (at most 512 regular files and 32 MiB, no links or special
+files, with `program.py`) are copied and run as an unprivileged process. `make_policy(config)` must be ready within
+30 s. The match runs at 1/20 of real speed while the program computes. After each answer, the next view comes once 5
+more control steps (0.05 s of game time) have passed; during a review the program is asked again and again. Each call
+must answer within 5 s with exactly one response of at most 1 MiB: None, one command, or `{{"type": "ready"}}` alone. A
+command the match refuses does not end the match; one that answers a view from a point that has ended is dropped. A
+review not ended with `ready` within 300 s loses the match (`ready_timeout`), and a match not over within 7200 s of
+wall time from the start of the evaluation scores 0. Only a match that ends by its rules (`match_over`) can pass.
+
+A simulator error in a control step, after the program's first applied command, also scores 0.
+"""
+
+[families.badminton_matchlow]
+opponent = "Scripted robot at level 2 with the same arm, racket and gantry limits: it plays from the simulator's true state, predicts the shuttle's flight exactly, reacts 0.25 s after your hit, returns every shuttle it can reach, places most shots away from your base and reads habits in your shots"
+standard = """
+One game of singles badminton with rally scoring against the scripted opponent; you serve the first point. The first
+to 11 points wins; from 10-10 a player must lead by 2, and at 14-14 the next point wins (at most 15). The match also
+ends after 400 hits (both sides) or 40 points played (lets included): then the player with more points wins; at equal
+points, the winner of the last point that was not a let; if no point was won, the opponent. There are no draws.
+
+You lose a point when your shot goes into the net, comes down on your own side or lands outside the opponent's singles
+court (lines are in); when a shuttle that is yours to hit lands in your court, or is still unplayed 6 s after the
+opponent played it; and on your own service fault: no toss within 3 s (the window opens 1 s after play resumes), a
+miss (the shuttle lands, or 6 s pass after the toss), a hit above 1.15 m or not upwards, a serve into the net or outside
+the opponent's diagonal service court. Your base more than 5 cm from its serve spot before the serve is delivered also
+loses you the point. You win the point when the opponent's shot lands out or in the net, or its serve is a fault.
+
+Every `act` you send is played by the skill you serve from `/app/output/skill/` (a call that fails sends no command).
+The grade is the match result alone: the skill is not scored, and which commands played the strokes is not checked.
+
+The world runs in lockstep: it advances only during the agent's waits and up to the step at which its action
+takes effect.
+
+Success: the match ends by these rules and you won it. Your side loses the match at once, a valid 0, if you do not send
+`game start` within 1800 s of real time after the match service starts or before your session ends (`no_show`); if a
+review is not sent with `game ready` within 300 s of real time after a point (`ready_timeout`, even when you are
+ahead); or if your session ends before the match is over (`abandoned`).
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+realtime = """
+One game of singles badminton with rally scoring against the scripted opponent; you serve the first point. The first
+to 11 points wins; from 10-10 a player must lead by 2, and at 14-14 the next point wins (at most 15). The match also
+ends after 400 hits (both sides) or 40 points played (lets included): then the player with more points wins; at equal
+points, the winner of the last point that was not a let; if no point was won, the opponent. There are no draws.
+
+You lose a point when your shot goes into the net, comes down on your own side or lands outside the opponent's singles
+court (lines are in); when a shuttle that is yours to hit lands in your court, or is still unplayed 6 s after the
+opponent played it; and on your own service fault: no toss within 3 s (the window opens 1 s after play resumes), a
+miss (the shuttle lands, or 6 s pass after the toss), a hit above 1.15 m or not upwards, a serve into the net or outside
+the opponent's diagonal service court. Your base more than 5 cm from its serve spot before the serve is delivered also
+loses you the point. You win the point when the opponent's shot lands out or in the net, or its serve is a fault.
+
+Every `act` you send is played by the skill you serve from `/app/output/skill/` (a call that fails sends no command).
+The grade is the match result alone: the skill is not scored, and which commands played the strokes is not checked.
+
+Success: the match ends by these rules and you won it. Your side loses the match at once, a valid 0, if you do not send
+`game start` within 1800 s of real time after the match service starts or before your session ends (`no_show`); if a
+review is not sent with `game ready` within 300 s of real time after a point (`ready_timeout`, even when you are
+ahead); or if your session ends before the match is over (`abandoned`).
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+privileged = """
+The match and its point rules: one game of singles badminton with rally scoring against the scripted opponent, played
+with the low-level commands (`traj`, `move`, `toss`, `none`); you serve the first point. The first to 11 points wins;
+from 10-10 a player must lead by 2, and at 14-14 the next point wins (at most 15). The match also ends after 400 hits
+(both sides) or 40 points played (lets included): then the player with more points wins; at equal points, the winner
+of the last point that was not a let; if no point was won, the opponent. You lose a point when your shot goes into the
+net, comes down on your own side or lands out; when a shuttle that is yours to hit lands in your court or is still
+unplayed 6 s after the opponent played it; on your own service fault (no toss within 3 s of the window opening 1 s
+after play resumes, a miss, a hit above 1.15 m or not upwards, a serve into the net or outside the diagonal service
+court); and when your base leaves its serve spot by more than 5 cm before the serve is delivered.
+
+The call rules: the files under `/app/output/policy/` (at most 512 regular files and 32 MiB, no links or special
+files, with `program.py`) are copied and run as an unprivileged process. `make_policy(config)` must be ready within
+30 s. The match runs at 1/20 of real speed while the program computes. After each answer, the next view comes once 2
+more control steps (0.02 s of game time) have passed; during a review the program is asked again and again. Each call
+must answer within 5 s with exactly one response of at most 1 MiB: None, one command, or `{{"type": "ready"}}` alone. A
+command the match refuses does not end the match; one that answers a view from a point that has ended is dropped. A
+review not ended with `ready` within 300 s loses the match (`ready_timeout`), and a match not over within 7200 s of
+wall time from the start of the evaluation scores 0. Only a match that ends by its rules (`match_over`) can pass.
+
+A simulator error in a control step, after the program's first applied command, also scores 0.
+"""
+
+[families.soccer_match]
+opponent = "Scripted team B at level 2: two Booster T1s on the same walking policy and kick skill as yours; they read the simulator's true state, react to the ball 0.3 s late, walk at most 0.65 m/s and kick in their stride (the in-walk kick)"
+standard = """
+One 2 v 2 match of two halves of 5 minutes of game time (a half runs on for up to 3 s while the ball still rolls). The
+team with more goals after two halves wins; a 10-goal lead wins at once. Level after two halves: a shoot-out of 3 kicks
+each (decided as soon as one team cannot be caught), then up to 3 sudden-death rounds, each won by the better kick
+(goal, saved, post, wide, other, no kick, in this order), then a coin toss drawn from the seed. There are no draws. In
+the shoot-out the striker has 20 s to touch the ball, and a keeper more than 0.6 m from its goal line before the touch
+concedes a goal. A kick-off team that scores before it touched the ball outside the centre circle gets no goal.
+
+The world runs in lockstep: it advances only during the agent's waits and up to the step at which its action
+takes effect.
+
+Success: the match ends by these rules and team A won it. Your side loses the match at once, a valid 0, if you do not
+send `game start` within 1800 s of real time after the match service starts or before your session ends (`no_show`);
+if a review is not sent with `game ready` within 600 s of real time after a stoppage (a goal, half time, a dropped
+ball, full time when level, each shoot-out kick; `ready_timeout`, even when you are ahead); or if your session ends
+before the match is over (`abandoned`).
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+realtime = """
+One 2 v 2 match of two halves of 5 minutes of game time (a half runs on for up to 3 s while the ball still rolls). The
+team with more goals after two halves wins; a 10-goal lead wins at once. Level after two halves: a shoot-out of 3 kicks
+each (decided as soon as one team cannot be caught), then up to 3 sudden-death rounds, each won by the better kick
+(goal, saved, post, wide, other, no kick, in this order), then a coin toss drawn from the seed. There are no draws. In
+the shoot-out the striker has 20 s to touch the ball, and a keeper more than 0.6 m from its goal line before the touch
+concedes a goal. A kick-off team that scores before it touched the ball outside the centre circle gets no goal.
+
+Success: the match ends by these rules and team A won it. Your side loses the match at once, a valid 0, if you do not
+send `game start` within 1800 s of real time after the match service starts or before your session ends (`no_show`);
+if a review is not sent with `game ready` within 600 s of real time after a stoppage (a goal, half time, a dropped
+ball, full time when level, each shoot-out kick; `ready_timeout`, even when you are ahead); or if your session ends
+before the match is over (`abandoned`).
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+privileged = """
+The match and its rules: one 2 v 2 match of two halves of 5 minutes of game time (a half runs on for up to 3 s while
+the ball still rolls). The team with more goals after two halves wins; a 10-goal lead wins at once. Level after two
+halves: a shoot-out of 3 kicks each, then up to 3 sudden-death rounds, each won by the better kick (goal, saved, post,
+wide, other, no kick), then a coin toss drawn from the seed. In the shoot-out the striker has 20 s to touch the ball,
+and a keeper more than 0.6 m from its goal line before the touch concedes a goal. A kick-off team that scores before it
+touched the ball outside the centre circle gets no goal.
+
+The call rules: the files under `/app/output/policy/` (at most 512 regular files and 32 MiB, no links or special
+files, with `program.py`) are copied and run as an unprivileged process. `make_policy(config)` must be ready within
+30 s. The match runs at 1/5 of real speed while the program computes. After each answer, the next view comes once 1
+more control step (0.02 s of game time) has passed; during a review the program is asked again and again. Each call
+must answer within 5 s with exactly one response of at most 1 MiB: None, one command, a list of at most 2 commands
+(one per robot), or `{{"type": "ready"}}` alone. A command the match refuses does not end the match; one that answers a
+view from a play period that has ended is dropped. A review not ended with `ready` within 600 s loses the match
+(`ready_timeout`), and a match not over within 4800 s of wall time from the start of the evaluation scores 0. Only a
+match that ends by its rules (`match_over`) can pass.
+
+A simulator error in a control step, after the program's first applied command, also scores 0.
+"""
+
+[families.soccer_jointmatch]
+opponent = "Learned team at level 5: two Booster T1s under joint control like yours (12 leg joint targets every 20 ms, the same limits), each walking on a gait policy trained by reinforcement learning (PPO), with a learned plan choosing what each robot does; it reads the simulator's true state"
+standard = """
+One 2 v 2 match at the joint level, of two halves of 5 minutes of game time (a half runs on for up to 3 s while the
+ball still rolls). The team with more goals after two halves wins; a 10-goal lead wins at once. Level after two halves:
+a shoot-out of 3 kicks each (decided as soon as one team cannot be caught), then up to 3 sudden-death rounds, each won
+by the better kick (goal, saved, post, wide, other, no kick, in this order), then a coin toss drawn from the seed. There
+are no draws. In the shoot-out the striker has 20 s to touch the ball, and a keeper more than 0.6 m from its goal line
+before the touch concedes a goal. A kick-off team that scores before it touched the ball outside the centre circle gets
+no goal.
+
+A win is then checked for the released Booster walking policy. The match is replayed, and for a sample of each of
+your robots' joint rows (every 20th control step, at most 600 per robot, spread over the match) the policy's closest
+possible row is fitted (its velocity command and gait phase free, from the robot's state up to 3 control steps
+earlier). If for either robot more than half of these rows are fitted within
+0.02 rad (RMS), the win is void and scores 0. A win whose check gives no result, or whose replay does not reproduce the
+match, is an infrastructure failure, not a score. `METHOD.md` and `NOTES.md` are not graded.
+
+The world runs in lockstep: it advances only during the agent's waits and up to the step at which its action
+takes effect.
+
+Success: the match ends by these rules, team A won it and the check found no released policy. Your side loses the match
+at once, a valid 0, if you do not send `game start` within 7200 s of real time after the match service starts or before
+your session ends (`no_show`); if a review is not sent with `game ready` within 300 s of real time after a stoppage (a
+goal, half time, a dropped ball, full time when level, each shoot-out kick; `ready_timeout`, even when you are ahead);
+or if your session ends before the match is over (`abandoned`).
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+realtime = """
+One 2 v 2 match at the joint level, of two halves of 5 minutes of game time (a half runs on for up to 3 s while the
+ball still rolls). The team with more goals after two halves wins; a 10-goal lead wins at once. Level after two halves:
+a shoot-out of 3 kicks each (decided as soon as one team cannot be caught), then up to 3 sudden-death rounds, each won
+by the better kick (goal, saved, post, wide, other, no kick, in this order), then a coin toss drawn from the seed. There
+are no draws. In the shoot-out the striker has 20 s to touch the ball, and a keeper more than 0.6 m from its goal line
+before the touch concedes a goal. A kick-off team that scores before it touched the ball outside the centre circle gets
+no goal.
+
+A win is then checked for the released Booster walking policy. The match is replayed, and for a sample of each of
+your robots' joint rows (every 20th control step, at most 600 per robot, spread over the match) the policy's closest
+possible row is fitted (its velocity command and gait phase free, from the robot's state up to 3 control steps
+earlier). If for either robot more than half of these rows are fitted within
+0.02 rad (RMS), the win is void and scores 0. A win whose check gives no result, or whose replay does not reproduce the
+match, is an infrastructure failure, not a score. `METHOD.md` and `NOTES.md` are not graded.
+
+Success: the match ends by these rules, team A won it and the check found no released policy. Your side loses the match
+at once, a valid 0, if you do not send `game start` within 7200 s of real time after the match service starts or before
+your session ends (`no_show`); if a review is not sent with `game ready` within 300 s of real time after a stoppage (a
+goal, half time, a dropped ball, full time when level, each shoot-out kick; `ready_timeout`, even when you are ahead);
+or if your session ends before the match is over (`abandoned`).
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+privileged = """
+The match and its rules: one 2 v 2 match at the joint level, of two halves of 5 minutes of game time (a half runs on
+for up to 3 s while the ball still rolls). The team with more goals after two halves wins; a 10-goal lead wins at once.
+Level after two halves: a shoot-out of 3 kicks each, then up to 3 sudden-death rounds, each won by the better kick
+(goal, saved, post, wide, other, no kick), then a coin toss drawn from the seed. In the shoot-out the striker has 20 s
+to touch the ball, and a keeper more than 0.6 m from its goal line before the touch concedes a goal. A kick-off team
+that scores before it touched the ball outside the centre circle gets no goal. The formal match runs no check for the
+released walking policy.
+
+The call rules: the files under `/app/output/policy/` (at most 512 regular files and 32 MiB, no links or special
+files, with `program.py`) are copied and run as an unprivileged process. `make_policy(config)` must be ready within
+30 s. The match runs at 1/10 of real speed while the program computes. After each answer, the next view comes once 1
+more control step (0.02 s of game time) has passed; during a review the program is asked again and again. Each call
+must answer within 5 s with exactly one response of at most 1 MiB: None, one command, a list of at most 2 commands
+(one per robot), or `{{"type": "ready"}}` alone. A command the match refuses does not end the match; one that answers a
+view from a play period that has ended is dropped. A review not ended with `ready` within 300 s loses the match
+(`ready_timeout`), and a match not over within 10800 s of wall time from the start of the evaluation scores 0. Only a
+match that ends by its rules (`match_over`) can pass.
+
+A simulator error in a control step, after the program's first applied command, also scores 0.
+"""
+
+[families.soccer_ssl_match]
+opponent = "Yellow team at level 4: the scripted level 3 team (man marking, a blocker, passes) with a trained network choosing each field robot's option every 0.2 s; it reads the simulator's true state with no reaction delay and commands its robots with the same skills and limits as yours"
+standard = """
+One 5 v 5 match under the RoboCup SSL Division B rules, with an automatic referee: two halves of 300 s of playing time
+(the clock stops whenever no team may play the ball), ends changed at half time. The team with more goals after two
+halves wins; a team with 10 goals and a lead of more than one wins at once. Level after two halves: a shoot-out of 5
+penalty kicks each (decided as soon as one team cannot be caught), then sudden death; still level after 10 kicks each,
+a coin toss drawn from the seed. There are no draws. A goal counts only if the ball fully entered the goal between the
+posts, was never higher than 0.15 m after the scoring team's last touch, and the scoring team had no more robots on the
+field than allowed and committed no non-stopping foul in the last 2 s.
+
+The world runs in lockstep: it advances only during the agent's waits and up to the step at which its action
+takes effect.
+
+Success: the match ends by these rules and the blue team (yours) won it. Your side loses the match at once, a valid 0,
+if you do not send `game start` within 1800 s of real time after the match service starts or before your session ends
+(`no_show`); if a review is not sent with `game ready` within 600 s of real time after a stoppage (a goal, half time,
+full time before the shoot-out, each shoot-out kick; `ready_timeout`, even when you are ahead); or if your session ends
+before the match is over (`abandoned`).
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+realtime = """
+One 5 v 5 match under the RoboCup SSL Division B rules, with an automatic referee: two halves of 300 s of playing time
+(the clock stops whenever no team may play the ball), ends changed at half time. The team with more goals after two
+halves wins; a team with 10 goals and a lead of more than one wins at once. Level after two halves: a shoot-out of 5
+penalty kicks each (decided as soon as one team cannot be caught), then sudden death; still level after 10 kicks each,
+a coin toss drawn from the seed. There are no draws. A goal counts only if the ball fully entered the goal between the
+posts, was never higher than 0.15 m after the scoring team's last touch, and the scoring team had no more robots on the
+field than allowed and committed no non-stopping foul in the last 2 s.
+
+Success: the match ends by these rules and the blue team (yours) won it. Your side loses the match at once, a valid 0,
+if you do not send `game start` within 1800 s of real time after the match service starts or before your session ends
+(`no_show`); if a review is not sent with `game ready` within 600 s of real time after a stoppage (a goal, half time,
+full time before the shoot-out, each shoot-out kick; `ready_timeout`, even when you are ahead); or if your session ends
+before the match is over (`abandoned`).
+
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+"""
+privileged = """
+The match and its rules: one 5 v 5 match under the RoboCup SSL Division B rules, with an automatic referee: two halves
+of 300 s of playing time (the clock stops whenever no team may play the ball), ends changed at half time. The team with
+more goals after two halves wins; a team with 10 goals and a lead of more than one wins at once. Level after two
+halves: a shoot-out of 5 penalty kicks each, then sudden death; still level after 10 kicks each, a coin toss drawn from
+the seed. A goal counts only if the ball fully entered the goal between the posts, was never higher than 0.15 m after
+the scoring team's last touch, and the scoring team had no more robots on the field than allowed and committed no
+non-stopping foul in the last 2 s.
+
+The call rules: the files under `/app/output/policy/` (at most 512 regular files and 32 MiB, no links or special
+files, with `program.py`) are copied and run as an unprivileged process. `make_policy(config)` must be ready within
+30 s. The match runs at 1/10 of real speed while the program computes. After each answer, the next view comes once 5
+more control steps (0.05 s of game time) have passed; during a review the program is asked again and again. Each call
+must answer within 5 s with exactly one response of at most 1 MiB: None, one command (a `batch` command moves several
+robots), or `{{"type": "ready"}}` alone. A command the match refuses does not end the match; one that answers a view
+from a play period that has ended is dropped. A review not ended with `ready` within 600 s loses the match
+(`ready_timeout`), and a match not over within 13500 s of wall time from the start of the evaluation scores 0. Only a
+match that ends by its rules (`match_over`) can pass.
+
+A simulator error in a control step, after the program's first applied command, also scores 0.
+"""

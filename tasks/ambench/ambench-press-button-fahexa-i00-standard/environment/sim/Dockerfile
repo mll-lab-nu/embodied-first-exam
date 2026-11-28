@@ -6,7 +6,7 @@
 # (Pyroki @ 2eafc99 with JAX 0.4.28 on the CPU, acados @ fa0af20 built with qpOASES). What is left out on purpose: AM-Bench's
 # scripted experts (source/ambench/ambench/policies/scripted/, the reference solutions; the task registrations' pointer to them is
 # blanked), its policy-learning package (ambench_learn), its scripts, documentation and git history: nothing an agent can read
-# here locates a solution (docs/protocol/README.md §2.7). Every web asset the twelve tasks' scenes load at run time (objects'
+# here locates a solution (docs/protocol/leakage.md). Every web asset the twelve tasks' scenes load at run time (objects'
 # payloads and materials, the robot's paint, Isaac Lab's ground, NDT's warehouse scene) is baked in under /opt/isaac-assets
 # (images/ambench/web_assets.txt), mirroring the asset buckets' layouts: the tasks run with closed egress.
 # Every Python package is pinned in images/ambench/requirements.lock (`uv pip freeze` of the reference build).
@@ -105,14 +105,14 @@ WORKDIR /app
 # their paths under /srv the files it shares with other tasks, from pinned files-only images (images/<name>/
 # FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
 COPY . /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:ambench-files-0.9.0@sha256:e0eb312cf2b078320af4ba1e7baf0186e05d89da547014385e5380434172773a \
+COPY --from=ghcr.io/mll-lab-nu/efe:ambench-files-0.10.0@sha256:e1634af9f6f9431ccc9b224d488d2b009337eb0759894893cb501327ebd21246 \
      /sim/finalize.sh \
      /privileged/environment/rcb_ambench.py \
      /sim/server.py \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.7.0@sha256:1ab8c16d4372a0b44f5c0ea7f819f6febafcfdc132013b1736a04f360375b28f \
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.9.0@sha256:2cf5b6f826d698eaa0dcddf1561e6c673ca0ddabac2c3868d823598eb3cb75b6 \
      /rcb1.py \
      /rcb_limited.py \
      /run.sh \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:agent-end-files-0.4.0@sha256:96a5c925a9128ed91e1654e2b9aac99373517c80c3aa5e47b8f74880a0c413d0 /rcb_agent_end.py /srv/rcb_agent_end.py
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.9.0@sha256:2cf5b6f826d698eaa0dcddf1561e6c673ca0ddabac2c3868d823598eb3cb75b6 /agent_end/rcb_agent_end.py /srv/rcb_agent_end.py

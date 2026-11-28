@@ -104,16 +104,16 @@ RUN sed -i -e '/ jammy-security /s|http://snapshot.ubuntu.com/ubuntu/20261001T00
 WORKDIR /app
 # <<< images/robodojo/Dockerfile
 
-# Separate verifier sandbox (PROTOCOL §4): the same simulator image with the verifier's own copies of the tooling and the
+# Separate verifier sandbox (docs/protocol/tasks.md#grading): the same simulator image with the verifier's own copies of the tooling and the
 # frozen instance baked in. Nothing the agent did in its container reaches this one — Harbor uploads only the declared
 # artifacts (/app/output/), so a patched success check or a swapped interpreter in the agent container cannot influence
 # the verdict.
 FROM robodojo-base
 COPY instance.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:robodojo-files-0.10.0@sha256:595f0a20f00647a9f6455f28034acd35084e6453f34737083ef5200af53d027a /privileged/environment/rcb_robodojo.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:robodojo-files-0.12.0@sha256:9106a905ffd0ee9a2ca67acf353bfcc4e48546102055c60ce6ae986d4ffef8a4 /privileged/environment/rcb_robodojo.py /privileged/tests/grade.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests
-# resources (PROTOCOL §6) # rcb-monitor
+# resources (docs/protocol/resources.md) # rcb-monitor
 COPY --from=ghcr.io/mll-lab-nu/efe:monitor-0.5.0@sha256:ecc5f24f1516ca11711d7c2d3ac07c89f79cd9220812c1244498ec71e352402a /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
 COPY rcb_limits.json /tests/rcb_limits.json

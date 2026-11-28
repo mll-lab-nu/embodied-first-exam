@@ -84,7 +84,7 @@ def seat_spec(sport, cfg, seat, m=None, plugin=None) -> dict:
     """What GET /spec tells `seat` (without the protocol's timing part)."""
     decl = spec_mod.load(plugin) if plugin else {}
     m = m or sport.build(cfg)
-    return {"seat": seat, "side": cfg.side_of(seat), "protocol": PROTOCOLS[sport.protocol], "revision": sport.revision,
+    return {"seat": seat, "side": cfg.side_of(seat), "protocol": PROTOCOLS[sport.protocol], "turn_based": sport.protocol == "turn", "revision": sport.revision,
             "action_level": cfg.action_level, "play": cfg.play, "format": cfg.format,
             **public_spec(sport, cfg, seat, m, sport.action_layer(cfg.action_level), decl)}
 

@@ -1,36 +1,35 @@
-# kinder-sweep-into-drawer-i00-privileged
+# KinDER · sweep-into-drawer (privileged)
 
 | | |
 |---|---|
-| Benchmark | KinDER |
+| Task ID | `kinder-sweep-into-drawer-i00-privileged` |
+| Benchmark | [KinDER](https://github.com/Princeton-Robot-Planning-and-Learning/kindergarden) (Huang et al., 2026), upstream `Princeton-Robot-Planning-and-Learning/kindergarden@5b2dbac` |
+| Robot | TidyBot++ mobile manipulator: holonomic base, Kinova Gen3 7-DoF arm, Robotiq 2F-85 gripper |
 | Mode | privileged |
-| Twin | `kinder-sweep-into-drawer-i00-standard` |
-| Simulator / robot | `kinder` / `tidybot-plus-plus` |
-| Family / instance | `sweep-into-drawer` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `none` — GPT-6 Luna's privileged-mode trajectory of 2026-10-04, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1 (it moves the base diagonally by up to 0.13 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example); in standard mode, the graded episode of run `codex-gpt6_1_sol-high` of 2026-10-03 (960 control steps, no reset), which the standard service scored 1 (live, fresh replay, deterministic); human review in PR #8 |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:kinder-0.1.6` |
+| Instance | `sweep-into-drawer`, seed 0 |
+| Time limit | 30 min |
+| Reference solution | None |
 
 ## Task
-KinDER `kinder/SweepIntoDrawer3D-o5-v0` (Dynamic3D, TidyBot++), seed 0, privileged mode: the agent has the simulator and its state and
-hands in one trajectory, replayed open-loop in a fresh process. Its standard-mode twin is `kinder-sweep-into-drawer-i00-standard`.
+Get the five small cubes on top of the kitchen island into the middle drawer of the island's top row. There is a wiper
+you can use.
 
-Task: Get the five small cubes on top of the kitchen island into the middle drawer of the island's top row. There is a wiper you can use.
+## Success criteria
+Goal check (KinDER `SweepIntoDrawer3D-o5`): the centre of every one of the five cubes lies inside the goal region
+of the middle drawer of the kitchen island's top row, a box inside the drawer that stops short of its left and right
+walls. Nothing else is checked: the drawer may be left in any position, and the wiper anywhere.
 
-## Difficulty
-Nonprehensile, tool use, dynamics: open a closed drawer, then sweep five small cubes off the counter into it with a wiper. KinDER's paper reports at most 0.14 success for its best method on this variant and 0.00 for sampling MPC on the true simulator.
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory(...)` writes it: actions for this instance, one row
+of 11 values per 10 Hz control step, each inside the action space's bounds. After the agent's session it is replayed
+once, open-loop, from the frozen start (`tests/instance.json`) in a fresh process of a separate verifier container
+without network. The task is passed if KinDER's goal check holds at any control step of the replay within the first
+1,000 rows (100 s). The replay stops at that step; later rows are not run, and rows after the 1,000th never run. Only
+the trajectory is scored (`gen.py` and `NOTES.md` are not). A missing file, a file for another instance, a wrong
+shape, a non-finite value or a value outside the bounds scores 0. An error inside the grader is reported as
+`grader_error` (infrastructure), not as a score.
 
-## Reference solution
-None. Solvability rests on the positive example in `oracle_evidence` (task.toml), checked by a human reviewer (docs/protocol/README.md §4).
-
-## Verification
-One open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, in a container of
-its own (`tests/Dockerfile`, no network): pass iff it reaches the goal within 1000 control steps. No oracle; human review in PR #8. `nop` scores 0.
-
-Benchmark notes: `tasks/kinder/README.md`.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,3 +37,9 @@ Caps per container (PROTOCOL §6).
 | verifier | 4 | 8 GiB | no cap | no GPU | no cap |
 
 - GPU: not needed.
+
+## License
+KinDER ([Princeton-Robot-Planning-and-Learning/kindergarden](https://github.com/Princeton-Robot-Planning-and-Learning/kindergarden)
+@ `5b2dbac`) is released under the MIT License (copyright (c) 2025 Tom Silver). The lab scenes are MimicLabs
+([Gatech-RL2/mimiclabs](https://github.com/Gatech-RL2/mimiclabs), MIT License), fetched by upstream's own download
+script when the image is built. The simulator is MuJoCo (Apache License 2.0). No non-commercial terms apply.

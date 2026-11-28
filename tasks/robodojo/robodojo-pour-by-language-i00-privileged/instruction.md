@@ -5,11 +5,11 @@ Pour the violet bottle into the black bowl, then the red bottle into the white b
 brown bowl, in that order.
 
 ## Goal
-Success: the violet bottle has been poured into the black bowl, then the red bottle into the white bowl, then the
-turquoise bottle into the brown bowl, each bottle nearly emptied into its bowl with little spilled. Each pour is judged
-at the moment its bottle stands upright again, so finish pouring before you stand it up. If an arm comes back to where
-it started while a later bowl holds its liquid and an earlier one does not, the episode ends at once as a failure. A
-replay ends as soon as the task is done; later rows are not run.
+Success: the violet bottle has been poured into the black bowl, the red bottle into the white bowl and the turquoise
+bottle into the brown bowl, each bottle nearly emptied into its bowl with little spilled. Each pour is judged at the
+moment its bottle stands upright again, so finish pouring before you stand it up. The order is checked whenever an arm
+comes back to where it started: if at that moment a later bowl holds its liquid and an earlier one does not, the episode
+ends at once as a failure. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave

@@ -3,5 +3,5 @@
  "grader": "grader/spatula_flip_serve.py",
  "title": "Flip a slice of bread in the pan with a spatula, then serve it onto the plate (Franka, operational-space control)",
  "text": "Flip the bread in the pan with the spatula, then lift it out on the spatula and set it down flat on the plate.",
- "success": "Success: the bread was flipped in the pan at some point (browned side up), then carried onto the plate on the spatula and set down from it, and it now lies flat on the plate (either side up), at rest."
+ "success": "Success: at some point the bread was flipped in the pan (browned side up); at some point it came to rest flat on the plate within a few seconds of riding on the raised spatula blade; and it now lies flat on the plate (either side up), at rest."
 }

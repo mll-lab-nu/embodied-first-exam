@@ -4,7 +4,8 @@
 Put both sandals side by side next to the bed and the book on a table.
 
 ## Goal
-Success: both sandals are next to the bed and next to each other, and the book lies on a table. It counts only once the
+Success: one sandal is next to the bed and the other is next to that sandal, and the book lies on a table. It counts
+only once the
 scene has settled: nothing the task names (a tool included) is still in a gripper, and everything has come to rest.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
@@ -24,7 +25,7 @@ you reach through its client or its MCP tools, as if it were real hardware: one 
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`):
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and loads the scene (3-12 min measured; the

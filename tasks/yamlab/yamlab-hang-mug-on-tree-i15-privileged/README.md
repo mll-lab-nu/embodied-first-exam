@@ -1,45 +1,47 @@
-# yamlab-hang-mug-on-tree-i15-privileged
+# YAMLab · HangMugOnTree-v0 (privileged)
 
 | | |
 |---|---|
-| Benchmark | YAMLab |
+| Task ID | `yamlab-hang-mug-on-tree-i15-privileged` |
+| Benchmark | [YAMLab](https://github.com/ARISE-Initiative/yamlab) (Dai, 2026), upstream `ARISE-Initiative/yamlab@ec0455d` |
+| Robot | Two I2RT YAM arms (6 joints each) with parallel two-finger grippers, on a workstation table |
 | Mode | privileged |
-| Twin | `yamlab-hang-mug-on-tree-i15-standard` |
-| Simulator / robot | `yamlab` / `i2rt-yam-bimanual` |
-| Family / instance | `hang_mug_on_tree` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:yamlab-0.2.1` |
+| Instance | `hang_mug_on_tree`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
 Pick up the mug with the left arm, pass it to the right arm in the air, and hang it on the mug tree.
 
-Two I2RT YAM arms on a workstation table pass a mug from the left gripper to the right one in the air and hang it on a mug tree: YAMLab's HangMugOnTree. Instance i15: YAMLab's objects `mug` = `Mug/mug_015` and `mug_tree` = `MugTree/mug_tree_015`, placed as in YAMLab teleoperation demonstration
-`hangmug_015.hdf5 demo_0` (its recorded initial state: both arms at the home pose, grippers open; placement-schedule entry 0: the mug at x = 0.726 m, y = 0.150 m, yaw 105°). The deliverable is one replayable
-trajectory of YAMLab's own 14-D joint-position actions at 30 Hz (`/app/output/trajectory.npz`), graded by YAMLab's staged
-success check with its evaluation thresholds.
+## Success criteria
+Three stages, in this order; a stage is counted only after the one before it has latched.
 
-## Difficulty
-Three ordered stages with an in-air handover: the left gripper must lift the mug, the right gripper must take it while it stays lifted and the left must let go (both conditions held for a full second), and the mug must end up hanging on one of the tree's branches by its handle, steady and released by both grippers; a mug dropped on the way is hard to recover. Privileged mode gives every object's pose and size, the success check, unlimited resets and self-replay;
-the primitives are only IK / joint moves and gripper commands. This mode is the control for the standard twin.
+1. Pick: the left gripper is grasping the mug and the mug's centre is more than 5 cm above its resting height (the
+   height of its centre when it stands on the table, 5.3 cm above the table top), on 8 consecutive control
+   steps. The right gripper is not checked.
+2. Handover: the right gripper is grasping the mug, the left gripper is not, and the mug's centre is more than 5 cm
+   above its resting height, on 30 consecutive control steps (about 1 s).
+3. Hang: the mug's centre is less than 11.5 cm from the mug tree's centre horizontally (half the tree's footprint
+   diagonal, at least 10 cm), more than 9.8 cm above the table top (half the mug's height plus 5 cm), neither
+   gripper is grasping the mug, and the mug's height stays within 3 cm of its height on the first step of the run, on 30
+   consecutive control steps (about 1 s).
 
-## Reference solution
-`solution/oracle_actions.npy` (658 control steps, run by `solution/oracle.py` through the agent's own tooling): a
-30-step (1 s) linear move from the home pose to the first action of the human teleoperation demonstration of this instance
-(`hangmug_015.hdf5 demo_0` of `yamlab/yamlab_datasets` @ `fc6be97`), then that demonstration's recorded actions, replayed open-loop.
-YAMLab's demonstrations are not in the image, and the agent's network reaches only the model APIs and the package
-registries.
+A gripper is grasping the mug when both its fingers touch the mug with a contact force of at least 0.1 N, at a point on
+their pads.
 
-## Verification
-`tests/grade.py` in a separate sandbox: one replay in a fresh process, from the verifier's own copy of the instance
-(`tests/instance.json`; the rebuilt start is checked against its hash); pass iff YAMLab's success check holds in it
-(every stage latched), plus `/logs/verifier/replay.mp4` (top camera and
-both wrist cameras). Oracle: 658 control steps, every stage latched at the last one; the live run and two
-fresh-process replays end in the same state (hash `88753272376676eb`). `nop`: no trajectory, reward 0; no stage holds at
-the start.
+The graded file is `/app/output/trajectory.npz`: `task` = `hang_mug_on_tree` and `actions`, a finite (T, 14) array with at most
+100,000 rows, one row per control step (1/30 s). The verifier replays it once, open-loop, in a fresh process from the
+frozen start, and the task succeeds when every stage above has latched at some control step of that replay. The replay
+stops at that step; later rows are not run. The replay ends as a failure, at the step it happens, when the mug or the mug tree
+falls more than 1 cm below the table top. A trajectory that ends before every stage has
+latched scores 0.
 
-## Resources
-Caps per container (PROTOCOL §6).
+A missing file, a file that is not a plain npz with `task` and `actions`, a wrong `task`, a wrong shape, a NaN or
+infinite value or more than 100,000 rows scores 0. A replay that gives no result or runs out of its time limit, or a
+frozen scene that does not rebuild as recorded, is an infrastructure error, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -49,15 +51,9 @@ Caps per container (PROTOCOL §6).
 - GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, RTX PRO 6000 Blackwell, held by `main`.
 - Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.
 
-## Details
-| | |
-|---|---|
-| Upstream | YAMLab @ ec0455d (MIT) on Isaac Lab @ f4aa17f / Isaac Sim 5.1.0; objects and demonstration from `yamlab/yamlab_datasets` @ fc6be97 (MIT) |
-| YAMLab task | `HangMugOnTree-v0` with `is_evaluation_mode` (YAMLab's evaluation thresholds); the frozen instance (assets + full scene state + its hash) is `environment/instance.json` |
-| Actions | 14 per control step (1/30 s): left joint1..6, left gripper, right joint1..6, right gripper; joints absolute targets (rad), gripper = `left_finger` target (m, -0.0475 open .. 0 closed) |
-| Physics | PhysX on the CPU (sim dt 1/120 s, decimation 4), RTX rendering only when a frame is asked for |
-| Image | built locally on every host (`images/yamlab/BUILD_ONLY`: it contains Isaac Sim); needs an RTX-class NVIDIA GPU (`environment/docker-compose.yaml`) |
-| Budget | the agent's cutoff is the `Agent time budget` row above (this task's `[agent] timeout_sec`); out of it, every Python process pays ~1.5-2.5 min of Isaac Sim launch + scene build (tasks/yamlab/README.md) |
-
-### Provenance
-The frozen instance was chosen and frozen in `ghcr.io/mll-lab-nu/efe-private:yamlab-0.1.0`.
+## License
+YAMLab ([ARISE-Initiative/yamlab](https://github.com/ARISE-Initiative/yamlab) @ `ec0455d`), its scene and object USDs
+and its dataset (`yamlab/yamlab_datasets` on Hugging Face) are released under the MIT License (Copyright (c) 2026
+Tianyuan Dai). Isaac Lab is BSD-3-Clause; YAMLab's LeRobot fork is Apache-2.0. NVIDIA Isaac Sim 5.1 and its wheels are
+proprietary: NVIDIA licenses them for use, not for redistribution, so the simulator image is built on your machine and
+building it accepts NVIDIA's Isaac Sim / Omniverse licence terms. No non-commercial terms apply.

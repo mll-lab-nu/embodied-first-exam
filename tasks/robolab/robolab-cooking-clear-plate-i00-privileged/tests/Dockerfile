@@ -30,7 +30,7 @@ COPY --from=ghcr.io/astral-sh/uv:0.13.0@sha256:cdc6093146eb3ff6a40107b38f008b789
 ENV PATH="/root/.local/bin:${PATH}"
 # RoboLab's code at v0.3.1 and its asset library (every LFS file present), in one RUN that then deletes the repository's
 # .git (its objects hold every committed file: `git show` would rebuild what is removed) and examples/recorded_data
-# (RoboLab's one recorded episode, a successful run of one of the RoboLab tasks: its actions, log and video; PROTOCOL H.2)
+# (RoboLab's one recorded episode, a successful run of one of the RoboLab tasks: its actions, log and video; docs/protocol/invariants.md H.2)
 RUN git init -q /opt/robolab && cd /opt/robolab && git remote add origin https://github.com/NVlabs/RoboLab && \
     git fetch -q --depth 1 origin 9db0aaf09d9fe5d4f37b168320788258c7012463 && GIT_LFS_SKIP_SMUDGE=1 git checkout -q FETCH_HEAD && \
     test "$(git rev-parse HEAD)" = 9db0aaf09d9fe5d4f37b168320788258c7012463 && \
@@ -57,16 +57,16 @@ RUN sed -i -e '/ jammy-security /s|http://snapshot.ubuntu.com/ubuntu/20261001T00
 WORKDIR /app
 # <<< images/robolab/Dockerfile
 
-# Separate verifier sandbox (PROTOCOL §4): the same simulator image with the verifier's own copies of the
+# Separate verifier sandbox (docs/protocol/tasks.md#grading): the same simulator image with the verifier's own copies of the
 # tooling and the frozen instance baked in. Nothing the agent did in its container reaches this one — Harbor
 # uploads only the declared artifacts (/app/output/), so a patched success check or a swapped interpreter in
 # the agent container cannot influence the verdict.
 FROM robolab-base
 COPY grade.py instance.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:robolab-files-0.8.0@sha256:faedb141d5d889db8f735d4589cc2293af77212d31a0a170ba34185e44f76eac /rcb_robolab.py /tests/rcb_robolab.py
+COPY --from=ghcr.io/mll-lab-nu/efe:robolab-files-0.9.0@sha256:42e83b3e429f939b1df5e4339a96aed7eec7c2eb2b9eaf6e7ff97d3cc606a009 /rcb_robolab.py /tests/rcb_robolab.py
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests
-# resources (PROTOCOL §6) # rcb-monitor
+# resources (docs/protocol/resources.md) # rcb-monitor
 COPY --from=ghcr.io/mll-lab-nu/efe:monitor-0.5.0@sha256:ecc5f24f1516ca11711d7c2d3ac07c89f79cd9220812c1244498ec71e352402a /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
 COPY rcb_limits.json /tests/rcb_limits.json

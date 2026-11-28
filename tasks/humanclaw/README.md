@@ -1,119 +1,131 @@
 # HumanCLAW
 
+## Overview
+
 Find, navigate and interact with a simulated human body: in a furnished HSSD house, find an object of a category,
 walk until the body touches it and, for a bed, couch or toilet, sit on it, using nothing but whole-body motion
 skills. No arm, no gripper: the robot is an SMPL-X human body, moved by HumanCLAW's MotionDiT skill models under
-Half-Physics.
+Half-Physics. 55 frozen episodes in two modes: 110 task directories,
+`tasks/humanclaw/humanclaw-{nav,sit}-<category>-i<NN>-privileged` and `-standard`.
 
 | | |
 |---|---|
-| upstream | HumanCLAW (HumanClawBench, [Human-CLAW/HumanCLAW](https://github.com/Human-CLAW/HumanCLAW)), a source snapshot at commit `fe3d376` (tree `f60d71a0` of `harnesses/humanclaw`); profile `paper_fullval_v1` (1,218 val episodes in 41 HSSD scenes) |
+| upstream | HumanCLAW (HumanClawBench, Siyao et al., 2026, [Human-CLAW/HumanCLAW](https://github.com/Human-CLAW/HumanCLAW)), a source snapshot at commit `fe3d376` (tree `f60d71a0` of `harnesses/humanclaw`); profile `paper_fullval_v1` (1,218 val episodes in 41 HSSD scenes) |
 | simulator | Habitat-Sim `acbe6f4` with HumanCLAW's Half-Physics patch (Bullet `2c204c4`), MotionDiT flow-matching skills (30 NFE midpoint), GPU (EGL rendering, CUDA) |
 | robot | `smplx-human`: HumanCLAW's SMPL-X neutral body, 8 motion skills (walk, turn, side step, step back, climb up / down a step, sit, stop) |
-| score | HumanCLAW's own metric code, unchanged (`evaluation/metrics/episode.py`): NavSR@20cm (chair, potted plant, TV) or InteractSR (bed, couch, toilet) |
-| tasks | 55 frozen episodes x 2 modes (110 task dirs; Selection below): `tasks/humanclaw/humanclaw-{nav,sit}-<category>-i<NN>-privileged` and `-standard` (`eai-standard/2.1`) |
-| image | `ghcr.io/mll-lab-nu/efe-private:humanclaw-<VERSION>` (`images/humanclaw/`, BUILD_ONLY: without access to the organization's packages, build it once yourself, Before you run below) |
-
-## The task
-One task = one frozen episode of HumanCLAW's full validation set: the scene, the body's start pose (HumanCLAW's own
-spawn values), the target category and its goal objects, HumanCLAW's instruction word for word ("Find the chair and
-move until your body is touching the target, with zero distance to the target object.", plus "Finally, sit on the
-bed." for an interaction category), then the same goal in plain words (stop within about 20 cm of a target, or stop
-while sitting on one: HumanCLAW's own words ask for zero distance, its success rule does not). An action is a row `[action_id, value]`, one motion skill of 0.5 s (15 frames at
-30 Hz), mapped to HumanCLAW's skill calls by its own planner code (`_chooser_action`, so its clamps apply). An episode
-allows 100 actions, the stop included, and has no reset; success needs an explicit stop (HumanCLAW's active stop).
+| score | HumanCLAW's own metric code, unchanged (`evaluation/metrics/episode.py`): NavSR@20cm (chair, TV) or InteractSR (bed, couch, toilet) |
+| image | `ghcr.io/mll-lab-nu/efe-private:humanclaw-<VERSION>` (`images/humanclaw/`, BUILD_ONLY: see Others) |
 
 | | privileged | standard |
 |---|---|---|
 | the agent has | the simulator (`hc_tools.Env`): the body's pose, the targets' boxes, the navmesh, free resets | a client: the head camera (448 x 448 RGB, 90° fov), actions used / left, the pelvis' height change |
 | deliverable | `trajectory.npz` (`actions`, T <= 100 rows) | none: the sidecar records and grades the live episode |
-| graded by | one fresh-process replay from the verifier's copy of the instance: it succeeds | the live episode (HumanCLAW's `finalize` at the stop, in the sidecar); nothing replayed |
-| video | the replay's recorded poses, rendered after the verdict | the live episode's recorded poses, rendered after the verdict |
-| time cutoff | 3600 s | 3600 s |
+| graded by | one fresh-process replay from the verifier's copy of the instance | the live episode (HumanCLAW's `finalize` at the stop, in the sidecar); nothing replayed |
 
-What differs from HumanCLAW's own evaluator:
+## Upstream and license
+
+| part | licence | in the image |
+|---|---|---|
+| HumanCLAW code (episode loader, Half-Physics env, skill runner, metrics) | Apache-2.0 | yes (LICENSE, NOTICE in `/opt/humanclaw`) |
+| Habitat-Sim, its Half-Physics patch; Bullet | MIT; zlib | yes |
+| HSSD scenes (`hssd/hssd-hab`) and HumanCLAW's val41 supplement (`HumanCLAW/HumanCLAW-HSSD`) | **CC BY-NC 4.0** (non-commercial), gated (terms accepted per user on Hugging Face) | yes: may be used, not redistributed |
+| the body model (convex hulls and joint centres derived from SMPL-X / SMPL) | SMPL-X / SMPL model licences: **non-commercial research**, no redistribution | yes |
+| MotionDiT `paper_fullval_v1` weights (`HumanCLAW/HumanCLAW`) | released with the code; trained on AMASS / BABEL (**non-commercial research**) | yes |
+
+The image is private (BUILD_ONLY) and each user builds it under their own acceptance of these terms; the task
+directories hold only the frozen episodes (scene ids, start poses, goal objects) and this repository's code. The
+HumanCLAW source is fetched by commit from this repository's history (`fe3d376`, its `harnesses/humanclaw` tree hash
+checked), without its docs, tools, harnesses, experiment configs and episode shards.
+
+## Changes from upstream
+
 - The motion model's noise is seeded at every reset (torch / numpy / random, seed 0). HumanCLAW never seeds it, so its
   rollouts of the same actions differ run to run; seeded, an episode is a function of the actions on a given GPU
   model, which a submitted trajectory and a crash-resume both need. Across GPU models the motion model's arithmetic
   differs in the last bits and the physics amplifies it, so the verifier replays on the machine the agent ran on.
 - A reset rebuilds the simulator (HumanCLAW builds a fresh one per rollout too), so moved furniture comes back.
-- The agent is not HumanCLAW's VLM pipeline (planner + verifier, history of 10): it is whatever the harness runs, and
-  it calls the skills directly.
+- The agent is not HumanCLAW's VLM pipeline (planner + verifier, history of 10): it calls the skills directly. Actions
+  are mapped to HumanCLAW's skill calls by its own planner code (`_chooser_action`), so its clamps apply.
 - Videos are rendered after the verdict from the poses the episode recorded frame by frame (HumanCLAW's own delayed
-  renderer: it restores each recorded post-physics pose and renders; simulation never advances), so the frames are the
-  graded episode's, not a re-run. The live video writer stays off as in HumanCLAW's paper runs (its third-person sensor
-  can change Bullet's contact cache).
+  renderer), so the frames are the graded episode's, not a re-run. The live video writer stays off as in HumanCLAW's
+  paper runs (its third-person sensor can change Bullet's contact cache).
 - `view_points` in the frozen goals are cut to the 5 best per goal (HumanCLAW's loader needs one; nothing it scores
   reads them).
+- HumanCLAW's instruction is kept word for word ("Find the chair and move until your body is touching the target,
+  with zero distance to the target object.", plus "Finally, sit on the bed." for an interaction category), followed by
+  the goal in plain words: stop within about 20 cm of a target, or stop while sitting on one. HumanCLAW's own words ask
+  for zero distance; its success rule does not.
 
-Network: HumanCLAW's public repository holds recorded rollouts of these very episodes (its docs/analysis has
-action chains), so the agent reaches the model APIs and the package registries only (`allowlist`), in both modes.
+## Interface
 
-### Agent-ended episodes
+An action is a row `[action_id, value]`:
 
-Every standard task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3). HumanCLAW's episode is agent-ended by its
-own rule already (an active stop declares that the agent is done, and only a stop can succeed), so `POST /finish` is the
-stop: `server.py` runs the stop action as the episode's last control step (journaled like any other row) and HumanCLAW
-judges the episode there (reason `finished`; a stop action the agent sends ends it the same way). The end of the agent's
-session runs the stop too, before the episode is judged (reason `timeout`). The 100th action still ends the episode
-whatever it is (`step_limit`, HumanCLAW's own limit: a non-stop 100th action fails). No `RCB_STEP_LIMIT` is set: the 100
-actions are HumanCLAW's non-idle actions, while `hold(s)` (a hold chunk) adds idle control steps that the generic step cap
-would count. A success is never shown (the service only says that the episode ended). Without `RCB_AGENT_END` the
-service behaves as before.
+| id | skill | value |
+|---|---|---|
+| 0 | walk forward | 0.2 / 0.4 / 0.6 m (HumanCLAW's slow / normal / fast stride) |
+| 1 | stop | 0; ends the episode: the agent declares it is done |
+| 2 | turn | signed degrees, + left, \|value\| clamped to [10, 120] |
+| 3 | climb up a step | 0 |
+| 4 | sit down | target pelvis height in m, clamped to [0.15, 0.85] |
+| 5 | step back | m, clamped to [0.10, 0.60] |
+| 6 | side step | signed m, + left, \|value\| clamped to [0.10, 0.50] |
+| 7 | walk down a step | 0 |
 
-## Selection
-The 55 episodes are those of HumanCLAW's 1,218 validation episodes that GPT-6 Luna (Codex 0.164, effort xhigh) failed
-in both modes, in one run over all 1,218 episodes x 2 modes (privileged 1,161 / 1,218 solved, standard
-295 / 1,218): bed 22, couch 12, toilet 9, TV 11, chair 1, in 23 of the 41 scenes. Each episode keeps the number it
-has among all 1,218, so the numbers have gaps. None of the 55 is in the core set. Upstream episode ids and the
-per-episode outcomes are kept as trusted provenance outside the repository; no agent-readable file names them.
+Each of 0 and 2-7 is one 0.5 s motion chunk (15 frames at 30 Hz); the stop moves nothing. An episode allows 100
+actions, the stop included; the 100th ends it whatever it is.
 
-## Before you run
-The tasks' shared code (this repository's `embodied_first_exam/benchmarks/humanclaw/`: the privileged tools, the
-sidecar service, the grader) comes from the public files-only image `images/humanclaw-files/` (`COPY --from`, pinned by
-digest); only the simulator image is private.
+- **Privileged.** `hc_tools.Env` gives the body's pose, the targets' boxes, the navmesh and free resets; `Env.save()`
+  writes the trajectory.
+- **Standard.** The `sim` sidecar serves the head camera (448 x 448 RGB, 90° fov), the actions used and left, and the
+  pelvis' height above its start, through `rcb_client.py` and the `efe-robot` MCP tools (wire protocol
+  `eai-standard/3.0`). `POST /finish` is the stop: it runs the stop action as the episode's last step. A hold chunk
+  adds idle control steps and uses no action. Not given: the body's position, the target's position, a map, the
+  success signal.
 
-`images/humanclaw/` builds `ghcr.io/mll-lab-nu/efe-private:humanclaw-<VERSION>` (21.8 GB): HumanCLAW's code, Habitat-Sim,
-the motion weights and the 41 HSSD scenes. It holds data that may not be redistributed, so it is **BUILD_ONLY**
-(`images/humanclaw/BUILD_ONLY` has the licences and the full recipe notes). A runner with access to the organization's
-packages pulls it. Anyone else builds it once, from the repository root:
+Network: HumanCLAW's public repository holds recorded rollouts of these very episodes, so the agent reaches the model
+APIs and the package registries only (`allowlist`), in both modes.
+
+## Grading
+
+- **Navigation** (chair, TV): NavSR@20cm. The episode ends with a stop, and the shortest distance from the body to
+  the bounding box of a target object is at most 0.2 m.
+- **Interaction** (bed, couch, toilet): InteractSR. The episode ends with a stop, it contains at least one sit, and
+  the pelvis touches a target object's mesh on the last physics frame of the last motion.
+- **Privileged.** `tests/grade.py` replays `trajectory.npz` once in a fresh process on the verifier's own copy of the
+  instance and tools; a rebuilt start whose hash differs from `instance.json`'s `start_sha`, a replay that dies or
+  times out, or a grader error is `grader_error` with `infra_error`. A missing or malformed file, an invalid row, or
+  actions that end without a stop are the agent's 0.
+- **Standard.** The sidecar judges the live episode at the stop. The end of the agent's session runs the stop first
+  (reason `timeout`) and the episode is judged there; a non-stop 100th action fails (`step_limit`). No reset
+  (`RCB_RESET_BUDGET=0`).
+
+## Tasks
+
+55 frozen episodes of HumanCLAW's full validation set, each in both modes: bed 22, couch 12, toilet 9, TV 11, chair 1,
+in 23 of the 41 scenes. One task is one episode: the scene, the body's start pose (HumanCLAW's own spawn values), the
+target category and its goal objects. Each episode keeps the number it has among all 1,218, so the numbers have gaps.
+
+## Others
+
+**Building the image.** The tasks' shared code (`embodied_first_exam/benchmarks/humanclaw/`: the privileged tools, the
+sidecar service, the grader) comes from the public files-only image `images/humanclaw-files/` (`COPY --from`, pinned
+by digest); only the simulator image is private. `images/humanclaw/` builds
+`ghcr.io/mll-lab-nu/efe-private:humanclaw-<VERSION>` (21.8 GB): HumanCLAW's code, Habitat-Sim, the motion weights and
+the 41 HSSD scenes. It is **BUILD_ONLY** (`images/humanclaw/BUILD_ONLY` has the licences and the full recipe notes).
+A runner with access to the organization's packages pulls it. Anyone else builds it once, from the repository root:
 1. On Hugging Face, request access to the gated dataset `HumanCLAW/HumanCLAW-HSSD` (approved automatically) and accept
    the terms of `hssd/hssd-hab`.
 2. Make a read token and export it: `export HF_TOKEN=hf_...`
 3. Build under the tag the tasks' `cache_from` names (the token goes in as a BuildKit secret, never into a layer):
    `docker buildx build --builder default --secret id=hf_token,env=HF_TOKEN -t ghcr.io/mll-lab-nu/efe-private:humanclaw-$(cat images/humanclaw/VERSION) images/humanclaw`
-   It takes about 30 minutes on a 32-core host (Habitat-Sim's compile and the HSSD download), no GPU, and about
-   40 GB of free disk under Docker's data root.
+   It takes about 30 minutes on a 32-core host, no GPU, and about 40 GB of free disk under Docker's data root.
 4. `harbor run -p tasks/humanclaw/<task> ...` then builds each task from the local build cache: no token, no download,
-   seconds (the failed cache import from the private package is only logged). Keep that cache (`docker builder
-   prune` drops it).
+   seconds. Keep that cache (`docker builder prune` drops it).
 
-Running needs an NVIDIA GPU (EGL rendering and the motion model on CUDA; compute capability 8.0 to 9.0). A
-privileged trajectory replays bit for bit only on the GPU model it was made on (The task, above).
+Running needs an NVIDIA GPU (EGL rendering and the motion model on CUDA; compute capability 8.0 to 9.0). A privileged
+trajectory replays bit for bit only on the GPU model it was made on.
 
-## Licences
-| part | licence | in the image |
-|---|---|---|
-| HumanCLAW code (episode loader, Half-Physics env, skill runner, metrics) | Apache-2.0 | yes (LICENSE, NOTICE in `/opt/humanclaw`) |
-| Habitat-Sim, its Half-Physics patch; Bullet | MIT; zlib | yes |
-| HSSD scenes (`hssd/hssd-hab`) and HumanCLAW's val41 supplement (`HumanCLAW/HumanCLAW-HSSD`) | CC BY-NC 4.0, gated (terms accepted per user on Hugging Face) | yes: may be used, not redistributed |
-| the body model (convex hulls and joint centres derived from SMPL-X / SMPL) | SMPL-X / SMPL model licences: non-commercial research, no redistribution | yes |
-| MotionDiT `paper_fullval_v1` weights (`HumanCLAW/HumanCLAW`) | released with the code; trained on AMASS / BABEL (non-commercial research) | yes |
-
-So the image is private (BUILD_ONLY) and each user builds it under their own acceptance of these terms; the task
-directories hold only the frozen episodes (scene ids, start poses, goal objects) and this repository's code.
-
-## Reference solution
-A navmesh oracle with the privileged tools (`solution/oracle.py`): Habitat's shortest path (on a navmesh for a wider
-body) to the nearest goal viewpoint or to a reachable point beside a target box, turn-and-walk along it, close in with
-short strides, then, for an interaction episode, HumanCLAW's own sitting recipe (turn the back to the target, step
-back, sit at the category's height until the pelvis touches it), then stop; it tries a few variants with free resets.
-It solves 4 of the 55 episodes. On 7 it found no solution: targets behind furniture or up a step, and seats the
-body does not land on. The other 44 were not searched (`oracle = "none"`; their `oracle_evidence` says so).
-- privileged: `solution/actions.json` is the oracle's trajectory, replayed twice in fresh processes to success with
-  equal final hashes on the GPU model named in `oracle_evidence`. The physics amplifies the last-bit differences of the
-  motion model between GPU models (an RTX 4090 and an L40S agree on the start hash, never on the final one, and on
-  about 1 trajectory in 10 not even on the verdict), so `solve.sh` replays it first and, where it fails on the
-  machine at hand, runs the oracle again closed loop there.
-- standard: the same actions streamed as `skill` rows through the client (open loop, so they hold on the GPU model
-  named in the evidence).
+**Reference solutions.** `solution/` holds a reference trajectory for 4 of the 55 episodes (`oracle = "full"`); the
+others have none (`oracle = "none"`, said in their `oracle_evidence`). Because a trajectory replays exactly only on
+the GPU model it was recorded on, `solve.sh` replays it first and, where it fails on the machine at hand, records it
+again there.

@@ -18,7 +18,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-balance-board-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): Embodied Olympics balance-board on the same frozen instance as embodied-olympics-fun-balance-board-i00-privileged. Stay balanced on the roller board for 30 s, touching only the deck, with your feet, and keeping both ends of the deck off the floor. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 5 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): Embodied Olympics balance-board on the same frozen instance as embodied-olympics-fun-balance-board-i00-privileged. Stay balanced on the roller board for 30 s, touching only the deck, with your feet, and keeping both ends of the deck off the floor. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 5 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "standard-mode", "trajectory", "balance-board"]
 
 [metadata]
@@ -27,19 +27,19 @@ simulator = "mujoco"
 robot = "unitree-g1"
 family = "balance_board"
 category = "parkour-apparatus-balance"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
+protocol = "eai-standard/3.0"
 instance_seed = 0
 expert_time_estimate_hours = 8.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested: the start is just after a mount: the deck 3 degrees from level with its left end low, the robot standing square on it and tilted with it, its centre of mass 4.2 cm left of the roller's line of contact; left alone the deck is down at 0.8 s. Positive by injection (a spring-damper force on the torso, a helper's hand, for the 30 s: the deck brought level, at most 3.0 degrees); negatives: the do-nothing agent, the walking policy, the weight over one end, left alone after 20 s, off the board, lying on the deck. A feedback tuned for an exactly level start, which holds the board there without visible motion, falls at 0.85 s from this start, as does a linear ride; human review in the pull request that adds the benchmark (PROTOCOL §4)"
+oracle_evidence = "no reference solution; the referee is tested: the start is just after a mount: the deck 3 degrees from level with its left end low, the robot standing square on it and tilted with it, its centre of mass 4.2 cm left of the roller's line of contact; left alone the deck is down at 0.8 s. Positive by injection (a spring-damper force on the torso, a helper's hand, for the 30 s: the deck brought level, at most 3.0 degrees); negatives: the do-nothing agent, the walking policy, the weight over one end, left alone after 20 s, off the board, lying on the deck. A feedback tuned for an exactly level start, which holds the board there without visible motion, falls at 0.85 s from this start, as does a linear ride; human review in the pull request that adds the benchmark (docs/protocol/tasks.md#grading)"
 
 [verifier]
 timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -67,7 +67,7 @@ timeout_sec = 7200.0
 # Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md). The agent's
 # container holds no simulator, no referee and no instance.
-network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/invariants.md H.6)
 
 [environment]
 build_timeout_sec = 1800.0
@@ -75,7 +75,7 @@ cpus = 4
 memory_mb = 10240
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

@@ -1,30 +1,43 @@
-# robocasa-gr1-tray-to-tieredbasket-i00-privileged
+# RoboCasa-GR1 · PosttrainPnPNovelFromTrayToTieredbasketSplitA (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboCasa-GR1 |
+| Task ID | `robocasa-gr1-tray-to-tieredbasket-i00-privileged` |
+| Benchmark | [RoboCasa-GR1](https://github.com/robocasa/robocasa-gr1-tabletop-tasks) (NVIDIA et al., 2025), upstream `robocasa/robocasa-gr1-tabletop-tasks@4840e67` |
+| Robot | Fourier GR1 humanoid (two arms, waist and two six-command dexterous Fourier hands; fixed base) |
 | Mode | privileged |
-| Twin | `robocasa-gr1-tray-to-tieredbasket-i00-standard` |
-| Simulator / robot | `robosuite` / `fourier-gr1` |
-| Family / instance | `robocasa-gr1/PosttrainPnPNovelFromTrayToTieredbasketSplitA` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:robocasa-gr1-0.1.0` |
+| Instance | `robocasa-gr1/PosttrainPnPNovelFromTrayToTieredbasketSplitA`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-RoboCasa's GR1 tabletop `PosttrainPnPNovelFromTrayToTieredbasketSplitA` task with a Fourier GR1 humanoid (arms, waist and two dexterous six-command Fourier hands; fixed base): Put the lemon from the tray on the top tier of the tiered basket, and move both hands away. Produce one replayable trajectory of the robot's native controller commands on one frozen instance; graded on the state after the last action. Benchmark notes in `tasks/robocasa-gr1/README.md`.
+Put the lemon from the tray on the top tier of the tiered basket, and move both hands away.
 
-## Difficulty
-Full privileged state, unlimited resets and self-replay; a humanoid's two arms and dexterous hands driven through a whole-body IK controller (absolute grip-site poses, six commands per hand), pick-and-place with containers and doors. The standard twin removes the privileged state.
+## Success criteria
+All of these hold:
+- At least 2 of 15 key points of the lemon lie in the tiered basket's top zone (of its spawn zones, one per tier,
+  the one whose centre is highest): a cylinder of radius 8.4 cm along the basket's own vertical axis, from that
+  zone's centre up to 6.5 cm above it. The key points are the 8 corners of the lemon model's bounding box, the
+  centres of its 6 faces and its centre, each moved 20 % of the way toward the centre. Contact with the tiered
+  basket is not required.
+- The lemon does not touch the counter (the table, `table_main_group`).
+- The tiered basket is upright: its z axis has a world-z component above 0.8 (tilted less than about 37 degrees).
+- Each hand's grip site (`gripper0_right_grip_site`, `gripper0_left_grip_site`) is more than 0.25 m from the lemon's
+  origin and more than 0.25 m from the tiered basket's origin.
 
-## Reference solution
-The demonstration's own actions (original: 263 actions), executed from the frozen scene by the robot's own controller: 263 actions in `solution/oracle.npz`. The demonstration is a reference solution: it is not in the image and the agent cannot reach it.
+The graded file is `/app/output/trajectory.npz`: an `actions` array of shape (T, 24) with 1 ≤ T ≤ 3000, one row per
+control step (1/20 s); values outside the channel limits are clipped. The verifier, in a separate sandbox without
+network, replays it once, open-loop, in a fresh process from its own copy of the frozen start, and checks the
+conditions above once, with the environment's own `_check_success`, on the state after the last row. Meeting them
+earlier in the replay does not count, no step is simulated after the last row, and a scene that already met them at
+the start would not count either.
 
-## Verification
-`tests/grade.py` in a separate sandbox without network: one replay in a fresh process from the verifier's own copy of the instance; `success = success on the final state ∧ not solved at the start`. Reference: a fresh-process replay ends in the live run's state (hash `ba0069863b5b…`) and succeeds. `nop`: no trajectory, reward 0; the instance is not solved at the start.
+A missing file scores 0, and so does an invalid one: not a plain `.npz` of at most 8 MB holding only arrays (at most
+64), no `actions` array, a shape other than (T, 24), a NaN or infinite value, or T outside 1 to 3000. A replay that
+does not run to its end (a simulator error, or a frozen instance that fails its hash check) scores 0.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -33,10 +46,13 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Source | [RoboCasa GR1 tabletop tasks](https://github.com/robocasa/robocasa-gr1-tabletop-tasks) @ 4840e67 (MIT), robosuite @ 51cc017 (1.5.1) with its whole-body mink IK controller, MuJoCo 3.2.6; [environment source](https://github.com/robocasa/robocasa-gr1-tabletop-tasks/blob/4840e671596f93ca03651524b9f72ffb1aadfeff/README.md#L121) |
-| Instance | the initial state of official demonstration episode 0 (`demo_1`, HDF5/PosttrainPnPNovelFromTrayToTieredbasketSplitA.hdf5); MuJoCo state, model arrays, task state and RNG frozen in `instance.npz` (SHA-256 `b68a5613ff52…`, checked on load) |
-| Deliverable | `(T, 24)` native controller commands, 1 ≤ T ≤ 3000, 20 Hz |
-| Success | the environment's own check (`_check_success`) on the state after the last action |
+## License
+The scenes, task definitions and success checks are those of RoboCasa's GR1 tabletop tasks
+([robocasa/robocasa-gr1-tabletop-tasks](https://github.com/robocasa/robocasa-gr1-tabletop-tasks) @ `4840e67`, MIT
+License, copyright 2025 the NVIDIA GEAR group; paper: NVIDIA et al., 2025, "GR00T N1: An Open Foundation Model for
+Generalist Humanoid Robots", arXiv:2503.14734), built on robosuite
+([ARISE-Initiative/robosuite](https://github.com/ARISE-Initiative/robosuite) @ `51cc017`, MIT License). Assets are
+downloaded when the image is built and are not in this repository: RoboCasa's fixture, texture and object archives
+(CC BY 4.0) and NVIDIA's
+[PhysicalAI-DigitalCousin-Assets](https://huggingface.co/datasets/nvidia/PhysicalAI-DigitalCousin-Assets)
+(`lightwheel` and `sketchfab` object meshes), licensed **CC BY-NC 4.0: non-commercial use only**.

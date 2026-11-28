@@ -11,18 +11,18 @@ task_type = "trajectory"
 simulator = "mujoco"
 robot = "kuka-iiwa14-sharpa-ha4"
 family = "dextoolbench/eraser/handle_eraser/wipe_c"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 oracle = "partial"
-oracle_evidence = "SimToolReal's pretrained policy, replayed in this scene, reaches 12/31 goals (solution/; README of dextoolbench_eraser_handle_eraser_wipe_c-privileged)"
+oracle_evidence = "SimToolReal's pretrained policy, replayed in this scene, reaches 12/31 goals (solution/)"
 instance_seed = 0                 # DexToolBench fixes the start pose and goals (from a human demo); no randomization
 expert_time_estimate_hours = 4.0
 
 [verifier]
 timeout_sec = 1800.0
 environment_mode = "separate"
-network_mode = "no-network"       # PROTOCOL H.6: the verifier has no network
+network_mode = "no-network"       # docs/protocol/invariants.md H.6: the verifier has no network
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -31,7 +31,7 @@ timeout_sec = 120
 [agent]
 timeout_sec = 3600.0
 # SimToolReal's pretrained policy solves this task and is publicly downloadable, so egress is closed to everything but the model APIs and the package registries.
-network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL Appendix H.6
+network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); docs/protocol/invariants.md H.6
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 
 [environment]

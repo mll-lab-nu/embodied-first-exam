@@ -1,31 +1,61 @@
-# embodied-olympics-fun-javelin-i00-privileged
+# Embodied Olympics · javelin (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-javelin-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree H1-2 humanoid (1.78 m, 67 kg, 27 joints), with Unitree's walking policy |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-javelin-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-h1-2` |
-| Family / instance | `javelin` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: The cord lies across the palm of the H1-2's own right Inspire hand (its default forces, 20 N per fingertip, 30 N the thumb), held by contact and friction. A fast overhand swing pulls the cord out of the hand: its load back-drives the finger drives to their self-locking limits and pulls the cord out across the fingers at about 1.14 s (before the commanded opening at 1.18 s), at 12-13 m/s pointing down, at 1x and equally at 2x these forces (so no factor up to 2x helps); a swing searched by CMA-ES (about 60 generations) reaches 9.8 m head first (the mark is 20 m). Positive by a declared magic action: real arm raised above the shoulder holding the javelin, the hand opened; injected once, the javelin moved 0.12 m up and given 17 m/s at 35 deg: it lands head first 31.6 m from the arc; the real walk back off the runway and stand; the same state hash twice. Negatives: nop, a release below the shoulder, the hand opened at the start, the back turned, walking over the arc, leaving the runway while it flies, tail first, outside the sector, short, touched after the release, out in front of the arc's ends, a fall. Stress: random arm targets with the hand closed: at most 0.4 mm into the fingers. The clean release (TR 38.1(a), held with one hand, not slung or hurled): the release is the javelin's last contact with any part of the robot after the hold ends (then 0.02 s free), with at most 0.2 s of unheld contact on the right arm in between; after it, brushes by the right arm in the 0.2 s grace may change its velocity by at most 0.5 m/s in all (the contact impulses, summed, over its mass). A model run's 21.2 m throw (the hold ended at 5.3 m/s, then batted by the opening hand to 20.8 m/s) fails: release at its last continuous contact (7.078 s, 8.6 m/s), then 'struck after the release' (5.1 m/s by contact at 7.109 s). Every rule above is judged in the family's own 1 ms substep hook.; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Instance | `javelin`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Throw the javelin over your shoulder from behind the arc so that it lands point first inside the sector at least 20 m out, then leave the runway behind the arc and stand. (Embodied Olympics `javelin`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Throw the javelin over your shoulder from behind the arc so that it lands point first inside the sector at least 20 m
+out, then leave the runway behind the arc's end lines, or step back at least 4 m behind them, and stand still for 1 s.
 
-## Difficulty
-20.0 m asks for a release near 18 m/s at 25 to 30 degrees with the javelin pointing close enough to its flight that it comes down head first; the H1-2 has no running policy and its arm motors give 40 N m at the shoulder. Nothing holds the 2.21 m javelin but the fingers round its cord: a whip of the arm pulls it out across them (the finger drives give way at their self-locking limits), and the hand must let go of it at the right moment, above the shoulder, on a body that has to stay on its feet behind the arc.
+## Success criteria
+A javelin (0.6 kg, 2.21 m) starts held at its cord in the right hand. The runway is 4 m wide and ends at the arc, a
+circle of 8 m radius; the sector is bounded by the lines from the arc's centre through the arc's ends (28.96 degrees
+between them). The referee's stages, in order: release, landing, exit.
+- Held: the cord touches the right hand's fingers and its thumb or palm (breaks up to 0.02 s are ignored). After the
+  hold ends, only the right arm and hand may touch the javelin, for at most 0.20 s.
+- Release: the javelin's last contact with the robot, once it has touched nothing of the robot for 0.02 s. At that
+  last contact its centre of gravity is at least as high as the right shoulder joint.
+- Landing: the javelin's head touches the ground before any other part of it, inside the sector lines (on a line is
+  out), at least 20 m from the arc's inner edge (measured along the line through the arc's centre).
+- Exit: after the landing, the robot touches the ground outside the runway behind the arc's end lines, or at least
+  4 m behind the arc's ends.
+- Then the robot stands (only the feet on the ground, the torso within 20 degrees of vertical, the pelvis at most
+  0.35 m/s) for 1 s in a row.
 
-## Reference solution
-None. No reference controller exists for this family yet: The cord lies across the palm of the H1-2's own right Inspire hand (its default forces, 20 N per fingertip, 30 N the thumb), held by contact and friction. A fast overhand swing pulls the cord out of the hand: its load back-drives the finger drives to their self-locking limits and pulls the cord out across the fingers at about 1.14 s (before the commanded opening at 1.18 s), at 12-13 m/s pointing down, at 1x and equally at 2x these forces (so no factor up to 2x helps); a swing searched by CMA-ES (about 60 generations) reaches 9.8 m head first (the mark is 20 m). Positive by a declared magic action: real arm raised above the shoulder holding the javelin, the hand opened; injected once, the javelin moved 0.12 m up and given 17 m/s at 35 deg: it lands head first 31.6 m from the arc; the real walk back off the runway and stand; the same state hash twice. Negatives: nop, a release below the shoulder, the hand opened at the start, the back turned, walking over the arc, leaving the runway while it flies, tail first, outside the sector, short, touched after the release, out in front of the arc's ends, a fall. Stress: random arm targets with the hand closed: at most 0.4 mm into the fingers. The clean release (TR 38.1(a), held with one hand, not slung or hurled): the release is the javelin's last contact with any part of the robot after the hold ends (then 0.02 s free), with at most 0.2 s of unheld contact on the right arm in between; after it, brushes by the right arm in the 0.2 s grace may change its velocity by at most 0.5 m/s in all (the contact impulses, summed, over its mass). A model run's 21.2 m throw (the hold ended at 5.3 m/s, then batted by the opening hand to 20.8 m/s) fails: release at its last continuous contact (7.078 s, 8.6 m/s), then 'struck after the release' (5.1 m/s by contact at 7.109 s). Every rule above is judged in the family's own 1 ms substep hook..
+Fouls (each fails the attempt): any part of the robot touches the arc, its end lines or the ground beyond them; the
+robot touches a side line or the ground outside the runway (or behind its rear end) before the landing; the chest
+turns more than 135 degrees away from the throwing direction before the release; the javelin touches the left arm or
+hand before the release; after the hold ends it touches a part other than the right arm, or stays on the right arm
+for more than 0.20 s; the release is lower than the shoulder; after the release the javelin is held again, touched
+by a part other than the right arm, or touched by the right arm later than 0.20 s after the release or hard enough
+to change its velocity by more than 0.5 m/s in all; it does not land head first, lands outside the sector, or lands
+short of 20 m. Fall rule: on, the pelvis below 0.50 m or any part other than the feet on the ground. Time limit:
+60 s (6,000 control steps).
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: The women's javelin (0.6 kg, 2.21 m long, its centre of gravity 0.92 m from the tip, a metal head of 0.28 m; its cord grip, 0.145 m long and 0.0287 m across, covers the centre of gravity) starts held at its cord across the palm of your right hand, a five-finger hand that holds only by contact and friction: the javelin can slip along the fingers or turn in the hand, and drop. It is held while the cord touches the hand's fingers and its thumb or palm (breaks of at most 0.02 s are ignored). The release is the javelin's last contact with any part of you after the hold has ended (however it ends: opened, slipped or dropped), once it has then touched nothing of you for 0.02 s; between the end of the hold and the release only your right arm and hand may touch it, for at most 0.2 s. Until the release the javelin may not touch your left arm or hand (the javelin is held with one hand). The runway is 4.0 m wide between the inner edges of its side lines and 30.0 m long; it ends at the arc, a white strip whose inner edge is a circle of 8.0 m radius round a point on the runway's centre line; short white lines run outwards from the arc's two ends at right angles to the side lines. The sector is bounded by the two lines from the arc's centre through the arc's ends (28.96 degrees between them). The throw: at the release the javelin's centre of gravity must be no lower than your right shoulder joint. There is one release: after it the javelin may not be held again (the cord in the hand's fingers and thumb or palm once more) and no part of you may touch it, except that your right arm and its hand may still brush it during the first 0.2 s, if those touches change its velocity by at most 0.5 m/s in all (the sum of their contact impulses over its mass: the release must be clean). The throw is valid only if the head touches the ground before any other part of the javelin, at a point inside the sector lines (on a line is out). It is measured from that point to the inner edge of the arc along the line through the arc's centre. You succeed when a valid throw measures at least 20.0 m and you have then left the runway correctly and stood for 1.0 s. Leaving correctly: after the javelin has landed, your first touch of a side line or of the ground outside the runway is behind the arc's end lines, or you touch the ground 4.0 m or more behind the arc's ends. Standing: only your feet on the ground, the torso within about 20 degrees of upright, the pelvis slower than 0.35 m/s. You fail if, at any time before that, any part of you touches the arc, its end lines or the ground beyond them; if you touch a side line or the ground outside the runway (also behind its rear end) before the javelin has landed; if your chest is turned more than 135.0 degrees away from the throwing direction before the release (your back to the arc); if the javelin touches your left arm or hand before the release; if it is released lower than the shoulder; if after the end of the hold it stays on your right arm for more than 0.2 s or touches another part of you; if it is held again, or touched, after the release (but for the brush above); if it does not land head first, lands outside the sector or short of 20.0 m; if you fall (your pelvis lower than 0.5 m above the ground, or any part of you other than your feet on the ground); or after 60 s. Where you touch the ground is judged on the points of contact. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +64,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | throwing-catching-striking |
-| Rule book | World Athletics Competition and Technical Rules 2024: TR 32.9 (the javelin runway and its arc), TR 32.12 (the sector), TR 32.14, 32.16, 32.17 and 32.20 (throwing events: failures, the landing, leaving the runway, the measurement), TR 38.1 (the throw), TR 38.3-38.6 (the javelin: the women's implement, its grip); deviations: TR 38.1(a) ("the javelin shall be held at the grip with one hand"): the hand is the H1-2's own Inspire five-finger hand (six drives: four fingers, the thumb's flexion and rotation; fingertip forces 20 N, the thumb 30 N, at 1.0 times these forces; one closure command for the whole hand); the cord lies across its palm and is held by its fingers' and thumb's contact and friction only. Held means the cord touching the hand's fingers and its thumb or palm; the hold may break for at most 0.02 s (contacts flicker); the release is the javelin's last contact with any part of you once the hold has ended, when it has then touched nothing of you for 0.02 s (between the end of the hold and the release only the right arm may touch it, for at most 0.2 s). "Over the shoulder or upper part of the throwing arm" is judged at the release: the javelin's centre of gravity must then be no lower than the throwing shoulder's joint. · TR 38.1(a) (one hand): before the release the javelin may not touch your left arm or hand (it may rest against the rest of you: the rule book forbids only the second hand). · TR 38.1(c): "turned completely around" is judged as the chest's heading more than 135.0 degrees away from the throwing direction at any time before the release. · TR 38.3-38.6 (the implement): the robot throws the women's javelin, 600 g and 2.21 m (the men's is 800 g and 2.60-2.70 m): the H1-2's swing, holding the javelin by friction alone, cannot release the men's javelin pointing along its path fast enough to throw it head first past a line (its best: 15.3 m); a lighter official implement leaves faster from the same arm. Everything about the throw is otherwise real. · TR 38.3-38.6: the javelin is one rigid body (no bending or vibration) whose head does not stick in the ground; the mark is the point where the head first touches the ground; the cord grip is a smooth band 0.145 m long and 0.0287 m across (no pattern: the finger pads' rubber gives the friction). · Flight: quasi-steady aerodynamics in still air, no wind: drag and lift against the angle of attack from the wind-tunnel measurement of this very kind of javelin (a World Athletics women's javelin, Seo et al., Scientific Reports 2023; drag, lift and pitching moment from 0 to 18 degrees, beyond that a cylinder's cross-flow); the shaft's cross-flow damps its rotation. The javelin does not bend or vibrate. · TR 32.15 (interrupting a trial, laying the implement down): not modelled; the first release is the throw, and the javelin may not be gripped again. · TR 38.1(a) ("held at the grip with one hand ... shall not be slung or hurled"): the throw is the hand's alone and its release clean. The rule book has no article on touching the javelin after it has left the hand; here the right arm may still brush it during 0.2 s after the release, but those touches may change its velocity by at most 0.5 m/s in all (the sum of their contact impulses over its mass): a harder touch is a second propulsion of a released implement, and fails the throw. · TR 32.14 names no fall: here a fall ends the trial as a failure, as in every task of this benchmark; the trial ends when the robot has left the runway correctly and stands. · TR 25.17 (one minute for a trial): the whole trial, leaving the runway included, has 60 s. · The qualifying mark of 20.0 m is this benchmark's (a girls' school standard for the 600 g javelin); the rule book only measures. |
-| Stages | release → landing → exit |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `a75353fda01e89e11225a101b1405cfe69c45a1a1502348af69d5f86f88c7f10` |
-| Episode | 6000 control steps (60 s at 100 Hz) |
-| Action | sim rows of 141 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

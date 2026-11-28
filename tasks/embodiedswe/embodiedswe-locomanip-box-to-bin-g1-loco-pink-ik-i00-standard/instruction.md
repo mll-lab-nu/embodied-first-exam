@@ -5,8 +5,8 @@ Take the box off the shelf in front of you, carry it to the blue bin on the tabl
 bin.
 
 ## Goal
-Success: the box was taken off the shelf and carried over to the bin, and it now rests inside the bin's walls, let go of
-and still (not held, not across the rim).
+Success: the box was taken off the shelf and carried over to the bin, and it now rests still inside the bin's walls (not
+across the rim).
 
 Taking the box off the shelf and carrying it over count as they happen.
 

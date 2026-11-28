@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""The agent's time cutoff (docs/protocol/README.md §2): each task sets its own, and says it once, at the end of its instruction.
+"""The agent's time cutoff (docs/protocol/tasks.md): each task sets its own, and says it once, at the end of its instruction.
 
 The number is the task's `[agent] timeout_sec` in task.toml, set by its author in the
 pull request that adds or changes the task, as in Terminal-Bench; there is no table. For every task given (default:
 every task):
-  - `[agent] timeout_sec` is a whole positive number of seconds, at most 14400 (PROTOCOL §2; no benchmark is excepted);
+  - `[agent] timeout_sec` is a whole positive number of seconds, at most 14400 (docs/protocol/tasks.md; no benchmark is excepted);
   - instruction.md ends with the `## Limits` section scripts/task_conventions.py renders, the last thing the agent
     reads, whose Time line states that number and what the cutoff means in the task's mode; nothing follows it, and the
     heading stands there once;
@@ -12,7 +12,7 @@ every task):
     "wall-clock budget is 90 min (5400 s)", "You have 60 minutes of wall-clock time", "Time limit: one hour", ...; and
     the obvious other shapes: "You have one hour.", "The limit is 3600 seconds.", "Finish within 60 minutes."): two
     limits in one instruction are worse than none;
-  - the README's "Agent time budget" row has the number;
+  - the README's "Time limit" row (task_conventions.readme_time_row) has the number;
   - standard modes: the `sim` service is told the same number (`RCB_WALL_CLOCK_S` in environment/docker-compose.yaml,
     what its `/spec` budget and `meta["time_left_s"]` report; docs/protocol/running.md "The agent's time");
 ADVISORY (the required CI job runs the twins' equal cutoffs, an invariant, in ci_checks/check-twins.py).
@@ -88,11 +88,11 @@ def number_errors(task: Path) -> list[str]:
     except (OSError, tomllib.TOMLDecodeError) as e:
         return [f"task.toml: {e}"]
     if v is None:
-        return ["task.toml has no `[agent] timeout_sec` (the agent's cutoff, set by the task's author; PROTOCOL §2)"]
+        return ["task.toml has no `[agent] timeout_sec` (the agent's cutoff, set by the task's author; docs/protocol/tasks.md)"]
     if isinstance(v, bool) or not isinstance(v, (int, float)) or v <= 0 or float(v) != int(v):
         return [f"[agent] timeout_sec = {v!r} is not a whole positive number of seconds"]
     if v > tc.CUTOFF_CAP:
-        return [f"[agent] timeout_sec = {v:g} is above the {tc.CUTOFF_CAP} s cap (PROTOCOL §2; no benchmark is excepted)"]
+        return [f"[agent] timeout_sec = {v:g} is above the {tc.CUTOFF_CAP} s cap (docs/protocol/tasks.md; no benchmark is excepted)"]
     return []
 
 
@@ -116,8 +116,8 @@ def check_task(task: Path) -> list[str]:
     errs += [f"instruction.md states the agent's limit a second time, outside `{tc.LIMITS_HEADING}` ({x}); say "
              f"\"{tc.V2_CUTOFF_REF}\" instead of a number" for x in other_limits(ins)]
     readme = (task / "README.md").read_text(encoding="utf-8") if (task / "README.md").is_file() else ""
-    if f"| Agent time budget | {sec} s;" not in readme:
-        errs.append(f"README.md's `Agent time budget` row does not say {sec} s")
+    if tc.readme_time_row(task) not in readme:   # `| Time limit | 30 min |`
+        errs.append(f"README.md's `Time limit` row does not say {tc.duration_text(sec)} ({sec} s)")
     c = task / "environment/docker-compose.yaml"
     text = c.read_text() if c.is_file() else ""
     if mode in tc.SIDECAR_MODES and re.search(r"(?m)^  sim:", text):   # a task without a sim service has no budget to tell

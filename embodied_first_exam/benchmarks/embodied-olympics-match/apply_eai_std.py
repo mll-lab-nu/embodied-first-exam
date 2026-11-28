@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Put the match extension of eai-standard/2.x (docs/protocol/standard_mode.md Part 5; eai_std/ next to this file) into
+"""Put the match extension of eai-standard/3.0 (docs/protocol/eai-standard.md#match-extension; eai_std/ next to this file) into
 the Embodied Olympics - Match tasks that serve it, after an export (ci_checks/benchmarks/embodied-olympics-match/
 exported.toml lists the files it changes in each task's `patched`). Idempotent: a second run changes nothing.
 
@@ -7,8 +7,7 @@ Per task (tasks/embodied-olympics-match/<task>/):
   - environment/sim/eai_std/: the adapter, a byte copy of eai_std/ (the sim image's `COPY . /srv/` puts it at /srv/eai_std);
   - environment/docker-compose.yaml: the sim sidecar runs `python3 -m eai_std.serve` (core/serve.py or core/lockstep.py,
     unchanged, with the standard endpoints on the same port) with EAI_STD_CLOCK = realtime | lockstep | turn;
-  - environment/Dockerfile: the shared client (standard-files: rcb1.py and the 2.3 or the 2.2 rcb_client.py) in /opt/tools;
-  - task.toml [metadata] protocol, the protocol named in the description, README.md and the compose comment;
+  - environment/Dockerfile: the shared client (standard-files: rcb1.py and the realtime or the shared rcb_client.py) in /opt/tools;
   - instruction.md: `### Client` names the standard endpoints first, then the `game` command (unchanged).
 The core and the sport (core/, sport/: source_sha) and the files-only image are not touched.
 
@@ -19,7 +18,6 @@ from __future__ import annotations
 import re
 import sys
 import textwrap
-import tomllib
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -41,8 +39,6 @@ TASKS = [P + n for n in (
     "soccerssl-match-i01-realtime", "soccerssl-match-i01-standard",
     "tabletennis-duelrl-i01-realtime", "tabletennis-duelrl-i01-standard",
     "tabletennis-match-i04-realtime", "tabletennis-match-i04-standard")]
-OLD = {"realtime": "eai-standard-realtime/1.0", "lockstep": "eai-standard-lockstep/1.0", "turn": "eai-standard-turn/1.0"}
-NEW = {"realtime": "eai-standard/2.3+match/1.0", "lockstep": "eai-standard/2.1+match/1.0", "turn": "eai-standard/2.1+match/1.0"}
 OLD_CMD = {"realtime": "python3 /srv/core/launch.py", "lockstep": "python3 -m core.lockstep", "turn": "python3 /srv/core/launch.py"}
 CMD = "python3 -m eai_std.serve"
 # the shared client's files-only image: the pin in images/standard-files/FILES.json (scripts/files_image.py), never a copy
@@ -52,7 +48,7 @@ import files_image  # noqa: E402
 STD_FILES = files_image.image("standard-files")
 CLIENT = {"realtime": "/rcb1.py /realtime/rcb_client.py", "lockstep": "/rcb1.py /rcb_client.py",
           "turn": "/rcb1.py /rcb_client.py"}
-DOCKER_MARK = "# the eai-standard/2.x client (docs/protocol/standard_mode.md): `from rcb_client import Robot`"
+DOCKER_MARK = "# the eai-standard/3.0 client (docs/protocol/eai-standard.md): `from rcb_client import Robot`"
 
 ENDPOINTS = """\
 | HTTP | |
@@ -97,7 +93,7 @@ ENTITY = ("Where an action names a robot (`entity`), one chunk commands one: `\"
           "type `T@E`.")
 CLIENT_HEAD = """\
 ### Client
-The service at `http://localhost:8000` speaks eai-standard/2.x with the match extension (`{proto}`): the endpoints
+The service at `http://localhost:8000` speaks eai-standard/3.0 with the match extension: the endpoints
 of every standard task, plus `/start` and `/ready`. The shared client is installed (`from rcb_client import Robot`).
 
 """
@@ -114,11 +110,9 @@ def clock_of(task: Path) -> str:
     m = re.search(r'EAI_STD_CLOCK: "(\w+)"', (task / "environment/docker-compose.yaml").read_text())
     if m:                                         # applied before
         return m.group(1)
-    proto = tomllib.loads((task / "task.toml").read_text())["metadata"]["protocol"]
-    for c, p in OLD.items():
-        if proto == p:
-            return c
-    raise SystemExit(f"{task.name}: protocol {proto!r} is not one of the match's exported protocols")
+    if task.name.endswith("-realtime"):
+        return "realtime"
+    return "lockstep" if f"command: {OLD_CMD['lockstep']}" in (task / "environment/docker-compose.yaml").read_text() else "turn"
 
 
 def sub1(text: str, old: str, new: str, what: str, task: Path) -> str:
@@ -141,7 +135,7 @@ def compose(text: str, clock: str, task: Path) -> str:
                         "unchanged (core/lockstep.py, with the standard endpoints of eai_std/serve.py on the same port: the match service in lockstep, ")
     if not re.search(r'PLAYER_MODE_A: "unmetered"', text):
         raise SystemExit(f"{task.name}: seat A is not unmetered (eai_std.serve starts no metering proxy)")
-    return text.replace(OLD[clock], NEW[clock])
+    return text
 
 
 def dockerfile(text: str, clock: str, task: Path) -> str:
@@ -166,7 +160,7 @@ def instruction(text: str, clock: str, task: Path) -> str:
     export_head = ("### Client\nThe `game` command, or the same calls as HTTP with JSON at `http://localhost:8000/<SEAT>/` "
                    "(your seat is `$SEAT`):\n")
     m = re.search(r"(?s)### Client\n.*?\n(?=\| `game` command \|)", text)
-    if not m or (text.count(export_head) != 1 and "speaks eai-standard/2.x with the match extension" not in m.group(0)):
+    if not m or (text.count(export_head) != 1 and "speaks eai-standard/3.0 with the match extension" not in m.group(0)):
         raise SystemExit(f"{task.name}: instruction.md: the `### Client` section is neither the export's nor ours")
     eps = ENDPOINTS.format(observe=OBSERVE[clock], submit_args=SUBMIT_ARGS[clock], submit=SUBMIT[clock],
                            hold=HOLD[clock], review=REVIEW[clock])
@@ -174,7 +168,7 @@ def instruction(text: str, clock: str, task: Path) -> str:
         eps += ('| `POST /say {"text": "..."}` | a message to your team (`game say`) |\n'
                 '| `POST /team {"since": N}` | your team\'s messages (`game team`) |\n')
     rule = RULE[clock] + ("" if clock == "turn" else " " + ENTITY)
-    new = (CLIENT_HEAD.format(proto=NEW[clock]) + eps.rstrip("\n") + "\n\n" + wrap(rule + " " + CLIENT_TAIL) + "\n\n"
+    new = (CLIENT_HEAD + eps.rstrip("\n") + "\n\n" + wrap(rule + " " + CLIENT_TAIL) + "\n\n"
            + wrap(GAME_LEAD) + "\n\n")
     return text[:m.start()] + new + text[m.end():]
 
@@ -194,8 +188,6 @@ def apply(task: Path, check: bool) -> list[str]:
     edits = {
         "environment/docker-compose.yaml": lambda t: compose(t, clock, task),
         "environment/Dockerfile": lambda t: dockerfile(t, clock, task),
-        "task.toml": lambda t: t.replace(OLD[clock], NEW[clock]),
-        "README.md": lambda t: t.replace(OLD[clock], NEW[clock]),
         "instruction.md": lambda t: instruction(t, clock, task),
     }
     for rel, fn in edits.items():

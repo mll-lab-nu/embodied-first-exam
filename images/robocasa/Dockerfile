@@ -15,7 +15,7 @@ FROM docker.io/library/python:3.10.16-slim-bookworm@sha256:f9fd9a142c9e3bc54d906
 ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa
 RUN apt-get update && apt-get install -y --no-install-recommends git curl ca-certificates ffmpeg libosmesa6 libgl1 libglib2.0-0 libx11-6 build-essential linux-libc-dev && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir numpy==1.23.3 numba==0.56.4 scipy==1.10.1 mujoco==3.2.6 robosuite==1.5.1 pygame==2.6.1 Pillow==11.1.0 opencv-python==4.10.0.84 pyyaml==6.0.2 pynput==1.7.7 tqdm==4.67.1 termcolor==2.5.0 imageio==2.37.0 imageio-ffmpeg==0.6.0 h5py==3.12.1 lxml==5.3.1 hidapi==0.14.0.post4
-# PROTOCOL §2.7, in the same layer as the clone: no pointer to the demonstrations (the tasks' references) in the image.
+# docs/protocol/leakage.md, in the same layer as the clone: no pointer to the demonstrations (the tasks' references) in the image.
 # Drop RoboCasa's dataset downloader and blank the demonstration links in its dataset registry (nothing the tasks
 # import uses either: only robocasa/demos, robocasa/scripts and utils/{env,eval}_utils import the registry), and drop
 # the git history, which would still hold them. The assertions fail the build if a link or the downloader survives.

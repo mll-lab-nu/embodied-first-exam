@@ -1,4 +1,4 @@
-"""eai-standard/2.1 sim service for HumanCLAW -- the standard-mode sidecar's entry point (`python /srv/server.py`).
+"""eai-standard/3.0 sim service for HumanCLAW -- the standard-mode sidecar's entry point (`python /srv/server.py`).
 
 The simulator-specific half only: `HumanClaw` implements rcb_service.Sim for one frozen episode (hc_core.Session).
 The protocol, the episode, crash recovery and the finalize live in rcb_service.py, which imports no simulator.
@@ -9,10 +9,9 @@ grade it. The video is the live episode's recorded poses, rendered after the ver
 Settings come from environment/docker-compose.yaml:
   RCB_INSTANCE      the frozen episode (the privileged twin's instance.json)
   RCB_TASK_TEXT     one sentence for /spec
-  RCB_EPISODE       what ends an episode, for /spec (the instruction's words)
   RCB_RESET_BUDGET, RCB_WALL_CLOCK_S, RCB_DATA   the service's own (rcb_service.main)
 
-Agent-ended episodes (RCB_AGENT_END=1, PROTOCOL §3; rcb_service.AGENT_END): HumanCLAW's episode is agent-ended by its
+Agent-ended episodes (docs/protocol/tasks.md#modes): HumanCLAW's episode is agent-ended by its
 own rule already (only a stop can succeed, the state at the stop is judged), so the service's finish IS the stop: POST
 /finish runs the stop action as the episode's last control step (journaled like any other row), and the end of the
 agent's session does too, before the episode is judged (reason "timeout"); a stop the agent sends ends the episode as
@@ -52,7 +51,7 @@ class HumanClaw:
     end_judgement = "state"              # agent-ended: the state at the stop (HumanCLAW's own rule)
     hidden_keys = ("step_cap",)
 
-    def __init__(self, instance: str, *, task_text: str = "", episode: str = ""):
+    def __init__(self, instance: str, *, task_text: str = ""):
         self.inst = hc_core.load_instance(instance)
         if self.inst.get("digest") and self.inst["digest"] != hc_core.instance_digest(self.inst):
             raise InstanceMismatch(f"{instance} records digest {self.inst['digest']}, its contents hash to "
@@ -60,19 +59,17 @@ class HumanClaw:
         self.s = hc_core.Session(self.inst)
         if self.inst.get("start_sha"):
             self.start_sha = self.inst["start_sha"]
-        self.task_text, self.episode = task_text, episode
+        self.task_text = task_text
         self.cmd = IDLE_ROW.copy()
         self.hw = list(self.s.ego_rgb().shape[:2])
 
     # ------------------------------------------------------------------ the rcb_service.Sim contract
     def spec(self) -> dict:
-        ae = rcb_service.AGENT_END
         return {
             "simulator": "habitat-sim with HumanCLAW Half-Physics (Bullet), MotionDiT motion skills",
             "robot": "a simulated adult human body (SMPL-X neutral body), moved only by its motion skills",
             "task_text": self.task_text,
-            "episode": (self.episode if not ae else
-                        "ends at your stop action or POST /finish (the same thing: the stop), at the "
+            "episode": ("ends at your stop action or POST /finish (the same thing: the stop), at the "
                         f"{self.s.max_steps}th action whatever it is, when your session ends (judged as a stop then), "
                         "or on a simulator error; only a stop can succeed, and the state at the stop is what counts"),
             "action_types": {"skill": {
@@ -81,7 +78,7 @@ class HumanClaw:
                 "actions": {
                     "0": "walk forward; value = stride in m: 0.2, 0.4 or 0.6 (nothing else)",
                     "1": "stop; value 0. Ends the episode: you declare you are done (only a stop can succeed)"
-                         + ("; POST /finish is the same stop" if ae else ""),
+                         + "; POST /finish is the same stop",
                     "2": "turn in place; value = signed degrees, + left (counter-clockwise from above), - right; "
                          "|value| clamped to [10, 120]; 0 is refused",
                     "3": "climb up one step; value 0",
@@ -210,7 +207,7 @@ def _agent_finish(self) -> dict:
 def _end(self, reason: str) -> None:
     """The end of the agent's session is a stop too (run first, then judged); an end HumanCLAW makes itself (a stop, the
     100th action) is "finished" when its last action was a stop, else "step_limit"."""
-    if self.agent_end and not self.done:
+    if not self.done:
         if reason == "timeout" and not self.sim.s.done and not getattr(self, "_closing", None):
             self._closing = "timeout"
             try:
@@ -232,8 +229,7 @@ rcb_service.Service._end = _end
 
 def build() -> HumanClaw:
     env = os.environ.get
-    return HumanClaw(env("RCB_INSTANCE", "/srv/instance.json"), task_text=env("RCB_TASK_TEXT", ""),
-                     episode=env("RCB_EPISODE", ""))
+    return HumanClaw(env("RCB_INSTANCE", "/srv/instance.json"), task_text=env("RCB_TASK_TEXT", ""))
 
 
 if __name__ == "__main__":

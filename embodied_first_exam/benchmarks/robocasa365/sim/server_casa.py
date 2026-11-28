@@ -1,4 +1,4 @@
-"""Standard-mode sim service for the RoboCasa-series tasks (eai-standard/2.1): robot as a service.
+"""Standard-mode sim service for the RoboCasa-series tasks (eai-standard/3.0): robot as a service.
 
 Derived from the MuJoCo service (embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py, via
 embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py) and identical to it in protocol and lifecycle: GET /spec, GET /status, POST /observe, POST /submit, binary RCB1 responses,
@@ -10,16 +10,14 @@ from the collect hook ends the episode, /data evidence. Differences, all from ro
 - a hold chunk (/submit {"interpolate": "hold", "seconds": n}, no rows; eai-standard/3.0) holds the robot still
   (S.hold_targets(): delta channels zero, the rest kept); /observe only reads (seconds > 0 is a 400);
 - cameras are the robot's own (they move with its base), so every response carries their current calibration;
-- protocol v1.0 items the MuJoCo service gets in the migration (docs/protocol/README.md §7): the eai-standard/2.1 name, a
-  simulator error (500) ends the episode with reason "error", an oversized body is answered with 413.
+- as the MuJoCo service: a simulator error (500) ends the episode with reason "error", an oversized body is answered with 413.
 
 What the agent gets: camera RGB (+ depth) with each camera's calibration, the robot's own joints, end-effector
 positions and last command, and the task's instruction. Never an object's pose, the scene layout or the success check.
-With RCB_AGENT_END (every standard and realtime task from 3.0) the episode runs until the agent's POST /finish, the
-step limit, the end of its session or a simulator error, and the state it ends in is graded; the success is never
-shown. Without it the episode runs until the agent's time is up; the state after the last control step is graded.
+The episode is agent-ended: it runs until the agent's POST /finish, the step limit, the end of its session or a
+simulator error, and the state it ends in is graded; the success is never shown.
 
-The verdict is the live episode's (docs/protocol/README.md H.4): the environment's own success
+The verdict is the live episode's (docs/protocol/invariants.md H.4): the environment's own success
 check on the state after the last control step this service executed, not already solved at the start, and the
 episode not ended by a simulator error. Nothing is replayed to grade it. The frozen initial state is checked when the
 episode begins (the instance file's hash, RCB_INSTANCE_SHA, and the start state's hash, RCB_START_SHA, both from the
@@ -58,7 +56,7 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb1  # noqa: E402
 
-PROTOCOL = "eai-standard/2.1"
+PROTOCOL = "eai-standard/3.0"
 DATA = os.environ.get("RCB_DATA", "/data")  # the evidence directory (the variable is for tests; tasks use /data)
 os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
 TOOL = importlib.import_module(os.environ.get("RCB_TOOL", "casa_tool"))
@@ -74,21 +72,19 @@ LOCK = threading.Lock()
 E = {"ready": False, "calls": 0, "rows": 0, "done": False, "reason": None, "t0": time.time(), "finalized": False}
 E["t_first"] = None  # the agent's first request (its clock starts there: _touch, _agent_time)
 
-# Agent-ended episodes (docs/protocol/README.md §3 "Agent-ended episodes", standard_mode.md; required for every standard
-# and realtime task from protocol v3.0; the same rules as rcb_service.py's AGENT_END). RCB_AGENT_END=1: the service never
-# shows the task's success and a success never ends the episode; POST /finish (JSON {}) ends it (reason "finished"),
+# Agent-ended episodes (docs/protocol/eai-standard.md "Agent-ended episodes", docs/protocol/eai-standard.md; the same rules as
+# rcb_service.py's): the service never shows the task's success and a success never ends the episode; POST /finish (JSON {}) ends it (reason "finished"),
 # and so do the step cap (reason "step_limit": RCB_MAX_CONTROL_STEPS, or RCB_STEP_LIMIT=N when set, which may only lower
 # it) and the end of the agent's session ("timeout"); those three ends are judged on the state they leave (END_JUDGEMENT
 # says how: "state", the task's success as things stand then; "events", a goal judged on moments as they happened).
 # A task's own failure rule still ends the episode with 0, after a success too.
-AGENT_END = os.environ.get("RCB_AGENT_END") == "1"
 STEP_LIMIT = int(os.environ.get("RCB_STEP_LIMIT") or 0) or None
-if STEP_LIMIT is not None and (not AGENT_END or STEP_LIMIT < 1):
-    raise RuntimeError("RCB_STEP_LIMIT needs RCB_AGENT_END=1 and a positive number of steps")
+if STEP_LIMIT is not None and STEP_LIMIT < 1:
+    raise RuntimeError("RCB_STEP_LIMIT needs a positive number of steps")
 if STEP_LIMIT:
     MAX_CONTROL_STEPS = min(MAX_CONTROL_STEPS or STEP_LIMIT, STEP_LIMIT)
 END_STATE_REASONS = ("finished", "timeout", "step_limit")     # ends judged on the state they leave
-CAP_REASON = "step_limit" if AGENT_END else "step limit"     # the step cap's end (judged as it stands either way)
+CAP_REASON = "step_limit"                                   # the step cap's end (judged as it stands)
 ENDED_BY = {"finished": "finish", "step_limit": "step_limit", "timeout": "session_end", "error": "error",
             "sim_crashed_on_call": "error", "sim_crashed": "error"}   # any other end: "failed" (the task's own rule)
 SUCCESS_SIGNAL_NOTE = ("hidden: the service never tells you whether you have succeeded and a success does not end the "
@@ -108,12 +104,10 @@ def _hidden_success(ok, step: int) -> None:
 
 def _ae_state() -> dict:
     """The hidden success as a checkpoint (a completed call's log line) keeps it: a resume restores it."""
-    return {"now_success": E["now_success"], "seen_step": E["seen_step"], "trial_seen": E["trial_seen"]} if AGENT_END else {}
+    return {"now_success": E["now_success"], "seen_step": E["seen_step"], "trial_seen": E["trial_seen"]}
 
 
 def _ae_restore(last: dict, ev: list) -> None:
-    if not AGENT_END:
-        return
     E["now_success"], E["seen_step"] = bool(last.get("now_success")), last.get("seen_step")
     E["trial_seen"] = bool(last.get("trial_seen"))
     fin = [e for e in ev if e.get("ev") == "end" and e.get("reason") == "finished"]
@@ -121,9 +115,7 @@ def _ae_restore(last: dict, ev: list) -> None:
 
 
 def _ae_fields() -> dict:
-    """final.json's record of an agent-ended episode (evidence only; nothing without the feature)."""
-    if not AGENT_END:
-        return {}
+    """final.json's record of the agent-ended episode (evidence only)."""
     r, t0, ft = E["reason"], E.get("t_first"), E.get("finish_t")
     out = {"success_signal": "hidden", "ended_by": ENDED_BY.get(r, "failed") if r else None, "end_judgement": END_JUDGEMENT,
            "hidden_success_seen": E["seen_step"] is not None, "hidden_success_first_step": E["seen_step"],
@@ -202,7 +194,7 @@ def _remove(*paths: str) -> None:
 def _give_up(reason: str, infra: bool) -> None:
     """End the trial's episode without a new one: mark it failed, keep the PID file for the collect hook, and answer
     every request with the refusal (409, _refuse_forever) until the container is removed.
-    A verdict already on disk is never overwritten (PROTOCOL §4.7), whatever else the file says: at most its missing
+    A verdict already on disk is never overwritten (embodied_first_exam/standard/README.md#crash-recovery), whatever else the file says: at most its missing
     "finalized" flag is set, or a "video_pending" left by a process that died rendering the video is cleared (that
     video is lost), which changes nothing the verdict says."""
     log({"ev": "restart_refused", "reason": reason})
@@ -225,7 +217,7 @@ def _give_up(reason: str, infra: bool) -> None:
 
 def _refuse_forever(reason: str, infra: bool) -> None:
     """After a give-up: answer every request 409 {"error", "reason", "gave_up": true, "infra_error"} until the container is
-    removed (as the MuJoCo service's and the 2.2 layer's refuse_forever), so the agent's client stops at once
+    removed (as the MuJoCo service's and the shared layer's refuse_forever), so the agent's client stops at once
     (EpisodeOver) instead of waiting out its timeout for a service that will never serve. The verdict is on disk
     already; this never changes it."""
     body = json.dumps({"error": "the sim service gave up on this episode and will not serve it", "reason": reason,
@@ -442,15 +434,13 @@ SPEC = {
             "first request. Plan by time_left_s."
         ),
     },
-    "episode": "runs until your time is up; the state after the last executed control step is graded",
+    "episode": ("runs until your POST /finish or until your time is up"
+                + (f", or for at most {MAX_CONTROL_STEPS} control steps (reason step_limit)" if MAX_CONTROL_STEPS else "")
+                + "; the state after the last executed control step is graded"),
+    "success_signal": SUCCESS_SIGNAL_NOTE,
 }
-if AGENT_END:
-    SPEC["success_signal"] = SUCCESS_SIGNAL_NOTE
-    if STEP_LIMIT:
-        SPEC["budget"]["steps"] = MAX_CONTROL_STEPS
-    SPEC["episode"] = ("runs until your POST /finish or until your time is up"
-                       + (f", or for at most {MAX_CONTROL_STEPS} control steps (reason step_limit)" if MAX_CONTROL_STEPS else "")
-                       + "; the state after the last executed control step is graded")
+if STEP_LIMIT:
+    SPEC["budget"]["steps"] = MAX_CONTROL_STEPS
 
 
 def _agent_time() -> float:
@@ -588,14 +578,13 @@ class Recorder:
         return out
 
 
-# ---- eai-standard/3.0 (docs/protocol/standard_mode.md): standard mode is Gym's env.step. The world is frozen between
+# ---- eai-standard/3.0 (docs/protocol/eai-standard.md): standard mode is Gym's env.step. The world is frozen between
 # submits; /observe never lets time pass (`seconds` > 0 is a 400) and reads the recorder: last_s = 0 the current frame,
 # last_s = n the frames recorded in the last n robot seconds. The recorder is no process of its own: during every /submit
 # (a rows-free hold chunk too) it keeps every camera's RGB frame every 1 / RCB_CAMERA_FPS of robot time, with the proprio
 # row and the step, in a ring of the last RCB_LOOKBACK_S robot seconds; an image the call's own Recorder grabbed at that
 # step is reused, not rendered again. A rows-free hold chunk {"type", "interpolate": "hold", "seconds": n} holds the
-# current target for n seconds (what /observe with seconds > 0 did before).
-EAI_STANDARD = "eai-standard/3.0"
+# current target for n seconds.
 HOLD_HINT = ('observe never lets time pass (eai-standard/3.0): to let n seconds pass, submit a hold chunk {"type": <type>, '
              '"interpolate": "hold", "seconds": n} with no rows; last_s = n returns the frames recorded in the last n seconds')
 DEPTH_PAST = ("depth with last_s > 0: the recorder keeps no depth for these cameras (spec timing.recorder.depth lists "
@@ -700,7 +689,6 @@ def _last_s(meta: dict) -> float:
     return v
 
 
-SPEC["standard"] = EAI_STANDARD
 SPEC["timing"] = {"recorder": {"cameras": RING_CAMS, "fps": round(1.0 / (RING_DT * RING_EVERY), 3), "buffer_s": RING_S,
                                "records": "during /submit", "depth": []}}
 
@@ -884,8 +872,7 @@ def run_submit(q: dict):
     E["calls"] += 1
     E["rows"] += executed
     RECF.flush()
-    if AGENT_END:
-        _hidden_success(_casa_success(), len(RECORD))   # the state's success: recorded, never shown
+    _hidden_success(_casa_success(), len(RECORD))   # the state's success: recorded, never shown
     out = {
         **meta_common(),
         "chunk_id": E["calls"],
@@ -939,8 +926,7 @@ def do_hold(q: dict):
     rec.tick(force=True)
     E["calls"] += 1
     RECF.flush()
-    if AGENT_END:
-        _hidden_success(_casa_success(), len(RECORD))   # the state's success: recorded, never shown
+    _hidden_success(_casa_success(), len(RECORD))   # the state's success: recorded, never shown
     out = {
         **meta_common(),
         "chunk_id": E["calls"],
@@ -1043,7 +1029,7 @@ def _render_video(A: np.ndarray) -> None:
 
 
 def finalize() -> None:
-    """The episode is over: the verdict is the live episode's (docs/protocol/README.md H.4).
+    """The episode is over: the verdict is the live episode's (docs/protocol/invariants.md H.4).
     success = the environment's success check (`_check_success`, as the live episode last ran it) holds on the state
     after the last executed control step, the scene was not solved at the start, and the episode did not end on a
     simulator error (whose state is the partial step's, not the last executed one). Nothing is replayed to grade it.
@@ -1069,7 +1055,7 @@ def finalize() -> None:
                 "live_success": live_ok,
                 "initial_success": initial,
                 "success": bool(live_ok and not initial and E["reason"] != "error"
-                                and (not AGENT_END or E["reason"] in END_STATE_REASONS)),
+                                and E["reason"] in END_STATE_REASONS),
                 "live_state_sha": live_sha,
                 "state_sha": live_sha,
                 "final_reward": float(live.get("reward") or 0.0),
@@ -1106,7 +1092,7 @@ def finish(reason: str) -> None:
     E["done"] = True
     E["reason"] = reason
     E["t_end"] = time.time()
-    if AGENT_END and reason == "finished":
+    if reason == "finished":
         E["finish_t"] = E["t_end"]
     log({"ev": "end", "reason": reason, "control_steps": len(RECORD), **({"finish_t": E["finish_t"]} if reason == "finished" else {})})
     write_final()
@@ -1172,7 +1158,7 @@ class Hd(BaseHTTPRequestHandler):
 
     def do_POST(self):
         _touch()
-        if self.path not in ("/submit", "/observe") + (("/finish",) if AGENT_END else ()):
+        if self.path not in ("/submit", "/observe") + ("/finish",):
             return self._json(404, {"error": "no such endpoint"})
         try:
             self._n = int(self.headers.get("Content-Length", 0) or 0)
@@ -1205,7 +1191,7 @@ class Hd(BaseHTTPRequestHandler):
                 return self._json(409, {"error": "episode finished", "reason": E["reason"]})
             finish("finished")
             return self._json(200, {"ok": True, **_status()})
-        if self.path == "/observe" and AGENT_END and E["done"] and E["reason"] == "finished":
+        if self.path == "/observe" and E["done"] and E["reason"] == "finished":
             return self._json(409, {"error": "episode finished", "reason": E["reason"]})  # after /finish: /spec, /status only
         if self.path == "/observe" and E.get("finalizing"):  # after the session's end (as rcb_service)
             return self._json(409, {"error": "trial finished: your time is up", "reason": E["reason"]})
@@ -1213,7 +1199,7 @@ class Hd(BaseHTTPRequestHandler):
         if submit and E["done"]:
             return self._json(409, {"error": "episode finished", "reason": E["reason"]})
         # 1. Validation: nothing has run yet, so whatever is wrong here is the request's fault and a 400; it never ends
-        #    the episode (PROTOCOL §4.6). ValueError carries the explanation; any other exception is a field of a type
+        #    the episode (docs/protocol/eai-standard.md#errors). ValueError carries the explanation; any other exception is a field of a type
         #    the checks did not expect.
         try:
             q = parse_submit(meta, parts) if submit else parse_observe(meta)

@@ -37,7 +37,7 @@ RUN pip install --no-cache-dir huggingface_hub==0.24.6 \
     && printf '%s\n' 'LIBERO-PRO 2b910b5b5f53016bef9907632f6f840f1ce2229c' 'LIBERO-Pro data c86fc3b8293185a6f373677018ff3e37f8391602' 'LIBERO-MAX a1e3cef258b3e00487db5282aef4e36010aaf401' > /opt/libero-max-sources
 ENV LIBERO_SOURCE_PACKAGE_ROOT=/opt/libero-pro/libero LIBERO_CONFIG_PATH=/opt/libero-config \
     PYTHONPATH=/opt/libero-max/overlay:/opt/libero-max/src
-# Build-time checks (PROTOCOL §2.7): no demonstrations, no dataset downloader or links, no LIBERO-MAX runners or data.
+# Build-time checks (docs/protocol/leakage.md): no demonstrations, no dataset downloader or links, no LIBERO-MAX runners or data.
 RUN test -z "$(find /opt -name '*.hdf5' -o -name '.git' -o -name 'download_utils.py' | head -1)" \
     && ! grep -rqs "utexas.box.com\|download_libero_datasets" /opt/libero-pro /opt/libero-max \
     && test ! -e /opt/libero-max/scripts && test ! -e /opt/libero-max/benchmark \

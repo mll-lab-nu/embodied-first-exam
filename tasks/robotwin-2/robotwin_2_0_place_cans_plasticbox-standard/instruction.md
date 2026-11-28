@@ -1,10 +1,11 @@
 # RoboTwin 2.0 · place_cans_plasticbox (standard)
 
 ## Task
-Put both cans into the plastic box, one in its left half and one in its right half, then let go.
+Put both cans into the plastic box, each near the middle of one of its two halves, then let go.
 
 ## Goal
-Success: the two cans are in the plastic box, one in each half, and both grippers are open.
+Success: each of the two cans is in the plastic box, near the middle of one of its two halves (they may share a half),
+and both grippers are open.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -21,7 +22,7 @@ its client or its MCP tools, as if it were real hardware: one live episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`):
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`):
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service warms up, ~1 min)

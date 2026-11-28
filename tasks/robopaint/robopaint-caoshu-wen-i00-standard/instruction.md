@@ -6,7 +6,7 @@ strokes.
 
 ## Goal
 Success: the ink on the main sheet matches the exemplar's writing character for character (every stroke inked along its
-whole length and fully covered, its edges where the exemplar's are, almost no ink anywhere else), you used at most 2
+whole length and mostly covered, its edges where the exemplar's are, almost no ink anywhere else), you used at most 2
 strokes as the process rules count them, and the process rules below hold; a small shift of the whole writing does not
 matter. The main sheet is scored as the episode leaves it.
 
@@ -33,7 +33,7 @@ its client or its MCP tools, as if it were real hardware: one live episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service builds the scene, under a minute)

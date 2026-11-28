@@ -12,12 +12,12 @@ simulator = "mujoco"               # the Embodied Olympics simulator: MuJoCo 3.3
 robot = "unitree-g1"
 family = "shuttle_run"
 category = "track-and-jumps"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 # scene = environment/instance.json (the family's parameters + its t = 0 state hash); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 4.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested: positive by injection (real running on all four legs, the three about-turns set by hand: 23.0 s); negatives: turning short, a foot only on the line, two legs only, arms over the finish without the torso, down, walking. With the built-in gaits a leg takes about 6 s and an about-turn on the walking policy 3.4 s: about 33 s against the 30 s limit. A turn counts only with the foot beyond the line between its cones (every ground contact point at |y| <= 3 m), the finish only where the torso's leading point crosses the start line between its cones, and the pelvis may not leave the court (|y| > 4 m or more than 10 m beyond a line fails). Positive by injection (the standing robot moved by hand beyond each line in turn, then through the start line: real foot contacts and an interpolated torso crossing); negatives: nop, a turn touch past the cones, out of the court, a finish past the cones. A model run's oval loop round the court (turns and finish on the lines' extensions, up to 8.3 m wide) fails: 'left the court' at 4.99 s. Every rule above is judged in the family's own 1 ms substep hook.; human review in the pull request that adds the benchmark (PROTOCOL §4)"
+oracle_evidence = "no reference solution; the referee is tested: positive by injection (real running on all four legs, the three about-turns set by hand: 23.0 s); negatives: turning short, a foot only on the line, two legs only, arms over the finish without the torso, down, walking. With the built-in gaits a leg takes about 6 s and an about-turn on the walking policy 3.4 s: about 33 s against the 30 s limit. A turn counts only with the foot beyond the line between its cones (every ground contact point at |y| <= 3 m), the finish only where the torso's leading point crosses the start line between its cones, and the pelvis may not leave the court (|y| > 4 m or more than 10 m beyond a line fails). Positive by injection (the standing robot moved by hand beyond each line in turn, then through the start line: real foot contacts and an interpolated torso crossing); negatives: nop, a turn touch past the cones, out of the court, a finish past the cones. A model run's oval loop round the court (turns and finish on the lines' extensions, up to 8.3 m wide) fails: 'left the court' at 4.99 s. Every rule above is judged in the family's own 1 ms substep hook.; human review in the pull request that adds the benchmark (docs/protocol/tasks.md#grading)"
 
 [verifier]
 timeout_sec = 900.0
@@ -26,7 +26,7 @@ timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -41,7 +41,7 @@ memory_mb = 8192
 timeout_sec = 7200.0
 # Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md).
-network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/invariants.md H.6)
 
 [environment]
 build_timeout_sec = 1800.0

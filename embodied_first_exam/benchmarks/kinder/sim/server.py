@@ -1,4 +1,4 @@
-"""eai-standard/2.1 sim service for KinDER -- the sidecar's entry point (`python /srv/server.py`).
+"""eai-standard/3.0 sim service for KinDER -- the sidecar's entry point (`python /srv/server.py`).
 
 The simulator-specific half only: one adapter per KinDER robot implements rcb_service.Sim for one frozen instance
 (`make` picks it by the robot in the scene); the protocol, the episode, crash recovery and the finalize live in
@@ -25,7 +25,7 @@ The verdict is the live episode's: step() reports KinDER's own goal check (`term
 step and the episode ends there, so nothing is replayed to grade it; render_video() re-runs the trajectory once, after
 the verdict, to film it. start_sha is the frozen instance's recorded scene_sha (the state hash right after reset), which
 rcb_service checks when an episode begins; a KinDER that no longer builds the instance is InstanceMismatch.
-Agent-ended episodes (RCB_AGENT_END, PROTOCOL §3; every KinDER standard task): the goal check no longer ends the
+Agent-ended episodes (docs/protocol/tasks.md#modes): the goal check never ends the
 episode; it is judged on the state the episode ends in (end_judgement "state"; the goal check is a predicate on the
 scene); the episode's length is its step cap, judged as it stands.
 """
@@ -40,7 +40,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from rcb_kinder import CAMERA_HW, GL_BACKEND, Session  # noqa: E402
-from rcb_service import AGENT_END, InstanceMismatch, main  # noqa: E402
+from rcb_service import InstanceMismatch, main  # noqa: E402
 
 CAMERAS = ("robot_base", "robot_wrist")       # the robot's own cameras
 DEPTH = ("robot_wrist",)                     # the one that is RGB-D on the real robot
@@ -117,7 +117,7 @@ class _Robot:
 
     def _cap(self) -> dict:
         """Agent-ended episodes: the episode's last step is its step cap (judged as it stands), not a failure."""
-        return {"step_cap": True} if AGENT_END and self.s.t >= self.s.max_steps else {}
+        return {"step_cap": True} if self.s.t >= self.s.max_steps else {}
 
     def _robot(self) -> dict[str, float]:
         """The robot's features in KinDER's state, by name."""
@@ -226,9 +226,7 @@ class TidyBot(_Robot):
         return {
             "simulator": "kinder", "robot": "TidyBot++: holonomic base, Kinova Gen3 7-DoF arm, Robotiq 2F-85 gripper",
             "task_text": self.task_text,
-            "episode": EPISODE_AGENT_END.format(n=self.max_control_steps) if AGENT_END else
-                       f"ends when the task succeeds (KinDER's own goal check), after {self.max_control_steps} control "
-                       "steps, when your time is up, or on a simulator error",
+            "episode": EPISODE_AGENT_END.format(n=self.max_control_steps),
             "action_types": {"delta": {
                 "dim": self.dim, "layout": self.layout(),
                 "low": [stated(v, -1) for v in self.lo], "high": [stated(v, 1) for v in self.hi],
@@ -459,9 +457,7 @@ class Kinova(_Robot):
             "simulator": "kinder", "robot": "TidyBot++-style mobile manipulator, kinematic (PyBullet): base, Kinova "
                                             "Gen3 7-DoF arm, Robotiq 2F-85 gripper",
             "task_text": self.task_text,
-            "episode": EPISODE_AGENT_END.format(n=self.max_control_steps) if AGENT_END else
-                       f"ends when the task succeeds (KinDER's own goal check), after {self.max_control_steps} control "
-                       "steps, when your time is up, or on a simulator error",
+            "episode": EPISODE_AGENT_END.format(n=self.max_control_steps),
             "action_types": {"delta": {
                 "dim": self.dim, "layout": self.layout(),
                 "low": [stated(v, -1) for v in self.lo], "high": [stated(v, 1) for v in self.hi],

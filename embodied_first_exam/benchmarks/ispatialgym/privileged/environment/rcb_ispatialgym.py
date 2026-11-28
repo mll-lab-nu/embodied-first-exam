@@ -54,7 +54,7 @@ SUBSTEPS = 4
 TOLERANCE_SCALE = 3.0       # run_isg --mode policy's default --tolerance-scale
 SETTLE_EVAL = True          # upstream's settle-eval (subset.toml): with it off, a blind sweep of a held object's poses succeeds
 SETTLE_STEPS = 45           # configs/eval.yaml settle_steps
-# agent-ended episodes (PROTOCOL §3; the standard service's RCB_AGENT_END): a success is recorded (Session.success is the
+# agent-ended episodes (docs/protocol/tasks.md#modes; the standard service's RCB_AGENT_END): a success is recorded (Session.success is the
 # state's success now, success_step the first one) and never ends the episode; only max_steps does (sim/server.py judges
 # the state the episode ends in, with the settle window from it)
 AGENT_END = os.environ.get("RCB_AGENT_END") == "1"
@@ -632,7 +632,7 @@ class Session:
 # --------------------------------------------------------------------------- CLI
 class _Video:
     """Head-camera frames of an episode to an mp4 through ffmpeg (10 fps: every third control step, 540 px). The
-    recording never decides a replay (PROTOCOL §4): a failure of the encoder disables it and is reported as `error`."""
+    recording never decides a replay (docs/protocol/tasks.md#grading): a failure of the encoder disables it and is reported as `error`."""
 
     def __init__(self, path: str, size: int = 540, fps: int = 10):
         self.size, self.p, self.error, self.n = size, None, None, 0
@@ -680,7 +680,7 @@ class LiveVideo:
     resizes and encodes it, so a call is not slowed by the encoder. A full queue (the encoder behind) drops the frame and
     counts it, and so does a frame that cannot be read (the recording goes on). close() is bounded (60 + 60 + 120 s), so
     the service exits well within the collect hook's wait for it. Nothing here decides anything: a failure of the
-    recording loses only the video (PROTOCOL §4)."""
+    recording loses only the video (docs/protocol/tasks.md#grading)."""
 
     def __init__(self, path: str, every: int = 3, max_queue: int = 32, video: Any = None):
         import queue

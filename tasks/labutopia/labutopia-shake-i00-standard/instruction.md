@@ -5,8 +5,9 @@ Pick up the beaker and, holding it in the air, shake it sideways five times, eac
 more; then hold it still for a second.
 
 ## Goal
-Success: the beaker, held a thumb's length or more above where it stood, has been shaken sideways five times, each shake
-moving it a thumb's length or more, and then held still for a second. The shaking counts once it has happened.
+Success: the beaker has been shaken sideways five times, each shake moving it a thumb's length or more, and then held
+still for a second; only the time it spends a thumb's length or more above where it stood counts towards this. The
+shaking counts once it has happened.
 
 When you are done, send `/finish` to end the episode and get it graded.
 
@@ -26,7 +27,7 @@ if it were real hardware: one live episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                    # connects; waits while the service starts (13 to 27 minutes; it gives up after 3600 s)

@@ -170,15 +170,15 @@ PY
 WORKDIR /app
 # <<< images/humanclaw/Dockerfile
 
-# Separate verifier sandbox (PROTOCOL §4): the same simulator image with the verifier's own copies of the tools and
+# Separate verifier sandbox (docs/protocol/tasks.md#grading): the same simulator image with the verifier's own copies of the tools and
 # the frozen instance. Only the declared artifacts (/app/output/) come over from the agent's container.
 FROM humanclaw-base
 COPY instance.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:humanclaw-files-0.3.0@sha256:fd031b908e6589a4088664e830b846603c37e553e7a4c378d23e4c51f9da5fd8 /grade_privileged.py /tests/grade.py
-COPY --from=ghcr.io/mll-lab-nu/efe:humanclaw-files-0.3.0@sha256:fd031b908e6589a4088664e830b846603c37e553e7a4c378d23e4c51f9da5fd8 /hc_core.py /hc_tools.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:humanclaw-files-0.4.0@sha256:9c3f646a80200e47ef2502701cfd711469c3107e2540149b90e37a2b43f0595a /grade_privileged.py /tests/grade.py
+COPY --from=ghcr.io/mll-lab-nu/efe:humanclaw-files-0.4.0@sha256:9c3f646a80200e47ef2502701cfd711469c3107e2540149b90e37a2b43f0595a /hc_core.py /hc_tools.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests
-# resources (PROTOCOL §6) # rcb-monitor
+# resources (docs/protocol/resources.md) # rcb-monitor
 COPY --from=ghcr.io/mll-lab-nu/efe:monitor-0.5.0@sha256:ecc5f24f1516ca11711d7c2d3ac07c89f79cd9220812c1244498ec71e352402a /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
 COPY rcb_limits.json /tests/rcb_limits.json

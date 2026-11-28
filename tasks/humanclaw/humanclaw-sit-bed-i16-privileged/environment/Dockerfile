@@ -174,7 +174,7 @@ WORKDIR /app
 # HSSD val scenes (images/humanclaw/). Everything task-specific is copied here: the frozen episode and the tools.
 FROM humanclaw-base
 COPY instance.json /app/instance.json
-COPY --from=ghcr.io/mll-lab-nu/efe:humanclaw-files-0.3.0@sha256:fd031b908e6589a4088664e830b846603c37e553e7a4c378d23e4c51f9da5fd8 /hc_core.py /hc_tools.py /opt/tools/
+COPY --from=ghcr.io/mll-lab-nu/efe:humanclaw-files-0.4.0@sha256:9c3f646a80200e47ef2502701cfd711469c3107e2540149b90e37a2b43f0595a /hc_core.py /hc_tools.py /opt/tools/
 ENV PYTHONPATH=/opt/tools HC_INSTANCE=/app/instance.json
 RUN mkdir -p /app/output
 WORKDIR /app

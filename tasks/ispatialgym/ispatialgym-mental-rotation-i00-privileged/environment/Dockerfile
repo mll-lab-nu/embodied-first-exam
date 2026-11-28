@@ -73,14 +73,14 @@ ENV OMNI_KIT_ACCEPT_EULA=YES HDF5_USE_FILE_LOCKING=FALSE HF_HUB_OFFLINE=1 \
     OMNIGIBSON_TRACK_STATE_UPDATES=1 OMNIGIBSON_CHANGE_DETECTION_NUMPY=1 OMP_NUM_THREADS=1 NUMPY_MADVISE_HUGEPAGE=0 \
     PYTHONHASHSEED=0
 # <<< images/ispatialgym/Dockerfile
-# Privileged mode: the agent and the simulator share this container (docs/protocol/README.md §3). eai-ispatialgym, with a layer
+# Privileged mode: the agent and the simulator share this container (docs/protocol/tasks.md#modes). eai-ispatialgym, with a layer
 # that removes what states or solves a task and asserts nothing of it is left (scrub.sh, bind-mounted for the build only),
 # and this task's frozen start (instance.json, the copy the standard twin and the verifier also hold): no goal, no target,
 # no success check here; the verifier has them (tests/).
 FROM ispatialgym-base
 COPY instance.json /app/instance.json
 COPY --from=ghcr.io/mll-lab-nu/efe:ispatialgym-goals-files-0.1.0@sha256:a5b14edb2270793a3d97edeb2ff151646532f30221fe40b55867d33732c97e7f /mental-rotation-i00/goal.png /app/goal.png
-COPY --from=ghcr.io/mll-lab-nu/efe:ispatialgym-files-0.7.0@sha256:2f0d19ceb2dfbb95805d4a854d37c3a5df255620e26160acd84bf7abecbb07c9 /privileged/environment/rcb_ispatialgym.py /opt/tools/rcb_ispatialgym.py
+COPY --from=ghcr.io/mll-lab-nu/efe:ispatialgym-files-0.8.0@sha256:3fb821c292d069b60a25286effa62d10498e78226a27f83e82b46b4a831308b1 /privileged/environment/rcb_ispatialgym.py /opt/tools/rcb_ispatialgym.py
 RUN --mount=type=bind,source=scrub,target=/tmp/scrub sh /tmp/scrub/scrub.sh \
       /opt/ispatialgym/ispatialgym/assets/bddl/activity_definitions/mental_rotation/problem3.bddl && mkdir -p /app/output
 ENV PYTHONPATH=/opt/tools OMNIGIBSON_HEADLESS=1

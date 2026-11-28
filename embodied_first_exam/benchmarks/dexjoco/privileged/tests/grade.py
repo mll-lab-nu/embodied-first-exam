@@ -32,7 +32,7 @@ LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 
 
 T_START = time.time()
-# PROTOCOL §2.6: every exit writes these (numeric only)
+# docs/protocol/tasks.md#grading: every exit writes these (numeric only)
 BASE = {"success": 0, "deterministic": 0, "grader_error": 0, "infra_error": 0, "missing_trajectory": 0, "bad_trajectory": 0}
 
 

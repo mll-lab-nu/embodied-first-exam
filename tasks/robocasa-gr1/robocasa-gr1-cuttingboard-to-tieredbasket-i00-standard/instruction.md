@@ -6,7 +6,7 @@ Put the sweet potato from the cutting board on the top tier of the tiered basket
 ## Goal
 Success: the sweet potato is on the top tier of the tiered basket, not touching the counter, with the tiered basket
 still upright and both hands moved away from the sweet potato and the tiered basket; the other item that started on the
-cutting board with the sweet potato is not in the tiered basket.
+cutting board with the sweet potato is not on the tiered basket's top tier.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -24,7 +24,7 @@ its MCP tools, as if it were real hardware: one live episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service starts: about a minute)

@@ -11,9 +11,9 @@ task_type = "trajectory"
 simulator = "myosuite"            # MyoSuite 2.12.2 on MuJoCo 3.6.0 (CPU)
 robot = "myohand"
 family = "dex_cylinder_pass"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 oracle = "none"
-oracle_evidence = "no positive example yet (two model attempts failed: Codex + GPT-6 Luna, effort high, run `codex-gpt6_luna-high` and Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06)); the task is marked unvalidated (PROTOCOL §2 `validated`); human review in PR #65"
+oracle_evidence = "no positive example yet (two model attempts failed: Codex + GPT-6 Luna, effort high, run `codex-gpt6_luna-high` and Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06)); the task is marked unvalidated (docs/protocol/tasks.md `validated`); human review in PR #65"
 instance_seed = 0                 # MyoHandCylindersmallPass-v0: seed(0), then reset(seed=0)
 expert_time_estimate_hours = 3.0
 
@@ -22,7 +22,7 @@ timeout_sec = 1800.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -37,7 +37,7 @@ memory_mb = 8192
 timeout_sec = 3600.0
 # The agent reaches the model APIs and the package registries, nothing else (scripts/set_agent_egress.py HOSTS). MyoSuite's
 # trained baselines ship in its PyPI wheel (and a standard-mode agent could rebuild the simulator from it): reachable,
-# left to the instruction's honour rule (PROTOCOL §5).
+# left to the instruction's honour rule (docs/protocol/tasks.md#instructionmd).
 network_mode = "allowlist"
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 

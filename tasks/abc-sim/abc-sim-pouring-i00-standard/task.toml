@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, { source
 
 [task]
 name = "embodied-first-exam/abc-sim-pouring-i00-standard"
-description = "ABC Sim pouring beads (two I2RT YAM arms, MuJoCo): Pour the beads from the mug into the cup. The robot as a service (eai-standard/2.2); graded by the live episode."
+description = "ABC Sim pouring beads (two I2RT YAM arms, MuJoCo): Pour the beads from the mug into the cup. The robot as a service (eai-standard/3.0); graded by the live episode."
 keywords = ["robotics", "abc-sim", "mujoco", "yam", "bimanual", "pouring", "standard"]
 
 [metadata]
@@ -12,14 +12,14 @@ simulator = "mujoco"                # ABC Sim (abc_sim, amazon-far/abc @ d0832d1
 robot = "i2rt-yam-bimanual"
 family = "pouring"
 dynamics = "static"
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 3.8
 
 [metadata.seeds]
 # the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
-# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+# under solution/ is for, where they are not the default seed alone (docs/protocol/tasks.md)
 allowed = [0, 13, 14]
 oracle = [0, 13, 14]
 
@@ -28,7 +28,7 @@ timeout_sec = 600.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -47,7 +47,7 @@ timeout_sec = 1800
 
 [agent]
 timeout_sec = 3600.0
-network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL Appendix H.6
+network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); docs/protocol/invariants.md H.6
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 
 [environment]
@@ -56,7 +56,7 @@ cpus = 4
 memory_mb = 10240
 storage_mb = 20480
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

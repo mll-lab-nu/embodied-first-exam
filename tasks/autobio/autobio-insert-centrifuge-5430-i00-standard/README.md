@@ -1,31 +1,38 @@
-# autobio-insert-centrifuge-5430-i00-standard
+# AutoBio · insert_centrifuge_5430 (standard)
 
 | | |
 |---|---|
-| Benchmark | AutoBio |
-| Mode | standard (`eai-standard/2.2`) |
-| Twin | `autobio-insert-centrifuge-5430-i00-privileged` |
-| Simulator / robot | `autobio` / `ur5e-robotiq-2f85` |
-| Family / instance | `insert_centrifuge_5430` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |
+| Task ID | `autobio-insert-centrifuge-5430-i00-standard` |
+| Benchmark | [AutoBio](https://github.com/autobio-bench/AutoBio) (Lan et al., 2025), upstream `autobio-bench/AutoBio@0850421` |
+| Robot | Universal Robots UR5e arm with a Robotiq 2F-85 gripper |
+| Mode | standard |
+| Instance | `insert_centrifuge_5430`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-AutoBio's `insert_centrifuge_5430` (Load centrifuge rotor) on the same frozen instance as `autobio-insert-centrifuge-5430-i00-privileged`: Put the 1.5 mL tube from the plate into the centrifuge's rotor, in the slot opposite the tube that is already there, without turning the rotor.
-On the bench: a centrifuge (an Eppendorf 5430 model) with its lid open and a 30-slot rotor holding one 1.5 mL tube, and a well plate with a second 1.5 mL tube standing in it. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
+Put the 1.5 mL tube from the plate into the centrifuge's rotor, in the slot opposite the tube that is already there,
+without turning the rotor.
 
-## Difficulty
-Same instance and success rule as `autobio-insert-centrifuge-5430-i00-privileged` (AutoBio's level: hard). A 1.5 mL tube is taken from a plate and seated within 5 mm in one particular slot of a 30-slot rotor, inside the centrifuge's bowl. In standard mode the agent loses resets, the simulator and the state of the tubes and instruments: it sees camera images and the robot's proprioception, acts in joint-position chunks, and gets one episode, so it has to find the things it handles in the images and recover from its own mistakes without starting over.
+## Success criteria
+At the last control step, the 1.5 mL tube's body origin is within 5 mm (straight-line distance) of its seated position
+in the rotor slot opposite the tube already loaded, and its height is inside AutoBio's fixed height window, 6 mm tall
+(a second bound on the height). The seated position is computed once, at the start of the episode: a rotor turned later moves the slot away
+from it. The rotor's angle is not checked otherwise.
 
-## Reference solution
-`solution/oracle_stream.py` streams the privileged reference's rows (`solution/oracle.npz`, 4582 rows, float32-exact) through the client in `hold` chunks; it uses no privileged information at run time. The service's recorded trajectory is then exactly the privileged reference: success after 4582 control steps.
+The graded episode is the one live episode, as it ran; nothing is replayed to grade it. There is no reset. AutoBio's
+`check()` is evaluated after every control step of 2 ms, and the condition above is judged on the state at the last
+executed control step. The episode ends when the agent sends `/finish` (the action type `done` is the same), when the
+agent's session ends (at the latest after 1 h), or after 600,000 control steps (1200 s of simulated time).
+Meeting the condition earlier does not end the episode, and the service never reports success while it runs.
 
-## Verification
-Graded by the live episode (docs/protocol/README.md H.4): `success` = the live episode's success, judged by the sim service on the episode the agent ran, with no grading replay; an episode that ended in a simulator error scores 0. The service records every executed control step; the collect hook (`environment/sim/finalize.sh`) ends the service, writes `final.json` from the live episode's record and, after the verdict is on disk, replays the recorded trajectory once from the frozen instance to render `replay.mp4` (a failed video replay costs the video only). `tests/grade.py` (separate sandbox, no network) writes the reward fields (`graded_by_live` = 1, `replays` = 0, `infra_error`, the crash-recovery fields). A missing or unfinished `final.json` (the hook never wrote its verdict) and a live episode that did not start in the instance's recorded state are `infra_error = 1`, never the agent's 0. `nop`: the episode times out, reward 0.
+A MuJoCo physics warning (an unstable state) ends the episode at once as a failure, also after the condition was met;
+the renderer's own warning (`VGEOMFULL`) does not count. An episode that ends in a simulator error scores 0. A live
+episode that did not start in the instance's recorded state, and a service that never wrote its record, are
+infrastructure failures, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -35,9 +42,11 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | AutoBio (github.com/autobio-bench/AutoBio @ 0850421, no licence stated: the image is built locally, images/autobio/BUILD_ONLY) on MuJoCo 3.3.0 |
-| Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`embodied_first_exam/standard/`); cameras `table_cam_front`, `table_cam_left`, `wrist_cam` (640 x 480); action types `joint_position` and `done`; forward and inverse kinematics of the arm joints |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
+## License
+AutoBio ([autobio-bench/AutoBio](https://github.com/autobio-bench/AutoBio) @ `0850421`) states **no licence** for its
+code or its own assets (the digitized instruments, tubes, racks and pipette, and two binaries without source: the
+thread and detent MuJoCo plugins `libmjlab.so.3.3.0` and the liquid-surface solver `meshplane.so`). No file of AutoBio
+is in this repository, and the simulator image is built locally and never published; it is used here for research
+evaluation only. The robot models AutoBio bundles keep their own licences: UR5e and Robotiq 2F-85 (BSD), ALOHA 2
+(BSD), DexHand021 (Apache-2.0); the display font is under the SIL OFL. The simulator is MuJoCo 3.3.0 (Apache License
+2.0). Details: `images/autobio/BUILD_ONLY`.

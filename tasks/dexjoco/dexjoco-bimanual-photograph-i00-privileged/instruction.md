@@ -5,8 +5,8 @@ Take a picture of the logo: hold the camera a short way in front of the logo and
 at it, and press its shutter button.
 
 ## Goal
-Success: the camera is held a short way in front of the logo and well above the table, pointed straight at it, while its
-shutter button is being pressed. A replay ends as soon as the task is done; later rows are not run.
+Success: the camera is held a short way in front of the logo and well above the table, pointed straight at it, while
+something touches its shutter button. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(...)`, at most 50,000 rows (1000 s of robot
 time; `save_trajectory` refuses a longer one). It is replayed open-loop from the fixed start and passes if its episode

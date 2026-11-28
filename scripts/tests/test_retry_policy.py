@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""INVARIANT test (docs/protocol/README.md Appendix H.5), part of the required CI job `invariants`: an infrastructure
+"""INVARIANT test (docs/protocol/invariants.md H.5), part of the required CI job `invariants`: an infrastructure
 failure is void and may be rerun with the same instance, seed and configuration, also after a rerun that failed for
 infrastructure; a result (an agent failure or a success) is never rerun (scripts/retry_policy.py). Standard library only."""
 import sys
@@ -32,7 +32,7 @@ try:
     fails.append("an unknown outcome must be refused")
 except ValueError:
     pass
-expect(rp.MAX_INFRA_RETRIES is None, "MAX_INFRA_RETRIES is None: no fixed number of infrastructure reruns (PROTOCOL H.5)")
+expect(rp.MAX_INFRA_RETRIES is None, "MAX_INFRA_RETRIES is None: no fixed number of infrastructure reruns (docs/protocol/invariants.md H.5)")
 
 # retry_config(): the same instance, seed and configuration
 r = rp.retry_config(CFG)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """The agent's network egress of tasks: `allowlist` (the model APIs and the package registries; what every task in
-tasks/ has, PROTOCOL Appendix H.6), or, for a run's own copy of a task, `only <hosts>` / `public`.
+tasks/ has, docs/protocol/invariants.md H.6), or, for a run's own copy of a task, `only <hosts>` / `public`.
 
     scripts/set_agent_egress.py allowlist    [task dirs...]     # default: all tasks/*/*
     scripts/set_agent_egress.py only <host>[,<host>]  <task dirs...>   # a run's copy: exactly these hosts
@@ -20,8 +20,8 @@ solution: docs/protocol/leakage.md). To change what agents reach, edit the two l
 `allowed_hosts` line of every allowlist task and leaves the other lines as they are), then
 `python3 scripts/task_conventions.py tasks/*/*/` (normalize refreshes each DIGEST).
 
-A task whose author chose open egress declares it in Harbor's own field, `[agent] network_mode = "public"` (PROTOCOL §2,
-Appendix H.6): `allowlist` leaves every task that declares it alone and names it (`skip`), and a runner does not narrow
+A task whose author chose open egress declares it in Harbor's own field, `[agent] network_mode = "public"` (docs/protocol/tasks.md,
+invariants.md H.6): `allowlist` leaves every task that declares it alone and names it (`skip`), and a runner does not narrow
 its copy to the gateway (`network` prints the declaration).
 
 A run with no restriction at all: `public` on a copy of the task directories (never in tasks/: CI requires the list
@@ -50,7 +50,7 @@ HOSTS = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*
 PACKAGE_HOSTS = ["pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com",
                  "security.ubuntu.com", "snapshot.ubuntu.com"]
 assert not PACKAGE_HOSTS or HOSTS[-len(PACKAGE_HOSTS):] == PACKAGE_HOSTS
-COMMENT = "# model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL Appendix H.6"
+COMMENT = "# model APIs and package registries (scripts/set_agent_egress.py); docs/protocol/invariants.md H.6"
 root = pathlib.Path(__file__).resolve().parents[1]
 
 

@@ -1,13 +1,17 @@
 # Embodied Olympics tasks exported by Embodied Olympics' own exporter (a private repository, MIT): its simulator
-# service runs unchanged inside each task (PROTOCOL §3; tasks/embodied-olympics-match/README.md: the benchmark
+# service runs unchanged inside each task (docs/protocol/tasks.md#modes; tasks/embodied-olympics-match/README.md: the benchmark
 # Embodied Olympics - Match). Written by that exporter on this checkout, then `python3 scripts/task_conventions.py` on
 # them (seeds, resources, README; the cutoff is each task's own `[agent] timeout_sec`, which a re-export must keep:
 # 7200 s, 14400 s for soccerssl-match-i01, badminton-match-i04, badminton-duelrl-i01, badminton-matchlow-i01,
 # foosball-match-i01, soccer-jointcpu-i01 and soccer-jointgpu-i01).
-# `patched`: files this repository changed after the export (PROTOCOL §3: sent upstream; a re-export must keep them).
+# `patched`: files this repository changed after the export (docs/protocol/tasks.md#modes: sent upstream; a re-export must keep them).
 # Every task: the standard modes are graded by the live episode: core/service.py, core/grading.py = tests/grade.py,
 # core/realtime.py (real-time: the control step's own error), spectator/sport_video.py (where present),
 # docker-compose.yaml (RO_VERDICT_REPLAY=0), task.toml, README.md.
+# Every task's README.md is not the export's: `scripts/task_conventions.py` renders it from
+# tasks/embodied-olympics-match/readme.toml (with instruction.md and task.toml), so a re-export's README.md is
+# replaced by that rendering. The benchmark README's "Changes from upstream", "Interface" and "Grading" describe the
+# patches the comments below name.
 # Every task: provenance text only (no code, number or field a grader or simulator reads): machine names,
 # review-server links and the exporter repository's name in comments, docstrings, scene-file comments and free-text
 # metadata fields (policy / weights / reference-parameter notes, sport.toml comments, oracle_evidence), the bundle
@@ -16,28 +20,26 @@
 # efe:olympiad-*, efe:olympiad-soccer-* and efe:soccer-joint-* tags) in the Dockerfiles, sport.toml / toolkit.toml image
 # fields, test docstrings and README, the bundle hashes of those files, and the files-only image pin
 # embodied-olympics-match-files 0.3.0 (it also carries the paths and bytes of embodied-olympics-match-sim-files).
+# Every task: the core's protocol id eai-standard/3.0 (core/realtime.py, core/turn.py, core/lockstep.py, core/__init__.py
+# PROTOCOLS) and its clients' turn test by /spec `turn_based` (core/turn.py's spec, core/local.py, core/client.py,
+# core/game.py, core/builtin_seat.py, environment/game, solution/ro_client.py), in every copy (sim/variants/ too).
 # Every task: [metadata.seeds] in task.toml and the privileged twin's tests/seeds/<seed>/ (two more seeds per match:
 # the first two public seeds of the instance's format and level cell in sport.toml [official], else the sport's
 # development seeds 1 and 2; scripts/task_seed.py materialize sets RO_SEED, match_instance.json and the texts).
 
-# The protocol each mode of these tasks serves (PROTOCOL §3): ci_checks/check-protocol.py accepts it for the
+# The protocol each mode of these tasks serves (docs/protocol/tasks.md#modes): ci_checks/check-protocol.py accepts it for the
 # directories listed below only.
-# The match extension of eai-standard/2.x (owner 2026-11-25; docs/protocol/standard_mode.md Part 5): every task below
+# The match extension of eai-standard/3.0 (owner 2026-11-25; docs/protocol/eai-standard.md#match-extension): every task below
 # except the low-level skill matches (matchlow) and the G1 table tennis serves the standard endpoints (/spec /status
 # /observe /submit, plus /start /ready /say /team) next to the core's own seat API, from
 # embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/ (copied to environment/sim/eai_std/ by
 # apply_eai_std.py there, which a re-export runs again; the sim runs `python3 -m eai_std.serve`). Its `patched` lists
 # say so: environment/sim/eai_std/, environment/Dockerfile (the shared client), docker-compose.yaml, task.toml,
-# README.md, instruction.md. core/ and sport/ are unchanged (source_sha), and so is the files-only image.
+# README.md, instruction.md. The matchlow and G1 matches serve the core's own seat API (realtime, or the world in
+# lockstep: environment/sim/core/lockstep.py, Embodied First Exam's) and no standard endpoints.
 [protocols]
-realtime = ["eai-standard/2.3+match/1.0",         # the real-time matches on the match extension (2.3's realtime clock)
-            "eai-standard-realtime/1.0"]          # the real-time matches: Embodied Olympics' own service and referee
-                                                  # (matchlow, G1)
-standard = ["eai-standard/2.1+match/1.0",         # the standard twins and the turn-based bout on the match extension
-            "eai-standard-turn/1.0",              # the turn-based matches: the world waits for the player whose turn it
-            "eai-standard-lockstep/1.0"]          # is, a chess clock per player (Embodied Olympics' own service and referee);
-                                                  # the real-time matches' standard twins: the same service, the world in
-                                                  # lockstep (environment/sim/core/lockstep.py, Embodied First Exam's)
+realtime = "eai-standard/3.0"
+standard = "eai-standard/3.0"
 
 [[tasks]]
 name = "embodied-olympics-match-foosball-match-i01-realtime"

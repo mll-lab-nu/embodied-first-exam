@@ -1,12 +1,12 @@
 # MyoSuite · table_tennis (realtime)
 
 ## Task
-Return the served ball: after it bounces once on your half, hit it once with the paddle so that it lands on the
-opponent's half, with no second paddle touch and no second bounce on your half.
+Return the served ball: hit it once with the paddle so that it lands on the opponent's half, with no second paddle
+touch and at most one bounce on your half before that.
 
 ## Goal
-Success: after the serve bounces once on your half, you hit the ball once with the paddle and it then lands on the
-opponent's half, with no second paddle touch and no second bounce on your half. Once this has happened the task is
+Success: you hit the ball once with the paddle and it then lands on the opponent's half, with no second paddle touch
+and at most one bounce on your half before that. Once this has happened the task is
 passed, whatever happens afterwards. Before that, the episode ends as a failure on any other outcome of the rally or if
 the ball falls toward the floor.
 
@@ -29,7 +29,7 @@ clock that does not stop while you think.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, realtime mode, its docstring the full reference
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`, realtime mode, its docstring the full reference
 (`python -c "import rcb_client; help(rcb_client)"`):
 
 | call | endpoint | what it does |

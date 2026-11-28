@@ -34,8 +34,9 @@ Rules:
   it can lose you the match.
 
 The match (RoboCup Humanoid Soccer League rules, with these changes):
-- Two halves of 5 minutes of game time; more goals after two halves wins, or a 10-goal lead at any time (the mercy
-  rule). No change of ends (each team's frame stays), no timeouts, no designated goalkeeper, no substitutes.
+- Two halves of 5 minutes of game time (a half runs on for up to 3 s while the ball is still moving); more goals after
+  two halves wins, or a 10-goal lead at any time (the mercy rule). No change of ends (each team's frame stays), no
+  timeouts, no designated goalkeeper, no substitutes.
 - If the score is level after two halves, there is a penalty shoot-out of 3 kicks each. Then come up to 3 sudden-death
   rounds, each won by the better kick (goal, saved, post, wide, other, no kick), and then a coin toss drawn from the
   seed. There are no draws.
@@ -56,7 +57,7 @@ its client or its MCP tools, as if it were real hardware, on a clock that does n
 episode.
 
 ### Client
-The service at `http://localhost:8000` speaks eai-standard/2.x with the match extension (`eai-standard/2.3+match/1.0`): the endpoints
+The service at `http://localhost:8000` speaks eai-standard/3.0 with the match extension: the endpoints
 of every standard task, plus `/start` and `/ready`. The shared client is installed (`from rcb_client import Robot`).
 
 | HTTP | |

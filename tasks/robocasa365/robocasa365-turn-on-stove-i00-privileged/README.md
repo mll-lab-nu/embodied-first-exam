@@ -1,30 +1,39 @@
-# robocasa365-turn-on-stove-i00-privileged
+# RoboCasa365 · TurnOnStove (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboCasa365 |
+| Task ID | `robocasa365-turn-on-stove-i00-privileged` |
+| Benchmark | [RoboCasa365](https://github.com/robocasa/robocasa) (Nasiriany et al., 2026), upstream `robocasa/robocasa@4f8a298` |
+| Robot | Franka Panda arm on an Omron mobile base with a torso lift (PandaOmron), parallel-jaw gripper |
 | Mode | privileged |
-| Twin | `robocasa365-turn-on-stove-i00-standard` |
-| Simulator / robot | `robosuite` / `franka-panda-omron` |
-| Family / instance | `robocasa365/TurnOnStove` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:robocasa365-0.1.0` |
+| Instance | `robocasa365/TurnOnStove`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-RoboCasa365's `TurnOnStove` kitchen task with a Franka Panda arm on an Omron mobile base (with a torso lift): Turn on the stove's rear left burner. Produce one replayable trajectory of the robot's native controller commands on one frozen instance; graded on the state after the last action. Benchmark notes in `tasks/robocasa365/README.md`.
+Turn on the stove's rear left burner.
 
-## Difficulty
-Full privileged state, unlimited resets and self-replay; a mobile manipulator in one of RoboCasa365's large, cluttered kitchens, long-horizon contact-rich manipulation with a 20 Hz controller. The standard twin removes the privileged state.
+## Success criteria
+The stove's rear left burner is on: its knob's angle, taken between 0 and 2π, is between 0.35 rad and 2π − 0.35 rad.
 
-## Reference solution
-PR #4's reference for this frozen instance (an official demonstration's initial state; PR #4's authoring record for this task names neither the demonstration episode nor the retargeting method). Executed from the frozen scene by the robot's own controller: 241 actions in `solution/oracle.npz`. Neither the demonstration nor the reference is in the image; the agent cannot reach them.
+In the conditions above, an object's centre is its body origin in the simulator; touching is a MuJoCo contact between the two
+models' collision geoms; an object's horizontal radius is half the diagonal of its bounding box seen from above; the
+gripper's grip point is the robot's end-effector site; a joint's opening is its position as a fraction of the joint's
+range. The environment's check runs three times per control step (once inside the environment's step, before the
+fixtures update their state, and twice after it) and once at the frozen start; counts of checks above are counts of
+these runs.
 
-## Verification
-`tests/grade.py` in a separate sandbox without network: one replay in a fresh process from the verifier's own copy of the instance; `success = success on the final state ∧ not solved at the start`. Reference: a fresh-process replay ends in the live run's state (hash `e83ba997d65f…`) and succeeds. `nop`: no trajectory, reward 0; the instance is not solved at the start.
+The graded file is `/app/output/trajectory.npz`: an array `actions` of shape (T, 13), finite, with 1 ≤ T ≤ 3000, one
+row per control step (1/20 s); each row is clipped to the controller's limits when it is executed. The verifier replays
+it once, open-loop, in a fresh process from its own copy of the frozen instance, and takes the check's result on the
+state after the last row; nothing earlier in the replay counts, except where the conditions above say a count or a
+moment counts as it happens. It scores 1 when that result is a success and the check did not already hold at the
+frozen start. A missing file scores 0, and so does an invalid one: over 8 MB, not an archive of at most 64 plain `.npy`
+arrays, no `actions`, a shape other than (T, 13), a NaN or infinite value, or T outside 1 to 3000. A replay that fails
+with an error (a simulator error, or the verifier's frozen instance failing its hash check) scores 0.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -33,10 +42,12 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Source | [RoboCasa365](https://github.com/robocasa/robocasa) @ 4f8a298 (robocasa 1.0.1; MIT), robosuite @ 5ce6643 (1.5.2), MuJoCo 3.3.1; [environment source](None) |
-| Instance | the initial state of an official demonstration episode (which one is not in PR #4's authoring record); MuJoCo state, model arrays, task state and RNG frozen in `instance.npz` (SHA-256 `a52a0718df3e…`, checked on load) |
-| Deliverable | `(T, 13)` native controller commands, 1 ≤ T ≤ 3000, 20 Hz |
-| Success | the environment's own check (`_check_success`) on the state after the last action: the rear left burner's knob is on: its angle from off, in absolute value, is between 0.35 rad and 2π − 0.35 rad. |
+## License
+The kitchen tasks, scenes and success checks are RoboCasa365's ([robocasa/robocasa](https://github.com/robocasa/robocasa)
+@ `4f8a298`, robocasa 1.0.1), released under the MIT License (Copyright (c) 2026 the RoboCasa Team); the simulation
+framework is [robosuite](https://github.com/ARISE-Initiative/robosuite) @ `5ce6643` (1.5.2, MIT License) on MuJoCo 3.3.1
+(Apache License 2.0). RoboCasa's assets (fixtures, object meshes, textures, including the Objaverse and AI-generated
+objects) are under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) as RoboCasa states (credit: RoboCasa,
+robocasa.ai); no non-commercial terms apply. They are downloaded, pinned by SHA-256, when the image is built and are not
+redistributed in this repository. Paper: Nasiriany et al., 2026, "RoboCasa365: A Large-Scale Simulation Framework for
+Training and Benchmarking Generalist Robots", ICLR 2026.

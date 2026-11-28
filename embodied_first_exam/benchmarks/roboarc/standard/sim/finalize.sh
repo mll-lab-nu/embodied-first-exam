@@ -1,7 +1,7 @@
 #!/bin/sh
 # [[verifier.collect]] hook, run inside the `sim` sidecar once Harbor has stopped the agent's container.
 # The live episode is the verdict (owner 2026-10-17): no grading replay runs.
-#   1. `rcb_limited.py end` (the shared first half, docs/protocol/standard_mode.md §13.3): SIGUSR1 to the service, which ends
+#   1. `rcb_limited.py end` (the shared first half, embodied_first_exam/standard/README.md#what-a-shared-layer-task-declares): SIGUSR1 to the service, which ends
 #      the episode (judged as it stands), writes trajectory.npz + episode.json (the live verdict, its review / forcing /
 #      instability evidence, final-state hash, live_rows) and exits, releasing its GPU. It waits through a crash-recovery
 #      resume (no PID file until the service is ready again), signals only the newest service process, resends every
@@ -64,7 +64,7 @@ if out.get("reason") == "simulator_instability":
 # live_success: the live episode's own success; success: the verdict (no infrastructure failure, not held for review)
 out["live_success"] = bool(out.get("success")) and not out.get("gave_up")
 out["held_for_review"] = out["live_success"] and isinstance(out.get("review"), dict)
-out["success"] = out["live_success"] and not out.get("infra_error") and not out["held_for_review"] and out.get("reason") != "error"   # a simulator error: the agent's 0 (PROTOCOL §4)
+out["success"] = out["live_success"] and not out.get("infra_error") and not out["held_for_review"] and out.get("reason") != "error"   # a simulator error: the agent's 0 (docs/protocol/tasks.md#grading)
 out.update(finalized=True, graded_by="live", replays=0, state_sha=out.get("live_sha"))
 for k, v in (("video", False), ("video_source", "render"), ("video_pending", rc == "0"),
              ("media_status", "pending" if rc == "0" else "none")):

@@ -3,7 +3,7 @@
  "kind": "rcb",
  "suite": "pandadyn",
  "task": "pandadyn-s10-swinging-load-transit-dock-i00-realtime",
- "protocol": "eai-standard/2.3",
+ "protocol": "eai-standard/3.0",
  "realtime": true,
  "tools": [
   "spec",

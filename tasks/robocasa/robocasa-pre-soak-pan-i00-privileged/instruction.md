@@ -5,7 +5,8 @@ Put the pan and the sponge in the sink, turn the sink faucet on, nearly all the 
 
 ## Goal
 Success: the pan and the sponge are both all the way in the sink, the water is on with its handle turned nearly all the
-way, and your hand has let go of the pan and moved away. Your trajectory is replayed from the fixed start. What counts
+way, and your hand has let go of the pan and moved well away from it (what counts is how far the hand is from it). Your
+trajectory is replayed from the fixed start. What counts
 is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 12)`

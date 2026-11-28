@@ -1,0 +1,317 @@
+# README data for tasks/roboengineer/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text (each task's own copy; the copies of one evaluator are byte-identical):
+#   verdict    embodied_first_exam/benchmarks/roboengineer/standard/tests/grade.py verdict() (Control Transfer) and
+#              .../standard/tests/variants/9e936dca4e/grade.py verdict() (Neural Landing): success = every held-out case
+#              succeeded, replay_verified, scores finite in [0, 100]; final_reward = mean case score.
+#   selection  environment/sim/scripts/control_transfer/trusted/session.py finalize() L243-301 (the sealed round, else
+#              the latest round completed before the cutoff; each held-out case in two fresh processes, unrendered,
+#              metrics + feedback + state hash must match, else infra_error); quadrotor_landing/native/service.py
+#              select_submission() L36-43 and trusted/grade.py (two replays per case).
+#   families   go2-*: sim/quadrupedbench/simulation.py score() L137-208, jump_metrics() L97-135, episode() L42-60,
+#              rollout() L282-336 (contacts, divergence, `enabled`);
+#              anycar tracking and compact laps: trusted/anycar.py score_trajectory() L182-261, rollout() L263-320;
+#              anycarbench/model.py L166-181 (barriers), L285-294 (collision, body contact); control_public/anycar.py
+#              DT = 0.02, HORIZON = 24; anycarbench/compact_routes.json (45 m loops, 30 s horizon);
+#              anycar-drift-park: trusted/anycar_drift.py Monitor.step()/metrics() L101-193, episode_parameters()
+#              L195-204; anycarbench/drift.py DEFAULT_COURSE; control_public/anycar_drift.py HORIZON = 16;
+#              anycar-tight-drift-park: trusted/anycar_drift_v3.py Monitor (same lines, plus the rotation checks),
+#              episode_parameters() L217-225; anycarbench/drift_v3.py DEFAULT_COURSE;
+#              neuralfly-*: trusted/fly.py rollout() L94-200; control_public/fly.py DURATION = 6 * 2 pi, DT = 0.02,
+#              Vehicle.step() contact L183-201;
+#              landing-random-pad: quadrotor_landing/trusted/simulation.py L150-255, trusted/scoring.py SettlingTimer;
+#              public/model.py (DT 0.01, HORIZON 16, SETTLE_TIME 1, PAD_RADIUS 0.45);
+#              g1-terrain-walk: sim/scripts/control_transfer/components/sim2realbench/g1/deploy.py L103-203,
+#              terrain.py make_spec() (12 held-out cases: flat, slope, rough, steps; 0.5 / 0.6 / 0.65 m/s).
+
+[benchmark]
+name = "roboEngineer"
+citation = "Wang et al., 2026"      # Embodied First Exam (arXiv:2611.12177): roboEngineer is one of its original suites
+url = "https://www.embodied-first-exam.ai/suite/roboengineer/"
+repo = "mll-lab-nu/embodied-first-exam"
+commit = "b2280d8"                  # the commit that added tasks/roboengineer/ to this repository
+
+[license]
+text = """
+roboEngineer is an original suite of Embodied First Exam. Its components carry their own terms: AnyCar's car mechanism
+([LeCAR-Lab/anycar](https://github.com/LeCAR-Lab/anycar) @ `20fc50a`, Apache License 2.0 as its README declares) and
+F1DB's circuit outlines ([f1db/f1db](https://github.com/f1db/f1db) @ `7cf634e`, CC BY 4.0; `anycarbench/NOTICE`);
+the Unitree G1 model and training task of [unitreerobotics/unitree_rl_mjlab](https://github.com/unitreerobotics/unitree_rl_mjlab)
+@ `1425b15` (Apache License 2.0); MuJoCo Menagerie's Unitree Go2 (BSD 3-Clause, Unitree Robotics) and Skydio X2
+(Apache License 2.0) models. The Neural Fly force fit is made from the flight logs of
+[aerorobotics/neural-fly](https://github.com/aerorobotics/neural-fly) @ `0ed5024`, which are **for personal and
+educational use only** (written permission from the authors is needed for further use); the fit is not distributed.
+The Neural Landing residual is converted from the checkpoint of
+[GuanyaShi/neural_lander_sim_1d](https://github.com/GuanyaShi/neural_lander_sim_1d) @ `30ab04c`, which states no
+licence. The simulator is MuJoCo (Apache License 2.0).
+"""
+
+[robots]
+anycar = "AnyCar 1/10-scale racing car (contact wheels, suspension, steering)"
+unitree-go2 = "Unitree Go2 quadruped"
+unitree-g1 = "Unitree G1 29-DoF humanoid"
+intel-aero-partial = "Intel Aero quadrotor (partly calibrated) with the Neural Lander ground-effect residual"
+neural-fly-partial = "Neural Fly quadrotor airframe, approximated as a symmetric X quadrotor"
+
+# session.py finalize() (Control Transfer) / native/service.py select_submission() + finalize() (Neural Landing);
+# session.py L100 / L154-156 (a round still running at the cutoff: aborted_at_cutoff, never eligible); grade.py
+# verdict(): no_submission -> success 0, infra_error 0; a digest, schema or replay failure -> infra_error 1.
+[modes.standard]
+success = """
+The evaluator grades one policy: the deployment round the agent sealed or, without a seal, the latest round that
+completed before the agent's session ended (at the latest after {timeout}). A round still running at that moment is
+not graded, and with no completed round the score is 0. The evaluator runs that policy on every held-out case, each in
+two fresh processes without rendering; the two runs must give the same state hash, metrics and noisy observations. The
+task succeeds when every held-out case succeeds. `final_reward` is the mean case score (0 to 100); it does not decide
+success. A case in which the simulation diverges fails. A failure of the evaluator itself (a missing or mismatched
+asset or instance, a worker crash, two runs that disagree) is an infrastructure error, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Go2: simulation.py score(): failed = any bad_contact (a non-foot geom on the floor; weave: a pole touching the robot)
+# or base z < 0.12 or |roll| or |pitch| > 1.1 at any physics step (0.002 s); stable = every step of the last 1 s with
+# >= 3 feet on the ground, |v| < 0.25, |omega| < 0.35, |roll|, |pitch| < 0.22; rollout() L331-335: enabled false or a
+# divergence -> success False.
+[families."roboengineer/go2-attitude"]
+no_twin = "roboEngineer is graded on dynamics the agent is never shown; a privileged mode would expose them"
+success = """
+There are 10 held-out cases. Each is a 10 s episode in which the roll and pitch commands start at 1 s. A case succeeds
+when, over every simulation step from 1 s on, the root-mean-square error between the body's roll and pitch and the
+commanded roll and pitch is below 0.08 rad, at least three feet touch the ground in at least 95 % of those steps, and
+the base ends less than 0.25 m (horizontally) from where it started. The case fails if at any step a part of the robot
+other than a foot touches the ground, the base drops below 0.12 m, or the roll or pitch exceeds 1.1 rad. A policy whose
+`enabled` flag is false fails every case.
+"""
+
+[families."roboengineer/go2-weave"]
+no_twin = "roboEngineer is graded on dynamics the agent is never shown; a privileged mode would expose them"
+success = """
+There are 10 held-out cases. Each is a 20 s episode with four poles on the line y = 0, at x = 0.9, 1.9, 2.9 and 3.9 m;
+the Go2 starts at the origin facing +x. The base must pass each pole's x position in order, at least 0.16 m to its left
+(+y) for the first pole, to its right for the second, and so on, alternating. A crossing on the wrong side or closer
+than 0.16 m does not count for that pole. At the end of the episode the base must be more than 0.35 m past the last
+pole (x above 4.25 m). The case fails if at any step a pole touches the robot, a part of the robot other than a foot
+touches the ground, the base drops below 0.12 m, or the roll or pitch exceeds 1.1 rad. A policy whose `enabled` flag is
+false fails every case.
+"""
+
+# jump_metrics(): a flight = consecutive steps from t >= 1 s with no robot geom touching the ground; it qualifies with
+# airtime >= 0.08 s and base rise >= 0.07 m; the longest qualifying flight is graded.
+[families."roboengineer/go2-forward-jump"]
+no_twin = "roboEngineer is graded on dynamics the agent is never shown; a privileged mode would expose them"
+success = """
+There are 10 held-out cases. Each is a 6 s episode with a commanded forward distance between 0.70 and 1.00 m. A flight
+is a stretch after 1 s in which no part of the robot touches the ground; it counts when it lasts at least 0.08 s and the
+base rises at least 0.07 m during it, and the longest such flight is graded. A case succeeds when there is such a flight,
+the base moves forward by at least 70 % of the commanded distance during it, the base's forward travel from the start
+is within 0.15 m of the commanded distance both at touchdown and at the end of the episode, the sideways offset at the
+end is below 0.15 m, and at every step of the last second at least three feet touch the ground, the base's speed is
+below 0.25 m/s, its angular speed below 0.35 rad/s and its roll and pitch below 0.22 rad. The case fails if at any step a
+part of the robot other than a foot touches the ground, the base drops below 0.12 m, or the roll or pitch exceeds 1.1
+rad. A policy whose `enabled` flag is false fails every case.
+"""
+
+[families."roboengineer/go2-yaw-jump"]
+no_twin = "roboEngineer is graded on dynamics the agent is never shown; a privileged mode would expose them"
+success = """
+There are 10 held-out cases. Each is a 6 s episode with a commanded left turn between 110° and 150°. A flight is a
+stretch after 1 s in which no part of the robot touches the ground; it counts when it lasts at least 0.08 s and the base
+rises at least 0.07 m during it, and the longest such flight is graded. A case succeeds when there is such a flight, the
+heading turns by at least 70 % of the commanded angle during it, the heading change from the start is within 0.25 rad of
+the command at touchdown and within 0.18 rad at the end of the episode, the base ends less than 0.25 m (horizontally)
+from where it started, and at every step of the last second at least three feet touch the ground, the base's speed is
+below 0.25 m/s, its angular speed below 0.35 rad/s and its roll and pitch below 0.22 rad. The case fails if at any step a
+part of the robot other than a foot touches the ground, the base drops below 0.12 m, or the roll or pitch exceeds 1.1
+rad. A policy whose `enabled` flag is false fails every case.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# AnyCar tracking: anycar.py score_trajectory() else-branch (ellipse): 24 phase gates, radial error < 0.45 at the gate,
+# completion >= 23/24, offtrack = radial > 0.70 at any sample; rmse < 0.30, heading MAE < 0.18, speed MAE < 0.25,
+# final error < 0.35; unsafe = collision (barrier with tyre or chassis) or body contact (chassis with the ground) or
+# rollover (chassis z axis component < 0.5) or offtrack. HORIZON = 24 s, samples every DT = 0.02 s.
+[families."roboengineer/anycar-tracking"]
+no_twin = "roboEngineer is graded on dynamics the agent is never shown; a privileged mode would expose them"
+success = """
+There are 10 held-out cases. Each is a 24 s episode on an elliptical course lined with barriers; the car is sampled
+every 0.02 s against a moving target that runs along the ellipse. The lap has 24 gates, one at each 1/24 of a lap of
+progress around the ellipse; a gate counts when the car reaches it in order while less than 0.45 m from the ellipse. A
+case succeeds when the car passes at least 23 of the 24 gates, the root-mean-square distance to the moving target is
+below 0.30 m, the mean heading error is below 0.18 rad, the mean speed error is below 0.25 m/s and the final distance to
+the target is below 0.35 m. The case fails if the car or a tyre touches a barrier, the chassis touches the ground, the
+car tips more than 60° from upright, or the car is ever more than 0.70 m from the ellipse.
+"""
+
+# anycar.py score_trajectory() track branch with full_lap: gate_count = max(24, ceil(45 m / 0.5)) = 90 planes across
+# the route, crossed forward within 0.45 m of the centre, in order; completion must be 1.0; offtrack = distance to the
+# centre line > 0.70; rollout(): horizon 30 s (compact-30s/1), target speed = length / 27.5.
+[families."roboengineer/anycar-compact-lap-monaco-6"]
+no_twin = "roboEngineer is graded on dynamics the agent is never shown; a privileged mode would expose them"
+vars = { track = "Monaco" }
+success = """
+There are 10 held-out cases. Each is a 30 s episode on a 45 m closed loop shaped after the {vars[track]} circuit and
+lined with barriers; the car is sampled every 0.02 s against a moving target that runs the lap in 27.5 s. The lap has
+90 gates, lines across the route every 0.5 m; a gate counts when the car crosses it forward, in order, less than 0.45 m
+from the centre line. A case succeeds when the car passes every gate within the episode, the root-mean-square distance
+to the moving target is below 0.30 m, the mean heading error is below 0.18 rad, the mean speed error is below 0.25 m/s
+and the final distance to the target is below 0.35 m. The case fails if the car or a tyre touches a barrier, the chassis
+touches the ground, the car tips more than 60° from upright, or the car is ever more than 0.70 m from the centre line.
+"""
+
+[families."roboengineer/anycar-compact-lap-silverstone-8"]
+no_twin = "roboEngineer is graded on dynamics the agent is never shown; a privileged mode would expose them"
+vars = { track = "Silverstone" }
+success = """
+There are 10 held-out cases. Each is a 30 s episode on a 45 m closed loop shaped after the {vars[track]} circuit and
+lined with barriers; the car is sampled every 0.02 s against a moving target that runs the lap in 27.5 s. The lap has
+90 gates, lines across the route every 0.5 m; a gate counts when the car crosses it forward, in order, less than 0.45 m
+from the centre line. A case succeeds when the car passes every gate within the episode, the root-mean-square distance
+to the moving target is below 0.30 m, the mean heading error is below 0.18 rad, the mean speed error is below 0.25 m/s
+and the final distance to the target is below 0.35 m. The case fails if the car or a tyre touches a barrier, the chassis
+touches the ground, the car tips more than 60° from upright, or the car is ever more than 0.70 m from the centre line.
+"""
+
+# anycar_drift.py Monitor (checked every 2 ms physics step): gates = route[::5] within 0.28 m, in order; sliding =
+# finished and near (|x - park_x| < 1.7, |y - park_y| < 1.0) and |vy| > 0.2 and speed > 0.6 and sideslip > 10 deg;
+# drift = longest continuous slide >= 0.15 s and slide distance >= 0.06 m; stopped = inside (footprint 0.49 x 0.27 m)
+# and |ex| < 0.18 and |ey| < 0.12 and heading within 0.14 of pi and speed < 0.08 and |yaw rate| < 0.1; success needs
+# stopped >= 0.5 s at the end; offtrack = (before the last gate) > 0.65 m from the route, or |x| > 7, |y| > 5.
+# episode_parameters(): slot_length U(1.15, 1.3), slot_width 0.65, HORIZON 16 s.
+[families."roboengineer/anycar-drift-park"]
+no_twin = "roboEngineer is graded on dynamics the agent is never shown; a privileged mode would expose them"
+success = """
+There are 10 held-out cases. Each is a 16 s episode on a U-shaped course (radius 1.5 m) that ends next to a parking space
+between two parked cars; the space is 0.65 m wide and 1.15 to 1.3 m long, and its direction points along -x. The state is
+checked every 2 ms. The route has gates; a gate counts when the car's centre comes within 0.28 m of it, in order. After
+the last gate, near the space (within 1.7 m along x and 1.0 m along y of its centre), the car must drift: one continuous
+slide of at least 0.15 s with sideways speed above 0.2 m/s, speed above 0.6 m/s and a sideslip angle above 10°, and at
+least 0.06 m of sideways slide in total. A case succeeds when the car has drifted and, for at least the last 0.5 s of
+the episode, the whole car is inside the space, its centre is within 0.18 m (along the space) and 0.12 m (across it) of
+the space's centre, its heading is within 0.14 rad of the space's direction, its speed is below 0.08 m/s and its yaw
+rate below 0.1 rad/s. The case fails if the car touches a barrier or a parked car, the chassis touches the ground, the
+car tips more than 60° from upright, the car is more than 0.65 m from the route before the last gate, or it leaves the
+area |x| ≤ 7 m, |y| ≤ 5 m.
+"""
+
+# anycar_drift_v3.py Monitor: as drift-park with near = |x - park_x| < 2.5 and park_y - 0.8 < y < radius + 0.4; heading
+# target 0; rotation_ok = | |rotation after the last gate| - pi | < 0.25; |rotation while sliding| >= 120 deg.
+# DEFAULT_COURSE radius 2.2, slot_width 0.43; episode_parameters(): slot_length U(0.65, 0.73).
+[families."roboengineer/anycar-tight-drift-park"]
+no_twin = "roboEngineer is graded on dynamics the agent is never shown; a privileged mode would expose them"
+success = """
+There are 10 held-out cases. Each is a 16 s episode on a U-shaped course (radius 2.2 m) that ends next to a tight parking
+bay; the bay is 0.43 m wide and 0.65 to 0.73 m long, and its direction points along +x, opposite to the car's heading at
+the end of the route. The state is checked every 2 ms. The route has gates; a gate counts when the car's centre comes
+within 0.28 m of it, in order. After the last gate the car's heading must change in total by 180° (within 0.25 rad,
+either way round), and the car must drift near the bay (within 2.5 m along x of its centre, and from 0.8 m below the
+bay's centre line to 0.4 m beyond the course radius along y): one continuous slide of at least 0.15 s with sideways
+speed above 0.2 m/s, speed above 0.6 m/s and a sideslip angle above 10°, at least 0.06 m of sideways slide in total,
+and at least 120° of the turn made while sliding. A case succeeds when the car has done so and, for at least the last
+0.5 s of the episode, the whole car is inside the bay, its centre is within 0.18 m (along the bay) and 0.12 m (across
+it) of the bay's centre, its heading is within 0.14 rad of the bay's direction, its speed is below 0.08 m/s and its yaw
+rate below 0.1 rad/s. The case fails if the car touches a barrier or a parked car, the chassis touches the ground, the
+car tips more than 60° from upright, the car is more than 0.65 m from the route before the last gate, or it leaves the
+area |x| ≤ 7 m, |y| ≤ 5 m.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Neural Fly: fly.py rollout(): steps = DURATION / (rate * DT), six laps; error at every control step = distance to
+# target(t + DT), from the first step (no warm-up); crash = any MuJoCo contact (Vehicle.step: data.ncon), a non-finite
+# state, a MuJoCo bad-state warning or > 5 m from the eight's centre -> the episode ends; success = complete and not
+# crash and rmse < 0.25. Held-out: 10 cases, two per wind stratum (0, 4.2, 8.5, 12.1, 8.5 + 2.4 sin t m/s).
+[families."roboengineer/neuralfly-eight"]
+no_twin = "roboEngineer is graded on dynamics the agent is never shown; a privileged mode would expose them"
+vars = { course = "a vertical figure eight (2.5 m wide, 1.5 m tall) that the moving target runs in 2π s per lap" }
+others = """
+This task needs the Neural Fly force fit, which is not distributed: build the evaluator image with
+`images/control-transfer/fetch_assets.sh --fit-fly`, which makes the fit locally from the public flight logs.
+"""
+success = """
+There are 10 held-out cases, two for each of five wind conditions.
+The course is {vars[course]}.
+Each case runs six laps of the figure eight. A case succeeds when the drone flies all six laps without a crash
+and the root-mean-square distance between the drone and the moving target, over every control step (0.02 s) from the
+first one, is below 0.25 m. A crash ends the case as a failure: any contact, a non-finite or unstable simulation state,
+or the drone more than 5 m from the figure eight's centre.
+"""
+
+[families."roboengineer/neuralfly-general"]
+no_twin = "roboEngineer is graded on dynamics the agent is never shown; a privileged mode would expose them"
+vars = { course = "a figure eight drawn per case: vertical, horizontal or inclined, of varied size, heading and lap time (the moving target runs a lap in 2π / 0.8 to 2π / 1.1 s), in either direction" }
+others = """
+This task needs the Neural Fly force fit, which is not distributed: build the evaluator image with
+`images/control-transfer/fetch_assets.sh --fit-fly`, which makes the fit locally from the public flight logs.
+"""
+success = """
+There are 10 held-out cases, two for each of five wind conditions.
+The course is {vars[course]}.
+Each case runs six laps of the figure eight. A case succeeds when the drone flies all six laps without a crash
+and the root-mean-square distance between the drone and the moving target, over every control step (0.02 s) from the
+first one, is below 0.25 m. A crash ends the case as a failure: any contact, a non-finite or unstable simulation state,
+or the drone more than 5 m from the figure eight's centre.
+"""
+
+[families."roboengineer/neuralfly-general-skydio"]
+no_twin = "roboEngineer is graded on dynamics the agent is never shown; a privileged mode would expose them"
+vars = { course = "a figure eight drawn per case: vertical, horizontal or inclined, of varied size, heading and lap time (the moving target runs a lap in 2π / 0.8 to 2π / 1.1 s), in either direction" }
+others = """
+This task needs the Neural Fly force fit, which is not distributed: build the evaluator image with
+`images/control-transfer/fetch_assets.sh --fit-fly`, which makes the fit locally from the public flight logs.
+"""
+success = """
+There are 10 held-out cases, two for each of five wind conditions.
+The course is {vars[course]}.
+Each case runs six laps of the figure eight. A case succeeds when the drone flies all six laps without a crash
+and the root-mean-square distance between the drone and the moving target, over every control step (0.02 s) from the
+first one, is below 0.25 m. A crash ends the case as a failure: any contact, a non-finite or unstable simulation state,
+or the drone more than 5 m from the figure eight's centre.
+"""
+
+[families."roboengineer/neuralfly-vector-wind"]
+no_twin = "roboEngineer is graded on dynamics the agent is never shown; a privileged mode would expose them"
+vars = { course = "a figure eight drawn per case: vertical, horizontal or inclined, of varied size, heading and lap time (the moving target runs a lap in 2π / 0.8 to 2π / 1.1 s), in either direction, flown in a horizontal wind field" }
+others = """
+This task needs the Neural Fly force fit, which is not distributed: build the evaluator image with
+`images/control-transfer/fetch_assets.sh --fit-fly`, which makes the fit locally from the public flight logs.
+"""
+success = """
+There are 10 held-out cases, two for each of five wind conditions.
+The course is {vars[course]}.
+Each case runs six laps of the figure eight. A case succeeds when the drone flies all six laps without a crash
+and the root-mean-square distance between the drone and the moving target, over every control step (0.02 s) from the
+first one, is below 0.25 m. A crash ends the case as a failure: any contact, a non-finite or unstable simulation state,
+or the drone more than 5 m from the figure eight's centre.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Neural Landing: simulation.py: crash = a non-foot geom on the floor or tilt > 0.8 rad or |x| or |y| > 3 or z > 3 or a
+# divergence; off_pad_contact = a foot contact farther than PAD_RADIUS 0.45 m from the pad centre; impact = vertical and
+# horizontal speed just before the first touch (< 0.4, < 0.25); settled = feet touching and xy error < 0.15 and tilt <
+# 0.15 and speed < 0.08, checked every 10 ms; SettlingTimer: the final uninterrupted settled run must reach 1 s (101
+# samples) and last to the end (a break resets completion_time to None). HORIZON 16 s; 6 held-out cases.
+[families."roboengineer/landing-random-pad"]
+no_twin = "roboEngineer is graded on dynamics the agent is never shown; a privileged mode would expose them"
+success = """
+There are 6 held-out cases. Each is a 16 s episode: the drone starts 0.8 to 1.5 m up and lands on a round pad of radius
+0.45 m on the floor, placed per case. A case succeeds when only the drone's feet touch the floor, and only inside the
+pad; at the first touch the drone's vertical speed is below 0.4 m/s and its horizontal speed below 0.25 m/s; and the
+drone is settled without a break for at least the last 1 s of the episode, checked every 10 ms: feet on the floor,
+centre within 0.15 m (horizontally) of the pad's centre, tilt below 0.15 rad and speed below 0.08 m/s. The case fails if
+another part of the drone touches the floor, a foot touches the floor outside the pad (even if the drone later slides
+onto it), the tilt exceeds 0.8 rad, the drone goes more than 3 m from the origin along x or y, or it climbs above 3 m.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# G1: deploy.py rollout(): 20 s at 50 Hz; speed command from 2 s; fallen = pelvis clearance above the terrain < 0.45 or
+# body z axis component < 0.5 or non-finite -> the episode ends; success = not fallen and elapsed >= 20 s and mean
+# |x speed - command| over t >= 2 s < 0.25 and forward travel from 2 s > 0.65 * speed * 18 and |lateral| < 2.
+[families."roboengineer/g1-terrain-walk"]
+no_twin = "roboEngineer is graded on dynamics the agent is never shown; a privileged mode would expose them"
+success = """
+There are 12 held-out cases, three on each kind of ground: flat, sloped, rough and stepped. Each is a 20 s episode in
+which the forward speed command (0.5, 0.6 or 0.65 m/s) starts at 2 s. A case succeeds when the G1 does not fall during
+the 20 s, its mean absolute error between forward speed and the command from 2 s on is below 0.25 m/s, its forward travel
+from 2 s on is more than 65 % of the commanded distance (speed × 18 s), and its sideways travel is less than 2 m. The G1
+has fallen, which ends the case as a failure, when its pelvis comes within 0.45 m of the ground below it or its body
+tilts more than 60° from upright.
+"""

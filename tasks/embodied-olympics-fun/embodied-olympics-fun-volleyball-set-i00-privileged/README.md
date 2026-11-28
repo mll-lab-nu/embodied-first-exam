@@ -1,31 +1,66 @@
-# embodied-olympics-fun-volleyball-set-i00-privileged
+# Embodied Olympics · volleyball set (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-volleyball-set-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree H1-2 humanoid (1.78 m, 67 kg, 27 joints), with Unitree's walking policy |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-volleyball-set-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-h1-2` |
-| Family / instance | `volleyball_set` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: No reference solution: a CMA-ES search over the walk command, the key times and the arms' key offsets (about 150 generations) finds legal sets (out 7.0-7.5 m/s against 6.6 in, apex 4.3-4.6 m, 0.5-0.8 m from the target's centre) only with the hands 5.7-6.4 cm into each other as they rise above the forehead, which the robot's self-collision rules out; with a penalty for that, no clean set was found in 20 generations. Positive by a declared magic action. The real parts: the ball machine's toss, the walking policy at zero command with the right arm raised straight up (the hands far apart; at most 0.2 mm of self-overlap), the contact with the right hand, the flight and the landing. Injected: (1) once, 0.35 m above the palm, the descending ball is moved sideways, its height and velocity kept, onto a path that meets the palm; (2) at the first contact with the hand, its velocity is set to rise to 4.6 m and come down on the target's centre. It comes in at 6.85 m/s, leaves at 8.13 m/s, peaks at 4.74 m and lands 0.82 m from the centre; the same state hash twice. Negatives: nop (the floor before the set), the same at half speed (not a set), and the referee test's other negatives.; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Instance | `volleyball_set`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Set the ball: with one overhead touch of your hands, send it high above the net and into the hitter's target along the net. (Embodied Olympics `volleyball-set`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Set the ball: with one overhead touch of your hands, send it high above the net and into the hitter's target along the
+net.
 
-## Difficulty
-The hands (rubber fists) have to meet a 7 m/s ball above the head and drive it away faster than it came, up to nearly 4 m and 5 m along the net into a 2 m circle, in a contact of a few hundredths of a second: the angle and the speed both have to be right, and arms that are only held up return the ball too slowly.
+## Success criteria
+An official volleyball court (9.0 m by 9.0 m on each side of the net; the net's top 2.43 m high). The robot is the
+setter, standing in its front zone facing along the net: the net 1.0 m to its right, the attack line 3.0 m from the
+centre line to its left, the side line of position 2 3.0 m behind it. A volleyball (0.21 m across, 0.27 kg) is
+tossed to it by a ball machine in the back court 3.0 s after the start and comes down above it. The referee's
+stages, in order: set, above the net, in the target.
+- Set: the ball's first contact after the toss, before it touches the floor, with the hands only (the parts beyond
+  the wrists; one or both), after the ball has passed its highest point and with its centre above the top of the
+  head (0.76 m above the waist joint along the trunk). Its contacts last at most 0.1 s; it is over when the ball has
+  been clear of the robot for 0.03 s. The ball leaves the hands moving upward and at least 1.0 times as fast as just
+  before they touched it.
+- Above the net: the ball's centre then rises at least 1.0 m above the net's top.
+- In the target: the ball's first contact with the floor is inside a circle of 1.0 m radius centred 1.0 m from the
+  net on the robot's side and 1.0 m inside the side line ahead of the robot (the point under the ball's centre
+  decides). The success is called at that contact.
 
-## Reference solution
-None. No reference controller exists for this family yet: No reference solution: a CMA-ES search over the walk command, the key times and the arms' key offsets (about 150 generations) finds legal sets (out 7.0-7.5 m/s against 6.6 in, apex 4.3-4.6 m, 0.5-0.8 m from the target's centre) only with the hands 5.7-6.4 cm into each other as they rise above the forehead, which the robot's self-collision rules out; with a penalty for that, no clean set was found in 20 generations. Positive by a declared magic action. The real parts: the ball machine's toss, the walking policy at zero command with the right arm raised straight up (the hands far apart; at most 0.2 mm of self-overlap), the contact with the right hand, the flight and the landing. Injected: (1) once, 0.35 m above the palm, the descending ball is moved sideways, its height and velocity kept, onto a path that meets the palm; (2) at the first contact with the hand, its velocity is set to rise to 4.6 m and come down on the target's centre. It comes in at 6.85 m/s, leaves at 8.13 m/s, peaks at 4.74 m and lands 0.82 m from the centre; the same state hash twice. Negatives: nop (the floor before the set), the same at half speed (not a set), and the referee test's other negatives..
+Fouls (each fails the attempt at once):
+- the robot touches the ball machine or the ball waiting in it;
+- the ball touches the floor before or during the set;
+- any part of the robot other than a hand touches the ball;
+- the first contact comes before the ball has passed its highest point, or with the ball's centre not above the top of
+  the head;
+- the contacts last longer than 0.1 s (the ball held); the ball leaves the hands downward or slower than it came;
+- a hand touches the ball again after the set;
+- the ball does not rise 1.0 m above the net's top, or comes down outside the target;
+- before the set the pelvis is farther from the net than the attack line (out of the front zone);
+- the robot touches the net, an antenna or a post; a foot is on the floor wholly beyond the centre line.
+Fall (a failure at any time): the pelvis lower than 0.35 m, or any part other than the feet on the floor. Time limit:
+10 s (1,000 control steps).
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: You are the setter on an official volleyball court (9.0 m by 9.0 m on each side of the net; the net's top 2.43 m high). You stand in your front zone facing along the net: the net is 1.0 m to your right, the attack line 3.0 m from the centre line to your left, the side line of position 2 3.0 m behind you, the side line of position 4 ahead of you. A volleyball (0.21 m across, 0.27 kg, in air) is tossed to you from the back court 3.0 s after the start and comes down above you. The set is the ball's first contact after the toss, before it touches the floor: with your hands (the parts beyond the wrists; one or both), overhead (the ball's centre above the top of your head, which is 0.76 m above your waist joint along the trunk), after the ball has passed its highest point, all contacts within 0.1 s, over when the ball has been clear of you for 0.03 s. It must be a set, not a rebound: the ball leaves your hands moving upward and at least 1.0 times as fast as it was just before they touched it. Then the ball's centre must rise at least 1.0 m above the net's top, and the ball must come down in the outside hitter's target: its first contact with the floor is inside a circle of 1.0 m radius whose centre is 1.0 m from the net on your side and 1.0 m inside the side line ahead of you. That is the success. You fail if you touch the ball machine or the ball waiting in it, if the ball touches the floor before your set, if any part of you other than a hand touches the ball, if the ball's centre is not above the top of your head when your hands first touch it, if you touch it before it has passed its highest point, if the contacts last longer than 0.1 s (the ball held), if the ball leaves your hands downward or slower than that, if you touch the ball again, if it does not rise that high or comes down outside the target, if before your set your pelvis is farther from the net than the attack line (you left the front zone), if you touch the net, an antenna or a post, if a foot of yours is on the floor wholly beyond the centre line, if you fall (your pelvis lower than 0.35 m above the floor, or any part of you other than the feet on the floor), or after 10 s. The ball cannot be gripped. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +69,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | football-and-volleyball |
-| Rule book | FIVB Official Volleyball Rules 2025-2028: Rule 1 (the court 18 m x 9 m, the front zone between the centre line and the attack line 3 m from it), Rule 2 (the men's net, top at 2.43 m, the antennas), Rule 3 (the ball: 65-67 cm round, 260-280 g), Rule 9.2 (the hit: not caught or thrown, one contact), Rule 11 (no contact with the net, the foot not wholly beyond the centre line); deviations: The pass is played by a two-wheel volleyball machine standing in the back court instead of a team-mate, the same in every attempt: its wheels, at equal speeds, drive the ball out 0.9 m above the floor at about 9 m/s without spin, steeply up towards the setter. · Rule 9.2 (the overhead pass with the fingers): the robot has no fingers, so the set is one contact of the hands (the parts beyond the wrists) with the ball's centre above the top of the robot's head (0.76 m above its waist joint along the trunk, about 1.80 m when it stands). 'Not caught or thrown' is a contact of at most 0.1 s (the ball cannot be gripped). · A set is judged by numbers instead of a referee's eye: the ball must leave the hands moving upward and at least 1.0 times as fast as it arrived (hands held still in the ball's path return it at no more than three quarters of its speed: that is a rebound, not a set); it must be played after it has passed its highest point, by a setter who has stayed in the front zone. · Nobody attacks the set: a good set is defined as volleyball coaching grades it, a ball that rises at least 1.0 m above the net and comes down in the outside hitter's target, a circle of 1.0 m radius at position 4, judged where the ball first touches the floor. · Rule 2: the net is a rigid panel 1 m deep and the posts and antennas are rigid (a real net is a mesh under tension that gives); a robot touching any of them commits the Rule 11 fault all the same. · No team-mates or opponents, no wind. |
-| Stages | set → above the net → in the target |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `e3b55e80ca10105d1446a1b095d1a3349f7ddd7523d2bfc3e37c35245a85b633` |
-| Episode | 1000 control steps (10 s at 100 Hz) |
-| Action | sim rows of 141 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

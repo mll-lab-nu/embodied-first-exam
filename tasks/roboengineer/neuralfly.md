@@ -1,6 +1,6 @@
 # roboEngineer / Drone / Neural Fly
 
-> roboEngineer task names: [README.md](README.md) (the package names of #329 used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `ci_checks/benchmarks/roboengineer/exported.toml`).
+> roboEngineer task names: [README.md](README.md) (the package names used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `ci_checks/benchmarks/roboengineer/exported.toml`).
 
 The separately scored `neural-fly-general-v1` task asks a coding agent to track **six timed laps of varied figure-eight commands**, improve a numeric controller over three deployment-feedback rounds, and freeze it for a ten-case held-out bank. Deployment uses **native CPU MuJoCo, NumPy CPU inference and OSMesa software rendering**. This task is simulation transfer with a real-flight-data force surrogate; it is not a physical flight experiment, DAIML reproduction, or PX4 reproduction.
 
@@ -162,7 +162,7 @@ repository and is excluded from both task runtime layouts, alongside its output 
 replace `video.mp4` in an episode directory; the benchmark's feedback video must stay
 unchanged. A synthetic vector trace must never be described as measured hardware wind.
 
-Integration validation on 2026-10-14 used the generated i00/i01 packages with the
+Integration validation used the generated i00/i01 packages with the
 previously frozen scripted policy (no new tuning or adaptation rounds): 10/10 held-out
 successes per plant, mean scores 90.0123 and 88.4098, combined 89.2110. All 20
 fresh-process replay pairs match whole records, true states and private wind arrays;

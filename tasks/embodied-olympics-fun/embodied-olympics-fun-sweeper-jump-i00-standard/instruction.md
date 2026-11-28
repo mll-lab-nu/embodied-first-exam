@@ -1,12 +1,12 @@
 # Embodied Olympics · sweeper jump (standard)
 
 ## Task
-Jump the sweeping boom 3 times in a row without being hit, then land on your podium and stand still before it comes
-round again.
+Jump the sweeping boom 3 times in a row without being hit, then land on your feet and stand still for 1 s on your
+podium.
 
 ## Goal
-Success: you jump the boom three times in a row without it touching you, then land on your feet on the podium and stand
-still for 1 s before it comes round again.
+Success: you jump the boom three times in a row without it touching you, then land on your feet and stand still on the
+podium for 1 s, the boom never touching you.
 
 The referee in the service judges these stages, in order: **jump 1 → jump 2 → jump 3 → landing → stand**. Once the
 referee calls success, it stays; the attempt continues until you finish. The first foul before a success ends the
@@ -40,7 +40,7 @@ MuJoCo). The robot runs as a service you reach through its client or its MCP too
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`) is your whole interface to the robot. Its docstring is the full
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`) is your whole interface to the robot. Its docstring is the full
 reference (`python -c "import rcb_client; help(rcb_client)"`); its examples use another benchmark's names: for this task
 `r.spec()` is authoritative.
 

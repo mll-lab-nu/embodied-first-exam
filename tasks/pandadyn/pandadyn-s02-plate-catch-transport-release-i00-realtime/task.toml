@@ -19,7 +19,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/pandadyn-s02-plate-catch-transport-release-i00-realtime"
-description = "REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = 2): Panda Dynamic Scenes S02 Plate catch, transport and release (one Franka Panda) on the same frozen instance as the privileged task. Task: Catch the ball on the flat plate and settle it in the middle. Carry it through the two waypoints without letting it roll off, settle it again, and tip it into the sliding basin while the basin is moving. Once an episode starts the scene and the robot move whatever the agent does (at 1/S of real speed), so the agent plans or streams joint_position targets from a program of its own through the realtime client (RGB, depth + proprioception). 3 resets, only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
+description = "REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/3.0, slowdown S = 2): Panda Dynamic Scenes S02 Plate catch, transport and release (one Franka Panda) on the same frozen instance as the privileged task. Task: Catch the ball on the flat plate and settle it in the middle. Carry it through the two waypoints without letting it roll off, settle it again, and tip it into the sliding basin while the basin is moving. Once an episode starts the scene and the robot move whatever the agent does (at 1/S of real speed), so the agent plans or streams joint_position targets from a program of its own through the realtime client (RGB, depth + proprioception). 3 resets, only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
 keywords = ["robotics", "pandadyn", "maniskill", "sapien", "franka-panda", "single-arm", "dynamic-manipulation", "realtime-mode", "trajectory"]
 
 [metadata]
@@ -27,8 +27,8 @@ task_type = "trajectory"
 simulator = "maniskill"
 robot = "franka-panda"
 family = "s02_plate_catch_transport_release"
-dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.3"
+dynamics = "dynamic"              # scene dynamics (docs/protocol/tasks.md): the task's own declaration
+protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 8.0
@@ -38,7 +38,7 @@ timeout_sec = 600.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -64,7 +64,7 @@ command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) 
 timeout_sec = 2200
 
 [agent]
-timeout_sec = 3600.0              # the agent's cutoff, this task's own (PROTOCOL §2), as the service's RCB_WALL_CLOCK_S
+timeout_sec = 3600.0              # the agent's cutoff, this task's own (docs/protocol/tasks.md), as the service's RCB_WALL_CLOCK_S
 # The agent reaches the model APIs and the package registries, nothing else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
@@ -75,7 +75,7 @@ cpus = 4
 memory_mb = 10240
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

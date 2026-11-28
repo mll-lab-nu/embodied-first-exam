@@ -1,13 +1,13 @@
 #!/bin/sh
 # [[verifier.collect]] hook, run inside the `sim` sidecar once Harbor has stopped the agent's container.
-#   1. `rcb_limited.py end` (docs/protocol/standard_mode.md §13.3): SIGUSR1 to the service, which ends the episode if the
+#   1. `rcb_limited.py end` (embodied_first_exam/standard/README.md#what-a-shared-layer-task-declares): SIGUSR1 to the service, which ends the episode if the
 #      agent had not (reason "timeout"), writes trajectory.npz + episode.json (the live verdict: DexJoCo's own success
 #      check on the episode the service ran, the final-state hash) and exits. It exits 2 when final.json already holds
 #      the verdict (the service gave up: after crashes, or at the start: too few CPUs, a scene that did not build to the
 #      frozen instance): that verdict stays.
 #   2. write final.json from episode.json: the verdict is the live episode's (graded_by = "live", replays = 0).
 #      Nothing is replayed to grade it: DexJoCo's episode ends at the first success, so there is no settle window
-#      after it that a replay would have added (tasks/dexjoco/README.md, "grading: the live episode").
+#      after it that a replay would have added (tasks/dexjoco/README.md, "Grading", "Standard").
 #   3. one video-only pass (`video.py`, a fresh process): the trajectory rendered from the frozen instance into
 #      replay.mp4, after the verdict is on disk ("video_pending" while it runs). It never changes the verdict: a video
 #      that fails or runs out of time loses only the video.

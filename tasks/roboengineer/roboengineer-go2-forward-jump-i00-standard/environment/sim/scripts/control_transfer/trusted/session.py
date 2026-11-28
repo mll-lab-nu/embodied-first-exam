@@ -157,7 +157,7 @@ class Session:
                     self.persist()
                     return {"error": "Session closed"}
                 # the evaluator failed (a policy cannot make it fail: divergence is a failed episode, validated
-                # inputs only): the trial is void, an infrastructure failure (PROTOCOL H.5), never the agent's 0
+                # inputs only): the trial is void, an infrastructure failure (docs/protocol/invariants.md H.5), never the agent's 0
                 s["infra_error"] = True
                 row["status"] = "failed"
                 self.persist()
@@ -276,7 +276,7 @@ class Session:
                 cases = list(enumerate(self.instance["bank"]["held_out"]))
 
                 def evaluate(item):
-                    # two fresh processes, no rendering: the verdict never waits for or depends on a video (PROTOCOL §4)
+                    # two fresh processes, no rendering: the verdict never waits for or depends on a video (docs/protocol/tasks.md#grading)
                     i, case = item
                     a = self.episode(policy, case, held / f"case-{i}-a", False, track=False)
                     b = self.episode(policy, case, held / f"case-{i}-b", False, track=False)
@@ -309,7 +309,7 @@ class Session:
         return final
 
     def render_video(self, final):
-        """After the verdict (PROTOCOL §4): one rendered run of the selected policy per held-out case, joined into
+        """After the verdict (docs/protocol/tasks.md#grading): one rendered run of the selected policy per held-out case, joined into
         /data/replay.mp4 (the held-out evaluation the verdict is about). Best effort: it never changes final.json."""
         status = {"video": None, "cases": [], "matches_graded": None}
         try:

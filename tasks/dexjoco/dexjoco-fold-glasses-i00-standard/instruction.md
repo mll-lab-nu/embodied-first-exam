@@ -5,6 +5,8 @@ Fold the glasses and put them in the open case.
 
 ## Goal
 Success: both arms of the glasses are folded and the glasses lie inside the case, and they stay so for about a second.
+If the hold is not yet complete when you send `/finish`, the robot keeps your last command for about one more
+second, and the hold must complete within that time.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -22,7 +24,7 @@ client or its MCP tools, as if it were real hardware: one live episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service starts)

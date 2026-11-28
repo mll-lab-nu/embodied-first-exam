@@ -4,8 +4,8 @@
 Unscrew the cap of the 50 mL tube and lift it off, holding the cap with `arm1`.
 
 ## Goal
-Success: `arm1`'s gripper holds the cap, unscrewed and lifted a few centimetres off the tube. A physics warning (an
-unstable simulation, for instance after the robot was driven hard into something) ends the episode at once, as a
+Success: the cap, unscrewed and lifted a few centimetres off the tube, is touched by `arm1`'s gripper. A physics warning
+(an unstable simulation, for instance after the robot was driven hard into something) ends the episode at once, as a
 failure.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
@@ -26,7 +26,7 @@ tools, as if it were real hardware: one live episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                    # connects (waits while the service starts)

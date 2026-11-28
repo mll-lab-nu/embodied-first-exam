@@ -11,14 +11,14 @@ task_type = "trajectory"
 simulator = "dexjoco"
 robot = "franka-allegro-bimanual"
 family = "bimanual_photograph"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 2.5
 
 [metadata.seeds]
 # the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
-# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+# under solution/ is for, where they are not the default seed alone (docs/protocol/tasks.md)
 allowed = [0, 1, 2]
 oracle = [0, 1, 2]
 
@@ -27,7 +27,7 @@ timeout_sec = 3600.0              # a replay of at most 50000 rows (the hand-in 
 environment_mode = "separate"     # the verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -35,7 +35,7 @@ timeout_sec = 120
 
 [agent]
 timeout_sec = 3600.0
-network_mode = "allowlist"        # the reference demonstrations are public on Hugging Face (PROTOCOL Appendix H.2)
+network_mode = "allowlist"        # the reference demonstrations are public on Hugging Face (docs/protocol/invariants.md H.2)
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 
 [environment]

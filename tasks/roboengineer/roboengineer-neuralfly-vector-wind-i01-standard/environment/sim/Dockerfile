@@ -3,26 +3,26 @@
 # FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
 FROM ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0
 COPY . /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.3.1@sha256:ec2520f7855f520bc032f24960306f290263adcf5c7d24e9083526d6584d2e7a \
+COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.4.0@sha256:710f5232e0c81ad59397c1612cc015a471cb3f0fe12a1599ad11d888b80d3609 \
      /sim/scripts/__init__.py \
      /standard/environment/public/control_public/client.py \
      /standard/environment/public/control_public/fly.py \
      /standard/environment/public/control_public/weights.py \
      /srv/control_public/
-COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.3.1@sha256:ec2520f7855f520bc032f24960306f290263adcf5c7d24e9083526d6584d2e7a \
+COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.4.0@sha256:710f5232e0c81ad59397c1612cc015a471cb3f0fe12a1599ad11d888b80d3609 \
      /sim/neuralfly_constants.py \
      /standard/environment/public/neuralfly_nominal.py \
      /standard/environment/public/neuralfly_video.py \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.3.1@sha256:ec2520f7855f520bc032f24960306f290263adcf5c7d24e9083526d6584d2e7a /sim/scripts/__init__.py /srv/scripts/__init__.py
-COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.3.1@sha256:ec2520f7855f520bc032f24960306f290263adcf5c7d24e9083526d6584d2e7a \
+COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.4.0@sha256:710f5232e0c81ad59397c1612cc015a471cb3f0fe12a1599ad11d888b80d3609 /sim/scripts/__init__.py /srv/scripts/__init__.py
+COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.4.0@sha256:710f5232e0c81ad59397c1612cc015a471cb3f0fe12a1599ad11d888b80d3609 \
      /sim/scripts/__init__.py \
      /sim/neuralfly_constants.py \
      /standard/environment/public/neuralfly_nominal.py \
      /standard/environment/public/neuralfly_video.py \
      /srv/scripts/control_transfer/
-COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.3.1@sha256:ec2520f7855f520bc032f24960306f290263adcf5c7d24e9083526d6584d2e7a /sim/scripts/__init__.py /srv/scripts/control_transfer/components/__init__.py
-COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.3.1@sha256:ec2520f7855f520bc032f24960306f290263adcf5c7d24e9083526d6584d2e7a \
+COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.4.0@sha256:710f5232e0c81ad59397c1612cc015a471cb3f0fe12a1599ad11d888b80d3609 /sim/scripts/__init__.py /srv/scripts/control_transfer/components/__init__.py
+COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.4.0@sha256:710f5232e0c81ad59397c1612cc015a471cb3f0fe12a1599ad11d888b80d3609 \
      /sim/scripts/__init__.py \
      /standard/environment/public/control_public/client.py \
      /standard/environment/public/control_public/fly.py \

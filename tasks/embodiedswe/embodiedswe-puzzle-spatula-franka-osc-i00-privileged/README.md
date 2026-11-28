@@ -1,33 +1,50 @@
-# embodiedswe-puzzle-spatula-franka-osc-i00-privileged
+# EmbodiedSWE · flip a slice of bread in the pan with a spatula, then serve it onto the plate, Franka (privileged)
 
 | | |
 |---|---|
-| Benchmark | EmbodiedSWE |
+| Task ID | `embodiedswe-puzzle-spatula-franka-osc-i00-privileged` |
+| Benchmark | [EmbodiedSWE](https://github.com/EmbodiedSWE/EmbodiedSWE) (Shen et al., 2026), upstream `EmbodiedSWE/EmbodiedSWE@67f44e8` |
+| Robot | Franka Emika Panda arm with its parallel-jaw gripper, under EmbodiedSWE's operational-space controller |
 | Mode | privileged |
-| Twin | `embodiedswe-puzzle-spatula-franka-osc-i00-standard` |
-| Simulator / robot | `embodiedswe` / `franka-panda` |
-| Family / instance | `puzzle.spatula.franka.osc` / seed 0 |
-| Oracle | `none` — No reference solution in the repository, and none written for this scene yet; the build, the start-state hash and a do-nothing run scoring 0 are checked. |
-| Agent time budget | 14400 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:embodiedswe-0.3.0` |
+| Instance | `puzzle.spatula.franka.osc`, seed 0 |
+| Time limit | 4 h |
+| Reference solution | None |
 
 ## Task
 Flip the bread in the pan with the spatula, then lift it out on the spatula and set it down flat on the plate.
 
-Flip a slice of bread in the pan with a spatula, then serve it onto the plate (Franka, operational-space control). EmbodiedSWE's `puzzle.spatula.franka.osc` task (robobench at commit `67f44e8a2ca5`), privileged mode, with a program as the
-deliverable: `solution/solve.py` exposing `solve(env)`.
+## Success criteria
+Three conditions, plus a tool-only rule. Flipped (counted when it happens): at some physics step the bread's top face
+(the one up at the start) pointed within 30° of straight down while the bread lay flat in the pan (centre within
+10.95 cm of the pan's centre, bottom within 12 mm of the pan floor, tilted at most 15°) and moved slower than
+0.05 m/s. Served (counted when it happens): at some physics step the bread lay at rest on the plate (as below) within
+600 physics steps (5 s) after the last step at which it rode the spatula's blade (on the blade, bottom 0.5 to 15 mm
+above it, tilted at most 30° from the blade) with its bottom more than 5 cm above the table. On the plate (on the
+final state): the bread's centre within 11.3 cm (75 % of the plate's radius) of the plate's centre, its bottom within
+12 mm of the plate's resting height, tilted at most 15° from flat (either side up), moving slower than 0.05 m/s. The
+order of the flip and the serve is not checked.
 
-## Difficulty
-Non-prehensile tool use: the bread is never grasped. Wedge the spatula's blade under the slice over the pan's rim, flip it so it lands flat and upside down in the pan, wedge it up again, carry it on the blade by friction alone over the rim and set it down flat on the plate, without the hand or fingers ever touching it, under torque control (OSC).
+Tool-only rule: a contact with nonzero force between the bread and the hand or a finger (`panda_hand`,
+`panda_leftfinger`, `panda_rightfinger`) at any physics step scores 0, also after the conditions were met. The spatula
+may touch the bread.
 
-## Reference solution
-None in the repository (`oracle = "none"`). No scripted reference has been written for this scene yet.
+The graded runs: the verifier, in a separate sandbox without network, grades each checkpoint the agent froze with
+`submit` (`/app/output/submissions/NNNNNN/`, at most 64) and the final `/app/output/solution/`. Each distinct candidate
+runs once in a fresh process: the simulator is built from the frozen instance (seed 0, GPU PhysX) and the candidate's
+`solve(env)` drives it from another process, without network or GPU, through a proxy env in which `env.step(action)`
+is the only call that changes anything. The run ends when `solve` returns or raises, when its process ends, or 30 min
+after the grading process started (start-up and import count). The conditions above are checked on the state at that
+moment; a condition stated as having happened counts from the moment it happened in that run. There is no reset.
 
-## Verification
-`tests/grade.py` with EmbodiedSWE's grader for this scene, `tests/grader/spatula_flip_serve.py`, on the frozen instance (seed 0); the procedure (candidates, sandbox, 30-minute limit, selection, video) is the benchmark's, tasks/embodiedswe/README.md "Grading".
+A candidate without `solve.py`, a checkpoint whose files differ from its receipt (`submission.json`), and a run whose
+process ends without a verdict while solving score 0. Byte-identical candidates are graded once. The result is one
+candidate: the one with the highest progress (EmbodiedSWE's rubric score for the task, the peak recorded during its
+run), ties going to success, then to the earliest (the final folder counts last). That candidate's success is the
+task's. The rebuilt start state is compared with the frozen instance; on the GPU model that froze it (NVIDIA L40S) a
+mismatch is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -37,12 +54,10 @@ Caps per container (PROTOCOL §6).
 - GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, held by `main`.
 - Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.
 
-## Details
-
-### Review notes
-- Tool-only rule: the scene's description says that touching the bread with the fingers or the gripper disqualifies
-  the episode, and its module leaves the check to the harness ("an EMBODIMENT clause, checked at the
-  robot-binding/harness layer"); EmbodiedSWE's grader does not check it. Here the verifier does: PhysX contact
-  reports on the bread (report only, threshold 0) and, after every physics substep, the contact forces between the
-  bread in play and `panda_hand`, `panda_leftfinger`, `panda_rightfinger`; any nonzero force sets success 0 and
-  progress 0. The spatula, welded to the hand by the scene's grasp contract, may touch the bread.
+## License
+EmbodiedSWE ([EmbodiedSWE/EmbodiedSWE](https://github.com/EmbodiedSWE/EmbodiedSWE) @ `67f44e8`): code under the
+Apache License 2.0. The scenes load EmbodiedSWE's asset bundle (Hugging Face `EmbodiedSWE/robobench-assets`, revision
+`62fab5b`), whose assets carry mixed licences, some of them **non-commercial (CC BY-NC)** or store-licensed (Fab /
+Objaverse models); each asset's licence ships with the bundle. The simulator is NVIDIA Isaac Sim 5.1 with Isaac Lab
+2.3.2, under NVIDIA's licence terms (use, no redistribution), built with RoboLab's recipe (Apache License 2.0). For
+these reasons the task image is built locally and never published.

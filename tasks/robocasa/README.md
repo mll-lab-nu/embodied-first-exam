@@ -1,9 +1,19 @@
 # RoboCasa
 
-[RoboCasa](https://github.com/robocasa/robocasa) v0.2 kitchen tasks with a mobile manipulator (Franka Panda on an
-Omron mobile base), each on one frozen instance, in both modes: 58 tasks.
+## Overview
 
-## Quick start
+[RoboCasa](https://github.com/robocasa/robocasa) v0.2 kitchen tasks with a mobile manipulator (a Franka Panda arm on an
+Omron mobile base with a torso lift), each on one frozen instance, in both modes: 29 environments, 58 task directories
+(`robocasa-<task>-i00-privileged`, `robocasa-<task>-i00-standard`). Both modes of an environment use the same frozen
+instance and the same success rule, the environment's own `_check_success`.
+
+- **privileged**: the agent has the full simulator (`casa_tool.Session`: the robosuite env, privileged state, unlimited
+  resets, self-replay) and hands in one trajectory of native controller commands, which the verifier replays
+  open-loop.
+- **standard**: the simulator runs in a `sim` sidecar the agent cannot open; the agent gets the client (and the same
+  service as MCP tools): the robot's cameras with their calibration, its own joints, end-effector positions and last
+  command, native controller commands in chunks; one episode, no reset, no object poses, no success signal.
+
 ```bash
 harbor run -d embodied-first-exam@all -p tasks/robocasa -a codex -m openai/gpt-6-astra
 ```
@@ -11,220 +21,164 @@ Every image is public: Harbor pulls it.
 
 | | |
 |---|---|
-| upstream | robocasa/robocasa @ `756598a5be52e052339bb2d957426e39015c2afb` (MIT), robosuite 1.5.1, MuJoCo 3.2.6 |
-| tasks | `tasks/robocasa/robocasa-<task>-i00-privileged` and `tasks/robocasa/robocasa-<task>-i00-standard`, 29 each |
+| upstream | robocasa/robocasa @ `756598a5be52e052339bb2d957426e39015c2afb` (v0.2, MIT), robosuite 1.5.1, MuJoCo 3.2.6 |
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda-omron"`, `family = "robocasa/<Env>"`, `oracle = "full"` |
-| image | `ghcr.io/mll-lab-nu/efe:robocasa-0.1.0` (`images/robocasa/`), CPU only, ~24 GB |
-| standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |
-| sources | each instance and reference is in its tasks (`environment/instance.npz`, `solution/oracle.npz`); the task directories are the deliverable; the tooling that built them is kept outside this repository |
+| image | `ghcr.io/mll-lab-nu/efe:robocasa-0.1.0` (`images/robocasa/`), CPU only (physics and OSMesa rendering), about 24 GB |
+| shared code | `embodied_first_exam/benchmarks/robocasa/` (`casa_tool.py`, the two graders, `sim/server_casa.py`, `sim/finalize.sh`), taken from the files-only image `robocasa-files` (`images/robocasa-files/FILES.json`) |
+| standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py` from the `standard-files` image |
+| instances | each instance and reference is in its tasks (`environment/instance.npz`, `solution/oracle.npz`); the task directories are the deliverable; the tooling that built them is kept outside this repository |
 
-## Scope
-All 29 of RoboCasa v0.2's 111 kitchen environments that have an official demonstration in the dataset registry
-at the pinned commit (`robocasa/utils/dataset_registry.py`, `v0.1/...` human demonstrations) and whose
-demonstration-based reference verifies: ArrangeVegetables, CloseDoubleDoor, CloseDrawer, CloseSingleDoor, CoffeePressButton, CoffeeServeMug, CoffeeSetupMug, MicrowaveThawing, OpenDoubleDoor, OpenDrawer, OpenSingleDoor, PnPCabToCounter, PnPCounterToCab, PnPCounterToMicrowave, PnPCounterToSink, PnPCounterToStove, PnPMicrowaveToCounter, PnPSinkToCounter, PnPStoveToCounter, PreSoakPan, PrepareCoffee, RestockPantry, TurnOffMicrowave, TurnOffSinkFaucet, TurnOffStove, TurnOnMicrowave, TurnOnSinkFaucet, TurnOnStove, TurnSinkSpout.
+Each per-task README is rendered from `tasks/robocasa/readme.toml` (benchmark, license, robot, and each environment's
+success condition with the upstream source lines it was read from).
 
-Not included (82):
-- `NavigateKitchen`: navigation only, with a different (3-D base) action interface; no reference trajectory.
-- 2 whose scene could not be frozen bit-exactly (reset not reproducible): CupcakeCleanup, PastryDisplay.
-- 79 without an official demonstration at the pinned commit, hence without a reference: AfterwashSorting, ArrangeBreadBasket, ArrangeTea, AssembleCookingArray, BeverageOrganization, BeverageSorting, BowlAndCup, BreadAndCheese, BreadSelection, BreadSetupSlicing, CandleCleanup, CerealAndBowl, CheesyBread, CleanMicrowave, ClearClutter, ClearingCleaningReceptacles, ClearingTheCuttingBoard, ColorfulSalsa, CondimentCollection, CountertopCleanup, DateNight, DefrostByCategory, DessertAssembly, DessertUpgrade, DrainVeggies, DrawerUtensilSort, DrinkwareConsolidation, DryDishes, DryDrinkware, FillKettle, FoodCleanup, FryingPanAdjustment, HeatMug, HeatMultipleWater, KettleBoiling, MakeFruitBowl, MakeLoadedPotato, MealPrepStaging, MeatTransfer, MultistepSteaming, OrganizeBakingIngredients, OrganizeCleaningSupplies, OrganizeVegetables, PanTransfer, PantryMishap, PlaceFoodInBowls, PrepForSanitizing, PrepForTenderizing, PrepMarinatingMeat, PrepareSoupServing, PrepareToast, PrewashFoodAssembly, PushUtensilsToSink, QuickThaw, RestockBowls, SearingMeat, SeasoningSpiceSetup, ServeSteak, SetBowlsForSoup, SetupFrying, SetupJuicing, ShakerShuffle, SimmeringSauce, SizeSorting, SnackSorting, SortingCleanup, SpicyMarinade, StackBowlsInSink, SteamInMicrowave, SteamVegetables, StockingBreakfastFoods, SweetSavoryToastSetup, ThawInSink, VeggieBoil, VeggieDipPrep, WaffleReheat, WarmCroissant, WineServingPrep, YogurtDelightPrep.
+## Upstream and license
 
-## Task definition
-- **Instance.** The initial state of the first official demonstration episode of the task (episode 0 of its
-  `v0.1/...` dataset; the README of each task names it), frozen in `instance.npz` (~0.1–0.3 MB): the MuJoCo
-  integration state, the model arrays the kitchen's reset rewrites, the env's Python task state (every JSON-encodable
-  attribute of the env, its fixtures, robot, controllers and observables) and the NumPy / Python RNG states, with a
-  SHA-256 checked on every load. Rebuilding is bit-exact (`reset_exact` in `frozen/report.json`). Copied into
-  `environment/`, `tests/` and `environment/sim/`.
-- **Actions.** The robot's native composite-controller command, one per control step (20 Hz), in both modes: 12
-  channels, arm end-effector deltas (OSC, base frame), grip, base velocities, torso and the hybrid-mode switch
-  (`casa_tool.action_spec`). This is the controller the demonstrations were recorded with. In standard mode the type is
-  `ee_delta`; a `joint_position` type is not offered (docs/protocol/standard_mode.md): the arm's demonstrations, and so the
-  references, are OSC commands. Scales (robosuite 1.5.1 `default_pandaomron.json`, `omron_mobile_base.xml`): arm 1.0 =
-  5 cm / 0.5 rad per step; base 1.0 = a target velocity of 1 m/s (`base_x`, `base_y`) or 1.5 rad/s (`base_yaw`),
-  force-limited velocity servos; torso a delta joint-position command, 1.0 = height target 5 cm above the current
-  height (lift range 0–0.34 m). Both instructions state them.
-- **Success.** The environment's own `_check_success` on the state after the last action (PROTOCOL §3), and not
-  already at the start. The check runs twice after every control step and once at reset, in the agent's session, the
-  verifier and the service alike: some checks keep timers, so the call pattern is part of the task (the pattern the
-  instances and references were validated with). Every reference's success also holds for 10 more still steps.
-  Both instructions list what the check requires for the task (read off the
-  upstream predicates): thresholds (doors ≥ 90% / ≤ 5% open, drawers ≥ 95%, knob ≥ 0.35 rad, handle 0.40 rad–π,
-  spout 30°–180°, placement radii) and implicit conditions (the gripper more than 25 cm from the placed object, or
-  15 cm from a pressed button; the microwave only switches on with its door closed). Text only: the grader is the
-  upstream check, unchanged.
-- **Determinism.** Physics is CPU-only and bit-exact. `casa_tool` turns MuJoCo's process-wide mesh cache off
-  (`mj_setCacheSize(mj_globalCache(), 0)`): a mesh served from that cache can differ from a freshly compiled one
-  (`mesh_polynormal`), so a scene built a second time in one process could step differently (seen on RoboCasa365 with
-  MuJoCo 3.3.1). With the cache off every build is the cold build a fresh process makes, for the agent's `reset()`, the
-  privileged verifier, the standard service's start and its video pass alike.
-- **Length.** Privileged deliverables have 1 ≤ T ≤ 3000 control steps (the references' authoring cap; the longest
-  reference has 1007). Standard episodes have no step limit (D1): only the wall clock.
-- **Standard-mode observations.** The robot's four cameras (`robot0_agentview_center/left/right`,
-  `robot0_eye_in_hand`; RGB, depth, intrinsics and the current camera-to-world pose, since they move with the robot),
-  its joints (positions, velocities), end-effector position and last command, and the instruction. No object poses,
-  scene layout, reward or success signal. RoboCasa's goals are relational (an object onto a fixture), so there is no
-  target point to give. Camera images (RGB and depth, in both modes and in replay videos) draw the visual meshes only,
-  as robosuite's own cameras do; the collision geoms (geom group 0) are hidden.
+- Upstream: RoboCasa, [robocasa/robocasa](https://github.com/robocasa/robocasa) at commit
+  `756598a5be52e052339bb2d957426e39015c2afb` ("v0.2"), MIT License (Copyright (c) 2024 the RoboCasa Team). Citation:
+  Nasiriany et al., 2024, "RoboCasa: Large-Scale Simulation of Everyday Tasks for Generalist Robots", RSS 2024.
+- robosuite 1.5.1 (MIT) and MuJoCo 3.2.6 (Apache License 2.0), pinned with every other pip package in
+  `images/robocasa/Dockerfile`.
+- Assets, downloaded when the image is built (each archive pinned by revision and SHA-256), not in this repository:
+  fixtures and textures from `robocasa/robocasa-assets` (CC-BY-4.0); v0.2 fixtures and appliance meshes from the mirror
+  `jianzhang96/robocasa-assets` (Apache-2.0); RoboCasa's own objaverse and AI-generated object archives (CC-BY-4.0, as
+  RoboCasa licenses its assets); the lightwheel and sketchfab object sets of NVIDIA
+  `PhysicalAI-DigitalCousin-Assets` under **CC-BY-NC-4.0: non-commercial use only** (`images/robocasa/fetch_objects.sh`).
 
-## Standard-mode service (`embodied_first_exam/benchmarks/robocasa/sim/server_casa.py`)
-Derived from `embodied_first_exam/benchmarks/dextoolbench/sim/server_mj.py` (via MetaWorld+'s `server_mw.py`) and identical in protocol and
-lifecycle: four endpoints, RCB1, no reset, journal + per-call checkpoints with at most two resumes, startup watchdog,
-SIGUSR1 collect hook, `/data` evidence, verdict before video. Differences (items 6, 7 and 11: the grading):
-1. The action type, channels and limits come from the instance (`casa_tool.action_spec`), not a fixed `joint_position`.
-2. A hold chunk (`/submit` with `interpolate: "hold"`, `seconds`, no rows) holds the robot still (delta channels zero; targets, grip and mode kept).
-3. Camera calibration is computed for every response (robot-mounted cameras move); `meta.task` is the instruction.
-4. The protocol is reported as `eai-standard/2.1`, with HumanoidBench's client (accepts both spellings); a simulator
-   error (500) ends the episode with `reason = "error"`; a body over 64 MB gets 413; the grader writes numeric fields.
-5. A first collect hook stops every process in the agent's container before the episode is ended (as HumanoidBench).
-6. **Graded by the live episode** (`finalize()`). When the episode ends
-   (the collect hook's SIGUSR1 after the agent's container was stopped) the service judges the episode it ran:
-   `success = live_success ∧ ¬initial_success ∧ reason ≠ "error"`, where `live_success` is the environment's own
-   `_check_success` as the live episode last ran it (after the last executed control step; the check's call pattern,
-   twice per step, is the privileged verifier's) and `initial_success` is the check at the scene's start. No settle or
-   hold window: the privileged rule has none. An
-   episode ended by a simulator error is no success (its last state is a partial step's). Nothing is replayed to grade
-   it. It writes the trajectory and the verdict together with `"finalized": true` in one atomic write of `final.json`
-   (`graded_by = "live"`, `replays = 0`, `live_state_sha` = `state_sha`, `video_source = "render"`). Only then it
-   renders `replay.mp4` / `replay.last.png`: one render pass, the live session rebuilt from the frozen instance runs the
-   trajectory with its camera on (at most about 300 frames, under a temporary name, renamed when complete;
-   `/data/video.pending` exists and `final.json` says `"video_pending": true` meanwhile). It can add `"video": true`
-   and nothing else, and compares nothing. An exception, a crash (the restarted service finds the verdict and idles:
-   nothing is replayed or rewritten; `video_pending` is cleared) or the hook giving up on the video leave the verdict
-   as it is. `_give_up` never overwrites a `final.json` that has a verdict. `tests/grade.py` passes iff the service's
-   verdict is a success, `live_success` holds and nothing is infrastructure; `reward.json` has `graded_by_live = 1`,
-   `replays = 0` and no `deterministic` / `replay_success`. Infrastructure (`infra_error = 1`, H.5's one retry): no,
-   an unreadable or an unfinalized `final.json`; a give-up after crashes not all inside the agent's calls
-   (`sim_crashed`, `resume_failed`); `instance_mismatch` (item 11); `finalize_error`. The agent's own result (0, never
-   infra): a crash inside its calls (`sim_crashed_on_call`), a simulator error from its actions (`sim_error`), the
-   timeout.
-7. **Collect hook** `environment/sim/finalize.sh` (`timeout_sec = 3600`). It
-   sends SIGUSR1 (again every 30 s) and waits for the verdict, then for the video, up to 3450 s in all on the clock
-   (`RCB_COLLECT_WAIT_S`). The verdict takes a second; the wait is long only for a service that crashed late in the
-   episode and resumes it from its journal first (crash recovery replays the journal, at most the episode's physics):
-   a wait cut short there would turn a live result into an infrastructure failure. Without any episode (the service never became ready)
-   it stops after 600 s. Budget of the video's render pass: one scene build (20–60 s), the episode's physics once more
-   at about 0.035 s per control step (the live service takes 0.047–0.062 s per step with its cameras) and at most about 300 frames (OSMesa,
-   320 x 240), so 3450 s covers about 95,000 control steps, 48,000 on a host twice as slow; the live episode ran the
-   same physics plus its cameras within the agent's hour. Cost per trial: about one replay's worth of CPU time
-   (0.035 s per step, about 3 minutes for a 5,000-step episode, 30–60 minutes at most for an hour-long one) on the
-   sidecar's CPUs, no GPU. The hook's 3600 s is a number of its own, sized for the agent cutoff of 3600 s (the cutoff is
-   each task's own `[agent] timeout_sec`, docs/protocol/README.md §2, docs/protocol/running.md "The agent's time"): lowering the cutoff keeps it
-   safe, raising it means raising the hook's `timeout_sec` in the three RoboCasa benchmarks' standard tasks too.
-8. **Request validation.** A request is checked as a whole before any physics (`parse_submit` / `parse_observe`):
-   a `dt`, `seconds` or `video_fps` that is not a finite number in range, `cameras` that is not a list of names,
-   a `note` that is not a string, actions that are not a `(T, N)` array of finite numbers are a 400 and nothing ran
-   (PROTOCOL §4); `null` means "not given". Only an error while the simulator executes is a 500 and ends the
-   episode. Kept as it was: camera names the robot does not have are ignored, and an unknown `video` value means
-   "last frame only". `dt = 0` is a 400.
-9. `time_left_s` counts from the agent's first request to the service (any endpoint; logged as `first_request` in
-   `episode.jsonl`, which a resume reads back), as in every other benchmark (docs/protocol/standard_mode.md, "The agent's clock").
-   `time_s` counts from the agent's first request too; `elapsed_s` from the episode's start (the service ready).
+## Changes from upstream
 
-10. **Camera calibration = the rendered viewpoint.** `cam2world_gl` is `data.cam_xpos` / `data.cam_xmat` of the
-   camera, the pose the renderer draws the mono RGB and depth images from (`cam2world()`, as `server_mj.py`), not
-   MuJoCo's left-eye camera `scene.camera[0]` (3.4 cm to the side): a marker's projection through the reported
-   calibration is within 0.4 px of where it is drawn. The intrinsics are `fx = fy = (H / 2) / tan(fovy / 2)`,
-   principal point at the image centre (every camera of these models is given by its `fovy`, no `sensorsize`).
-11. **Start-state check** (`_start_mismatch()`). With no replay from the frozen instance, the
-   start is checked when a fresh episode begins, before the port is bound: the instance file's own hash against
-   `RCB_INSTANCE_SHA` (`casa_tool` also checks the file against its embedded hash on load), the
-   start state's hash (`casa_tool.state_hash`: MuJoCo integration state, the model arrays the kitchen rewrites, the
-   task's Python state) against `RCB_START_SHA` (the hash every
-   archived standard episode of the instance logged at its start, on every runner host, never two values for one
-   instance), and the scene must not be solved at the start (no frozen
-   instance is). A mismatch gives up as `instance_mismatch`, `infra_error = 1`; the agent is never served. Both
-   variables are in the task's `environment/docker-compose.yaml` (the sidecar's environment; the agent never sees
-   it). Not checked: an instance without an archived episode (RoboCasa365 `PortionInTupperware`) has no start hash,
-   only the file's; `RCB_START_SHA` changes whenever the image or `casa_tool` changes how a scene is built.
+- **Physics, models and success checks: none.** The kitchens, the robot and every `_check_success` are RoboCasa's at the
+  pinned commit, installed unpatched; the graders call the upstream check unchanged.
+- **Removed.** No demonstration data and no pointer to it is in the image (the demonstrations are the references):
+  the Dockerfile deletes `robocasa/scripts/download_datasets.py` and the clone's `.git`, and blanks the demonstration
+  links (`*.hdf5`) in `robocasa/utils/dataset_registry.py`, in the clone's own layer, with build-time assertions.
+  Nothing the tasks import uses the registry. The published `robocasa-0.1.0` image was built before this step was added
+  to the recipe; the step touches no file the simulation loads.
+- **Frozen instances.** Each instance is the initial state of the first official demonstration episode of its task
+  (episode 0 of its `v0.1/...` dataset), frozen in `instance.npz` (about 0.1 to 0.3 MB): the MuJoCo integration state,
+  the model arrays the kitchen's reset rewrites, the env's Python task state (every JSON-encodable attribute of the env,
+  its fixtures, robot, controllers and observables) and the NumPy / Python RNG states, with a SHA-256 checked on every
+  load. Rebuilding is bit-exact. Copied into `environment/`, `tests/` and `environment/sim/`. For every instance: not
+  solved at the start, `reset()` bit-exact, the reference (87 to 1007 actions) succeeds on its final state, two replays
+  in fresh processes end in the same state, and the success survives 10 more still control steps.
+- **Task sentences.** The agent is shown a plain sentence for each instance (`casa_tool.TEXT_ERRATA`) instead of
+  RoboCasa's language string, which the instance file keeps unchanged: it names what the check needs (for example the
+  hand moved away where the check has that term).
+- **Mesh cache off.** `casa_tool` turns MuJoCo's process-wide mesh cache off (`mj_setCacheSize(mj_globalCache(), 0)`):
+  a mesh served from that cache can differ from a freshly compiled one (`mesh_polynormal`), so a scene built a second
+  time in one process could step differently. With the cache off every build is the cold build of a fresh process.
+- **Episode ends.** Upstream's horizon is off in these configs (`ignore_done = True`), and no upstream evaluation step
+  limit applies: a privileged deliverable has at most 3000 control steps (the references' authoring cap; the longest
+  reference has 1007), a standard episode has no step limit.
+- **Scope.** The 29 of RoboCasa v0.2's 111 kitchen environments that have an official demonstration in the dataset
+  registry at the pinned commit and whose demonstration-based reference verifies. Not included (82): `NavigateKitchen`
+  (navigation only, a different action interface, no reference); CupcakeCleanup and PastryDisplay (their scene could
+  not be frozen bit-exactly); 79 environments without an official demonstration at the pinned commit, hence without a
+  reference.
 
-### Agent-ended episodes
+## Interface
 
-Every standard task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3). `server_casa.py` never shows the task's
-success and a success never ends the episode: the environment's own check is still run after every call (as before,
-twice per control step) and only recorded (`hidden_success_first_step`). The agent ends the episode with `POST /finish`
-(reason `finished`); the end of its session (`timeout`) ends it too, and each is judged on the state it ends in (end
-judgement `state`: the environment's `_check_success`, whose timers and event memory are the environment's own; no
-settle window), with the rule that a scene solved at the start is no success. `final.json` adds the shared fields
-(`success_signal`, `ended_by`, `end_judgement`, `hidden_success_seen`, `hidden_success_first_step`,
-`trial_hidden_success_seen`, `finish_time_s`). Without `RCB_AGENT_END` the service behaves as described above.
+- **Actions (both modes).** The robot's native composite-controller command, one per control step (20 Hz), the
+  controller the demonstrations were recorded with: 12 channels (`casa_tool.action_spec`), every one clipped to [-1, 1].
+  `arm_dx, arm_dy, arm_dz, arm_drx, arm_dry, arm_drz`: end-effector deltas (OSC) in the robot's base frame, 1.0 = 5 cm /
+  0.5 rad per step; `grip` (+1 closes, -1 opens); `base_x, base_y, base_yaw`: target velocities of force-limited
+  velocity servos, 1.0 = 1 m/s or 1.5 rad/s; `torso`: a delta joint-position command, 1.0 = a height target 5 cm above
+  the current height (lift range 0 to 0.34 m); `hybrid_mode` (> 0 base mode, <= 0 arm mode). Scales from robosuite
+  1.5.1 `default_pandaomron.json` and `omron_mobile_base.xml`. In standard mode the type is `ee_delta`; there is no
+  `joint_position` type, since the references are OSC commands.
+- **Privileged mode.** `/opt/tools/casa_tool.py`: `Session(instance)`, `s.env` / `s.model` / `s.data`, `s.state()`
+  (joints, every body's pose, the objects, proprio, success), `step`, `check`, `replay`, `reset`, `save_trajectory`,
+  `render`. The success check runs twice after every control step and once at reset, in the agent's session, the
+  verifier and the service alike. The deliverable is `/app/output/trajectory.npz`.
+- **Standard mode.** The service speaks eai-standard/3.0. Observations: the robot's four cameras
+  (`robot0_agentview_center`, `robot0_agentview_left`, `robot0_agentview_right`, `robot0_eye_in_hand`; RGB 320 × 240,
+  depth, intrinsics and the current camera-to-world pose in every response, since the cameras move with the robot), its
+  joints (positions, velocities), end-effector position and last command, and the instruction. No object poses, scene
+  layout, reward or success signal; RoboCasa's goals are relational (an object onto a fixture), so there is no target
+  point to give. A hold chunk (`/submit` with `interpolate: "hold"`, `seconds`, no rows) holds the robot still: the
+  delta channels are zero, the grip and mode are kept. Rows may be `dt` apart (a multiple of 0.05 s); a chunk covers at
+  most 10 s.
+- **Camera calibration** is the rendered viewpoint: `cam2world_gl` is the camera's `data.cam_xpos` / `data.cam_xmat`,
+  the pose the mono RGB and depth images are drawn from, not MuJoCo's left-eye camera; the intrinsics are
+  `fx = fy = (H / 2) / tan(fovy / 2)` with the principal point at the image centre.
+- **Rendering.** Camera images (in both modes and in videos) draw the visual meshes only, as robosuite's own cameras do;
+  the collision geoms (geom group 0) are hidden.
+- **Egress.** The demonstrations are public, so `task.toml` closes agent egress to everything but the model APIs and the
+  package registries (`network_mode = "allowlist"`).
 
-## Egress
-The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs and the package registries
-(`network_mode = "allowlist"`, the hosts of `scripts/set_agent_egress.py`), as DexToolBench and HumanoidBench do.
-The image contains no demonstration data and no pointer to it: the Dockerfile deletes RoboCasa's
-`robocasa/scripts/download_datasets.py` and the clone's `.git`, and blanks the demonstration links (`*.hdf5`) in
-`robocasa/utils/dataset_registry.py`, in the clone's own layer, with build-time assertions. Nothing the tasks import
-uses the registry (only `robocasa/demos`, `robocasa/scripts` and `utils/{env,eval}_utils` import it).
+## Grading
 
-## Image
-`images/robocasa/Dockerfile` pins the base image by digest, every pip package, the RoboCasa commit and every asset
-archive by SHA-256 (`fetch_objects.sh` for the object meshes). It reproduces the content of the image the tasks were
-validated with. **Open: the tagged `ghcr.io/mll-lab-nu/efe:robocasa-0.1.0` build predates the scrub above (it still has the
-downloader, the links and `.git`); rebuild from this Dockerfile before pushing or running.** The scrub touches no file
-the simulation loads, so the hashes should not move. A clean rebuild downloads ~12 GB and needs ~50 GB of free disk;
-after it, re-check the
-hashes (the same `instance_sha`, `live_state_sha` for every task) before
-publishing. Licences: RoboCasa code MIT, robocasa/robocasa-assets CC-BY-4.0, jianzhang96/robocasa-assets Apache-2.0,
-RoboCasa's own object archives on UT Box (CC-BY-4.0, as RoboCasa licenses its assets on robocasa/robocasa-assets), NVIDIA PhysicalAI-DigitalCousin-Assets (lightwheel, sketchfab meshes)
-**CC-BY-NC-4.0** (non-commercial use only). The image is public (`ghcr.io/mll-lab-nu/efe:robocasa-<images/robocasa/VERSION>`),
-with these assets under their own licences.
+- **Success.** The environment's own `_check_success` on one state, and the scene not solved at the start (no frozen
+  instance is). Most checks combine a placement test (contact, a horizontal-distance test against a fraction of the
+  receptacle's radius, or every corner of the object's bounding box inside a fixture's interior box) with the gripper's
+  grip site more than 25 cm from the placed object, or 15 cm from a pressed button; door, drawer, knob, faucet and spout
+  checks compare joint angles with fixed fractions or angles. The microwave's and the coffee machine's on/off states are
+  updated at the end of every control step from the gripper's contact with their buttons (the microwave only with its
+  door closed). Each task's README states its condition exactly, with the thresholds.
+- **Privileged mode: one replay.** `tests/grade.py`, in a separate sandbox without network, replays
+  `/app/output/trajectory.npz` once in a fresh process from the verifier's own copy of the instance, and grades the
+  final state. A missing or invalid file (more than 8 MB, not a plain `.npz` of arrays, no `actions`, a shape other
+  than (T, 12), a non-finite value, T outside 1..3000) scores 0; a replay that fails is a `grader_error` and 0.
+  `reward.json` (numeric only): `success`, `deterministic`, `determinism_checked`, `replays`, `replay_success`,
+  `missing_trajectory`, `invalid_trajectory`, `grader_error`, `n_actions`, `sim_steps`, `final_reward`,
+  `video_rendered`, `verifier_wall_s`. The verdict is on disk before the video is rendered.
+- **Standard mode: the live episode.** The service (`embodied_first_exam/benchmarks/robocasa/sim/server_casa.py`)
+  grades the episode it ran: when the episode ends (the agent's `POST /finish`, or the collect hook's SIGUSR1 after the
+  agent's container was stopped), `success = live_success ∧ ¬initial_success ∧ reason ≠ "error"`, where
+  `live_success` is `_check_success` as the live episode last ran it, after the last executed control step. No settle
+  or hold window, no step limit, nothing replayed. The check runs after every call and is only recorded; it never ends
+  the episode. `final.json` gets the verdict in one atomic write (`graded_by = "live"`, `replays = 0`, `finalized`);
+  only then the video is rendered from the recorded trajectory (one render pass), which decides nothing.
+  `tests/grade.py` passes iff the service's verdict is a success, `live_success` holds and nothing is infrastructure.
+- **Start-state check.** Before the port is bound, the service checks the instance file's hash against
+  `RCB_INSTANCE_SHA` and the start state's hash (`casa_tool.state_hash`: MuJoCo integration state, the model arrays the
+  kitchen rewrites, the task's Python state) against `RCB_START_SHA` (both in each task's
+  `environment/docker-compose.yaml`, the sidecar's environment), and that the scene is not solved at the start. A
+  mismatch gives up as `instance_mismatch`, `infra_error = 1`; the agent is never served. `RCB_START_SHA` changes
+  whenever the image or `casa_tool` changes how a scene is built.
+- **Infrastructure vs agent failures** (standard `tests/grade.py`): `infra_error = 1` for a missing, unreadable or
+  unfinalized `final.json`, a give-up after crashes not all inside the agent's calls (`sim_crashed`, `resume_failed`),
+  `instance_mismatch` or `finalize_error`. The agent's 0: a crash inside its calls (`sim_crashed_on_call`), a simulator
+  error from its actions (`reason = "error"`), a failed check at the end.
+- **Collect hook budget.** `environment/sim/finalize.sh` (`timeout_sec = 3600`) waits for the verdict, then for the
+  video, up to 3450 s in all (`RCB_COLLECT_WAIT_S`). The video's render pass costs one scene build (20 to 60 s), the
+  episode's physics once more at about 0.035 s per control step, and at most about 300 frames (OSMesa, 320 × 240), so
+  3450 s covers about 95,000 control steps (48,000 on a host twice as slow). The hook's 3600 s is sized for an agent
+  time limit of 3600 s: raising a task's time limit means raising the hook's `timeout_sec` too.
 
-## Evidence
-Each instance is a demonstration's frozen initial state and each reference its actions executed with the native
-controller. For all 29: not solved at the start; `reset()` bit-exact; the reference
-(87–1007 actions) succeeds on its final state without truncation; two replays in fresh processes end in the live
-state's hash and succeed; the success survives 10 more still steps.
+## Tasks
 
-Harbor runs on the generated tasks: `-a oracle` scores 1 (29/29 privileged, 6/6 standard sampled), `-a nop` 0;
-scripted cheat attempts and Codex red-team trials score 0.
+29 environments, each with one privileged and one standard task (`i00`, instance seed 0).
 
-## Screening
-
-The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
-Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
-for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
-failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
-**unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode), and
-**pending** without a Luna verdict. A base whose every mode is easy, and every base Luna solved in some mode, is left out of the core set (`docs/core_set.toml`); its tasks keep their names.
-
-Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
-`codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
-Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
-`claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
-
-By directory: 38 easy, 1 hard, 19 unverified, 0 pending.
-
-| base | privileged | standard |
+| family | environment (upstream file) | what is checked |
 |---|---|---|
-| `robocasa-arrange-vegetables-i00` | easy: Luna | unverified |
-| `robocasa-close-double-door-i00` | easy: Luna | unverified |
-| `robocasa-close-drawer-i00` | easy: Luna | unverified |
-| `robocasa-close-single-door-i00` | easy: Luna | unverified |
-| `robocasa-coffee-press-button-i00` | easy: Luna | easy: Luna |
-| `robocasa-coffee-serve-mug-i00` | easy: Luna | unverified |
-| `robocasa-coffee-setup-mug-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash, Qwen3.8 27B | easy: Opus, Sol 6.1 |
-| `robocasa-microwave-thawing-i00` | easy: Luna, Astra, Sol 6.1, Sol, Gemini 4 Argon | hard (only Astra) |
-| `robocasa-open-double-door-i00` | easy: Luna | unverified |
-| `robocasa-open-drawer-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon |
-| `robocasa-open-single-door-i00` | easy: Luna | unverified |
-| `robocasa-pnp-cab-to-counter-i00` | easy: Luna | unverified |
-| `robocasa-pnp-counter-to-cab-i00` | easy: Luna | easy: Luna |
-| `robocasa-pnp-counter-to-microwave-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash, Qwen3.8 27B | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
-| `robocasa-pnp-counter-to-sink-i00` | easy: Luna | easy: Luna |
-| `robocasa-pnp-counter-to-stove-i00` | easy: Luna | unverified |
-| `robocasa-pnp-microwave-to-counter-i00` | easy: Luna | unverified |
-| `robocasa-pnp-sink-to-counter-i00` | easy: Luna | easy: Luna |
-| `robocasa-pnp-stove-to-counter-i00` | easy: Luna | unverified |
-| `robocasa-pre-soak-pan-i00` | easy: Luna | unverified |
-| `robocasa-prepare-coffee-i00` | easy: Luna | unverified |
-| `robocasa-restock-pantry-i00` | easy: Luna | unverified |
-| `robocasa-turn-off-microwave-i00` | easy: Luna | unverified |
-| `robocasa-turn-off-sink-faucet-i00` | easy: Luna | unverified |
-| `robocasa-turn-off-stove-i00` | easy: Luna | unverified |
-| `robocasa-turn-on-microwave-i00` | easy: Luna | easy: Luna |
-| `robocasa-turn-on-sink-faucet-i00` | easy: Luna | unverified |
-| `robocasa-turn-on-stove-i00` | easy: Luna | unverified |
-| `robocasa-turn-sink-spout-i00` | easy: Luna | easy: Luna |
+| `robocasa/ArrangeVegetables` | multi_stage/chopping_food/arrange_vegetables.py | carrot and lemon on the cutting board, hand away from the board |
+| `robocasa/CloseDoubleDoor` | single_stage/kitchen_doors.py | both cabinet doors at most 5% open |
+| `robocasa/CloseDrawer` | single_stage/kitchen_drawer.py | the drawer at most 5% open |
+| `robocasa/CloseSingleDoor` | single_stage/kitchen_doors.py | the microwave door at most 5% open |
+| `robocasa/CoffeePressButton` | single_stage/kitchen_coffee.py | the coffee machine on, hand away from the button |
+| `robocasa/CoffeeServeMug` | single_stage/kitchen_coffee.py | the mug touching the counter, hand away |
+| `robocasa/CoffeeSetupMug` | single_stage/kitchen_coffee.py | the mug under the spout, hand away |
+| `robocasa/MicrowaveThawing` | multi_stage/defrosting_food/microwave_thawing.py | the squash inside the microwave, the microwave on, hand away |
+| `robocasa/OpenDoubleDoor` | single_stage/kitchen_doors.py | both cabinet doors at least 90% open |
+| `robocasa/OpenDrawer` | single_stage/kitchen_drawer.py | the drawer at least 95% open |
+| `robocasa/OpenSingleDoor` | single_stage/kitchen_doors.py | the cabinet door at least 90% open |
+| `robocasa/PnPCabToCounter` | single_stage/kitchen_pnp.py | the hot dog touching the counter, hand away |
+| `robocasa/PnPCounterToCab` | single_stage/kitchen_pnp.py | the cake inside the cabinet, hand away |
+| `robocasa/PnPCounterToMicrowave` | single_stage/kitchen_pnp.py | the corn on the plate, the plate touching the microwave, hand away |
+| `robocasa/PnPCounterToSink` | single_stage/kitchen_pnp.py | the apple in the sink, hand away |
+| `robocasa/PnPCounterToStove` | single_stage/kitchen_pnp.py | the potato in the pan (within 7 cm), hand away |
+| `robocasa/PnPMicrowaveToCounter` | single_stage/kitchen_pnp.py | the onion on the plate, hand away |
+| `robocasa/PnPSinkToCounter` | single_stage/kitchen_pnp.py | the tomato on the plate, the plate on the counter, hand away |
+| `robocasa/PnPStoveToCounter` | single_stage/kitchen_pnp.py | the steak on the plate (within 7 cm), hand away |
+| `robocasa/PreSoakPan` | multi_stage/washing_dishes/pre_soak_pan.py | pan and sponge inside the sink, the water on, hand away from the pan |
+| `robocasa/PrepareCoffee` | multi_stage/brewing/prepare_coffee.py | the mug under the spout, the machine on, hand away from mug and button |
+| `robocasa/RestockPantry` | multi_stage/restocking_supplies/restock_pantry.py | both cans inside the cabinet, next to the can already there, hand away |
+| `robocasa/TurnOffMicrowave` | single_stage/kitchen_microwave.py | the microwave off, hand away from the stop button |
+| `robocasa/TurnOffSinkFaucet` | single_stage/kitchen_sink.py | the faucet handle at most 0.40 rad |
+| `robocasa/TurnOffStove` | single_stage/kitchen_stove.py | the front right knob within 0.35 rad of off |
+| `robocasa/TurnOnMicrowave` | single_stage/kitchen_microwave.py | the microwave on, hand away from the start button |
+| `robocasa/TurnOnSinkFaucet` | single_stage/kitchen_sink.py | the faucet handle above 0.40 rad |
+| `robocasa/TurnOnStove` | single_stage/kitchen_stove.py | the front left knob at least 0.35 rad from off |
+| `robocasa/TurnSinkSpout` | single_stage/kitchen_sink.py | the spout between 30° and 180° (right) |
 
-Judgment calls: `robocasa-pnp-counter-to-cab-i00`: the one standard solve hit the 3600 s agent timeout after its episode
-was recorded (graded as a success).
+Upstream files are under `robocasa/environments/kitchen/` at the pinned commit.

@@ -1,0 +1,216 @@
+# README data for tasks/autobio/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text (each file is identical in every task directory of its mode):
+#   checks    AutoBio @ 0850421 (autobio-bench/AutoBio, cloned for this check), each task module's `check()`:
+#             pickup_centrifuge_tube.py L179-191, mani_thermal_cycler.py L239-248, mani_pipette.py L225-239,
+#             screw_loosen.py L216-230, screw_tighten.py L245-258 (cap/tube sites L206-211: live site_xpos views),
+#             transfer_centrifuge_tube.py L179-184 (target slot L164), mani_thermal_mixer.py L320-367 (targets drawn in
+#             reset L300), load_centrifuge_5430.py L235-241 (reference pose computed in reset L220).
+#   tooling   tests/rcb_autobio.py (privileged; the same file as environment/sim/rcb_autobio.py of the standard tasks):
+#             FAMILIES L54-64 (rule `first` / `final`), MAX_STEPS = 600,000 (L51), _judge L214-224 (check() after every
+#             control step; a MuJoCo warning other than VGEOMFULL ends the episode as a failure; rule `first` ends at
+#             score >= 1; rule `final` success = score >= 1 at the current step), step L226-251, replay L285-300.
+#   graders   privileged tests/grade.py grade() L130-190; standard environment/sim/server.py L64-66 (agent-ended: rule
+#             `final` for every family), finish() L269-284, ctrl_step L302-312, `done` = /finish L445-449;
+#             environment/sim/finalize.sh (instance check); standard tests/grade.py grade().
+# Seed-dependent values (the mixer's targets, the target slot) are named by the Task section, not repeated here, so a
+# materialized seed (tests/seeds/<S>/seed.toml) needs no README replacement for them.
+
+[benchmark]
+name = "AutoBio"
+citation = "Lan et al., 2025"     # arXiv:2505.14030 (ICLR 2026); the repository's "preliminary version"
+url = "https://github.com/autobio-bench/AutoBio"
+repo = "autobio-bench/AutoBio"
+commit = "0850421"
+
+[license]
+text = """
+AutoBio ([autobio-bench/AutoBio](https://github.com/autobio-bench/AutoBio) @ `0850421`) states **no licence** for its
+code or its own assets (the digitized instruments, tubes, racks and pipette, and two binaries without source: the
+thread and detent MuJoCo plugins `libmjlab.so.3.3.0` and the liquid-surface solver `meshplane.so`). No file of AutoBio
+is in this repository, and the simulator image is built locally and never published; it is used here for research
+evaluation only. The robot models AutoBio bundles keep their own licences: UR5e and Robotiq 2F-85 (BSD), ALOHA 2
+(BSD), DexHand021 (Apache-2.0); the display font is under the SIL OFL. The simulator is MuJoCo 3.3.0 (Apache License
+2.0). Details: `images/autobio/BUILD_ONLY`.
+"""
+
+[robots]
+ur5e-robotiq-2f85 = "Universal Robots UR5e arm with a Robotiq 2F-85 gripper"
+aloha-2-arm = "One ALOHA 2 arm with its parallel gripper"
+aloha-2 = "Two ALOHA 2 arms with parallel grippers"
+ur5e-dexhand-2f85-bimanual = "Two UR5e arms: one with a DexHand021 hand that holds a pipette, one with a Robotiq 2F-85 gripper"
+
+# privileged tests/grade.py: missing file -> missing_trajectory (L137); unreadable / no `actions` -> bad_trajectory
+# (L145); `task` other than the family -> wrong_family (L148); shape (T, n), 1 <= T <= 600,000, finite -> else
+# bad_trajectory (L150-152); ONE replay in a fresh process; no result -> grader_error + infra_error (L159);
+# success = replay success AND instance_ok (L168-170; instance_ok false -> infra_error, L182-183).
+[modes.privileged]
+success = """
+The verifier replays `/app/output/trajectory.npz` (array `actions`, shape (T, n) with n the robot's controlled
+actuators, 1 ≤ T ≤ 600,000, finite values) once, open-loop, in a fresh process in a separate sandbox without network,
+from its own copy of the frozen instance. Each row is one control step of 2 ms (one physics step), with one position
+target per actuator, clipped to the actuators' ranges. AutoBio's `check()` is evaluated after every control step. A
+MuJoCo physics warning (an unstable state) ends the replay at once as a failure; the renderer's own warning
+(`VGEOMFULL`) does not count. A replay that reaches 600,000 control steps ends there.
+
+A missing file scores 0, and so does an invalid one: not a readable `.npz`, no `actions` array, a `task` entry that
+names another task, the wrong shape, a non-finite value, or more than 600,000 rows. A replay that gives no result, and
+a replay whose model or start state does not match the instance's recorded hashes, are infrastructure failures, not a
+score.
+"""
+
+# standard environment/sim/server.py: RCB_AGENT_END=1 (docker-compose); every family is judged with rule `final` (L64-66):
+# check() after every control step, never ending the episode, never shown. Ends: POST /finish or action `done`
+# ("finished", L445-449), the collect hook's SIGUSR1 ("timeout"), MAX_STEPS ("step_limit", L310-311), a physics
+# warning ("failure: simulator warning ...", rcb_autobio._judge L218-219), a simulator error ("error").
+# success = reason in (finished, timeout, step_limit, error) AND check() == 1 at the last control step (L279);
+# tests/grade.py: reason "error" -> 0; infra (instance_mismatch, not finalized) -> infra_error. budget reset 0 (L180).
+[modes.standard]
+success = """
+The graded episode is the one live episode, as it ran; nothing is replayed to grade it. There is no reset. AutoBio's
+`check()` is evaluated after every control step of 2 ms, and the condition above is judged on the state at the last
+executed control step. The episode ends when the agent sends `/finish` (the action type `done` is the same), when the
+agent's session ends (at the latest after {timeout}), or after 600,000 control steps (1200 s of simulated time).
+Meeting the condition earlier does not end the episode, and the service never reports success while it runs.
+
+A MuJoCo physics warning (an unstable state) ends the episode at once as a failure, also after the condition was met;
+the renderer's own warning (`VGEOMFULL`) does not count. An episode that ends in a simulator error scores 0. A live
+episode that did not start in the instance's recorded state, and a service that never wrote its record, are
+infrastructure failures, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families. Rule `first` (privileged): the replay ends at the first control step at which check() holds, a success.
+# Rule `final` (thermal_mixer, privileged): judged after the last row. Heights are body / site origins in the world.
+
+# pickup_centrifuge_tube.py check L179-191: tube body z > 0.925 AND a contact between geoms "1/aloha:leftfinger" and
+# "1/cap_cyl". The tube's body origin starts at about 0.83 m in the rack (9.5 cm below the bound: the earlier benchmark
+# README's figure, not re-measured here).
+[families.pickup]
+privileged = """
+At one control step, both: the 50 mL tube's body origin is higher than 0.925 m (9.5 cm above where it starts in the
+rack), and the gripper's left finger touches the tube's cap (a contact between those two geometries). The first such
+step ends the replay as a success.
+"""
+success = """
+Both, at the last control step: the 50 mL tube's body origin is more than 9.5 cm higher than where it starts in the
+rack, and the gripper's left finger touches the tube's cap (a contact between those two geometries).
+"""
+
+# mani_thermal_cycler.py check L239-248, case thermal_cycler_close: |lid + 1.9| < 0.01 and |lever + 0.94| < 0.01.
+[families.thermal_cycler_close]
+privileged = """
+At one control step, the thermal cycler's lid hinge is within 0.01 rad of -1.9 rad (closed) and the lid's lever joint is
+within 0.01 rad of -0.94 rad (locked); both joints start at 0. The first such step ends the replay as a success.
+"""
+success = """
+At the last control step, the thermal cycler's lid hinge is within 0.01 rad of -1.9 rad (closed) and the lid's lever
+joint is within 0.01 rad of -0.94 rad (locked); both joints start at 0.
+"""
+
+# mani_thermal_cycler.py check L239-248, case thermal_cycler_open: |lid| < 0.003 and |lever| < 0.003.
+[families.thermal_cycler_open]
+privileged = """
+At one control step, the thermal cycler's lid hinge and the lid's lever joint are both within 0.003 rad of 0 (open and
+unlocked); they start at -1.9 rad and -0.94 rad. The first such step ends the replay as a success.
+"""
+success = """
+At the last control step, the thermal cycler's lid hinge and the lid's lever joint are both within 0.003 rad of 0
+(open and unlocked); they start at -1.9 rad and -0.94 rad.
+"""
+
+# mani_pipette.py check L225-239: latch 1 (below_liquid): tip within 0.0065 m horizontally of the tube body origin,
+# tip more than 0.005 m below the liquid surface, thumb command (ctrl) > 0.70; latch 2 (liquid_drawn, only after 1):
+# tip below the surface and thumb command < 0.45; success: latch 2 and tip more than 0.05 m above the surface. The
+# latches are kept across steps (reset in reset(), L208-209).
+[families.pipette]
+privileged = """
+Three steps, in this order; the first two are latched once they happen:
+1. Dip: the pipette's tip is within 6.5 mm horizontally of the tube's axis (its body origin), more than 5 mm below the
+   liquid's surface, and the plunger thumb's command (the position target, not the joint's position) is above 0.70 rad.
+2. Release: the tip is below the liquid's surface and the thumb's command is below 0.45 rad.
+3. Lift: the tip is more than 0.05 m higher than the liquid's surface.
+The first control step at which step 3 holds after steps 1 and 2 ends the replay as a success.
+"""
+success = """
+Three steps, in this order; the first two count once they have happened:
+1. Dip: the pipette's tip is within 6.5 mm horizontally of the tube's axis (its body origin), more than 5 mm below the
+   liquid's surface, and the plunger thumb's command (the position target, not the joint's position) is above 0.70 rad.
+2. Release: the tip is below the liquid's surface and the thumb's command is below 0.45 rad.
+3. Lift: at the last control step, the tip is more than 0.05 m higher than the liquid's surface.
+"""
+
+# screw_loosen.py check L216-230: cap origin z - tube body origin z > 0.15 (0.1197 screwed on), a contact between
+# "1/aloha:leftfinger" (arm1) and "6/cap_cyl", and no contact between the cap thread "6/nut" and the tube thread
+# "7/bolt".
+[families.screw_loose]
+privileged = """
+At one control step, all three: the cap's origin is more than 0.15 m higher than the tube body's origin (screwed on it is
+0.1197 m), `arm1`'s left finger touches the cap, and the cap's thread does not touch the tube's thread. The first such
+step ends the replay as a success.
+"""
+success = """
+At the last control step, all three: the cap's origin is more than 0.15 m higher than the tube body's origin (screwed on it is
+0.1197 m), `arm1`'s left finger touches the cap, and the cap's thread does not touch the tube's thread.
+"""
+
+# screw_tighten.py check L245-258: cap origin z - tube body origin z < 0.123, the cap site "origin3" within 0.005 m
+# horizontally of the tube site "origin4", and a contact between "6/nut" and "7/bolt".
+[families.screw_tighten]
+privileged = """
+At one control step, all three: the cap's origin is less than 0.123 m higher than the tube body's origin (screwed all the way
+on it is 0.1197 m), the cap's axis is within 5 mm horizontally of the tube's axis, and the cap's thread touches the
+tube's thread. The first such step ends the replay as a success.
+"""
+success = """
+At the last control step, all three: the cap's origin is less than 0.123 m higher than the tube body's origin (screwed all the
+way on it is 0.1197 m), the cap's axis is within 5 mm horizontally of the tube's axis, and the cap's thread touches the
+tube's thread.
+"""
+
+# transfer_centrifuge_tube.py check L179-184: |tube_xy - target_xy| < 0.015 (target = the rack slot drawn in reset,
+# L164) and 0.829 < tube z < 0.831. Uprightness is not checked.
+[families.insert]
+privileged = """
+At one control step, the 50 mL tube's body origin is less than 15 mm horizontally from the target slot named in the
+Task section, and its height is between 0.829 m and 0.831 m. The tube's orientation is not checked. The first such step
+ends the replay as a success.
+"""
+success = """
+At the last control step, the 50 mL tube's body origin is less than 15 mm horizontally from the target slot named in the
+Task section, and its height is inside AutoBio's fixed height window, 2 mm tall (the same window for every slot of
+that rack). The tube's orientation is not checked.
+"""
+
+# mani_thermal_mixer.py check L320-367: score = 0.5 * temperature + 0.3 * time + 0.2 * speed, each max(0, 1 - |current
+# - target| / |target - initial|) (1 when target = initial), initial 60 s, 25 C, 900 rpm; success = score >= 1, i.e.
+# all three set values equal the targets. Rule `final`: judged after the last row (privileged) / at the end (standard).
+[families.thermal_mixer]
+privileged = """
+After the last row of the replay, the thermal mixer's panel settings (set time, set temperature, mixing speed) all
+equal the target settings named in the Task section. The panel starts at 60 s, 25 °C and 900 rpm. AutoBio's check is
+a score in [0, 1] (0.5 × temperature + 0.3 × time + 0.2 × speed, each the fraction of the way from the start setting
+to the target); success needs a score of 1. Meeting it earlier in the replay does not count.
+"""
+success = """
+At the last control step, the thermal mixer's panel settings (set time, set temperature, mixing speed) all equal the
+target settings named in the Task section. The panel starts at 60 s, 25 °C and 900 rpm. AutoBio's check is a score in
+[0, 1] (0.5 × temperature + 0.3 × time + 0.2 × speed, each the fraction of the way from the start setting to the
+target); success needs a score of 1.
+"""
+
+# load_centrifuge_5430.py check L235-241: 0.955 < tube z < 0.961 and |tube_pos - final_tar_tubepose.pos| < 0.005
+# (3D), the reference pose of the slot computed once in reset (L220). The rotor's angle is not checked.
+[families.insert_centrifuge_5430]
+privileged = """
+At one control step, the 1.5 mL tube's body origin is within 5 mm (straight-line distance) of its seated position in
+the rotor slot opposite the tube already loaded, and its height is between 0.955 m and 0.961 m. The seated position is
+computed once, at the start of the episode: a rotor turned later moves the slot away from it. The rotor's angle is not
+checked otherwise. The first such step ends the replay as a success.
+"""
+success = """
+At the last control step, the 1.5 mL tube's body origin is within 5 mm (straight-line distance) of its seated position
+in the rotor slot opposite the tube already loaded, and its height is inside AutoBio's fixed height window, 6 mm tall
+(a second bound on the height). The seated position is computed once, at the start of the episode: a rotor turned later moves the slot away
+from it. The rotor's angle is not checked otherwise.
+"""

@@ -4,9 +4,7 @@
 /docs/REVIEWING.md              @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /ci_checks/                     @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /.github/                       @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
-/scripts/build_images.sh        @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
-/scripts/push_images.sh         @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
-/images/VERSION                 @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/scripts/images.sh              @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /README.md                      @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /CONTRIBUTING.md                @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /AGENTS.md                      @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0

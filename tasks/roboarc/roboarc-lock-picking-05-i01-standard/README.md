@@ -1,37 +1,71 @@
-# roboarc-lock-picking-05-i01-standard
+# RoboARC · lock_picking (standard)
 
 | | |
 |---|---|
-| Benchmark | RoboARC |
-| Mode | standard (`eai-standard/2.4`) |
-| Twin | `roboarc-lock-picking-05-i01-privileged` |
-| Simulator / robot | `roboarc` / `franka-robotiq-2f85` |
-| Family / instance | `lock_picking` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 10800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` |
+| Task ID | `roboarc-lock-picking-05-i01-standard` |
+| Benchmark | [RoboARC](https://github.com/mll-lab-nu/RoboARC) (The RoboARC authors, 2026), upstream `mll-lab-nu/RoboARC@153eb8c` |
+| Robot | Franka Panda 7-DoF arm with a Robotiq 2F-85 parallel gripper (MuJoCo Menagerie) |
+| Mode | standard |
+| Instance | `lock_picking`, seed 0 |
+| Time limit | 3 h |
+| Reference solution | Included |
 
 ## Task
-Standard-mode twin of `roboarc-lock-picking-05-i01-privileged` (same frozen instance): the agent gets only the `eai-standard/2.4` client
-(docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the
-sidecar), which owns the scene and records the episode as a (T, 8) trajectory; its collect hook
-(`environment/sim/finalize.sh`) writes the live episode's verdict, then renders the video in one video-only
-replay of the recorded rows (no grading replay). The verifier runs in a separate sandbox (`tests/Dockerfile`) over the sidecar's artifacts. Compare against
-the privileged task to measure the cost of losing resets, privileged state and the tooling's primitives.
+Pick up the two-tab key from its rest and push it through all four rotor plates and the END plate, passing its tabs only
+through the plates' slots.
 
-## Difficulty
-Same scene, instance and success rule as `roboarc-lock-picking-05-i01-privileged` (see its Difficulty). In standard mode the agent loses resets, privileged state and planning primitives: it sees camera images and proprioception only, acts through the client, and gets one episode, so it has to estimate the scene from images and recover from its own mistakes without starting over.
+## Success criteria
+Success needs all of these:
+- Keep the finite-length shaft passing through the full thickness of all five plates at once, facing the insertion
+  direction. Reaching END with only the shaft tip is insufficient.
+- The rear edge of the leading tab must clear the outer face of END by at least 1 mm.
+- Normal contact with the bore wall and a small tilt are allowed when the shaft still fits through all five bores. The
+  radial numerical contact tolerance is 0.01 mm; the shaft may not pass through solid plate material.
+- Keep every tab clear of solid plate material whenever it overlaps a plate; account for the key's offset and tilt,
+  not just its rotation about the shaft.
+- Keep limited-travel rotor pins within their physical slot bounds (angular tolerance 0.5 degrees).
+- The key may stay held. Release and zero velocity are not required; all insertion and clearance conditions must
+  remain satisfied throughout confirmation.
+- Confirmation window: all of these conditions hold together for at least 0.5 s of simulated time. If one stops
+  holding, the window starts again.
 
-## Reference solution
-`solution/solve.sh` streams the recorded rows of the standard-mode oracle episode (`solution/oracle_qpos.npy`, one `joint_position` row per 25 ms control step, `hold`; the same rows as the privileged reference) through the client (`solution/oracle_replay.py`). That episode scored 1 (live and fresh replay) on the release image efe:roboarc-0.1.0 (2026-10-14; simulator source 37aa7ac0, tooling d8692e15).
+How the grader measures it:
+- Sizes: bore radius 7.5 mm, shaft radius 6.75 mm. At each of the 10 plate faces (four 10 mm rotor plates and END, 120
+  mm apart), the shaft axis' distance from the bore axis plus 6.75 mm / cos(tilt) may exceed 7.5 mm by at most 0.01
+  mm: about 0.76 mm of offset when the key is straight, which over the stack allows only about 0.18 degrees of tilt.
+- The shaft reaches from 545 mm behind the leading tab to 15 mm in front of it; all 10 plate faces must lie within
+  that length.
+- Tabs: half-width 4 degrees; the leading tab reaches radius 36 mm and the second tab, 120 mm behind it, 22 mm. Slots:
+  half-width 5.5 degrees, reaching radius 45 mm (deep) or 28 mm (shallow). A tab that overlaps a plate must sit inside
+  one of that plate's slots that reaches beyond the tab, with an angular margin of at least asin(axis offset / tab
+  radius) + the tilt.
+- Rotor stops (from each rotor's start angle, seen from the side the key enters, looking along the key toward END;
+  rotor 1 is the first plate the key reaches): rotor 1 2 degrees counterclockwise and 32 degrees clockwise; rotor 2 32
+  degrees counterclockwise and 2 degrees clockwise; rotor 3 2 degrees counterclockwise and 32 degrees clockwise; rotor
+  4 152 degrees counterclockwise and 2 degrees clockwise. Going more than 0.5 degrees beyond a stop ends the episode.
+- Forcing: an arm drive (not a gripper drive) at 95% or more of its torque cap while that arm's gripper, or a part it
+  holds, presses on anything else with 20 N or more in total. Forcing alone never ends the episode and never changes
+  the score.
 
-## Verification
-See `tests/grade.py`.
+Failures:
+- A limited-travel rotor exceeding its allowed bounds ends the episode in failure.
+- The key falling more than 100 mm below the tabletop ends the episode in failure.
 
-`nop` scored 0 on this base in both modes (the release image efe:roboarc-0.1.0; harbor run -a nop with rendering off; 2026-10-14).
+The graded episode is the one live episode in the `sim` service; nothing is replayed, and there is no reset. The
+episode ends when the agent sends `/finish` or when the agent's session ends (at the latest after 3 h, which the
+service counts from the agent's first request), or after 200,000 control steps (holds count).
 
-## Resources
-Caps per container (PROTOCOL §6).
+These ends are judged on the end state. The conditions above must hold when the episode ends and keep holding, with
+the last targets held, until they have held for the whole confirmation window; the time they already held before the
+end counts. Meeting them earlier in the episode does not count, and the service never reports success while the
+episode runs. A task failure (above) ends the episode at once and scores 0, even after a success; so does a simulator
+error caused by the agent's actions.
+
+Before the agent is served, the service checks the scene against the frozen instance; a mismatch is an infrastructure
+failure, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -42,44 +76,12 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer).
 
-## Details
-
-### Goal
-Pick up the two-tab key from its rest and push it through all four rotor plates and the END plate, passing its tabs only through the plates' slots.
-
-### Success requirements
-- Keep the finite-length shaft passing through the full thickness of all five plates at once, facing the insertion direction. Reaching END with only the shaft tip is insufficient.
-- The rear edge of the leading tab must clear the outer face of END by at least 1 mm.
-- Normal contact with the bore wall and a small tilt are allowed when the shaft still fits through all five bores. The radial numerical contact tolerance is 0.01 mm; do not push the shaft through solid plate material.
-- Keep every tab clear of solid plate material whenever it overlaps a plate; account for the key's offset and tilt, not just its rotation about the shaft.
-- Keep limited-travel rotor pins within their physical slot bounds (angular tolerance 0.5 degrees).
-- You may keep holding the key. Release and zero velocity are not required; all insertion and clearance conditions must remain satisfied throughout confirmation.
-- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
-
-### Task failure conditions
-- A limited-travel rotor exceeding its allowed bounds ends the episode in failure.
-- The key falling more than 100 mm below the tabletop ends the episode in failure.
-
-### Grader details (in addition to the requirements above)
-- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 6 mm beyond the tool frame (TCP) along its approach axis when open and about 19 mm when closed (the Robotiq fingertips move forward as they close). Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque. If any part of an arm goes more than 5 mm into a fixed object, such as a fixture or the table, the arm is stopped where it is. For that control step its joint targets are set to its measured joint positions, so it stops pushing. The response does not report these stops.
-- Forcing is recorded, not judged: an arm drive (not a gripper drive) at 95% of its torque cap or more while that arm's gripper, or a part it holds, presses on anything else with 20 N or more in total is forcing; 0.5 s of it on every physics tick is a forcing event in the evidence (`meta["safety"]`), shown to the reviewer when a success is reviewed. Forcing does not end the episode and does not change the grade by itself.
-- Sizes: bore radius 7.5 mm, shaft radius 6.75 mm. At each of the 10 plate faces (four 10 mm rotor plates and END, 120 mm apart), the shaft axis' distance from the bore axis plus 6.75 mm / cos(tilt) may exceed 7.5 mm by at most 0.01 mm: about 0.76 mm of offset when the key is straight, which over the stack allows only about 0.18 degrees of tilt.
-- The shaft reaches from 545 mm behind the leading tab to 15 mm in front of it; all 10 plate faces must lie within that length.
-- Tabs: half-width 4 degrees; the leading tab reaches radius 36 mm and the second tab, 120 mm behind it, 22 mm. Slots: half-width 5.5 degrees, reaching radius 45 mm (deep) or 28 mm (shallow). A tab that overlaps a plate must sit inside one of that plate's slots that reaches beyond the tab, with an angular margin of at least asin(axis offset / tab radius) + the tilt.
-- Rotor stops (from each rotor's start angle, seen from the side the key enters, looking along the key toward END; rotor 1 is the first plate the key reaches): rotor 1 2 degrees counterclockwise and 32 degrees clockwise; rotor 2 32 degrees counterclockwise and 2 degrees clockwise; rotor 3 2 degrees counterclockwise and 32 degrees clockwise; rotor 4 152 degrees counterclockwise and 2 degrees clockwise. Going more than 0.5 degrees beyond a stop ends the episode.
-- Grasp regions for assisted grasping, described under Grasping in instruction.md, with one sphere per graspable part: lock_key: radius 32 mm, on the key's handle. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically.
-- Grading: the live episode is the verdict: success needs it to succeed with the thresholds above (within its confirmation time); a live failure is final. Nothing is replayed to grade it: the video is rendered afterwards from the recorded rows and never changes the grade.
-
-| | |
-|---|---|
-| mode | standard (RGB, optional depth, proprioception, calibrated cameras, no reset) |
-| action space | `eai-standard/2.4`: `submit` chunks of `joint_position` (8, streamed at the 40 Hz control rate with the agent's `dt`) or `ee_pose` (8, IK per row); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); binary RCB1 responses |
-| oracle | `full` (`solution/`) |
-| verification | `success` = the live success: the task predicate on the live simulator with the instance's own thresholds (its confirmation time included), as the sim service recorded it (`final.json`: `graded_by` live, `replays` 0); no grading replay. The frozen instance is checked when the service builds it (`instance_mismatch`: infrastructure). After the verdict is written, one video-only fresh-process replay in the sidecar's collect hook renders `/logs/verifier/replay.mp4` (and, for a success held for review, the frames around its live review events); a failed video never changes the verdict |
-| crash recovery | `eai-standard/2.4` §13: journal + per-call checkpoints, `restart: on-failure:6`, resume class `approx` |
-
-### Provenance
-- Frozen instance: a MuJoCo instance (`simulator.physics_engine` "mujoco", its scene frozen under `instance_assets/mujoco/`), built by TopoGym source `d1eb6f13` (MuJoCo instance made before this image was built (TopoGym source d1eb6f13; its bytes are bound into the release image efe:roboarc-0.2.0)); bound to this release's runtime (source `c9171f79`, tooling `d8692e15`).
-- Frozen instance files (`instance.json`, `instance_assets/`): not in this directory. The public image carries them in `/opt/robotangle/instances/lock-picking-05-i01/` (`images/roboarc/assets.json` pins each file's sha256), and `/opt/robotangle/stage_instance.py` copies this task's instance next to its `runtime_binding.json`, which names the instance's canonical sha256 and every asset's sha256. The tooling checks them again at every session start.
-- Release: dev/robotangle_mujoco `7947eaa7b`, image `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` (images/roboarc/).
-- Name: RoboARC is the published name of this benchmark. Code identifiers keep the simulator's name: the simulator package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables.
+## License
+RoboARC ([mll-lab-nu/RoboARC](https://github.com/mll-lab-nu/RoboARC) @ `153eb8c`) is released under the MIT License
+(Copyright (c) 2026 The RoboARC authors). The robot models are MuJoCo Menagerie's: ALOHA 2 (BSD-3-Clause, Trossen
+Robotics), Franka Emika Panda (Apache License 2.0) and Robotiq 2F-85 (BSD-2-Clause, ROS-Industrial). The furniture part
+meshes of the furniture-assembly scenes are CC BY 4.0 (Hugging Face dataset `MLL-Lab/embodied-first-exam-public`,
+`ikea-mujoco/`). The simulator is MuJoCo 3.14.0 (Apache License 2.0). RGB images are rendered with Nyx (`gs-nyx`), used
+in the images with its owners' permission; the studio lighting is a CC0 HDRI from Poly Haven. Puzzle designs modelled
+after Hanayama's Huzzle Cast puzzles and the IKEA product names and designs are used with the owners' permission. No
+non-commercial terms apply.

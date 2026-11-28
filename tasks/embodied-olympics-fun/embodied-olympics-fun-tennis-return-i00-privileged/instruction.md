@@ -5,16 +5,16 @@ Return the serve: after it bounces once, hit it with the racket in your right ha
 without letting go of the racket.
 
 ## Goal
-Success: after the serve bounces once in your service box, you hit it with the racket in your right hand over the net
-and it first lands in the far singles court (the lines are in); you never let go of the racket.
+Success: after the serve bounces once on your side of the net, you hit it with the racket in your right hand over the
+net and it first lands in the far singles court (the lines are in); you never let go of the racket.
 
 The referee judges these stages, in order: **bounce → racket → over the net → in**. An attempt ends at the success, at
 the first foul or after 10 s (1000 control steps) of robot time.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`. It holds `actions`: one sim row of 141
 floats per control step. It is replayed open-loop from the fixed start, one row per control step, until the referee ends
-the attempt. It scores 1 if the replay succeeds, else 0. If the rows run out first, the attempt is judged on its state
-at that point. At most 1000 rows are used. Every row must be finite, including rows after the attempt's end; a NaN or an
+the attempt. It scores 1 if the replay succeeds, else 0. If the rows run out before the referee calls a success, it
+scores 0. At most 1000 rows are used. Every row must be finite, including rows after the attempt's end; a NaN or an
 infinite value scores 0.
 
 Put two files beside it. `gen.py` is the script that produced it: it must run and reproduce `trajectory.npz`, reading

@@ -2,7 +2,7 @@
 (tests/instance.json, the copy both twins share, with this task's goal.json restored) in ONE fresh process (rcb_ispatialgym.py replay). success = that replay
 succeeds (upstream's geometric success at some control step; the replay stops there), from a start that rebuilt as
 frozen. With one replay there is no second end state to compare: `deterministic` is written as 1 (nothing disagreed)
-with `determinism_checked` = 0 and `replays` = 1. Numeric-only reward.json (docs/protocol/README.md Appendix H.1, H.4).
+with `determinism_checked` = 0 and `replays` = 1. Numeric-only reward.json (docs/protocol/invariants.md H.1, H.4).
 
 bad_trajectory: no readable (T, 23) float array `actions`, a value that is not a finite float32 (the simulator steps
 float32), more rows than the episode's control steps (facts.json max_steps), or a file larger than that many rows: score 0, no infrastructure error.

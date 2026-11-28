@@ -2,19 +2,19 @@
 
 ## Task
 Run the 50 m hurdles: go over each of the four hurdles in your lane and reach the finish line, leaving at least one
-hurdle standing.
+hurdle in place.
 
 ## Goal
 Success: you go over all four hurdles in your lane, none passed beside, under or after pushing it away, leave at least
-one standing, and your torso reaches the finish line.
+one of them in place (no point of its top bar moved more than 10 cm), and your torso reaches the finish line.
 
 The referee judges these stages, in order: **hurdle 1 → hurdle 2 → hurdle 3 → hurdle 4 → finish**. An attempt ends at
 the success, at the first foul or after 140 s (14000 control steps) of robot time.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`. It holds `actions`: one sim row of 141
 floats per control step. It is replayed open-loop from the fixed start, one row per control step, until the referee ends
-the attempt. It scores 1 if the replay succeeds, else 0. If the rows run out first, the attempt is judged on its state
-at that point. At most 14000 rows are used, and every one must be finite, also those after the attempt's end (a NaN or
+the attempt. It scores 1 if the replay succeeds, else 0. If the rows run out before the referee calls a success, it
+scores 0. At most 14000 rows are used, and every one must be finite, also those after the attempt's end (a NaN or
 an infinite value scores 0).
 
 Put two files beside it. `gen.py` is the script that produced it: it must run and reproduce `trajectory.npz`, reading
@@ -34,7 +34,7 @@ The attempt fails at once if:
 - you knock a hurdle over with a hand, an arm, your trunk or your hips, climb on a hurdle, or push, kick or shove a
   hurdle along the track before you have gone over it
 - you leave your lane, or your torso reaches the finish line before you have gone over every hurdle
-- every hurdle is knocked down, or you are down for 10 s
+- every hurdle is knocked or moved out of place, or you are down for 10 s
 
 ## Robot Interface
 You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on

@@ -7,7 +7,8 @@ with the oil paints, in at most 2507 strokes.
 ## Goal
 Success: the main sheet looks like the picture (the same colours in the same places, the same lights and darks and
 edges, and paint only where the picture has paint), you used at most 2507 strokes, and the process rules below hold; a
-small shift of the whole painting does not matter. The main sheet is scored as the episode leaves it.
+small shift of the whole painting does not matter. A strip 8 mm wide along each edge of the main sheet is not scored.
+The main sheet is scored as the episode leaves it.
 
 When you are done, send `/finish` to end the episode and get it graded.
 
@@ -31,7 +32,7 @@ MCP tools, as if it were real hardware: one live episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service builds the scene, under a minute)

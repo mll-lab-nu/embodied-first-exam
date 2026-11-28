@@ -138,16 +138,16 @@ RUN sed -i -e '/ jammy-security /s|http://snapshot.ubuntu.com/ubuntu/20261001T00
     echo "15a39563d491def84446c8a5304e873a6b6509d56e2b54edce8eea154e1290a0  /etc/apt/sources.list" | sha256sum -c -
 WORKDIR /app
 # <<< images/maniguard/Dockerfile
-# Separate verifier sandbox (PROTOCOL H.1): the same simulator image with the verifier's own copies of the tooling and the
+# Separate verifier sandbox (docs/protocol/invariants.md H.1): the same simulator image with the verifier's own copies of the tooling and the
 # frozen instance baked in. Nothing the agent did in its container reaches this one: Harbor uploads only the declared
 # artifacts (/app/output/), so a patched monitor, goal check or interpreter in the agent container cannot change the verdict.
 FROM maniguard-base
 COPY test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:maniguard-files-0.8.0@sha256:653be171dcad7a89aa0804384759d8610f25ea603c1162807a2cfd5faefd29e8 /privileged/environment/rcb_maniguard.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:maniguard-files-0.10.0@sha256:bbb42ec9b8f212e38c7bea837c30e767f0df837f82e1e4be4aa9f261112437b0 /privileged/environment/rcb_maniguard.py /privileged/tests/grade.py /tests/
 COPY instance /tests/instance
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests
-# resources (PROTOCOL §6) # rcb-monitor
+# resources (docs/protocol/resources.md) # rcb-monitor
 COPY --from=ghcr.io/mll-lab-nu/efe:monitor-0.5.0@sha256:ecc5f24f1516ca11711d7c2d3ac07c89f79cd9220812c1244498ec71e352402a /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
 COPY rcb_limits.json /tests/rcb_limits.json

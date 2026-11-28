@@ -6,9 +6,9 @@ square. Leave the cage and its mount behind, no closer to the goal than they wer
 with the box handle as a tool.
 
 ## Goal
-Success: all of the owl is inside the green dashed goal square and still, and the cage and its mount are no closer to
-the goal than at the start. Do not force pieces into each other: a success reached that way may not count. Dropping a
-piece off the table, the rod included, ends the episode as a failure.
+Success: all of the owl is inside the green dashed goal square and still, and the cage and its mount reach no more than
+a few millimetres closer to the goal than their nearest part did at the start. Do not force pieces into each other: a
+success reached that way may not count. Dropping a piece off the table, the rod included, ends the episode as a failure.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts. Make sure
 everything is at rest when you send `/finish`.
@@ -27,7 +27,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.4`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects to the existing service; retries until ready (default timeout 3600 s)

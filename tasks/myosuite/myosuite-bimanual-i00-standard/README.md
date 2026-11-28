@@ -1,31 +1,48 @@
-# myosuite-bimanual-i00-standard
+# MyoSuite · bimanual (standard)
 
 | | |
 |---|---|
-| Benchmark | MyoSuite |
-| Mode | standard (`eai-standard/2.2`) |
-| Twin | `myosuite-bimanual-i00-privileged` |
-| Simulator / robot | `myosuite` / `myoarm-mpl` |
-| Family / instance | `bimanual` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `none` — no positive example yet (two model attempts failed: Codex + GPT-6 Luna, effort high, run `codex-gpt6_luna-high` and Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06)); the task is marked unvalidated (PROTOCOL §2 `validated`); human review in PR #65 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
+| Task ID | `myosuite-bimanual-i00-standard` |
+| Benchmark | [MyoSuite](https://github.com/MyoHub/myosuite) (Caggiano et al., 2022), upstream `MyoHub/myosuite@5635e1a` |
+| Robot | MyoArm (63 muscles) next to a motorized prosthetic arm (MPL, 17 motors) |
+| Mode | standard |
+| Instance | `bimanual`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-MyoSuite `myoChallengeBimanual-v0` (MyoArm + MPL, 63 muscles) on the same frozen instance as `myosuite-bimanual-i00-privileged`: Pick up the object with your right hand, pass it to the prosthetic left hand, and set it on top of the goal pillar. Each hand must hold it for at least 1 s, and it must never touch the table or the floor.
-The MyoArm (right, muscles) and a prosthetic MPL arm (left, motors) stand at a table; an object lies in front of the MyoHand and a pillar marks the goal on the far side. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
+Pick up the object with your right hand, pass it to the prosthetic left hand, and set it on top of the goal pillar. Each
+hand must touch it for at least 1 s in total, and it must never touch the table or the floor.
 
-## Difficulty
-Same instance and success rule as `myosuite-bimanual-i00-privileged` (first-pass rating: hard). In standard mode the agent loses free resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in actuator-command chunks, and gets 10 resets, so it has to close the loop on what it sees and learn the body from a few real attempts.
+## Success criteria
+Success event (MyoChallenge 2024 `myoChallengeBimanual-v0`, its `solved` and its contact check): the event is the
+first control step at which the object's centre is less than 0.17 m from the goal point on the goal pillar and the
+object has touched the goal pillar on at least 10 control steps of the episode so far. At that step the object's
+contact history must also pass MyoChallenge's contact check:
+- the object has touched the MyoArm's hand on at least 100 control steps (1 s at 10 ms per step);
+- the object has touched the prosthetic arm on at least 100 control steps;
+- on each of the last 8 control steps the object touched the goal pillar and nothing else;
+- the object never touched anything other than the MyoArm, the prosthesis, the start pillar and the goal pillar (the
+  table and the floor included).
 
-## Reference solution
-None. Solvability evidence: no positive example yet (two model attempts failed: Codex + GPT-6 Luna, effort high, run `codex-gpt6_luna-high` and Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06)); the task is marked unvalidated (PROTOCOL §2 `validated`); human review in PR #65.
+The order of the two hands is not checked. If the contact check fails at the step of the event, the episode ends with
+0.
 
-## Verification
-The sim service judges the episode live (the task's rule on the steps it ran: the challenge's own success event) and records every executed control step; it checks at the episode's start that the scene is the frozen instance (its recorded state hash; else `instance_mismatch`, an infrastructure failure). The collect hook (`environment/sim/finalize.sh`) ends the service and writes that live verdict to `final.json` (`graded_by` = `live`; nothing is replayed to grade it), then renders `replay.mp4` in one pass over the recorded trajectory, which decides nothing; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded. A missing or unreadable `final.json`, one without a verdict, or a give-up after crashes not all inside the agent's calls is an infrastructure failure (`infra_error = 1`), not the agent's 0. No oracle; human review in PR #65. `nop`: the episode times out, reward 0.
+Failure (MyoSuite's `done`, ends the episode with 0): 10 s of simulated time pass without the event, or the object is
+below 0.3 m.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The success event does not end the episode. Once it has happened the task is passed, even if a failure above ends the
+episode later. Before it, a failure ends the episode with 0.
+
+Graded: the live episode, judged by the simulator service; nothing is replayed. No success signal is shown to the
+agent. The episode ends at the agent's `/finish`, at a failure above, at the episode's own end where the rule above
+has one, or when the agent's time (1 h) runs out. Resets granted: 10. A reset starts a new episode from
+the frozen start; only the episode running at the end is graded. A simulator error raised by the agent's own call
+ends the episode with 0. An episode that does not start from the frozen instance, or a service crash outside the
+agent's calls, is an infrastructure failure, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -35,13 +52,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
-| Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`embodied_first_exam/standard/`); cameras `side_view`, `front_view`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat` (640 x 480); forward kinematics of the body's links |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering); after the agent's phase the collect hook only renders the video (one pass over the graded episode), it replays nothing to grade |
-| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance; only the last episode is graded, when the agent sends `POST /finish` or its session ends (a success ends nothing); results under another budget are reported separately |
-
-### Provenance
-The frozen instance (`environment/sim/instance.npz`) and its scene facts were made at generation time; see `tasks/myosuite/README.md`.
+## License
+MyoSuite ([MyoHub/myosuite](https://github.com/MyoHub/myosuite), version 2.12.2, tag `v2.12.2` = `5635e1a`) is
+released under the Apache License 2.0, as are the models it bundles (MyoSim, the MPL prosthetic arm, the object,
+furniture and YCB models). The MyoDex reference motions (the `dex_*` families) derive from the GRAB motion-capture
+dataset; MyoSuite asks their users to comply with GRAB's licence, which allows non-commercial scientific research
+only. The simulator is MuJoCo (Apache License 2.0).

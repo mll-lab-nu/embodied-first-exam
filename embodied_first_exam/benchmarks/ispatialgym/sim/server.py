@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for iSpatialGym (tasks/ispatialgym/README.md; docs/protocol/standard_mode.md): the benchmark's
+"""eai-standard/3.0 sim service for iSpatialGym (tasks/ispatialgym/README.md; docs/protocol/eai-standard.md): the benchmark's
 adapter of the shared layer rcb_limited.py. Owns the scene. HTTP surface (rcb_limited.serve): GET /spec, GET /status,
 POST /observe, POST /submit (RCB1 bodies and responses), POST /kinematics. Logs every call to /out/episode.jsonl and keeps
 /out/final.json current. Nothing about objects, targets or the world frame ever leaves this process.
@@ -7,11 +7,9 @@ As BEHAVIOR-1K's service (the same robot on the same simulator), except:
 - the action is iSpatialGym's own 23-D JoyLo action (rcb_ispatialgym.py): base velocity command, trunk, both arms, one
   command per gripper; rows are streamed at the 30 Hz control rate, the trunk and arm targets interpolated, the base and
   gripper commands switched at the row; there is no ee_pose action (POST /kinematics solves IK, statelessly);
-- the episode ends when upstream's geometric success holds (success), when its control steps run out (max_steps: run_isg's
-  policy budget, reason "failed: the episode's control steps ran out"), on the collect hook's signal (timeout) or on a
-  simulator error (error); there is no fall rule (upstream has none). With agent-ended episodes (RCB_AGENT_END,
-  rcb_agent_end.py) a success never ends it: POST /finish (finished), the session's end (timeout) or max_steps
-  (step_limit) does, and the state it ends in is judged (see finish());
+- the episode is agent-ended (rcb_agent_end.py): a success never ends it; it ends at POST /finish (finished), when its
+  control steps run out (max_steps, run_isg's policy budget: step_limit), on the collect hook's signal (timeout) or on a
+  simulator error (error); there is no fall rule (upstream has none); the state it ends in is judged (see finish());
 - every pose leaves in the odometry frame (the robot's base at the start of the episode), never in the world frame;
 - the verdict is the live episode's (owner 2026-10-17): upstream's success under settle-eval, judged
   at every control step the episode runs, is `success`; nothing replays it. When it ends the service writes
@@ -136,7 +134,7 @@ def dump() -> None:
     E["dumped"] = True
     try:
         E["live_sha"] = S.state_sha(); E["n_actions"] = len(S.rows)
-        S.save_trajectory(os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "reason": E["reason"]})
+        S.save_trajectory(os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/3.0)", "reason": E["reason"]})
     except Exception as exc:  # noqa
         traceback.print_exc(); log({"ev": "dump_error", "error": repr(exc)})
     st = S.status()
@@ -147,38 +145,33 @@ def dump() -> None:
         "success_step": st["success_step"], "symbolic_success": st["symbolic_success"], "geometric_success": st["geometric_success"],
         "error_metric": st["error_metric"], "graded_by": "live", "replays": 0,
         "startup": EP.n_startups, "pid": os.getpid(),   # which service start wrote it (finalize.sh's late-exit check)
-        **({"end_window_steps": E.get("end_window_steps")} if AE.ENABLED else {}),
+        "end_window_steps": E.get("end_window_steps"),
         **EP.final_fields(), **AE.final_fields(E, S.n)})
     write_final()
 
 
 def finish(reason: str) -> None:
+    # agent-ended episodes (docs/protocol/tasks.md#modes, rcb_agent_end.py; rcb_ispatialgym.AGENT_END): the state the episode ends in is
+    # judged with upstream's success under settle-eval (the goal and every target held, the objects and the robot at
+    # rest, over the last 45 control steps). At POST /finish and at the session's end the settle window runs from that
+    # state: the last command held (base at 0, journaled and recorded) until upstream's success holds or 45 steps
+    # have passed, so the steps already held count. max_steps is the step limit, judged as it stands; a simulator
+    # error is judged as it stands
     if E["done"]: return
-    if AE.ENABLED:
-        # agent-ended episodes (PROTOCOL §3, rcb_agent_end.py; rcb_ispatialgym.AGENT_END): the state the episode ends in is
-        # judged with upstream's success under settle-eval (the goal and every target held, the objects and the robot at
-        # rest, over the last 45 control steps). At POST /finish and at the session's end the settle window runs from that
-        # state: the last command held (base at 0, journaled and recorded) until upstream's success holds or 45 steps
-        # have passed, so the steps already held count. max_steps is the step limit, judged as it stands; a simulator
-        # error is judged as it stands
-        if reason == MAX_STEPS_REASON:
-            reason = "step_limit"
-        E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
-        if reason in ("finished", "timeout"):
-            try:
-                hold = S.hold_action(); n = 0
-                while not S.success and n < M.SETTLE_STEPS:
-                    n += 1; S.step(hold, cap=False); EP.journal(hold); video_step()
-                E["end_window_steps"] = n
-            except Exception as exc:  # noqa: BLE001 -- judged as it stands
-                traceback.print_exc(); log({"ev": "end_window_error", "error": repr(exc)[:300]})
-        E["success"] = reason in AE.END_STATE_REASONS + ("error",) and check_success()
-        log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": S.n, "elapsed_s": round(E["t_end"] - E["t0"], 1),
-             "success": bool(E["success"]), "end_window_steps": E.get("end_window_steps")})
-        dump()
-        return
-    E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["success"] = E["success"] or check_success()
-    log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": S.n, "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"])})
+    if reason == MAX_STEPS_REASON:
+        reason = "step_limit"
+    E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
+    if reason in ("finished", "timeout"):
+        try:
+            hold = S.hold_action(); n = 0
+            while not S.success and n < M.SETTLE_STEPS:
+                n += 1; S.step(hold, cap=False); EP.journal(hold); video_step()
+            E["end_window_steps"] = n
+        except Exception as exc:  # noqa: BLE001 -- judged as it stands
+            traceback.print_exc(); log({"ev": "end_window_error", "error": repr(exc)[:300]})
+    E["success"] = reason in AE.END_STATE_REASONS + ("error",) and check_success()
+    log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": S.n, "elapsed_s": round(E["t_end"] - E["t0"], 1),
+         "success": bool(E["success"]), "end_window_steps": E.get("end_window_steps")})
     dump()
 
 
@@ -189,7 +182,7 @@ def cam_spec(c: str) -> dict:
 
 
 SPEC = {
-    "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "iSpatialGym eval v1.0 (OmniGibson / Isaac Sim, BEHAVIOR-1K fork)",
+    "protocol": PROTOCOL, "simulator": "iSpatialGym eval v1.0 (OmniGibson / Isaac Sim, BEHAVIOR-1K fork)",
     "robot": "r1pro", "task_text": TASK_TEXT, "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS,
     "max_chunk_s": MAX_CHUNK_S, "max_control_steps": S.max_steps, "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: cam_spec(c) for c in CAMS},
@@ -218,10 +211,7 @@ SPEC = {
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "3600"))},
     "episode": (f"one episode, no reset: it ends when you POST /finish (finished), after {S.max_steps} control steps "
                 f"({S.max_steps / CTRL_HZ:.1f} s of simulated time; step_limit), when your time is up (timeout) or on a simulator error "
-                "(error); reaching the goal does not end it, and the state it ends in is judged") if AE.ENABLED else
-               (f"one episode, no reset: it ends at the first control step at which the scene matches the goal image (success), after "
-                f"{S.max_steps} control steps ({S.max_steps / CTRL_HZ:.1f} s of simulated time; reason \"{MAX_STEPS_REASON}\"), when your "
-                "time is up (timeout) or on a simulator error (error)"),
+                "(error); reaching the goal does not end it, and the state it ends in is judged"),
     "robot_spec": RSPEC,
     "kinematics": KSPEC,
     "depth": {"modes": ["none"], "default": "none", "note": "RGB only, as iSpatialGym's evaluation renders it"},
@@ -333,11 +323,8 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     """One recorded and journaled control step. True when the call must stop: the episode is over, or the layer stops
     the call (max_call_wall_s, the client hung up)."""
     done = S.step(a); stop = EP.journal(a); rec.tick(); video_step()
-    if AE.ENABLED:       # the state's success, recorded only (never shown); a success never ends the episode
-        AE.hidden_success(E, S.success, log, S.n)
-        if done: finish(MAX_STEPS_REASON)
-        return E["done"] or stop
-    if done: finish("success" if S.success else MAX_STEPS_REASON)
+    AE.hidden_success(E, S.success, log, S.n)   # the state's success, recorded only (never shown); it never ends the episode
+    if done: finish(MAX_STEPS_REASON)
     return E["done"] or stop
 
 
@@ -452,12 +439,7 @@ resumed = EP.begin(state=E, step=replay_row, state_sha=S.state_sha, proprio=prop
                    start_event={"subtask": S.up["subtask"], "start_sha": S.start_sha, "cameras": CAMS}, on_end=_end_from_signal)
 if resumed and S.done and not E["done"]:
     log({"ev": "resume_ended_early", "skipped_rows": REPLAY["skipped"], "end_reason": S.reason, "success": S.success})
-    if S.success and not AE.ENABLED:     # agent-ended: only max_steps ends the replay, before the logged episode did
-        E["ready"] = True
-        with LOCK: finish("success")
-        E["ready"] = False
-    else:
-        EP.give_up(f"resume_failed: the replayed episode ended ({S.reason}) before the logged one did", infra=True)
+    EP.give_up(f"resume_failed: the replayed episode ended ({S.reason}) before the logged one did", infra=True)
 if resumed and not E["done"]:
     # the episode goes on: an episode.json from a call the crash lost (it ended there, then was rolled back to the last
     # checkpoint) is not this episode's record; finalize.sh must never take it for one
@@ -471,5 +453,4 @@ open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes}{', resumed at call ' + str(E['calls']) if resumed else ''})", flush=True)
 AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
                     on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row,
-                    **({"finish": lambda: finish("finished"),
-                        "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})))
+                    finish=lambda: finish("finished"), end_step_limit=lambda: finish("step_limit")))

@@ -8,7 +8,7 @@
  "seat_env": "SEAT",
  "notes": "The tools are those of every standard task (spec, observe, submit) on the seat's eai-standard service with the match extension, plus the match's own calls (start, ready; say, team in a team format). Locating the ball or the opponent is done by eye in the images, with the cameras' intrinsics and poses from `spec`.",
  "task": "embodied-olympics-match-soccerssl-match-i01-realtime",
- "protocol": "eai-standard/2.3+match/1.0",
+ "protocol": "eai-standard/3.0",
  "realtime": true,
  "turn": false,
  "tools": [

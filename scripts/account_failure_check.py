@@ -37,7 +37,7 @@ def check(t: str) -> dict:
     why, infra = [], []
     name = os.path.basename(t.rstrip("/"))
     gw = os.path.join(t, "gateway", "totals.json")             # the usage gateway refused it: the trial's own budget, not
-    try:                                                        # the account (PROTOCOL §5); never stop the lane for it
+    try:                                                        # the account (docs/protocol/tasks.md#instructionmd); never stop the lane for it
         tot = json.load(open(gw))
         if not isinstance(tot, dict):
             raise ValueError

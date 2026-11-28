@@ -4,7 +4,8 @@
 Put exactly three of the objects in the box.
 
 ## Goal
-Success: the box holds exactly three objects, of any kind. Make sure everything is at rest when you send `/finish`.
+Success: the box holds exactly three objects, of any kind. It must hold for about a second after the episode ends, while
+the robot keeps your last command.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -23,7 +24,7 @@ through its client or its MCP tools, as if it were real hardware: one live episo
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                    # connects (waits while the service starts)

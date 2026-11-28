@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/labutopia-open-drawer-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): LabUtopia open_drawer (Open Drawer) on the same frozen instance as labutopia-open-drawer-i00-privileged: Pull the cabinet's top drawer open, then let go of it and move the hand away. The agent only gets a client: cameras (RGB, optional depth, calibration), the robot's proprioception, joint target chunks, arm kinematics; one episode, no reset, no object or instrument state; the sim service records the episode and grades the live episode (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): LabUtopia open_drawer (Open Drawer) on the same frozen instance as labutopia-open-drawer-i00-privileged: Pull the cabinet's top drawer open, then let go of it and move the hand away. The agent only gets a client: cameras (RGB, optional depth, calibration), the robot's proprioception, joint target chunks, arm kinematics; one episode, no reset, no object or instrument state; the sim service records the episode and grades the live episode (no grading replay)."
 keywords = ["robotics", "labutopia", "isaac-sim", "laboratory", "chemistry", "franka-panda", "code-as-policy", "trajectory", "open_drawer", "standard-mode"]
 
 [metadata]
@@ -21,8 +21,8 @@ task_type = "trajectory"
 simulator = "labutopia"           # LabUtopia @ 8df7278 on NVIDIA Isaac Sim 6.1.0 (PhysX on the CPU, RTX cameras)
 robot = "franka-panda"
 family = "open_drawer"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
+protocol = "eai-standard/3.0"
 oracle = "full"
 level = 1                         # LabUtopia's own level for the task (config level1_open_drawer)
 instance_seed = 2                 # numpy's and Python's random generators before LabUtopia's reset
@@ -33,7 +33,7 @@ timeout_sec = 600.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -65,7 +65,7 @@ memory_mb = 32768
 storage_mb = 20480
 gpu_types = ["RTX 4090", "L40S"]
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

@@ -4,8 +4,8 @@
 Stack the yellow block on the red block.
 
 ## Goal
-Success: the yellow block rests squarely on top of the red block. The replay of your trajectory ends as soon as the task
-is done (later rows are never executed).
+Success: the yellow block is on top of the red block, touching it, with its centre over it. The replay of your
+trajectory ends as soon as the task is done (later rows are never executed).
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`. It
 holds `task` and `actions`, a (T, 8) float array of at most 100,000 rows (one per control step, 1.9 h of robot time).

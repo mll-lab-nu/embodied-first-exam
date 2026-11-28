@@ -11,7 +11,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/embodied-olympics-match-soccerssl-match-i01-realtime"
-description = "REALTIME (Embodied Olympics / Embodied Agent Olympics, our own service): wheeled robot soccer 5 v 5 (robocup ssl division b), one match against the opponent team at level 4 (the reinforcement-learned tier), program play (eai-standard/2.3+match/1.0: the world runs at 1/10 of real speed and never waits, except that it freezes after every point for the player's review, at most 600 s). Task: Win a 5 v 5 wheeled robot soccer match against the yellow team. Camera images and the robot's own state only. Frozen development instance (seed and level fixed, not an official seed). wheeled robot soccer 5 v 5 under the RoboCup Small Size League rules (Division B): ten omnidirectional SSL robots after TIGERs Mannheim's v2020 (kicker, chip kicker, dribbler; their real speed, acceleration, kick and dribbler limits) and an orange golf ball on the 9 x 6 m field, two halves of 300 s of playing time, a shoot-out when level, an automatic referee for every rule an SSL auto-referee judges; you command your robots with three skills (move to a pose, optionally by a time and at a speed; kick flat or chipped along the robot's heading, now or the moment the ball reaches it; spin the dribbler) and see the game through the four overhead cameras of the shared vision, 40 ms late; in the `match` format you command the blue team against a scripted team, in the `duel` format another player commands the yellow team, in the `team` format each robot has its own player. Exported from Embodied Olympics task soccer_ssl-match-wallclock-program-standard."
+description = "REALTIME (Embodied Olympics / Embodied Agent Olympics, our own service): wheeled robot soccer 5 v 5 (robocup ssl division b), one match against the opponent team at level 4 (the reinforcement-learned tier), program play (eai-standard/3.0: the world runs at 1/10 of real speed and never waits, except that it freezes after every point for the player's review, at most 600 s). Task: Win a 5 v 5 wheeled robot soccer match against the yellow team. Camera images and the robot's own state only. Frozen development instance (seed and level fixed, not an official seed). wheeled robot soccer 5 v 5 under the RoboCup Small Size League rules (Division B): ten omnidirectional SSL robots after TIGERs Mannheim's v2020 (kicker, chip kicker, dribbler; their real speed, acceleration, kick and dribbler limits) and an orange golf ball on the 9 x 6 m field, two halves of 300 s of playing time, a shoot-out when level, an automatic referee for every rule an SSL auto-referee judges; you command your robots with three skills (move to a pose, optionally by a time and at a speed; kick flat or chipped along the robot's heading, now or the moment the ball reaches it; spin the dribbler) and see the game through the four overhead cameras of the shared vision, 40 ms late; in the `match` format you command the blue team against a scripted team, in the `duel` format another player commands the yellow team, in the `team` format each robot has its own player. Exported from Embodied Olympics task soccer_ssl-match-wallclock-program-standard."
 keywords = ["robotics", "embodied-olympics", "sports", "soccer_ssl", "mujoco", "realtime-mode", "vision", "real-time"]
 
 [metadata]
@@ -19,8 +19,8 @@ task_type = "trajectory"
 simulator = "mujoco"
 robot = "ssl-robot"
 family = "soccer_ssl_match"
-dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.3+match/1.0"
+dynamics = "dynamic"              # scene dynamics (docs/protocol/tasks.md): the task's own declaration
+protocol = "eai-standard/3.0"
 instance_seed = 7
 opponent_level = 4
 revision = "soccer_ssl-1"
@@ -37,7 +37,7 @@ oracle_evidence = "RLSSL 2026-10-16 (doc rlssl): L-RL against L3 25 W 5 D 10 L o
 
 [metadata.seeds]
 # the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
-# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+# under solution/ is for, where they are not the default seed alone (docs/protocol/tasks.md)
 allowed = [7, 1, 2]
 
 [verifier]
@@ -45,7 +45,7 @@ timeout_sec = 3960.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -76,7 +76,7 @@ cpus = 2
 memory_mb = 5120
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

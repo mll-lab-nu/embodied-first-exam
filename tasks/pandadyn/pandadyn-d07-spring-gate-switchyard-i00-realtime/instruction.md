@@ -8,11 +8,11 @@ with the right paddle and send it across the goal line in front of the middle of
 
 ## Goal
 Success: the left gripper holds the gate's handle with both fingers and swings the gate well open toward the right arm,
-and from then on keeps holding the handle with the gate well away from its rest position (either way); the right paddle
-hits the puck so that it runs deep into the pen; the gate stands open the other way, toward the left arm, at the moment
-the puck hits the side rail on the left arm's left; the right paddle intercepts the returning puck; finally the puck
-crosses the goal line in front of the middle of the backstop, not touching the paddle, with the gate still held well
-open.
+and at each later step it holds the handle with both fingers, the gate well away from its rest position (either way);
+the right paddle hits the puck so that it runs deep into the pen; the gate stands open the other way, toward the left
+arm, at the moment the puck hits the side rail on the left arm's left; the right paddle intercepts the returning puck;
+finally the puck crosses the goal line in front of the middle of the backstop, not touching the paddle, with the gate
+still held well open.
 
 The steps count only in this order. Once a step is done, it stays done. The task is done when its last step is done, and
 it stays done even if a failure ends the episode afterwards. The task fails, and the episode ends at once, when:
@@ -45,7 +45,7 @@ wall-clock time (`spec()["timing"]["slowdown"]`).
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.3`, realtime mode). Its docstring (`help(rcb_client)`) is the full
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`, realtime mode). Its docstring (`help(rcb_client)`) is the full
 reference.
 
 | call | what it does |

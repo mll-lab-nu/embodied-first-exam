@@ -2,11 +2,11 @@
 
 ## Task
 Draw up liquid from the 50 mL tube with the pipette: press the plunger, push the tip down into the liquid near the
-middle of the tube, let the plunger go, then lift the tip well out of the tube.
+middle of the tube, let the plunger go, then lift the tip well above the liquid.
 
 ## Goal
 Success: in that order, the tip goes down into the liquid near the middle of the tube with the plunger pressed, the
-plunger is let go while the tip is still in the liquid, and the tip is then lifted well out of the tube. A physics
+plunger is let go while the tip is still in the liquid, and the tip is then lifted well above the liquid. A physics
 warning (an unstable simulation, for instance after the robot was driven hard into something) ends the episode at once,
 as a failure.
 
@@ -31,7 +31,7 @@ reach through its client or its MCP tools, as if it were real hardware: one live
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                    # connects (waits while the service starts)

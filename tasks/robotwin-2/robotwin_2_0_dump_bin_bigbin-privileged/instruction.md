@@ -5,8 +5,9 @@ Pick up the small bin, pour all five balls into the big bin on the floor at the 
 bin up high, about a forearm's length above the table.
 
 ## Goal
-Success: all five balls are in the big bin on the floor, and the small bin is still held up about a forearm's length or
-more above the table. Your trajectory is replayed from the fixed start. What counts is the state after its last action.
+Success: all five balls are at the height of the inside of the big bin on the floor, and the small bin is still up about
+a forearm's length or more above the table. Your trajectory is replayed from the fixed start. What counts is the state
+after its last action.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`: the
 recorded actions, (T, 34), one row per physics step (1/250 s); at most 200,000 rows are graded. It is replayed open-loop

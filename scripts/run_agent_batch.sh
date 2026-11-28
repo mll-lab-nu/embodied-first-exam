@@ -34,7 +34,7 @@
 #   RUN_ID       the run id (docs/TAXONOMY.md "Run ids"): <harness>-<model>-<effort>, derived from AGENT / MODEL /
 #                EFFORT, e.g. codex-gpt6_luna-xhigh. Provider, service tier and settings go in metadata, never in the id.
 #   RESULTS      a directory OUTSIDE the repository: after each job scripts/write_task_results.py writes the per-task results
-#                for the results site there, <RESULTS>/<batch>/<task>/<RUN_ID>/ (PROTOCOL §1: no results in the repository);
+#                for the results site there, <RESULTS>/<batch>/<task>/<RUN_ID>/ (docs/protocol/tasks.md: no results in the repository);
 #                default <repo>/../rcb_results; "" = skip
 #   HOST_CPUS    the host's CPU count (`nproc`): a task's CPU cap above it ([environment] / [verifier.environment] cpus,
 #                a compose service's cpus) is clamped to it in the job's own copy of the task (below), as running.md "Resources"
@@ -227,7 +227,7 @@ u.build_opener(u.ProxyHandler({})).open(sys.argv[1], timeout=15).read()' "$GW/_g
     for i in "${!AGENT_ARGS[@]}"; do [ "${AGENT_ARGS[$i]}" = "config=$AGENT_CONFIG" ] && AGENT_ARGS[$i]="config=$cfg"; done
   fi
   # the egress allowlist must let the agent reach the gateway; with GATEWAY_EGRESS=gateway the list is the gateway's
-  # address and the package registries (PyPI and the apt archives: installing packages is allowed, PROTOCOL §5), and
+  # address and the package registries (PyPI and the apt archives: installing packages is allowed, docs/protocol/tasks.md#instructionmd), and
   # no model API's own host
   # (run_job: the job's own copy of the task; Harbor's --allow-agent-host can add a host to a task's list, not remove one)
   AGENT_ARGS+=(--allow-agent-host "$GATEWAY_BIND")
@@ -298,11 +298,11 @@ from collections import defaultdict
 jobs, batch, R = pathlib.Path(sys.argv[1]), sys.argv[2], pathlib.Path(sys.argv[3])
 sys.path.insert(0, str(R / "scripts"))
 import task_conventions as tc, write_task_results as wtr  # noqa: E402
-# docs/protocol/running.md "Results" (PROTOCOL §2): results are compared only within one configuration (task_conventions.config_key:
+# docs/protocol/running.md "Results" (docs/protocol/tasks.md): results are compared only within one configuration (task_conventions.config_key:
 # protocol version, mode, cutoff, reset budget, S, network); validated and unvalidated tasks (task_conventions.validated_of)
 # are ranked together, the unvalidated ones marked; a trial that is not a result (infrastructure, voided) never counts in a
 # success rate. Tasks outside the core set (docs/core_set.toml, task_conventions.set_of) are listed, marked, and left out
-# of the headline rate (PROTOCOL §4).
+# of the headline rate (docs/protocol/tasks.md#grading).
 HEAD = ("| task | success | result | reward fields | actions | agent wall s | input tok | cached | output tok | gateway in / out | cost $ | exception |\n"
         "|---|---|---|---|---|---|---|---|---|---|---|---|")
 groups = defaultdict(list)          # config key -> [(started, row, status, validated, not core)]
@@ -315,7 +315,7 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
     ae = r.get("agent_execution") or {}
     gw = wtr.load_json(trial / "gateway/totals.json")
     gw_cell = (f"{gw['input']} / {gw['output']}" + (" OVER BUDGET" if gw.get("over_token_budget") else "")) if gw else "-"
-    # requests the gateway refused because they were not model-API calls (PROTOCOL H.6): attempts, for a look; they
+    # requests the gateway refused because they were not model-API calls (docs/protocol/invariants.md H.6): attempts, for a look; they
     # do not void the trial, and the harness's own start-up probes are not among them
     left = sum(gw.get(k, 0) for k in ("refused_paths", "refused_server_tools", "refused_bodies", "refused_hosts"))
     gw_cell += f" REFUSED {left}" if left else ""
@@ -341,7 +341,7 @@ print(f"# {batch}\n\nOne table per comparable configuration (docs/protocol/runni
       "(a trial that is not a result is voided and never counted). Validated and unvalidated tasks are ranked together; "
       "tasks without a validated oracle (`oracle` not `full` and no `[metadata] validated = true`), and trials of a task "
       "version this checkout does not have, are marked (unvalidated). Tasks outside the core set (docs/core_set.toml) "
-      "are marked (not core) and left out of the success rate (PROTOCOL §4).")
+      "are marked (not core) and left out of the success rate (docs/protocol/tasks.md#grading).")
 for k in sorted(groups, key=lambda k: tuple(map(str, k))):
     rows = groups[k]
     counted = [(s, v) for _, _, s, v, e in rows if s in ("success", "fail") and not e]
@@ -375,13 +375,13 @@ src_of() {  # <task dir name>: its directory in the repository (no such task: a 
   printf '%s' "$R/tasks/.none/$1"
 }
 
-gateway_copy() {  # <dir> <harbor -i args...>: <dir>/tasks/<task> = the task with the gateway and the package registries as its only egress (PROTOCOL Appendix H.6)
+gateway_copy() {  # <dir> <harbor -i args...>: <dir>/tasks/<task> = the task with the gateway and the package registries as its only egress (docs/protocol/invariants.md H.6)
   local dir="$1" a; shift
   rm -rf "$dir" && mkdir -p "$dir/tasks" || return 1
   while [ $# -gt 0 ]; do
     a="$1"; shift
     if [ "$a" = -i ] && [ $# -gt 0 ]; then
-      if [ "$(python3 "$R/scripts/set_agent_egress.py" network "$(src_of "$1")")" = open ]; then    # the task declares open egress (`[agent] network_mode = "public"`, PROTOCOL §2): the copy keeps it
+      if [ "$(python3 "$R/scripts/set_agent_egress.py" network "$(src_of "$1")")" = open ]; then    # the task declares open egress (`[agent] network_mode = "public"`, docs/protocol/tasks.md): the copy keeps it
         cp -a "$(src_of "$1")" "$dir/tasks/$1" || return 1; shift; continue
       fi
       cp -a "$(src_of "$1")" "$dir/tasks/$1" && python3 "$R/scripts/set_agent_egress.py" only "$GATEWAY_ONLY" "$dir/tasks/$1" >/dev/null || return 1
@@ -452,7 +452,7 @@ PY
   return 0
 }
 
-name() {  # <mode> <base> -> task dir name: <base>-privileged / <base>-standard / <base>-realtime (PROTOCOL §1)
+name() {  # <mode> <base> -> task dir name: <base>-privileged / <base>-standard / <base>-realtime (docs/protocol/tasks.md)
   case "$1" in
     standard|limited) echo "$2-standard" ;;
     realtime) echo "$2-realtime" ;;

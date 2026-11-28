@@ -1,11 +1,12 @@
 # RoboDojo · pick_from_conveyor_by_image (standard)
 
 ## Task
-Put the object shown in the photo on the board into the basket on the belt, then lift the basket about a hand's length.
+Put the object shown in the photo on the board into the basket on the belt, then lift the basket with it at least a
+hand's width.
 
 ## Goal
-Success: the object shown in the photo lies on the basket's floor, and the basket is held about a hand's length above
-the belt.
+Success: the object shown in the photo lies on the basket's floor and, with the basket, is lifted at least a hand's
+width above where it started.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -19,8 +20,9 @@ Rules:
 - The basket is 36 cm front to back, 24 cm wide and 22 cm tall overall. Four objects, each different, ride the belt with
   it; one of them is the object in the photo.
 - The object's position, as the check measures it, is its centre, the middle of its bounding box.
-- On the basket's floor: the object's lowest point from 0.01 m below to 0.04 m above the basket's lowest point, both
-  inclusive.
+- On the basket's floor: the bottom of the object's bounding box from 0.01 m below to 0.04 m above the bottom of the
+  basket's, both inclusive; seen from above, the object's bounding box (as turned) inside the basket's; and the top of
+  the object's bounding box lower than the top of the basket's.
 - Lifted: the object's centre more than 0.08 m higher than at the start of the episode.
 - The 700-step limit is 28 s of simulated time.
 
@@ -31,7 +33,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)

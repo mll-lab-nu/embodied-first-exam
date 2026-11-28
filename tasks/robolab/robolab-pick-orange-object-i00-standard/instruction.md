@@ -4,8 +4,8 @@
 Pick up the orange measuring cup and lift it clear of the table.
 
 ## Goal
-Success: the gripper holds the orange measuring cup with all of it lifted at least a hand's width above the table, still
-over the table.
+Success: the gripper holds the orange measuring cup with all of it lifted at least a few centimetres above the table,
+still over the table.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -22,7 +22,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`):
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while Isaac Sim starts and builds the scene, ~2 min; longer on a

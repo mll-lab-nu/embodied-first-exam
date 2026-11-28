@@ -24,7 +24,7 @@ Rules:
 - A block's position, as the check measures it, is its centre, on the axis of its hole: on the bottom face for a star,
   half-way up for the other blocks.
 - Centred: seen from above, the centres of the blocks of one kind less than 0.001 m apart, taken one to the next in a
-  chain, and one of them less than 0.001 m from its peg's axis.
+  chain, and the first block of that chain less than 0.001 m from its peg's axis.
 - Pushed down: every block's lowest point more than 0.005 m below the top of the base's bounding box, that is lower than
   6.0 cm above the table.
 - Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
@@ -38,7 +38,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)

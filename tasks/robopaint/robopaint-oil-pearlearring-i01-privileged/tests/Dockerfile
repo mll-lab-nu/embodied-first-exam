@@ -1,16 +1,16 @@
-# Separate verifier sandbox (PROTOCOL §4): the same simulator image with the verifier's own copies of the tooling and the graders'
+# Separate verifier sandbox (docs/protocol/tasks.md#grading): the same simulator image with the verifier's own copies of the tooling and the graders'
 # frozen instance (+ the target picture and its licence) baked in. Nothing the agent did in its container reaches this one — Harbor
 # uploads only the declared artifacts (/app/output/), so a patched scorer or a swapped interpreter cannot influence the verdict.
 FROM ghcr.io/mll-lab-nu/efe:robopaint-0.2.0
 COPY instance.json truth_alpha.npz test.sh NOTICE-exemplar.md /tests/
 COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-pictures-files-0.1.0@sha256:3ce92526aa79918994ccb934390221e1dd6c3f4364109a40e5746140def6062e /oil-pearlearring-i01/target.png /tests/target.png
-COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.8.0@sha256:cbafd0760e862a76db9ef14f295807769280d02a68b583d68bd97b047b256793 /privileged/grade.py /tests/grade.py
-COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.8.0@sha256:cbafd0760e862a76db9ef14f295807769280d02a68b583d68bd97b047b256793 /rcb_brush.py /tests/rcb_brush.py
-COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.8.0@sha256:cbafd0760e862a76db9ef14f295807769280d02a68b583d68bd97b047b256793 /rcb_brush_score.py /tests/rcb_brush_score.py
-COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.8.0@sha256:cbafd0760e862a76db9ef14f295807769280d02a68b583d68bd97b047b256793 /rcb_brush_strict.py /tests/rcb_brush_strict.py
+COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.9.0@sha256:0784a1af64aa0694b739edc8620d4f3e5becb57a2c73bef075fb80ee89e98a91 /privileged/grade.py /tests/grade.py
+COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.9.0@sha256:0784a1af64aa0694b739edc8620d4f3e5becb57a2c73bef075fb80ee89e98a91 /rcb_brush.py /tests/rcb_brush.py
+COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.9.0@sha256:0784a1af64aa0694b739edc8620d4f3e5becb57a2c73bef075fb80ee89e98a91 /rcb_brush_score.py /tests/rcb_brush_score.py
+COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.9.0@sha256:0784a1af64aa0694b739edc8620d4f3e5becb57a2c73bef075fb80ee89e98a91 /rcb_brush_strict.py /tests/rcb_brush_strict.py
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests
-# resources (PROTOCOL §6) # rcb-monitor
+# resources (docs/protocol/resources.md) # rcb-monitor
 COPY --from=ghcr.io/mll-lab-nu/efe:monitor-0.5.0@sha256:ecc5f24f1516ca11711d7c2d3ac07c89f79cd9220812c1244498ec71e352402a /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
 COPY rcb_limits.json /tests/rcb_limits.json

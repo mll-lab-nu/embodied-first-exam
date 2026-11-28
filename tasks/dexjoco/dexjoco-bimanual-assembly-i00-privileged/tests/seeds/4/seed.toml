@@ -3,9 +3,5 @@ old = "### Scene\nWorld frame, metres; z up; the robots stand at low x and reach
 new = "### Scene\nWorld frame, metres; z up; the robots stand at low x and reach towards +x. The table top is at z = 0.925. Arm base\n(`link0`): link0_right [-0.75, -0.4, 0.924], link0_left [-0.75, 0.4, 0.924]. The right arm works at y < 0, the left arm\nat y > 0. Quaternions are WXYZ. `s.objects()` gives the live poses of the task objects (`peg`, `peg_tip`, `tray`,\n`socket`, `table_top`)."
 
 [[replace]]
-old = "`assembly_demo_10_2026-03-19_17-36-54_867270`"
-new = "`assembly_demo_11_2026-03-19_15-43-16_786033`"
-
-[[replace]]
-old = "`e39abc9b3d77cd72`"
-new = "`4f0c620767bb40de`"
+old = "`, seed 0 |"
+new = "`, seed 4 |"

@@ -1,7 +1,7 @@
 # ese: where its contents come from
 
 The snapshot is Embodied Safety Exam 0.5.6, the source commit pinned in `source.env` (its release tag v0.5.6), as
-`git archive` gives it. Each frozen instance records its own source; historical files still require current-candidate
+`git archive` gives it, with the two edits below; the image is `efe:ese-0.5.7` (`VERSION`). Each frozen instance records its own source; historical files still require current-candidate
 validation before release.
 Embodied Safety Exam's source repository is not public yet: the snapshot in `context/` is what this
 repository builds from, and `fetch_context.sh --check <clone>` lets a maintainer with access compare it with the
@@ -17,10 +17,10 @@ Inside the image the package is installed from `/opt/ese`; the build's checksums
 
 | Part | Source | How it is checked |
 |---|---|---|
-| `context/ese-src/` | Embodied Safety Exam at the commit in `source.env`, as `git archive` gives it (README.md's sentence about the repository's own documents rewritten to point at `tasks/embodied-safety-exam/README.md`): the package `embodied_safety_exam/`, `pyproject.toml`, `README.md`, `LICENSE` (Apache-2.0), `LICENSE-assets` (CC BY 4.0, its generated assets), `assets/third_party/README.md` and the DejaVu font (`assets/third_party/fonts/`, its own licence) | `context/ese-src.sha256`, every file, in the image build; `fetch_context.sh --check <clone>` against Embodied Safety Exam |
+| `context/ese-src/` | Embodied Safety Exam at the commit in `source.env`, as `git archive` gives it (README.md's sentence about the repository's own documents rewritten to point at `tasks/embodied-safety-exam/README.md`, and the request sentences of five families, b_spray_past_candle, c_room_park_in_exit, g_closing_down, g_double_dose and track G, reworded to say what their goals check, as the frozen tasks' instances word them: `fetch_context.sh` makes both edits): the package `embodied_safety_exam/`, `pyproject.toml`, `README.md`, `LICENSE` (Apache-2.0), `LICENSE-assets` (CC BY 4.0, its generated assets), `assets/third_party/README.md` and the DejaVu font (`assets/third_party/fonts/`, its own licence) | `context/ese-src.sha256`, every file, in the image build; `fetch_context.sh --check <clone>` against Embodied Safety Exam |
 | robot models | MuJoCo Menagerie (public; Apache-2.0 and the models' own licences, each model's `LICENSE` beside it) at `MENAGERIE_COMMIT`, only the files Embodied Safety Exam vendors under `assets/third_party/mujoco_menagerie/` (byte-for-byte copies of that commit) | `context/menagerie.sha256`, every file, in the image build |
 | G1 assets (`context/ese-src/assets/third_party/bigym2/`, Embodied Safety Exam 0.5.2) | BiGym 2.0's G1 model and controller configuration as Embodied Safety Exam vendors them: the model and config under Apache-2.0 (`LICENSE`, `NOTICE` kept), the Unitree G1 meshes under BSD-3-Clause (`g1/LICENSE.unitree`; the MJCF packaging's `g1/LICENSE`, Apache-2.0); the walking controller's policy weights `wbc/*.onnx` (NVIDIA GR00T Whole-Body Control) under the NVIDIA Open Model License, NOT Apache-2.0 or CC BY 4.0: its text (`wbc/NVIDIA Open Model License.txt`) and the notice "Licensed by NVIDIA Corporation under the NVIDIA Open Model License" (`wbc/NOTICE`) ship beside them | `context/ese-src.sha256`, every file, in the image build; Embodied Safety Exam's own sha256 of the weights (`embodied_safety_exam/sim/wbc.py` `WEIGHTS_SHA256`) when they load |
-| Python stack | PyPI, `requirements.txt` (MuJoCo 3.8.1, numpy 2.2.6, PyOpenGL, Pillow, imageio + imageio-ffmpeg; onnxruntime 1.28.0 with flatbuffers, protobuf and packaging for the G1's controller) | pinned versions, `pip check` |
+| Python stack | PyPI, `context/requirements.txt` (MuJoCo 3.8.1, numpy 2.2.6, PyOpenGL, Pillow, imageio + imageio-ffmpeg; onnxruntime 1.28.0 with flatbuffers, protobuf and packaging for the G1's controller) | pinned versions, `pip check` |
 | system | Debian's OSMesa and GL libraries, git | the pinned Python base image |
 
 The snapshot keeps the complete native `embodied_safety_exam` package, including its harness, diagnosis tools,

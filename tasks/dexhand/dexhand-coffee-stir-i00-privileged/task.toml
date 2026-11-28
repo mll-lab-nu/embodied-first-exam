@@ -13,7 +13,7 @@ robot = "marvin-bimanual-sharpa-wave"
 hands = ["sharpa", "wuji"]
 default_hand = "sharpa"
 family = "coffee_stir"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 
 oracle = "full"
 oracle_evidence = "solution/trajectory.npz replays the validated Sharpa Wave authoring trajectory on the Marvin right arm (1,882 controls; success after 1,802, then 80 unexecuted hold rows of slack). Two fresh-process replays succeed with identical state hashes, and the rows rounded to float32 also succeed. The standard oracle submits the same rows through the public client."
@@ -27,7 +27,7 @@ timeout_sec = 1800.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

@@ -1,12 +1,13 @@
 # Embodied Olympics · double dutch (standard)
 
 ## Task
-Jump Double Dutch: get into the two turning ropes and jump them 10 times in a row, one rope per jump, without a rope
+Jump Double Dutch: get into the two turning ropes and make 10 counted jumps (one rope counts per jump) without a rope
 touching you, then land on your feet.
 
 ## Goal
-Success: you get into the middle of the turning ropes, jump them ten times in a row, one rope per jump, without a rope
-touching you, and land on your feet.
+Success: you get into the middle of the turning ropes, make ten counted jumps without a rope touching you, and land on
+your feet; a jump counts when a rope passes under both feet while you are in the air, and a second rope in the same
+jump is not counted.
 
 The referee in the service judges these stages, in order: **the entry, each of the 10 jumps, the landing**. Once the
 referee calls success, it stays; the attempt continues until you finish. The first foul before a success ends the
@@ -41,7 +42,7 @@ MuJoCo). The robot runs as a service you reach through its client or its MCP too
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`) is your whole interface to the robot. Its docstring is the full
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`) is your whole interface to the robot. Its docstring is the full
 reference (`python -c "import rcb_client; help(rcb_client)"`); its examples use another benchmark's names: for this task
 `r.spec()` is authoritative.
 

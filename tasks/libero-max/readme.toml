@@ -1,0 +1,499 @@
+# README data for tasks/libero-max/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text (upstream clones at these commits):
+#   LIBERO-PRO @ 2b910b5 (Zxy-MLlab/LIBERO-PRO; its LIBERO package), libero/libero/envs/:
+#     bddl_base_domain.py step L810-819 (done = _check_success() after every control step);
+#     problems/libero_*_manipulation.py _check_success (tabletop L135-143: the AND of the BDDL goal's predicates) and
+#       _load_sites_in_arena (kitchen L63-124: a region of an object is a SiteObject with the joints of the body that
+#       holds it; a `living_room_table` region is a TargetZone of the ranges' half-widths, height 0.007 m, no parent);
+#     predicates/base_predicates.py In L57-59 (region.check_contact(obj) and region.check_contain(obj)), On L62-64
+#       (B.check_ontop(A)), Close L106-108, TurnOn L111-113, TurnOff L116-118;
+#     object_states/base_object_states.py ObjectState.check_ontop L78-94 (B's origin z <= A's, contact, horizontal
+#       distance of the origins < 0.03 m), turn_on L116-122 (any joint), turn_off L124-130 (every joint);
+#       SiteObjectState.check_contain L159-170, check_contact L172-176 (always True: In never checks contact),
+#       check_ontop L178-200 (SiteObject.under, plus contact with the parent object when the site has one), is_close
+#       L214-220 (every joint of the site's body);
+#     objects/site_object.py in_box L35-56 (|R @ half-sizes| about the site's centre, the bottom 0.01 m lower), under
+#       L63-80 (R @ (p - c): |x|, |y| < half-sizes, half_z - 0.005 < z < half_z + 0.10); objects/target_zones.py L28-56;
+#     objects/articulated_objects.py WoodenCabinet L173-195 (closed: slide > 0.0 m), FlatStove L247-292 and
+#       YellowStove L295-340 (on: hinge >= 0.5 rad; off: hinge < 0.0 rad);
+#     assets: articulated_objects/wooden_cabinet.xml L27 (top_side), L40-45 (top_level range -0.16..0.01, top_region),
+#       L82-85 (bottom_level, bottom_region); flat_stove.xml / yellow_stove.xml L22 (cook_region), L35-36 (button hinge
+#       range -0.005..2.1); stable_scanned_objects/{basket,red_basket}/*.xml L9 (contain_region);
+#       turbosquid_objects/desk_caddy/desk_caddy.xml L11 (back_contain_region); turbosquid_objects/wine_rack/
+#       wine_rack.xml L15 (top_region, tilted).
+#   LIBERO-PRO task data @ c86fc3b (zhouxueyang/LIBERO-Pro, bddl_files/): the `(:goal ...)` of each task's
+#     `substrate_variant.bddl_file` (instance.json), quoted next to each [tasks] entry below.
+#   LIBERO-MAX @ a1e3cef (liberomax/LIBERO-MAX), src/libero_max/: cosmos_integration.py CosmosInterventionEnv.step
+#     L221-355 (the on_proximity trigger, the change applied once, done passed through unchanged for these operations);
+#     pro_runtime.py step L281-289 (done unchanged); libero_backend.py (the changes, cited per family).
+#   tooling (embodied_first_exam/benchmarks/libero-max/): privileged/environment/lmx_tool.py SUITE_MAX_STEPS L42,
+#     load_actions L74-88, as_actions L91-99 (shape, finite, clipped to [-1, 1]), Session.__init__ L180-200 (the start
+#     hash; RCB_AGENT_END), step L203-217, _replay_main L458-483 (rows after the success: invalid), EXIT_REBUILD L52;
+#     privileged/tests/grade.py main L62-108; sim/server.py step L166-168, live_verdict L177-184 (no success key);
+#     standard/sidecar/rcb_service.py AGENT_END / END_STATE_REASONS L127-131, _step L939-955, _end L959-976, the start check
+#     L705-716, the resume and give-ups L750-772, a simulator error L857-865, the session end L1258-1263, _write_final
+#     L630-643; standard/tests/grade.py main L42-81.
+# The per-task names and numbers ({vars[...]}) are generated from each task's instance.json, its BDDL goal and the
+# instruction's state labels (a one-off generator, kept outside the repository).
+
+[benchmark]
+name = "LIBERO-MAX"
+citation = "Zhang et al., 2026"   # arXiv 2609.36518 (upstream CITATION.bib)
+url = "https://github.com/liberomax/LIBERO-MAX"
+repo = "liberomax/LIBERO-MAX"
+commit = "a1e3cef"
+
+[license]
+text = """
+LIBERO-MAX ([liberomax/LIBERO-MAX](https://github.com/liberomax/LIBERO-MAX) @ `a1e3cef`; Zhang et al., 2026,
+arXiv:2609.36518) has no licence file. Its authors gave written permission to redistribute the two parts used here, the
+event parameters and case choice (the frozen instance) and the event runtime in the image, with attribution (cite the
+paper and link the repository). The LIBERO package and object assets come from LIBERO-PRO
+([Zxy-MLlab/LIBERO-PRO](https://github.com/Zxy-MLlab/LIBERO-PRO) @ `2b910b5`, MIT), built on
+[LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO) (MIT); the task data (BDDL and initial-state files) is
+LIBERO-PRO's dataset `zhouxueyang/LIBERO-Pro` @ `c86fc3b` (CC BY 4.0). robosuite 1.4.0: MIT; MuJoCo 3.2.6: Apache-2.0.
+No part is under a non-commercial licence.
+"""
+
+[robots]
+franka-panda = "Franka Emika Panda arm on a fixed mount with its two-finger gripper (LIBERO's OSC_POSE controller)"
+
+# privileged/tests/grade.py main L62-108: no file -> missing_trajectory (0); lmx_tool.load_actions (plain npz, <= 2 MB,
+# <= 16 unique .npy members, `actions`), as_actions (shape (T, 7), finite; clipped to [-1, 1]); 1 <= T <= the suite's
+# SUITE_MAX_STEPS, else invalid_trajectory (0); one fresh-process `lmx_tool.py --replay` (RCB_AGENT_END unset: LIBERO's
+# done ends the episode, Session.step L215-216); rows left after the done -> "invalid" (0); success = the replay's
+# success (the done on the last row). A replay process that fails or times out (3600 s) -> grader_error = 1 (0); a
+# start state that does not rebuild (exit EXIT_REBUILD) -> grader_error = infra_error = 1.
+[modes.privileged]
+success = """
+An object's origin is its body's position in the simulator. A control step is 1/20 s. LIBERO checks the goal after
+every control step, and the episode ends at the first step on which it holds.
+
+The graded file is `/app/output/trajectory.npz` with an `actions` array of shape (T, 7), 1 ≤ T ≤ {vars[steps]} (LIBERO's
+step limit for this suite), one row per control step after LIBERO's 10 warm-up steps; values outside [-1, 1] are
+clipped. The verifier replays it once, open-loop, in a fresh process from the frozen start, with the scene change
+applied as above. It passes when the goal first holds on the step of the last row. Rows left after the step on which the
+goal first holds make the trajectory invalid, and a replay whose last row leaves the goal unmet scores 0.
+
+A missing file, a file that is not a plain npz (at most 2 MB, only `.npy` members) with a finite `actions` array of that
+shape, or more than {vars[steps]} rows scores 0, as does a replay process that fails or runs over its 1 h limit (a grader
+error). A host on which the frozen start does not rebuild bit-exactly is an infrastructure error, not a score.
+"""
+
+# sim service (RCB_AGENT_END=1, RCB_MAX_CONTROL_STEPS=9000 in environment/docker-compose.yaml): lmx_tool Session.step
+# L213-214 (run_on: success = LIBERO's check after the step, the episode is not ended); rcb_service _step L948-953 (the
+# cap -> "step_limit"), _agent_finish L978-983 ("finished"), poll L1258-1263 (SIGUSR1 at the session's end -> "timeout"), _end
+# L962-967 (success = reason in END_STATE_REASONS and the check after the last control step; no end window), a
+# simulator error L857-865 -> "error" (0); the start check L705-716 (instance_mismatch, infra), resume L750-772
+# (sim_crashed_on_call: 0; sim_crashed, resume_failed: infra); standard/tests/grade.py L52-58 (success AND live_success
+# AND graded_by "live" AND finalized AND NOT infra AND reason != "error"). One episode: RCB_RESET_BUDGET 0.
+[modes.standard]
+success = """
+An object's origin is its body's position in the simulator. A control step is 1/20 s.
+
+Graded is the one live episode (no reset), with the scene change applied as above. A success does not end it: the
+episode ends at the agent's `POST /finish`, after 9,000 control steps, or when the agent's session ends, and the goal
+is checked once, on the state after the last control step; a success earlier in the episode does not count. A
+simulator error raised by the agent's actions ends the episode with 0, as do service crashes that all happened while
+serving the agent's calls. A scene that does not start at the frozen instance's recorded state, service crashes outside
+the agent's calls, a resume that fails or a verdict the service never writes is an infrastructure error, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families: "libero-max/<LIBERO suite>/<LIBERO-MAX event>". The goal differs from task to task within a family, so each
+# family text is the task's goal ({vars[goal]}, from [tasks] below) and the family's event; `steps` is the suite's
+# privileged step limit (lmx_tool.SUITE_MAX_STEPS L42). Every trigger is on_proximity at 0.18 m (gen_vars.py asserts it).
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _shift_camera L195 (agentview pose and field of view)
+[families."libero-max/libero_10/camera_shift"]
+vars = { steps = "520" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX moves and turns the agentview camera and changes its field of view. Only the camera images change; the goal check does not use them.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _insert_distractors L381 (five placements around the trigger object)
+[families."libero-max/libero_10/distractor_burst"]
+vars = { steps = "520" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX places five more objects ({vars[distractors]}) around {vars[trigger]}. They are not part of the goal.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _set_lighting L418 (the scene's lights scaled by `scale`)
+[families."libero-max/libero_10/illumination_switch"]
+vars = { steps = "520" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX scales the scene's lighting by {vars[scale]}. Only the camera images change; the goal check does not use them.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _insert_obstacle L336-353 (_set_entity_position of the obstacle)
+[families."libero-max/libero_10/obstacle_insertion"]
+vars = { steps = "520" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX places {vars[obstacle]} next to {vars[trigger]} as an obstacle. The obstacle is not part of the goal.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _move_object L329-334 (_set_entity_position of one entity)
+[families."libero-max/libero_10/receptacle_relocation"]
+vars = { steps = "520" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX moves {vars[moved]} {vars[dist]} across the table: it sets that one object's position, and anything resting in or on it stays where it was. The goal is checked wherever the objects are at the end.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _set_sensor_corruption L479 and transform_observation L99 (`noise_std`, `occlusion_fraction`)
+[families."libero-max/libero_10/sensor_noise_onset"]
+vars = { steps = "520" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX adds noise and occluding patches to the camera images. Only the camera images change; the goal check does not use them.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _move_object L329-334 (_set_entity_position of one entity)
+[families."libero-max/libero_10/target_relocation"]
+vars = { steps = "520" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX moves {vars[moved]} {vars[dist]} across the table: it sets that one object's position. The goal is checked wherever the objects are at the end.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _set_visual_theme L444 and transform_observation L99 (a fixed channel permutation and gain)
+[families."libero-max/libero_10/visual_theme_switch"]
+vars = { steps = "520" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX recolours the camera images (a fixed swap and scaling of the colour channels). Only the camera images change; the goal check does not use them.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _shift_camera L195 (agentview pose and field of view)
+[families."libero-max/libero_goal/camera_shift"]
+vars = { steps = "300" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX moves and turns the agentview camera and changes its field of view. Only the camera images change; the goal check does not use them.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _set_lighting L418 (the scene's lights scaled by `scale`)
+[families."libero-max/libero_goal/illumination_switch"]
+vars = { steps = "300" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX scales the scene's lighting by {vars[scale]}. Only the camera images change; the goal check does not use them.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _insert_obstacle L336-353 (_set_entity_position of the obstacle)
+[families."libero-max/libero_goal/obstacle_insertion"]
+vars = { steps = "300" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX places {vars[obstacle]} next to {vars[trigger]} as an obstacle. The obstacle is not part of the goal.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _move_object L329-334 (_set_entity_position of one entity)
+[families."libero-max/libero_goal/receptacle_relocation"]
+vars = { steps = "300" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX moves {vars[moved]} {vars[dist]} across the table: it sets that one object's position, and anything resting in or on it stays where it was. The goal is checked wherever the objects are at the end.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _set_sensor_corruption L479 and transform_observation L99 (`noise_std`, `occlusion_fraction`)
+[families."libero-max/libero_goal/sensor_noise_onset"]
+vars = { steps = "300" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX adds noise and occluding patches to the camera images. Only the camera images change; the goal check does not use them.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _move_object L329-334 (_set_entity_position of one entity)
+[families."libero-max/libero_goal/target_relocation"]
+vars = { steps = "300" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX moves {vars[moved]} {vars[dist]} across the table: it sets that one object's position. The goal is checked wherever the objects are at the end.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _set_visual_theme L444 and transform_observation L99 (a fixed channel permutation and gain)
+[families."libero-max/libero_goal/visual_theme_switch"]
+vars = { steps = "300" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX recolours the camera images (a fixed swap and scaling of the colour channels). Only the camera images change; the goal check does not use them.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _shift_camera L195 (agentview pose and field of view)
+[families."libero-max/libero_object/camera_shift"]
+vars = { steps = "280" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX moves and turns the agentview camera and changes its field of view. Only the camera images change; the goal check does not use them.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _insert_distractors L381 (five placements around the trigger object)
+[families."libero-max/libero_object/distractor_burst"]
+vars = { steps = "280" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX places five more objects ({vars[distractors]}) around {vars[trigger]}. They are not part of the goal.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _set_lighting L418 (the scene's lights scaled by `scale`)
+[families."libero-max/libero_object/illumination_switch"]
+vars = { steps = "280" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX scales the scene's lighting by {vars[scale]}. Only the camera images change; the goal check does not use them.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _move_object L329-334 (_set_entity_position of one entity)
+[families."libero-max/libero_object/receptacle_relocation"]
+vars = { steps = "280" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX moves {vars[moved]} {vars[dist]} across the table: it sets that one object's position, and anything resting in or on it stays where it was. The goal is checked wherever the objects are at the end.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _set_sensor_corruption L479 and transform_observation L99 (`noise_std`, `occlusion_fraction`)
+[families."libero-max/libero_object/sensor_noise_onset"]
+vars = { steps = "280" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX adds noise and occluding patches to the camera images. Only the camera images change; the goal check does not use them.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _move_object L329-334 (_set_entity_position of one entity)
+[families."libero-max/libero_object/target_relocation"]
+vars = { steps = "280" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX moves {vars[moved]} {vars[dist]} across the table: it sets that one object's position. The goal is checked wherever the objects are at the end.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _set_visual_theme L444 and transform_observation L99 (a fixed channel permutation and gain)
+[families."libero-max/libero_object/visual_theme_switch"]
+vars = { steps = "280" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX recolours the camera images (a fixed swap and scaling of the colour channels). Only the camera images change; the goal check does not use them.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _shift_camera L195 (agentview pose and field of view)
+[families."libero-max/libero_spatial/camera_shift"]
+vars = { steps = "220" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX moves and turns the agentview camera and changes its field of view. Only the camera images change; the goal check does not use them.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _set_lighting L418 (the scene's lights scaled by `scale`)
+[families."libero-max/libero_spatial/illumination_switch"]
+vars = { steps = "220" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX scales the scene's lighting by {vars[scale]}. Only the camera images change; the goal check does not use them.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _insert_obstacle L336-353 (_set_entity_position of the obstacle)
+[families."libero-max/libero_spatial/obstacle_insertion"]
+vars = { steps = "220" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX places {vars[obstacle]} next to {vars[trigger]} as an obstacle. The obstacle is not part of the goal.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _move_object L329-334 (_set_entity_position of one entity)
+[families."libero-max/libero_spatial/receptacle_relocation"]
+vars = { steps = "220" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX moves {vars[moved]} {vars[dist]} across the table: it sets that one object's position, and anything resting in or on it stays where it was. The goal is checked wherever the objects are at the end.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _set_sensor_corruption L479 and transform_observation L99 (`noise_std`, `occlusion_fraction`)
+[families."libero-max/libero_spatial/sensor_noise_onset"]
+vars = { steps = "220" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX adds noise and occluding patches to the camera images. Only the camera images change; the goal check does not use them.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _move_object L329-334 (_set_entity_position of one entity)
+[families."libero-max/libero_spatial/target_relocation"]
+vars = { steps = "220" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX moves {vars[moved]} {vars[dist]} across the table: it sets that one object's position. The goal is checked wherever the objects are at the end.
+"""
+
+# cosmos_integration.py CosmosInterventionEnv.step L221-310 (on_proximity: |robot0_eef_pos - entity position| <= 0.18 m, policy step > 0, applied once); libero_backend.py _set_visual_theme L444 and transform_observation L99 (a fixed channel permutation and gain)
+[families."libero-max/libero_spatial/visual_theme_switch"]
+vars = { steps = "220" }
+success = """
+{vars[goal]}
+
+The scene changes once in the graded episode, at the first control step on which the hand (robosuite's end-effector point) is within 0.18 m of the position of {vars[trigger]}: LIBERO-MAX recolours the camera images (a fixed swap and scaling of the colour channels). Only the camera images change; the goal check does not use them.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Per task: the goal (the BDDL goal quoted next to each entry, the instruction's names), the trigger object and the
+# change's own parameters (instance.json case.scenario).
+[tasks."libero-max-goal-akita-black-bowl-in-wooden-cabinet-top-target-relocation-i00"]   # 07_initial_pose_position_angle/bddl/libero_goal/open_the_top_drawer_and_put_the_bowl_inside.bddl: (In akita_black_bowl_1 wooden_cabinet_1_top_region)
+vars = { goal = "Goal: the bowl (`akita_black_bowl_1`) is in the top drawer's region (`wooden_cabinet_1_top_region`), which moves with the drawer: its origin lies inside the region's box, centred on the region, with half-sizes 2.99, 7.56 and 10.22 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the bowl (`akita_black_bowl_1`)", moved = "the bowl (`akita_black_bowl_1`)", dist = "6 cm" }
+[tasks."libero-max-goal-akita-black-bowl-on-flat-stove-cook-target-relocation-i00"]   # libero_goal_lan/put_the_bowl_on_the_stove.bddl: (On akita_black_bowl_1 flat_stove_1_cook_region)
+vars = { goal = "Goal: the bowl (`akita_black_bowl_1`) is on the stove's cooking region (`flat_stove_1_cook_region`): the offset of its origin from the region's centre, turned by the region's rotation, is less than 7.5 cm along the region's x axis and less than 7.5 cm along its y axis, and between 0.5 cm below and 10 cm above the region's top face (0.25 cm above its centre); and the bowl touches the stove (`flat_stove_1`).", trigger = "the bowl (`akita_black_bowl_1`)", moved = "the bowl (`akita_black_bowl_1`)", dist = "12 cm" }
+[tasks."libero-max-goal-akita-black-bowl-on-plate-receptacle-relocation-i00"]   # libero_goal_swap/put_the_bowl_on_the_plate.bddl: (On akita_black_bowl_1 plate_1)
+vars = { goal = "Goal: the bowl (`akita_black_bowl_1`) is on the plate (`plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the bowl (`akita_black_bowl_1`)", moved = "the plate (`plate_1`)", dist = "12 cm" }
+[tasks."libero-max-goal-akita-black-bowl-on-wooden-cabinet-top-obstacle-insertion-i00"]   # libero_goal_lan/put_the_bowl_on_top_of_the_cabinet.bddl: (On akita_black_bowl_1 wooden_cabinet_1_top_side)
+vars = { goal = "Goal: the bowl (`akita_black_bowl_1`) is on the cabinet's top-surface region (`wooden_cabinet_1_top_side`): the offset of its origin from the region's centre, turned by the region's rotation, is less than 12.53 cm along the region's x axis and less than 9.44 cm along its y axis, and between 0.5 cm below and 10 cm above the region's top face (0.15 cm above its centre); and the bowl touches the cabinet (`wooden_cabinet_1`).", trigger = "the bowl (`akita_black_bowl_1`)", obstacle = "`cream_cheese_1`" }
+[tasks."libero-max-goal-cream-cheese-on-akita-black-bowl-obstacle-insertion-i00"]   # libero_goal_swap/put_the_cream_cheese_in_the_bowl.bddl: (On cream_cheese_1 akita_black_bowl_1)
+vars = { goal = "Goal: the cream cheese (`cream_cheese_1`) is on the bowl (`akita_black_bowl_1`): its origin is not lower than the origin of the bowl, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the cream cheese (`cream_cheese_1`)", obstacle = "`wine_bottle_1`" }
+[tasks."libero-max-goal-flat-stove-off-visual-theme-switch-i00"]   # libero_goal_task/turn_on_the_stove.bddl: (Turnoff flat_stove_1)
+vars = { goal = "Goal: the stove (`flat_stove_1`) is off: its knob's hinge is below 0 rad (the knob's lower limit is -0.005 rad).", trigger = "the stove (`flat_stove_1`)" }
+[tasks."libero-max-goal-flat-stove-on-illumination-switch-i00"]   # libero_goal_lan/turn_on_the_stove.bddl: (Turnon flat_stove_1)
+vars = { goal = "Goal: the stove (`flat_stove_1`) is on: its knob's hinge is at 0.5 rad or more (the knob turns from -0.005 to 2.1 rad).", trigger = "the stove (`flat_stove_1`)", scale = "0.2" }
+[tasks."libero-max-goal-flat-stove-on-illumination-switch-i01"]   # 07_initial_pose_position_angle/bddl/libero_goal/turn_on_the_stove.bddl: (Turnon flat_stove_1)
+vars = { goal = "Goal: the stove (`flat_stove_1`) is on: its knob's hinge is at 0.5 rad or more (the knob turns from -0.005 to 2.1 rad).", trigger = "the stove (`flat_stove_1`)", scale = "0.2" }
+[tasks."libero-max-goal-flat-stove-on-sensor-noise-onset-i00"]   # 01_visual_noise_glare/bddl/libero_goal/turn_on_the_stove.bddl: (Turnon flat_stove_1)
+vars = { goal = "Goal: the stove (`flat_stove_1`) is on: its knob's hinge is at 0.5 rad or more (the knob turns from -0.005 to 2.1 rad).", trigger = "the stove (`flat_stove_1`)" }
+[tasks."libero-max-goal-wine-bottle-on-plate-receptacle-relocation-i00"]   # libero_goal_task/put_the_bowl_on_the_plate.bddl: (On wine_bottle_1 plate_1)
+vars = { goal = "Goal: the wine bottle (`wine_bottle_1`) is on the plate (`plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the wine bottle (`wine_bottle_1`)", moved = "the plate (`plate_1`)", dist = "12 cm" }
+[tasks."libero-max-goal-wine-bottle-on-wine-rack-top-camera-shift-i00"]   # 05_view_occlusion/bddl/libero_goal/put_the_wine_bottle_on_the_rack.bddl: (On wine_bottle_1 wine_rack_1_top_region)
+vars = { goal = "Goal: the wine bottle (`wine_bottle_1`) is on the wine rack's top region (`wine_rack_1_top_region`), a thin box tilted with the rack's top: the offset of its origin from the region's centre, turned by the region's rotation, is less than 10.09 cm along the region's x axis and less than 2.2 cm along its y axis, and between 0.5 cm below and 10 cm above the region's top face (0.25 cm above its centre); and the wine bottle touches the wine rack (`wine_rack_1`).", trigger = "the wine bottle (`wine_bottle_1`)" }
+[tasks."libero-max-goal-wine-bottle-on-wine-rack-top-obstacle-insertion-i00"]   # 04_object_texture/bddl/libero_goal/put_the_wine_bottle_on_the_rack.bddl: (On wine_bottle_1 wine_rack_1_top_region)
+vars = { goal = "Goal: the wine bottle (`wine_bottle_1`) is on the wine rack's top region (`wine_rack_1_top_region`), a thin box tilted with the rack's top: the offset of its origin from the region's centre, turned by the region's rotation, is less than 10.09 cm along the region's x axis and less than 2.2 cm along its y axis, and between 0.5 cm below and 10 cm above the region's top face (0.25 cm above its centre); and the wine bottle touches the wine rack (`wine_rack_1`).", trigger = "the wine bottle (`wine_bottle_1`)", obstacle = "`akita_black_bowl_1`" }
+[tasks."libero-max-goal-wine-bottle-on-wine-rack-top-visual-theme-switch-i00"]   # 05_view_occlusion/bddl/libero_goal/put_the_wine_bottle_on_the_rack.bddl: (On wine_bottle_1 wine_rack_1_top_region)
+vars = { goal = "Goal: the wine bottle (`wine_bottle_1`) is on the wine rack's top region (`wine_rack_1_top_region`), a thin box tilted with the rack's top: the offset of its origin from the region's centre, turned by the region's rotation, is less than 10.09 cm along the region's x axis and less than 2.2 cm along its y axis, and between 0.5 cm below and 10 cm above the region's top face (0.25 cm above its centre); and the wine bottle touches the wine rack (`wine_rack_1`).", trigger = "the wine bottle (`wine_bottle_1`)" }
+[tasks."libero-max-goal-wine-bottle-on-wooden-cabinet-top-sensor-noise-onset-i00"]   # libero_goal_lan/put_the_wine_bottle_on_top_of_the_cabinet.bddl: (On wine_bottle_1 wooden_cabinet_1_top_side)
+vars = { goal = "Goal: the wine bottle (`wine_bottle_1`) is on the cabinet's top-surface region (`wooden_cabinet_1_top_side`): the offset of its origin from the region's centre, turned by the region's rotation, is less than 12.53 cm along the region's x axis and less than 9.44 cm along its y axis, and between 0.5 cm below and 10 cm above the region's top face (0.15 cm above its centre); and the wine bottle touches the cabinet (`wooden_cabinet_1`).", trigger = "the wine bottle (`wine_bottle_1`)" }
+[tasks."libero-max-goal-yellow-stove-on-camera-shift-i00"]   # libero_goal_object/turn_on_the_stove.bddl: (Turnon yellow_stove_1)
+vars = { goal = "Goal: the stove (`yellow_stove_1`) is on: its knob's hinge is at 0.5 rad or more (the knob turns from -0.005 to 2.1 rad).", trigger = "the stove (`yellow_stove_1`)" }
+[tasks."libero-max-long-alphabet-soup-and-cream-cheese-in-basket-receptacle-relocation-i00"]   # 02_camera_view_angle/bddl/libero_10/LIVING_ROOM_SCENE1_put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket.bddl: (In alphabet_soup_1 basket_1_contain_region) (In cream_cheese_1 basket_1_contain_region)
+vars = { goal = "Goal, both of: (1) the alphabet soup (`alphabet_soup_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked; and (2) the cream cheese (`cream_cheese_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the alphabet soup (`alphabet_soup_1`)", moved = "the basket (`basket_1`)", dist = "6 cm" }
+[tasks."libero-max-long-alphabet-soup-and-cream-cheese-in-basket-target-relocation-i00"]   # 02_camera_view_angle/bddl/libero_10/LIVING_ROOM_SCENE1_put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket.bddl: (In alphabet_soup_1 basket_1_contain_region) (In cream_cheese_1 basket_1_contain_region)
+vars = { goal = "Goal, both of: (1) the alphabet soup (`alphabet_soup_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked; and (2) the cream cheese (`cream_cheese_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the alphabet soup (`alphabet_soup_1`)", moved = "the alphabet soup (`alphabet_soup_1`)", dist = "12 cm" }
+[tasks."libero-max-long-alphabet-soup-and-tomato-sauce-in-basket-distractor-burst-i00"]   # 07_initial_pose_position_angle/bddl/libero_10/LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket.bddl: (In alphabet_soup_1 basket_1_contain_region) (In tomato_sauce_1 basket_1_contain_region)
+vars = { goal = "Goal, both of: (1) the alphabet soup (`alphabet_soup_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked; and (2) the tomato sauce (`tomato_sauce_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the alphabet soup (`alphabet_soup_1`)", distractors = "`butter_1`, `ketchup_1`, `milk_1`, `cream_cheese_1` and `orange_juice_1`" }
+[tasks."libero-max-long-alphabet-soup-and-tomato-sauce-in-basket-receptacle-relocation-i00"]   # 07_initial_pose_position_angle/bddl/libero_10/LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket.bddl: (In alphabet_soup_1 basket_1_contain_region) (In tomato_sauce_1 basket_1_contain_region)
+vars = { goal = "Goal, both of: (1) the alphabet soup (`alphabet_soup_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked; and (2) the tomato sauce (`tomato_sauce_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the alphabet soup (`alphabet_soup_1`)", moved = "the basket (`basket_1`)", dist = "6 cm" }
+[tasks."libero-max-long-alphabet-soup-and-tomato-sauce-in-basket-sensor-noise-onset-i00"]   # 04_object_texture/bddl/libero_10/LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket.bddl: (In alphabet_soup_1 basket_1_contain_region) (In tomato_sauce_1 basket_1_contain_region)
+vars = { goal = "Goal, both of: (1) the alphabet soup (`alphabet_soup_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked; and (2) the tomato sauce (`tomato_sauce_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the alphabet soup (`alphabet_soup_1`)" }
+[tasks."libero-max-long-black-bowl-in-wooden-cabinet-bottom-closed-obstacle-insertion-i00"]   # libero_10_object/KITCHEN_SCENE4_put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it.bddl: (Close wooden_cabinet_1_bottom_region) (In black_bowl_1 wooden_cabinet_1_bottom_region)
+vars = { goal = "Goal, both of: (1) the bowl (`black_bowl_1`) is in the bottom drawer's region (`wooden_cabinet_1_bottom_region`), which moves with the drawer: its origin lies inside the region's box, centred on the region, with half-sizes 2.99, 7.56 and 10.22 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked; and (2) the bottom drawer is closed: its slide is above 0 m (the slide runs from -0.16 m, pulled out, to 0.01 m).", trigger = "the bowl (`black_bowl_1`)", obstacle = "`wine_bottle_1`" }
+[tasks."libero-max-long-black-bowl-in-wooden-cabinet-bottom-closed-obstacle-insertion-i01"]   # libero_10_object/KITCHEN_SCENE4_put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it.bddl: (Close wooden_cabinet_1_bottom_region) (In black_bowl_1 wooden_cabinet_1_bottom_region)
+vars = { goal = "Goal, both of: (1) the bowl (`black_bowl_1`) is in the bottom drawer's region (`wooden_cabinet_1_bottom_region`), which moves with the drawer: its origin lies inside the region's box, centred on the region, with half-sizes 2.99, 7.56 and 10.22 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked; and (2) the bottom drawer is closed: its slide is above 0 m (the slide runs from -0.16 m, pulled out, to 0.01 m).", trigger = "the bowl (`black_bowl_1`)", obstacle = "`wine_bottle_1`" }
+[tasks."libero-max-long-porcelain-mug-and-white-yellow-mug-on-plate-camera-shift-i00"]   # 02_camera_view_angle/bddl/libero_10/LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate.bddl: (On porcelain_mug_1 plate_1) (On white_yellow_mug_1 plate_2)
+vars = { goal = "Goal, both of: (1) the white mug (`porcelain_mug_1`) is on the plate on the robot's right (`plate_1`): its origin is not lower than the origin of the plate on the robot's right, the two touch, and their origins are less than 3 cm apart horizontally; and (2) the yellow-and-white mug (`white_yellow_mug_1`) is on the plate on the robot's left (`plate_2`): its origin is not lower than the origin of the plate on the robot's left, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the white mug (`porcelain_mug_1`)" }
+[tasks."libero-max-long-porcelain-mug-and-white-yellow-mug-on-plate-illumination-switch-i00"]   # 02_camera_view_angle/bddl/libero_10/LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate.bddl: (On porcelain_mug_1 plate_1) (On white_yellow_mug_1 plate_2)
+vars = { goal = "Goal, both of: (1) the white mug (`porcelain_mug_1`) is on the plate on the robot's right (`plate_1`): its origin is not lower than the origin of the plate on the robot's right, the two touch, and their origins are less than 3 cm apart horizontally; and (2) the yellow-and-white mug (`white_yellow_mug_1`) is on the plate on the robot's left (`plate_2`): its origin is not lower than the origin of the plate on the robot's left, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the white mug (`porcelain_mug_1`)", scale = "0.2" }
+[tasks."libero-max-long-porcelain-mug-and-white-yellow-mug-on-plate-visual-theme-switch-i00"]   # libero_10_swap/LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate.bddl: (On porcelain_mug_1 plate_1) (On white_yellow_mug_1 plate_2)
+vars = { goal = "Goal, both of: (1) the white mug (`porcelain_mug_1`) is on the plate on the robot's right (`plate_1`): its origin is not lower than the origin of the plate on the robot's right, the two touch, and their origins are less than 3 cm apart horizontally; and (2) the yellow-and-white mug (`white_yellow_mug_1`) is on the plate on the robot's left (`plate_2`): its origin is not lower than the origin of the plate on the robot's left, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the white mug (`porcelain_mug_1`)" }
+[tasks."libero-max-long-porcelain-mug-and-white-yellow-mug-on-plate-visual-theme-switch-i01"]   # libero_10_lan/LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate.bddl: (On porcelain_mug_1 plate_1) (On white_yellow_mug_1 plate_2)
+vars = { goal = "Goal, both of: (1) the white mug (`porcelain_mug_1`) is on the plate on the robot's right (`plate_1`): its origin is not lower than the origin of the plate on the robot's right, the two touch, and their origins are less than 3 cm apart horizontally; and (2) the yellow-and-white mug (`white_yellow_mug_1`) is on the plate on the robot's left (`plate_2`): its origin is not lower than the origin of the plate on the robot's left, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the white mug (`porcelain_mug_1`)" }
+[tasks."libero-max-long-white-yellow-mug-and-green-chocolate-pudding-on-yellow-plate-sensor-noise-onset-i00"]   # libero_10_object/LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate.bddl: (On white_yellow_mug_1 yellow_plate_1) (On green_chocolate_pudding_1 living_room_table_yellow_plate_right_region)
+vars = { goal = "Goal, both of: (1) the mug (`white_yellow_mug_1`) is on the plate (`yellow_plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally; and (2) the chocolate pudding (`green_chocolate_pudding_1`) is on the table region beside the plate that the task names (`living_room_table_yellow_plate_right_region`), a 10 cm square on the table: the offset of its origin from the region's centre, turned by the region's rotation, is less than 5 cm along the region's x axis and less than 5 cm along its y axis, and between 0.5 cm below and 10 cm above the region's top face (0.7 cm above its centre); contact is not checked.", trigger = "the mug (`white_yellow_mug_1`)" }
+[tasks."libero-max-long-white-yellow-mug-in-desk-caddy-back-camera-shift-i00"]   # libero_10_task/STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy.bddl: (In white_yellow_mug_1 desk_caddy_1_back_contain_region)
+vars = { goal = "Goal: the mug (`white_yellow_mug_1`) is in the caddy's back-compartment region (`desk_caddy_1_back_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 2.77, 6.22 and 6.05 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the mug (`white_yellow_mug_1`)" }
+[tasks."libero-max-long-white-yellow-mug-in-desk-caddy-back-illumination-switch-i00"]   # libero_10_task/STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy.bddl: (In white_yellow_mug_1 desk_caddy_1_back_contain_region)
+vars = { goal = "Goal: the mug (`white_yellow_mug_1`) is in the caddy's back-compartment region (`desk_caddy_1_back_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 2.77, 6.22 and 6.05 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the mug (`white_yellow_mug_1`)", scale = "1.8" }
+[tasks."libero-max-object-alphabet-soup-in-basket-receptacle-relocation-i00"]   # 04_object_texture/bddl/libero_object/pick_up_the_alphabet_soup_and_place_it_in_the_basket.bddl: (In alphabet_soup_1 basket_1_contain_region)
+vars = { goal = "Goal: the alphabet soup (`alphabet_soup_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the alphabet soup (`alphabet_soup_1`)", moved = "the basket (`basket_1`)", dist = "6 cm" }
+[tasks."libero-max-object-alphabet-soup-in-basket-target-relocation-i00"]   # 06_object_shape/bddl/libero_object/pick_up_the_alphabet_soup_and_place_it_in_the_basket.bddl: (In alphabet_soup_1 basket_1_contain_region)
+vars = { goal = "Goal: the alphabet soup (`alphabet_soup_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the alphabet soup (`alphabet_soup_1`)", moved = "the alphabet soup (`alphabet_soup_1`)", dist = "6 cm" }
+[tasks."libero-max-object-alphabet-soup-in-basket-visual-theme-switch-i00"]   # 07_initial_pose_position_angle/bddl/libero_object/pick_up_the_alphabet_soup_and_place_it_in_the_basket.bddl: (In alphabet_soup_1 basket_1_contain_region)
+vars = { goal = "Goal: the alphabet soup (`alphabet_soup_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the alphabet soup (`alphabet_soup_1`)" }
+[tasks."libero-max-object-butter-in-basket-distractor-burst-i00"]   # 07_initial_pose_position_angle/bddl/libero_object/pick_up_the_butter_and_place_it_in_the_basket.bddl: (In butter_1 basket_1_contain_region)
+vars = { goal = "Goal: the butter (`butter_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the butter (`butter_1`)", distractors = "`orange_juice_1`, `ketchup_1`, `chocolate_pudding_1`, `bbq_sauce_1` and `tomato_sauce_1`" }
+[tasks."libero-max-object-butter-in-basket-receptacle-relocation-i00"]   # 07_initial_pose_position_angle/bddl/libero_object/pick_up_the_butter_and_place_it_in_the_basket.bddl: (In butter_1 basket_1_contain_region)
+vars = { goal = "Goal: the butter (`butter_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the butter (`butter_1`)", moved = "the basket (`basket_1`)", dist = "6 cm" }
+[tasks."libero-max-object-chocolate-pudding-in-basket-distractor-burst-i00"]   # 01_visual_noise_glare/bddl/libero_object/pick_up_the_chocolate_pudding_and_place_it_in_the_basket.bddl: (In chocolate_pudding_1 basket_1_contain_region)
+vars = { goal = "Goal: the chocolate pudding (`chocolate_pudding_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the chocolate pudding (`chocolate_pudding_1`)", distractors = "`ketchup_1`, `orange_juice_1`, `alphabet_soup_1`, `bbq_sauce_1` and `salad_dressing_1`" }
+[tasks."libero-max-object-chocolate-pudding-in-basket-distractor-burst-i01"]   # libero_object_lan/pick_up_the_chocolate_pudding_and_place_it_in_the_basket.bddl: (In chocolate_pudding_1 basket_1_contain_region)
+vars = { goal = "Goal: the chocolate pudding (`chocolate_pudding_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the chocolate pudding (`chocolate_pudding_1`)", distractors = "`orange_juice_1`, `salad_dressing_1`, `bbq_sauce_1`, `ketchup_1` and `alphabet_soup_1`" }
+[tasks."libero-max-object-chocolate-pudding-in-basket-sensor-noise-onset-i00"]   # libero_object_swap/pick_up_the_chocolate_pudding_and_place_it_in_the_basket.bddl: (In chocolate_pudding_1 basket_1_contain_region)
+vars = { goal = "Goal: the chocolate pudding (`chocolate_pudding_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the chocolate pudding (`chocolate_pudding_1`)" }
+[tasks."libero-max-object-cream-cheese-in-basket-visual-theme-switch-i00"]   # 01_visual_noise_glare/bddl/libero_object/pick_up_the_cream_cheese_and_place_it_in_the_basket.bddl: (In cream_cheese_1 basket_1_contain_region)
+vars = { goal = "Goal: the cream cheese (`cream_cheese_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the cream cheese (`cream_cheese_1`)" }
+[tasks."libero-max-object-green-bbq-sauce-in-red-basket-distractor-burst-i00"]   # libero_object_object/pick_up_the_bbq_sauce_and_place_it_in_the_basket.bddl: (In green_bbq_sauce_1 red_basket_1_contain_region)
+vars = { goal = "Goal: the BBQ sauce (`green_bbq_sauce_1`) is in the basket's containment region (`red_basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the BBQ sauce (`green_bbq_sauce_1`)", distractors = "`chocolate_pudding_1`, `salad_dressing_1`, `ketchup_1`, `cream_cheese_1` and `alphabet_soup_1`" }
+[tasks."libero-max-object-green-chocolate-pudding-in-red-basket-camera-shift-i00"]   # libero_object_object/pick_up_the_chocolate_pudding_and_place_it_in_the_basket.bddl: (In green_chocolate_pudding_1 red_basket_1_contain_region)
+vars = { goal = "Goal: the chocolate pudding (`green_chocolate_pudding_1`) is in the basket's containment region (`red_basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the chocolate pudding (`green_chocolate_pudding_1`)" }
+[tasks."libero-max-object-ketchup-in-basket-distractor-burst-i00"]   # 05_view_occlusion/bddl/libero_object/pick_up_the_ketchup_and_place_it_in_the_basket.bddl: (In ketchup_1 basket_1_contain_region)
+vars = { goal = "Goal: the ketchup (`ketchup_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the ketchup (`ketchup_1`)", distractors = "`cream_cheese_1`, `bbq_sauce_1`, `salad_dressing_1`, `alphabet_soup_1` and `milk_1`" }
+[tasks."libero-max-object-milk-in-basket-camera-shift-i00"]   # libero_object_task/pick_up_the_ketchup_and_place_it_in_the_basket.bddl: (In milk_1 basket_1_contain_region)
+vars = { goal = "Goal: the milk (`milk_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the milk (`milk_1`)" }
+[tasks."libero-max-object-milk-in-basket-distractor-burst-i00"]   # 05_view_occlusion/bddl/libero_object/pick_up_the_milk_and_place_it_in_the_basket.bddl: (In milk_1 basket_1_contain_region)
+vars = { goal = "Goal: the milk (`milk_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the milk (`milk_1`)", distractors = "`butter_1`, `cream_cheese_1`, `chocolate_pudding_1`, `orange_juice_1` and `tomato_sauce_1`" }
+[tasks."libero-max-object-milk-in-basket-illumination-switch-i00"]   # libero_object_task/pick_up_the_ketchup_and_place_it_in_the_basket.bddl: (In milk_1 basket_1_contain_region)
+vars = { goal = "Goal: the milk (`milk_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the milk (`milk_1`)", scale = "0.2" }
+[tasks."libero-max-object-milk-in-basket-target-relocation-i00"]   # 05_view_occlusion/bddl/libero_object/pick_up_the_milk_and_place_it_in_the_basket.bddl: (In milk_1 basket_1_contain_region)
+vars = { goal = "Goal: the milk (`milk_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the milk (`milk_1`)", moved = "the milk (`milk_1`)", dist = "6 cm" }
+[tasks."libero-max-object-orange-juice-in-basket-distractor-burst-i00"]   # 06_object_shape/bddl/libero_object/pick_up_the_orange_juice_and_place_it_in_the_basket.bddl: (In orange_juice_1 basket_1_contain_region)
+vars = { goal = "Goal: the orange juice (`orange_juice_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the orange juice (`orange_juice_1`)", distractors = "`chocolate_pudding_1`, `salad_dressing_1`, `butter_1`, `bbq_sauce_1` and `ketchup_1`" }
+[tasks."libero-max-object-orange-juice-in-basket-illumination-switch-i00"]   # 04_object_texture/bddl/libero_object/pick_up_the_orange_juice_and_place_it_in_the_basket.bddl: (In orange_juice_1 basket_1_contain_region)
+vars = { goal = "Goal: the orange juice (`orange_juice_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the orange juice (`orange_juice_1`)", scale = "1.8" }
+[tasks."libero-max-object-salad-dressing-in-basket-sensor-noise-onset-i00"]   # libero_object_swap/pick_up_the_salad_dressing_and_place_it_in_the_basket.bddl: (In salad_dressing_1 basket_1_contain_region)
+vars = { goal = "Goal: the salad dressing (`salad_dressing_1`) is in the basket's containment region (`basket_1_contain_region`): its origin lies inside the region's box, centred on the region, with half-sizes 6.11, 6.11 and 6.95 cm along the region's own axes (LIBERO turns them into the world frame and takes their absolute values) and its bottom lowered by 1 cm; contact is not checked.", trigger = "the salad dressing (`salad_dressing_1`)" }
+[tasks."libero-max-spatial-akita-black-bowl-on-plate-camera-shift-i00"]   # libero_spatial_task/pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate.bddl: (On akita_black_bowl_2 plate_1)
+vars = { goal = "Goal: the bowl the task names (`akita_black_bowl_2`) is on the plate (`plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the bowl the task names (`akita_black_bowl_2`)" }
+[tasks."libero-max-spatial-akita-black-bowl-on-plate-camera-shift-i01"]   # libero_spatial_swap/pick_up_the_black_bowl_on_the_stove_and_place_it_on_the_plate.bddl: (On akita_black_bowl_1 plate_1)
+vars = { goal = "Goal: the bowl the task names (`akita_black_bowl_1`) is on the plate (`plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the bowl the task names (`akita_black_bowl_1`)" }
+[tasks."libero-max-spatial-akita-black-bowl-on-plate-illumination-switch-i00"]   # 06_object_shape/bddl/libero_spatial/pick_up_the_black_bowl_next_to_the_ramekin_and_place_it_on_the_plate.bddl: (On akita_black_bowl_1 plate_1)
+vars = { goal = "Goal: the bowl the task names (`akita_black_bowl_1`) is on the plate (`plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the bowl the task names (`akita_black_bowl_1`)", scale = "0.2" }
+[tasks."libero-max-spatial-akita-black-bowl-on-plate-illumination-switch-i01"]   # libero_spatial_lan/pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate.bddl: (On akita_black_bowl_1 plate_1)
+vars = { goal = "Goal: the bowl the task names (`akita_black_bowl_1`) is on the plate (`plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the bowl the task names (`akita_black_bowl_1`)", scale = "0.2" }
+[tasks."libero-max-spatial-akita-black-bowl-on-plate-obstacle-insertion-i00"]   # libero_spatial_lan/pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate.bddl: (On akita_black_bowl_1 plate_1)
+vars = { goal = "Goal: the bowl the task names (`akita_black_bowl_1`) is on the plate (`plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the bowl the task names (`akita_black_bowl_1`)", obstacle = "`cookies_1`" }
+[tasks."libero-max-spatial-akita-black-bowl-on-plate-obstacle-insertion-i01"]   # libero_spatial_lan/pick_up_the_black_bowl_next_to_the_cookie_box_and_place_it_on_the_plate.bddl: (On akita_black_bowl_1 plate_1)
+vars = { goal = "Goal: the bowl the task names (`akita_black_bowl_1`) is on the plate (`plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the bowl the task names (`akita_black_bowl_1`)", obstacle = "`cookies_1`" }
+[tasks."libero-max-spatial-akita-black-bowl-on-plate-receptacle-relocation-i00"]   # 02_camera_view_angle/bddl/libero_spatial/pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate.bddl: (On akita_black_bowl_1 plate_1)
+vars = { goal = "Goal: the bowl the task names (`akita_black_bowl_1`) is on the plate (`plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the bowl the task names (`akita_black_bowl_1`)", moved = "the plate (`plate_1`)", dist = "12 cm" }
+[tasks."libero-max-spatial-akita-black-bowl-on-plate-receptacle-relocation-i01"]   # 05_view_occlusion/bddl/libero_spatial/pick_up_the_black_bowl_next_to_the_plate_and_place_it_on_the_plate.bddl: (On akita_black_bowl_1 plate_1)
+vars = { goal = "Goal: the bowl the task names (`akita_black_bowl_1`) is on the plate (`plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the bowl the task names (`akita_black_bowl_1`)", moved = "the plate (`plate_1`)", dist = "12 cm" }
+[tasks."libero-max-spatial-akita-black-bowl-on-plate-sensor-noise-onset-i00"]   # 01_visual_noise_glare/bddl/libero_spatial/pick_up_the_black_bowl_next_to_the_ramekin_and_place_it_on_the_plate.bddl: (On akita_black_bowl_1 plate_1)
+vars = { goal = "Goal: the bowl the task names (`akita_black_bowl_1`) is on the plate (`plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the bowl the task names (`akita_black_bowl_1`)" }
+[tasks."libero-max-spatial-akita-black-bowl-on-plate-sensor-noise-onset-i01"]   # 07_initial_pose_position_angle/bddl/libero_spatial/pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate.bddl: (On akita_black_bowl_1 plate_1)
+vars = { goal = "Goal: the bowl the task names (`akita_black_bowl_1`) is on the plate (`plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the bowl the task names (`akita_black_bowl_1`)" }
+[tasks."libero-max-spatial-akita-black-bowl-on-plate-target-relocation-i00"]   # 07_initial_pose_position_angle/bddl/libero_spatial/pick_up_the_black_bowl_next_to_the_cookie_box_and_place_it_on_the_plate.bddl: (On akita_black_bowl_1 plate_1)
+vars = { goal = "Goal: the bowl the task names (`akita_black_bowl_1`) is on the plate (`plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the bowl the task names (`akita_black_bowl_1`)", moved = "the bowl the task names (`akita_black_bowl_1`)", dist = "6 cm" }
+[tasks."libero-max-spatial-akita-black-bowl-on-plate-target-relocation-i01"]   # 02_camera_view_angle/bddl/libero_spatial/pick_up_the_black_bowl_next_to_the_cookie_box_and_place_it_on_the_plate.bddl: (On akita_black_bowl_1 plate_1)
+vars = { goal = "Goal: the bowl the task names (`akita_black_bowl_1`) is on the plate (`plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the bowl the task names (`akita_black_bowl_1`)", moved = "the bowl the task names (`akita_black_bowl_1`)", dist = "6 cm" }
+[tasks."libero-max-spatial-akita-black-bowl-on-plate-visual-theme-switch-i00"]   # libero_spatial_lan/pick_up_the_black_bowl_next_to_the_plate_and_place_it_on_the_plate.bddl: (On akita_black_bowl_1 plate_1)
+vars = { goal = "Goal: the bowl the task names (`akita_black_bowl_1`) is on the plate (`plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the bowl the task names (`akita_black_bowl_1`)" }
+[tasks."libero-max-spatial-black-bowl-on-yellow-plate-obstacle-insertion-i00"]   # libero_spatial_object/pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate.bddl: (On black_bowl_1 yellow_plate_1)
+vars = { goal = "Goal: the bowl the task names (`black_bowl_1`) is on the plate (`yellow_plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the bowl the task names (`black_bowl_1`)", obstacle = "`cookies_1`" }
+[tasks."libero-max-spatial-black-bowl-on-yellow-plate-target-relocation-i00"]   # libero_spatial_object/pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate.bddl: (On black_bowl_1 yellow_plate_1)
+vars = { goal = "Goal: the bowl the task names (`black_bowl_1`) is on the plate (`yellow_plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the bowl the task names (`black_bowl_1`)", moved = "the bowl the task names (`black_bowl_1`)", dist = "6 cm" }
+[tasks."libero-max-spatial-black-bowl-on-yellow-plate-visual-theme-switch-i00"]   # libero_spatial_object/pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate.bddl: (On black_bowl_1 yellow_plate_1)
+vars = { goal = "Goal: the bowl the task names (`black_bowl_1`) is on the plate (`yellow_plate_1`): its origin is not lower than the origin of the plate, the two touch, and their origins are less than 3 cm apart horizontally.", trigger = "the bowl the task names (`black_bowl_1`)" }

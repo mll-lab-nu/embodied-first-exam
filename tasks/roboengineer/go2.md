@@ -1,6 +1,6 @@
 # roboEngineer: Unitree Go2 tasks
 
-> roboEngineer task names: [README.md](README.md) (the package names of #329 used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `ci_checks/benchmarks/roboengineer/exported.toml`).
+> roboEngineer task names: [README.md](README.md) (the package names used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `ci_checks/benchmarks/roboengineer/exported.toml`).
 
 This family ports four SPI-Active-inspired objectives to **native CPU MuJoCo**, with NumPy controller inference and **OSMesa software rendering**. It is a new simulator port and benchmark definition, not reproduction of the paper's physical experiments or released trained policies. No upstream Go2 checkpoint is assumed.
 

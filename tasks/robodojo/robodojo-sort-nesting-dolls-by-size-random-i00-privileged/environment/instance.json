@@ -872,6 +872,7 @@
  "control_hz": 25,
  "action_dim": 14,
  "instruction": "Arrange the five nesting dolls in a row from left to right, from smallest to largest.",
+ "goal_text": "Stand the five penguin toys upright in a straight row from left to right, smallest to largest, with a little space between them. Then move both arms back to where they started.",
  "labels": [
   "doll0",
   "doll1",

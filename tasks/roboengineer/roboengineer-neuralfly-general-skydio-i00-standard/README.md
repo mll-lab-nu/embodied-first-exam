@@ -1,30 +1,36 @@
-# roboengineer-neuralfly-general-skydio-i00-standard
+# roboEngineer · neuralfly-general-skydio (standard)
 
 | | |
 |---|---|
-| Benchmark | roboEngineer |
-| Mode | standard (`eai-policy/1.1`) |
-| Twin | — (none: roboEngineer has no privileged mode, PROTOCOL §2) |
-| Simulator / robot | `mujoco` / `neural-fly-partial` |
-| Family / instance | `roboengineer/neuralfly-general-skydio` / seed 0 |
-| Oracle | `full` — Harbor 0.23.0 oracle agent on a cloud CPU host, 2026-10-18, image efe-private:control-transfer-0.2.0: the reference controller (solution/, three feedback rounds) succeeded on 10/10 held-out cases, mean engineering score 87.58; nop 0. |
-| Agent time budget | 14400 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0` |
+| Task ID | `roboengineer-neuralfly-general-skydio-i00-standard` |
+| Benchmark | [roboEngineer](https://www.embodied-first-exam.ai/suite/roboengineer/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | Neural Fly quadrotor airframe, approximated as a symmetric X quadrotor |
+| Mode | standard |
+| Instance | `roboengineer/neuralfly-general-skydio`, seed 0 |
+| Time limit | 4 h |
+| Reference solution | Included |
 
 ## Task
 Fly the drone through six timed laps of its figure eight, keeping close to the moving target the whole time.
 
-## Difficulty
-Infer transfer failures from video and noisy sensors across bounded adaptation rounds.
+## Success criteria
+There are 10 held-out cases, two for each of five wind conditions.
+The course is a figure eight drawn per case: vertical, horizontal or inclined, of varied size, heading and lap time (the moving target runs a lap in 2π / 0.8 to 2π / 1.1 s), in either direction.
+Each case runs six laps of the figure eight. A case succeeds when the drone flies all six laps without a crash
+and the root-mean-square distance between the drone and the moving target, over every control step (0.02 s) from the
+first one, is below 0.25 m. A crash ends the case as a failure: any contact, a non-finite or unstable simulation state,
+or the drone more than 5 m from the figure eight's centre.
 
-## Reference solution
-Harbor 0.23.0 oracle agent on a cloud CPU host, 2026-10-18, image efe-private:control-transfer-0.2.0: the reference controller (solution/, three feedback rounds) succeeded on 10/10 held-out cases, mean engineering score 87.58; nop 0.
+The evaluator grades one policy: the deployment round the agent sealed or, without a seal, the latest round that
+completed before the agent's session ended (at the latest after 4 h). A round still running at that moment is
+not graded, and with no completed round the score is 0. The evaluator runs that policy on every held-out case, each in
+two fresh processes without rendering; the two runs must give the same state hash, metrics and noisy observations. The
+task succeeds when every held-out case succeeds. `final_reward` is the mean case score (0 to 100); it does not decide
+success. A case in which the simulation diverges fails. A failure of the evaluator itself (a missing or mismatched
+asset or instance, a worker crash, two runs that disagree) is an infrastructure error, not a score.
 
-## Verification
-Frozen development and held-out banks, data-only deployment, fresh-process state hashes, separate no-network verifier. All numeric scores and physical outcomes are operator-only until submission closes.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,7 +40,19 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
+## Others
+This task needs the Neural Fly force fit, which is not distributed: build the evaluator image with
+`images/control-transfer/fetch_assets.sh --fit-fly`, which makes the fit locally from the public flight logs.
 
-### Notes
-Flight-data quadratic force surrogate and approximate rigid-body/actuator dynamics; not a learned aerodynamics model or flight-stack simulation. Fixed 50-degree command tilt envelope; 2.2 thrust-to-weight limit. Skydio X2 appearance only; the underlying Neural Fly surrogate is not calibrated Skydio dynamics.
+## License
+roboEngineer is an original suite of Embodied First Exam. Its components carry their own terms: AnyCar's car mechanism
+([LeCAR-Lab/anycar](https://github.com/LeCAR-Lab/anycar) @ `20fc50a`, Apache License 2.0 as its README declares) and
+F1DB's circuit outlines ([f1db/f1db](https://github.com/f1db/f1db) @ `7cf634e`, CC BY 4.0; `anycarbench/NOTICE`);
+the Unitree G1 model and training task of [unitreerobotics/unitree_rl_mjlab](https://github.com/unitreerobotics/unitree_rl_mjlab)
+@ `1425b15` (Apache License 2.0); MuJoCo Menagerie's Unitree Go2 (BSD 3-Clause, Unitree Robotics) and Skydio X2
+(Apache License 2.0) models. The Neural Fly force fit is made from the flight logs of
+[aerorobotics/neural-fly](https://github.com/aerorobotics/neural-fly) @ `0ed5024`, which are **for personal and
+educational use only** (written permission from the authors is needed for further use); the fit is not distributed.
+The Neural Landing residual is converted from the checkpoint of
+[GuanyaShi/neural_lander_sim_1d](https://github.com/GuanyaShi/neural_lander_sim_1d) @ `30ab04c`, which states no
+licence. The simulator is MuJoCo (Apache License 2.0).

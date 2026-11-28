@@ -54,7 +54,7 @@ The robot runs as a service you reach through its client or its MCP tools, as if
 episode.
 
 ### Client
-The service at `http://localhost:8000` speaks eai-standard/2.x with the match extension (`eai-standard/2.1+match/1.0`): the endpoints
+The service at `http://localhost:8000` speaks eai-standard/3.0 with the match extension: the endpoints
 of every standard task, plus `/start` and `/ready`. The shared client is installed (`from rcb_client import Robot`).
 
 | HTTP | |
@@ -197,7 +197,7 @@ when it took effect (`took_effect.step`).
   position 10 s into a kick-off or penalty preparation are moved to legal spots, with one foul for each team; no
   progress for 10 s gives a force start; other unsporting behaviour is not judged.
 - The yellow team (level 4) is the official level 3 team with a trained network choosing each robot's option; it reads
-  the true state after a reaction delay and commands its robots with the same skills and limits as yours.
+  the true state with no delay and commands its robots with the same skills and limits as yours.
 
 ## Limits
 - Time: 14400 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.

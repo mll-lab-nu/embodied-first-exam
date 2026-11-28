@@ -1,12 +1,12 @@
 # MyoSuite · table_tennis (privileged)
 
 ## Task
-Return the served ball: after it bounces once on your half, hit it once with the paddle so that it lands on the
-opponent's half, with no second paddle touch and no second bounce on your half.
+Return the served ball: hit it once with the paddle so that it lands on the opponent's half, with no second paddle
+touch and at most one bounce on your half before that.
 
 ## Goal
-Success: after the serve bounces once on your half, you hit the ball once with the paddle and it then lands on the
-opponent's half, with no second paddle touch and no second bounce on your half. The episode ends as soon as the task is
+Success: you hit the ball once with the paddle and it then lands on the opponent's half, with no second paddle touch
+and at most one bounce on your half before that. The episode ends as soon as the task is
 done. It ends as a failure on any other outcome of the rally, if the ball falls toward the floor, and after 3 s.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`. It is replayed open-loop

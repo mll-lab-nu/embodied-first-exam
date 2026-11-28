@@ -18,7 +18,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/humanoidbench-loco-sit-simple-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): HumanoidBench sit_simple on the same frozen instance as humanoidbench-loco-sit-simple-i00-privileged. Task: Sit down on the chair right behind you and stay seated, upright and still. The agent only gets a client: /observe, /submit and /reset (head-camera RGB, joint proprioception, a pelvis IMU, a fixed room camera; joint-position chunks). Up to 50 resets (each a new episode from the frozen start), no privileged state, no reward; the sim service records the episodes and grades the last one as it ran (the live episode; nothing is replayed)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): HumanoidBench sit_simple on the same frozen instance as humanoidbench-loco-sit-simple-i00-privileged. Task: Sit down on the chair right behind you and stay seated, upright and still. The agent only gets a client: /observe, /submit and /reset (head-camera RGB, joint proprioception, a pelvis IMU, a fixed room camera; joint-position chunks). Up to 50 resets (each a new episode from the frozen start), no privileged state, no reward; the sim service records the episodes and grades the last one as it ran (the live episode; nothing is replayed)."
 keywords = ["robotics", "humanoidbench", "mujoco", "h1", "locomotion", "standard-mode", "trajectory", "sit_simple"]
 
 [metadata]
@@ -26,8 +26,8 @@ task_type = "trajectory"
 simulator = "humanoidbench"
 robot = "unitree-h1"
 family = "sit_simple"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
+protocol = "eai-standard/3.0"
 instance_seed = 0
 expert_time_estimate_hours = 2.0
 oracle = "full"
@@ -37,7 +37,7 @@ timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -73,7 +73,7 @@ cpus = 3
 memory_mb = 4096
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

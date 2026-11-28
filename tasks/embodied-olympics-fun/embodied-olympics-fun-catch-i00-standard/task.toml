@@ -18,7 +18,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-catch-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): Embodied Olympics catch on the same frozen instance as embodied-olympics-fun-catch-i00-privileged. Catch the fly ball in one hand before it touches the ground or your body, and keep it in that hand. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 5 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): Embodied Olympics catch on the same frozen instance as embodied-olympics-fun-catch-i00-privileged. Catch the fly ball in one hand before it touches the ground or your body, and keep it in that hand. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 5 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-h1-2", "humanoid", "standard-mode", "trajectory", "catch"]
 
 [metadata]
@@ -27,19 +27,19 @@ simulator = "mujoco"
 robot = "unitree-h1-2"
 family = "catch"
 category = "throwing-catching-striking"
-dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+dynamics = "dynamic"              # scene dynamics (docs/protocol/tasks.md): the task's own declaration
+protocol = "eai-standard/3.0"
 instance_seed = 0
 expert_time_estimate_hours = 10.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested: Both hands are the H1-2's own Inspire five-finger hands at their default forces (20 N per fingertip, 30 N the thumb; no factor); a catch is one hand enclosing the ball (its fingers and its thumb or palm touching it from opposite sides, the two contact directions at least 90 degrees apart), held 1 s. The fly ball is thrown by the two-wheel pitching machine (21.4 m/s at the launch, it lands 1.32 m from the robot untouched). Positive by a declared magic action: real, the robot turns its palm up on stand rows and holds it there; injected once, when the descending ball is below 3 m it is put at rest on that palm; real, the hand closes round it, the catch and the 1 s hold (right and left hands; the same state hash twice). Negatives: nop (the ball lands within 3 m), onto the trunk, touched while still rising, the hand opened after the catch (the ball lies on the open palm: out of the hand), resting on the open palm never closed on (not caught in time), a fall. Stress: random arm targets with the ball in the hand, the ball at most 1.6 mm into the hand. Realtime: physics RTF about 2.1 on the reference workstation (estimated from a same-process comparison on a slower host), above 1.5.; human review in the pull request that adds the benchmark (PROTOCOL §4)"
+oracle_evidence = "no reference solution; the referee is tested: Both hands are the H1-2's own Inspire five-finger hands at their default forces (20 N per fingertip, 30 N the thumb; no factor); a catch is one hand enclosing the ball (its fingers and its thumb or palm touching it from opposite sides, the two contact directions at least 90 degrees apart), held 1 s. The fly ball is thrown by the two-wheel pitching machine (21.4 m/s at the launch, it lands 1.32 m from the robot untouched). Positive by a declared magic action: real, the robot turns its palm up on stand rows and holds it there; injected once, when the descending ball is below 3 m it is put at rest on that palm; real, the hand closes round it, the catch and the 1 s hold (right and left hands; the same state hash twice). Negatives: nop (the ball lands within 3 m), onto the trunk, touched while still rising, the hand opened after the catch (the ball lies on the open palm: out of the hand), resting on the open palm never closed on (not caught in time), a fall. Stress: random arm targets with the ball in the hand, the ball at most 1.6 mm into the hand. Realtime: physics RTF about 2.1 on the reference workstation (estimated from a same-process comparison on a slower host), above 1.5.; human review in the pull request that adds the benchmark (docs/protocol/tasks.md#grading)"
 
 [verifier]
 timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -67,7 +67,7 @@ timeout_sec = 7200.0
 # Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md). The agent's
 # container holds no simulator, no referee and no instance.
-network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/invariants.md H.6)
 
 [environment]
 build_timeout_sec = 1800.0
@@ -75,7 +75,7 @@ cpus = 4
 memory_mb = 10240
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

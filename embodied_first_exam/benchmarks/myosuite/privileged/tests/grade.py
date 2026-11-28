@@ -10,7 +10,7 @@ compare: reward.json has `deterministic` = 1 (nothing disagreed), `determinism_c
 replay.mp4, after the verdict is on disk (it never changes it), and only when what is left of the verifier's time can
 hold it.
 
-Whose failure a 0 is (PROTOCOL §4): a file that is no trajectory for this instance -- unreadable, an entry that unpacks
+Whose failure a 0 is (docs/protocol/tasks.md#grading): a file that is no trajectory for this instance -- unreadable, an entry that unpacks
 to more than its row limit allows (checked before it is read), not (T, actuators), empty or longer than the family's
 MAX_ROWS, NaN/inf -- is the agent's (`bad_trajectory`), checked here before any replay. After that check a
 replay process that gives no result (out of time, killed, not started, a failing tool) is the grader's

@@ -1,34 +1,49 @@
-# embodied-olympics-fun-sweeper-jump-i00-standard
+# Embodied Olympics · sweeper jump (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
-| Twin | `embodied-olympics-fun-sweeper-jump-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `sweeper_jump` / seed 0 |
-| Oracle | `full` — Reference: walk, joint and lowcmd rows with the boom angle read privileged: it faces the boom, makes three tuck jumps with the soles 4-8 cm over the 0.30 m boom and stands 2 s, success at 21.1 s; 9 of 11 perturbed starts and 15 of 20 with its own gains +-3 % succeed, below the 9 of 10 bar (landings on the 0.9 m podium). The privileged twin's reference rows (2110 control steps, success after 21.1 s) streamed through the client. |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-sweeper-jump-i00-standard` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
+| Mode | standard |
+| Instance | `sweeper_jump`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | Included |
 
 ## Task
-Jump the sweeping boom 3 times in a row without being hit, then land on your podium and stand still before it comes round again. (Embodied Olympics `sweeper-jump`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Jump the sweeping boom 3 times in a row without being hit, then land on your feet and stand still for 1 s on your
+podium.
 
-## Difficulty
-Neither built-in gait can jump: the robot must jump with its feet above a boom almost as high as its knees, at the moment a fast boom arrives, and land on a small podium in balance, three times. Each landing has to be absorbed and the robot re-centred on the podium before the boom comes round again. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
+## Success criteria
+The robot stands on a round podium 0.90 m across and 0.40 m high. A 50 kg foam boom 0.20 m thick, its axis 0.20 m
+above the podium's top, turns counter-clockwise (seen from above) round a motion base at 8 rpm, once every 7.5 s,
+driven by a motor of at most 450 N m; it reaches over the whole podium and is already turning at the start. The
+referee's stages, in order: jump 1, jump 2, jump 3, landing, stand.
+- A jump counts when the boom passes under both feet, and at the moment it passes each foot the sole of that foot is
+  above the boom's top (0.30 m above the podium's top) and nothing of the robot touches anything. A foot the boom
+  passes that is not above it, or a pass while the robot touches something, fails the attempt; so does the boom
+  passing one foot and not the other within half a turn.
+- Landing: after the third jump, the robot's first contact is made by the feet only; otherwise the attempt fails.
+- Stand: the robot then stands for 1 s without a break with only its feet on the podium, the torso within about 20
+  degrees of vertical, the pelvis slower than 0.35 m/s. The success is called when the 1 s is complete.
 
-## Reference solution
-`solution/oracle_replay.py` streams the privileged twin's reference solution, row by row, through the client (`solution/rows.npz`, recorded at generation time). Reference: walk, joint and lowcmd rows with the boom angle read privileged: it faces the boom, makes three tuck jumps with the soles 4-8 cm over the 0.30 m boom and stands 2 s, success at 21.1 s; 9 of 11 perturbed starts and 15 of 20 with its own gains +-3 % succeed, below the 9 of 10 bar (landings on the 0.9 m podium). The privileged twin's reference rows (2110 control steps, success after 21.1 s) streamed through the client.
+Fouls (each fails the attempt at once): the boom touches any part of the robot (a hit; grabbing it counts); any part
+of the robot touches the bed round the podium, the motion base or another podium. Fall (a failure at any time): the
+pelvis lower than 0.35 m above the podium's top, or any part other than the feet on the ground. Time limit: 30 s
+(3,000 control steps).
 
-## Verification
-The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
-infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
-`/data/final.json`: pass iff the live attempt succeeded. The
-rules: You stand on a round podium, 0.9 m across and 0.4 m high, whose centre is 3.2 m from the axis of the motion base, facing the base. A foam boom 0.2 m thick, its axis 0.2 m above the podium's top, turns round the base counter-clockwise (seen from above) at 8.0 revolutions per minute, driven by a motor of at most 450.0 N m; it reaches 4.0 m from the axis, over the whole podium, and comes round once every 7.5 s. It is already turning at the start. A jump counts when the boom passes under both your feet while nothing of you touches anything (at the moment it passes each foot). You succeed when, after 3 counted jumps, your first contact is your feet on the podium and you then stand still for 1.0 s (only your feet on the podium, your torso within about 20 degrees of vertical, your pelvis slower than 0.35 m/s), before the boom comes round again. You fail at once if the boom touches any part of you (a hit; grabbing or holding it is a hit too), if any part of you touches the bed (the floor round the podium) or the motion base, if the boom passes through a foot that is not above it, on a fall (your pelvis less than 0.35 m above the podium's top, or any part of you other than your feet on the podium), on a landing after the last jump that is not on the feet, or after 30 s.
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The referee's
+success call is an event: once it is made at some control step, the attempt is a success. It is never shown to the
+agent and does not end the attempt: the physics goes on until the agent's `/finish`, the attempt's time limit, or the
+end of the agent's time (2 h), and nothing after the call undoes it. A failure the referee calls before any
+success (a foul, a fall, the physics diverging) ends the attempt at once with 0. Reaching the time limit or the end of
+the session without a success call scores 0. The agent has 5 resets, each starting a new attempt from the
+frozen start; only the last attempt (the one after the last reset) is graded, and a success in an earlier attempt does
+not count. A simulator error raised by the agent's own call ends the attempt with 0. An attempt that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,13 +53,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | parkour-apparatus-balance |
-| Rule book | No official rule book exists: the sweeper is a party and amusement game, not a sport. The closest real device is Galaxy Multi Rides' 'Meltdown' (US Meltdown operator manual: an eight-player game, each player standing on a podium round a motion base whose foam booms spin round, 'the aim of the game is to either duck under, or jump over the boom as it spins around'; players must not grab, hold or ride the booms; a player who is hit is out; one 1 hp spin motor on a speed dial, at most 15.82 rpm; foam boom attachments 220 lb for the two booms; riders at least 48 in (1.22 m) tall and at most 200 lb), the same game as the 'Sweeper' of the TV show Wipeout. Its rules as played: stay on your podium, jump the low boom each time it comes round, the last player not hit wins; deviations: the booms: Meltdown's dual attachment has two foam booms; here there is only the low boom you jump (the duck boom is left off: this family tests the jump), so the rotor is that one boom, 50.0 kg, half of the attachment's 220 lb · the dimensions: the manual gives none of the boom's height, length or thickness, nor of the podiums. The boom's axis is 0.2 m above the podium's top, the mid-shin of a rider of the minimum height (1.22 m), its foam 0.2 m thick, reaching 4.0 m from the axis over the podiums of a 30 ft bed, whose centres are 3.2 m from the axis; each podium a 0.9 m disc 0.4 m high (reasonable sizes, not published ones) · the podium and the bed: the inflatable podium is a rigid platform and the inflatable bed a firm floor (neither's give is modelled; touching the bed is out anyway) · the speed: the operator's dial is set to a steady 8.0 rpm (about half the machine's top speed), already turning at the start; the machine's program, which changes speed, is not used · the count: one player, and a run of 3 jumps in a row with no hit is the success (a round number: the game has no count, its last player standing wins); after the last jump the robot must stand still for 1.0 s on its podium before the boom comes round again · a hit is any touch of the boom on the robot (in the game a light touch may leave a player standing); a jump is a pass of the boom under both feet while nothing of the robot touches anything · the motor: the 1 hp drive is a speed loop with a torque limit of 450.0 N m at the boom (1 hp at the top speed of 15.82 rpm, through the gearbox), no gearbox backlash or compliance; the foam's contact is a critically damped spring of 0.02 s time constant (an estimate for a soft polyurethane pad) |
-| Stages | jump 1 → jump 2 → jump 3 → landing → stand |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 3000 control steps (30 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

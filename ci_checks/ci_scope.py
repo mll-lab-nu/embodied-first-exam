@@ -80,12 +80,12 @@ UNITS: dict[str, list[str]] = {
     "roboEngineer": ["images/control-transfer/", "images/quadrotor-landing/"],
     "ABC Sim": _own("abc-sim"),
     "Embodied Safety Exam": _own("ese"),
-    "EmbodiedSWE": _own("embodiedswe", "images/embodiedswe-standard-files/"),
+    "EmbodiedSWE": _own("embodiedswe"),
     "HumanCLAW": _own("humanclaw"),
 }
 HAND_UNITS = {k: list(v) for k, v in UNITS.items()}   # the rows above, before the conventional paths below are added
 # images/ directories every benchmark builds on: a change to one runs the full suite (no unit owns it)
-SHARED_IMAGES = ("monitor", "standard-files", "agent-end-files")
+SHARED_IMAGES = ("monitor", "standard-files")
 # the benchmark's shared task code, embodied_first_exam/benchmarks/<folder>/ (embodied_first_exam/README.md), its CI
 # hooks, ci_checks/benchmarks/<folder>/, and its files-only image, images/<folder>-files/ (task images and sidecars): the folder of its
 # task dirs, tasks/<folder>/ (task_conventions.BENCHMARK_DIRS)
@@ -96,6 +96,7 @@ for _label, _folder in tc.BENCHMARK_DIRS.items():
 # changes that no check reads: they need only the repo-level checks (which always run). Everything not listed here and
 # not a benchmark's own path runs the full suite.
 NO_TASK_EFFECT = ("README.md", "CONTRIBUTING.md", "AGENTS.md", "CLAUDE.md", "LICENSE", "SECURITY.md", "CODE_OF_CONDUCT.md", "docs/protocol/running.md",
+                  "docs/operations.md",
                   "docs/REVIEWING.md", ".gitignore",
                   "docs/core_set.toml")   # read by reports only; its own check (run_all.sh) and test (run_invariants.sh) always run
 # tasks/dataset.toml: not committed (generated for a release; check-dataset-manifest.sh fails when it is tracked)
@@ -174,7 +175,7 @@ def scope(paths: list[str]) -> dict:
     for p in paths:
         if p in NO_TASK_EFFECT or p in REPO_LEVEL_ONLY:
             continue
-        if re.match(r"ci_checks/benchmarks/[^/]+/(?!advisory-)", p):   # an invariant hook, a file one runs (check_leak.sh)
+        if re.match(r"ci_checks/benchmarks/[^/]+/(?!advisory-)", p):   # an invariant hook, a file one reads (exported.toml)
             return {"scope": "full", "reason": f"{p}: a benchmark's invariant hook or what it reads (exported.toml), whose "
                     "mutations check-ci-selftest.py runs in the full suite only", "benches": []}
         own = owners(p)

@@ -1,66 +1,40 @@
-# humanoidbench-manip-window-i00-privileged
+# HumanoidBench · window (privileged)
 
 | | |
 |---|---|
-| Benchmark | HumanoidBench |
+| Task ID | `humanoidbench-manip-window-i00-privileged` |
+| Benchmark | [HumanoidBench](https://humanoid-bench.github.io/) (Sferrazza et al., 2024), upstream `carlosferrazza/humanoid-bench@cb11890` |
+| Robot | Unitree H1 humanoid with two Shadow dexterous hands, 61 position-controlled actuators (HumanoidBench `h1hand`) |
 | Mode | privileged |
-| Twin | `humanoidbench-manip-window-i00-standard` |
-| Simulator / robot | `humanoidbench` / `unitree-h1hand` |
-| Family / instance | `window` / seed 0 |
-| Oracle | `none` — none known: no run has passed it, and published RL reaches 94% of the bar (paper 227, FastTD3 613, bar 650); human review in PR #9 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
+| Instance | `window`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
 Take hold of the wiping tool and wipe the window with it, moving it up and down.
 
-HumanoidBench window: produce one replayable trajectory that wipes a window with a tool held by the Unitree H1, frozen scene instance 00.
+## Success criteria
+Pass mark: an episode return of at least 650, upstream's success bar, where the return is the sum of
+HumanoidBench's per-step `window` reward over the episode. Each control step earns between 0 and 1: half from the
+wiping tool's face lying flat against the glass, earned only while the tool touches the pane, and half from the tool
+moving up or down at a steady wiping pace, both hands at the tool, and the robot standing upright in front of the
+window with little actuator effort. An episode is at most 1,000 control steps (20 s at 50 Hz).
 
-## Difficulty
-The pass mark is a **threshold on the whole episode's return** (`>= 650` over 1000 steps), not a
-predicate on the final state.
+Terminations (each ends the episode at once as a failure):
+- the robot falls, its pelvis below 0.58 m;
+- the wiping tool drops, its centre below 0.58 m.
 
-- **Tool use with sustained contact.** The subset's one tool-use task, scored on the tool's contact
-  with a surface. The tool is not the goal, it is the means: the
-  robot has to grasp it, then control the *tool's* contact with a surface while moving. Losing the grip
-  ends the episode.
-- **61 actuators.** Two Shadow hands take the action from 19 numbers to 61 — the same capability class
-  as `push` at triple the search dimension.
-- **A zero-valued contact gate.** Wiping without touching the glass scores nothing for the contact half
-  of the reward.
-- **An all-zero trajectory terminates at step 17**, tied with `cube` for the fastest failure in the
-  subset: the tool is dropped almost immediately.
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory(...)` writes it: this task's name (`window`) and at
+most 1,000 rows of 61 finite servo targets, one row per control step (values outside [-1, 1] are
+clipped). After the agent's session it is replayed once, open-loop, from the frozen start (`tests/instance.npz`) in a
+fresh process of a separate verifier container without network, the only place the reward exists. The task is passed
+if the replayed episode's return reaches the pass mark. The replay stops at the first of the terminations above; rows
+after it are not run. Only the trajectory is scored (`gen.py` and `NOTES.md` are not). A missing file, a file for
+another task, or one that is not such an array scores 0; an error inside the grader is reported as `grader_error`
+(infrastructure), not as a score.
 
-**Measured floors** (this instance): an all-zero
-trajectory scores **1.55 / 650** (the episode terminates at step 17 of 1000). Holding the starting
-pose instead — the floor a competent agent gets before writing a controller — scores **1.4%** of the
-bar; that is the number this task was selected on (the benchmark's give-away limit).
-**External evidence**: published RL results reach **94%** of the bar (paper 227, FastTD3 613, bar
-650) — training runs of millions of environment steps, not a one-hour coding session, so treat it as
-proof that the task *has* a solution rather than as a target.
-
-**The agent does not see the reward function.** It is deleted from the image and restored only
-inside the verifier (`images/humanoidbench/scrub_oracles.py`, `tests/rcb_rewards.py`), so the
-numbers above are upstream's own scoring (on our physics: see *Physics vs upstream*) while the agent
-works from the task statement and the physical state alone.
-
-## Reference solution
-None. Requiring one would cap the benchmark at what we can already solve, which systematically
-removes the interesting tasks. What replaces it (docs/protocol/README.md §4): the floor above
-(doing nothing cannot pass), the evidence that the task has a solution (`oracle_evidence` in
-task.toml), and a human reviewer.
-
-## Verification
-In its own container, built from `tests/Dockerfile` (no network): the agent's container is gone by
-then, and only `/app/output/` crosses over. Open-loop replay of `/app/output/trajectory.npz` from
-`tests/instance.npz` in a fresh process, once; pass iff the replay's episode return reaches
-`success_bar`. `tests/grade.py` also
-writes `/logs/verifier/replay.mp4` and, because Harbor promotes every `reward.json` key to a
-leaderboard metric, keeps the per-task numbers (`episode_return`, `success_bar`) in
-`/logs/verifier/diagnostics.json`. No oracle; human review in PR #9. `nop` scores 0.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -69,19 +43,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Capability class | C6 · standing bimanual manipulation |
-| Physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (tasks/humanoidbench/README.md, Physics). |
-
-### GPU
-Optional, and passing never depends on it: MuJoCo physics is CPU-only, so a GPU only speeds up the
-agent's own offscreen rendering (osmesa ~130 ms/frame, egl ~0.4 ms). Hand one to the agent's
-container with `--extra-docker-compose environment/gpu.docker-compose.yaml`; `rcb_hb.py` then picks
-EGL by itself unless `MUJOCO_GL` says otherwise. The overlay is not named `docker-compose.yaml`
-because Harbor would load that on every machine, and a device reservation the host cannot satisfy
-stops the container from starting.
-
-### Provenance
-The instance (`environment/instance.npz` and its byte copy `tests/instance.npz`) is seed 0 (sha `260f3f1c4cff`).
+## License
+HumanoidBench (Sferrazza et al., 2024; <https://github.com/carlosferrazza/humanoid-bench>) is released under the MIT
+License, copyright (c) 2024 Robot Learning Lab, UC Berkeley. The image's notice is
+`images/humanoidbench/LICENSE.humanoid-bench`; this task's `rewards.json` carries upstream's code under that license.
+Robot models shipped with upstream: the Unitree H1 model (BSD 3-Clause, copyright Unitree Robotics) and, on the
+two-handed H1, the Shadow Hand model from MuJoCo Menagerie (Apache License 2.0). No non-commercial terms apply.

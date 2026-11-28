@@ -4,7 +4,8 @@
 Lay the book across the two cups so that it rests on top of them.
 
 ## Goal
-Success: the book lies raised on top of the two cups, both cups under it; the robot has let go of the book and moved its
+Success: the book lies raised on top of the two cups, resting on both, each cup under or right next to its edge; the
+robot has let go of the book and moved its
 grippers away from it, it is at rest, and neither the book nor the cups have fallen off the table. Make sure everything
 is at rest when you send `/finish`.
 
@@ -23,7 +24,7 @@ as a service you reach through its client or its MCP tools, as if it were real h
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service builds the scene, ~1 min)

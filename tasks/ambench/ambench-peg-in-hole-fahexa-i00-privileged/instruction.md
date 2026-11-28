@@ -1,11 +1,10 @@
 # AM-Bench · ambench-peg-in-hole-fahexa-i00 (privileged)
 
 ## Task
-Push the peg you are holding, front end first, into the blue socket on the wall, most of the way to the red plate at its
-back.
+Push the peg you are holding, front end first, into the blue socket on the wall, past the middle of the socket.
 
 ## Goal
-Success: the peg's front end is in the socket's opening, most of the way to the red plate at its back. The replay stops
+Success: the peg's front end is inside the socket's opening, pushed in past the middle of the socket. The replay stops
 at the first step where the task is done; later rows are not run. It fails if its simulated time (Robot Interface) runs
 out first.
 

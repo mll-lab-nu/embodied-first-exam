@@ -3,7 +3,7 @@
  "kind": "rcb",
  "suite": "roboarc",
  "task": "roboarc-lock-picking-05-i01-standard",
- "protocol": "eai-standard/2.4",
+ "protocol": "eai-standard/3.0",
  "realtime": false,
  "tools": [
   "spec",

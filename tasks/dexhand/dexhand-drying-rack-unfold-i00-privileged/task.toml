@@ -13,7 +13,7 @@ robot = "sharpa-wave-floating"
 hands = ["sharpa", "wuji"]
 default_hand = "sharpa"
 family = "drying_rack_unfold"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 
 oracle = "full"
 oracle_evidence = "solution/trajectory.npz replays the recorded Sharpa Wave authoring episode (2,415 controls, success after 2,315). The rows are float32-exact, so the standard oracle submits the same rows through the client. Two fresh-process replays succeed with identical state hashes."
@@ -27,7 +27,7 @@ timeout_sec = 1800.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

@@ -20,7 +20,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-volleyball-bump-i00-realtime"
-description = "REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = 1): Embodied Olympics volleyball-bump on the same frozen instance as embodied-olympics-fun-volleyball-bump-i00-privileged. Pass the serve: with one forearm pass, send the ball up above net height and down onto the setter's target. Once an attempt starts the venue does not wait; the agent drives the robot from a program of its own through the client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 5 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records every executed control step and grades the last attempt live with the family's referee (no grading replay)."
+description = "REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/3.0, slowdown S = 1): Embodied Olympics volleyball-bump on the same frozen instance as embodied-olympics-fun-volleyball-bump-i00-privileged. Pass the serve: with one forearm pass, send the ball up above net height and down onto the setter's target. Once an attempt starts the venue does not wait; the agent drives the robot from a program of its own through the client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 5 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records every executed control step and grades the last attempt live with the family's referee (no grading replay)."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-h1-2", "humanoid", "realtime-mode", "trajectory", "volleyball-bump"]
 
 [metadata]
@@ -29,8 +29,8 @@ simulator = "mujoco"
 robot = "unitree-h1-2"
 family = "volleyball_bump"
 category = "football-and-volleyball"
-dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.3"
+dynamics = "dynamic"              # scene dynamics (docs/protocol/tasks.md): the task's own declaration
+protocol = "eai-standard/3.0"
 instance_seed = 0
 expert_time_estimate_hours = 10.0
 oracle = "full"
@@ -41,7 +41,7 @@ timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -69,7 +69,7 @@ timeout_sec = 7200.0
 # Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md). The agent's
 # container holds no simulator, no referee and no instance.
-network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/invariants.md H.6)
 
 [environment]
 build_timeout_sec = 1800.0
@@ -77,7 +77,7 @@ cpus = 4
 memory_mb = 10240
 storage_mb = 20480
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

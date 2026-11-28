@@ -1,31 +1,52 @@
-# embodied-olympics-fun-rugby-conversion-i00-privileged
+# Embodied Olympics · rugby conversion (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-rugby-conversion-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-rugby-conversion-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `rugby_conversion` / seed 0 |
-| Oracle | `full` — Reference, on Unitree's actuator data (rotor inertia, joint friction): a standing power kick through lowcmd, the hip and knee bursts at the G1's 88 / 139 N m; the wind-up pose, hip roll, crouch, ankle, knee-burst start, waist torque and wind-up length from CMA-ES, with a penalty for any arm passing into the robot's own body. The foot meets the ball above the rigid tee at 3.18 s and sends it through the goal plane at 5.66 m (the bar is at 3.0 m), 0.44 m right of the middle; success after 4.05 s. All 8 perturbations score (servo gains x0.97 / x1.03, the kick 10 ms earlier / later, the tee 1 cm nearer, farther, left, right; the ball crosses at 5.3-5.7 m). The deepest self-overlap is 1.2 mm (trunk and shoulder). The robot falls after the kick, which is allowed (Law 8 judges the ball). Measured: success after 4.05 s of the 60 s limit, live and in a fresh replay, ending in the same state. |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Instance | `rugby_conversion`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | Included |
 
 ## Task
-Kick the conversion: with one kick, send the ball from its tee over the crossbar between the posts. (Embodied Olympics `rugby-conversion`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Kick the conversion: with one kick, send the ball from its tee over the crossbar between the posts.
 
-## Difficulty
-To clear a 3 m bar 5 m away the ball must leave the foot at about 10 m/s or more, rising at 45 to 60 degrees: a hard, steep kick under the ball's lower end. The robot has no kicking skill; a hard swing on one leg throws the 33 kg body round, and the robot must stay on its feet until the ball has scored.
+## Success criteria
+A rugby ball stands upright on a kicking tee in front of the robot's right foot. The goal line is 5 m beyond the ball;
+the posts on it are 5.6 m apart (inner faces), centred on the ball, with the top of the crossbar 3 m above the ground.
+The referee's stages, in order: kick, goal.
+- Kick: the first contact of a foot with the ball (the foot below the ankle, or the lower leg where it lies over the
+  foot: from 0.08 m behind to 0.15 m ahead of the ankle joint and at most 0.12 m above it). Every foot contact within
+  0.15 s of the first belongs to the same kick.
+- Goal: the ball's centre passes the goal line's vertical plane above the crossbar and between the posts (extended
+  upwards), and goes on to 0.4 m beyond that plane. The ball may touch the bar or a post on the way. The success is
+  called at that point.
 
-## Reference solution
-`solution/oracle.py` drives the robot through the task's own tooling, closed loop on the privileged state, and writes the trajectory (`solution/solve.sh`). Reference, on Unitree's actuator data (rotor inertia, joint friction): a standing power kick through lowcmd, the hip and knee bursts at the G1's 88 / 139 N m; the wind-up pose, hip roll, crouch, ankle, knee-burst start, waist torque and wind-up length from CMA-ES, with a penalty for any arm passing into the robot's own body. The foot meets the ball above the rigid tee at 3.18 s and sends it through the goal plane at 5.66 m (the bar is at 3.0 m), 0.44 m right of the middle; success after 4.05 s. All 8 perturbations score (servo gains x0.97 / x1.03, the kick 10 ms earlier / later, the tee 1 cm nearer, farther, left, right; the ball crosses at 5.3-5.7 m). The deepest self-overlap is 1.2 mm (trunk and shoulder). The robot falls after the kick, which is allowed (Law 8 judges the ball). Measured: success after 4.05 s of the 60 s limit, live and in a fresh replay, ending in the same state.
+Fouls (each fails the attempt): any part of the robot other than a foot touches the ball, at any time; a foot touches
+the ball outside the kicking zone above; a touch of the ball more than 0.15 s after the kick; the ball touches the
+ground (not the tee) after the kick before it has scored; the ball passes the goal line's plane under the crossbar or
+outside the posts. Fall, judged only before the kick: the pelvis below 0.35 m, or any part other than the feet on the
+ground. A fall after the kick does not end the attempt. Time limit: 60 s (6,000 control steps).
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: A size-5 rugby ball (an oval 0.29 m long and 0.19 m across, 0.435 kg, in air) stands upright on a kicking tee (0.06 m high to its cup, 0.08 kg, standing free) on the grass in front of your right foot, on the 5-metre line: its centre 0.3 m ahead of your pelvis and -0.17 m to your left (negative: to the right). The goal line is 5.0 m beyond the ball, square to the direction you face; the goal posts stand on it, 5.6 m apart between their inner faces, centred on the line through the ball square to the goal line, 8.0 m high and 0.12 m thick, padded up to 2.0 m (the padding 0.25 m round each post's axis); the crossbar's top edge is 3.0 m above the ground. The kick is a contact of a foot of yours with the ball: the foot below the ankle, or your lower leg where it lies over the foot (from 0.08 m behind to 0.15 m ahead of the ankle joint) and no more than 0.12 m above the ankle joint; every such contact within 0.15 s of the first belongs to the one kick. You score when the ball's centre passes the goal line's vertical plane above the crossbar's top edge and between the posts' inner faces (extended upwards), and goes on 0.4 m beyond it; it may touch the bar or a post on the way. You fail if any other part of you touches the ball at any time, if you touch it again after the kick, if the ball touches the ground (not the tee) after the kick before it has scored, if it passes the goal line's plane under the bar or outside the posts, if you fall before the kick (your pelvis lower than 0.35 m above the ground, or any part of you other than the feet on the ground), or after 60 s. A fall after the kick does not end the attempt (Law 8 judges the ball, not the kicker; the setting fall_after_kick_fails = 0, where 1 would make any fall a failure).
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +55,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | football-and-volleyball |
-| Rule book | World Rugby Laws of the Game (2025): Law 1 (the goal posts 5.6 m apart, the crossbar's top edge 3.0 m above the ground, the posts at least 3.4 m high, padding on the posts; the 5-metre line), Law 2 (the ball: oval, 280-300 mm long, 740-770 mm round end to end, 580-620 mm round across, 410-460 g), Law 8 (8.4: a goal is scored when the ball is kicked over the crossbar and between the goal posts without first touching a team-mate or the ground; 8.7: a conversion is a place-kick or a drop-kick; 8.8: the kick is taken on a line through the place where the try was awarded, parallel to the touchlines, the ball on the ground or on a kicking tee, within 60 seconds); deviations: Law 8.8 (where): the try is taken as awarded under the posts, and the conversion is kicked from the 5-metre line (5.0 m from the goal line) on that line: a choice the law allows, made for this robot, whose measured hard kicks leave the foot at 7 to 11 m/s (a professional's at 25 m/s from 20-40 m). A ball over the bar from there must still rise more than 3 m within 5 m. · Law 2 (the ball's behaviour): a rigid prolate spheroid (a thin shell's mass distribution); its drag in air from wind-tunnel measurements (side-on), its bounce a stand-in (no published rebound test for a rugby ball: a size-5 football's, at the same inflation pressure). It does not deform. · Law 8.8 (the tee): a low plastic kicking tee (0.06 m to the cup), a free body standing on the grass; the ball stands upright in its cup. No placer. · Law 8.4 (between the posts): judged as the ball's centre passing the goal line's vertical plane above the crossbar's top and between the posts' inner faces extended upwards; a ball that hits the bar and goes on over counts, one that comes back does not. A touch judge's flag is replaced by this geometry. · Law 1: only the goal end of the field is there; the posts are 8.0 m high; no wind, no opponents (a conversion is not charged down after the kicker's first movement in this setting). |
-| Stages | kick → goal |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `7abf9b7207b954fe0a315e5638a786a1c239f9053fdfe551e9d60b575e19967b` |
-| Episode | 6000 control steps (60 s at 100 Hz) |
-| Action | sim rows of 151 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

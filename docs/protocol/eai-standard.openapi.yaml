@@ -1,0 +1,1138 @@
+openapi: 3.1.0
+jsonSchemaDialect: https://spec.openapis.org/oas/3.1/dialect/base
+info:
+  title: eai-standard robot task protocol
+  version: "3.0"
+  summary: The robot-as-a-service wire protocol of the standard and realtime task modes.
+  description: |
+    The HTTP interface a standard- or realtime-mode task's `sim` service offers to the agent
+    (docs/protocol/eai-standard.md). Every service answers `/spec.protocol = "eai-standard/3.0"`; what a
+    service serves beyond the base is said by its `/spec` capabilities, never by a version string:
+
+    | capability (`/spec`) | what it adds | reference implementation (what it serves) |
+    |---|---|---|
+    | base | `/spec` `/status` `/observe` `/submit` `/finish`, RCB1 frames, optional `/reset` | the sidecar layer `rcb_service.py` (shipped from the `standard-files` image), and the same wire served by some benchmarks' own servers: RoboTwin 2.0 (`embodied_first_exam/benchmarks/robotwin-2/sim/server.py`), DexToolBench and MuJoCo Playground (`dextoolbench/sim/server_mj.py`, one file), MetaWorld+ (`metaworldplus/sim/server_mw.py`), RoboCasa (`robocasa/sim/server_casa.py`) |
+    | `kinematics`, `robot_spec`, `world`, `max_call_wall_s` | depth modes, per-frame steps/extrinsics, `robot_spec`, `world`, `/kinematics`, per-call wall bound | the shared layer `embodied_first_exam/standard/rcb_limited.py` (+ `agent_end/rcb_agent_end.py`) |
+    | `timing.realtime = true` | a clock that does not stop (realtime mode) | `embodied_first_exam/standard/realtime/rcb_realtime.py` over the sidecar `rcb_service.py`: the base plus the clock (no `/kinematics`, no `depth` modes) |
+    | `operations = true` | operation ids, request deadlines, `GET /operations/{id}` | `embodied_first_exam/standard/operations/rcb_limited.py` (+ `agent_end/rcb_agent_end.py`): the shared layer plus operations (standard mode only) |
+    | `match` | the match extension (`/start`, `/ready`, `/say`, `/team`) | `embodied_first_exam/benchmarks/embodied-olympics-match/eai_std/` |
+
+    Every capability is optional; the third column says which
+    ones each reference layer serves. `x-eai-capability` below names the capability an operation, response or
+    field belongs to (`base`, `reset`, `shared`, `realtime`, `operations`, `match`).
+
+    **Modes.** Standard mode is Gym's `env.step`: the world stands still between calls, time passes only
+    inside `/submit` (a chunk of rows, or a hold chunk), which blocks until it has run. Realtime mode
+    (`/spec.timing.realtime = true`): an episode starts paused; its clock starts at the episode's first `/submit` and
+    then runs one control step every `timing.wall_s_per_control_step` seconds whatever the agent does;
+    `/submit` answers at once. Each operation states its behaviour per mode in `x-eai-modes`.
+
+    **Bodies.** Requests are JSON or RCB1; every answer that carries data (`/observe`, `/submit`, `/reset`)
+    is an RCB1 frame (`Content-Type: application/x-rcb1`, binary, never base64). Everything else
+    (`/spec`, `/status`, `/finish`, `/kinematics`, `/operations/{id}`, every error) is JSON. The RCB1
+    header's `meta` object is described by the schema named in each media type's `x-eai-rcb1-meta`.
+
+    **Episode end.** Every standard and realtime episode is agent-ended: the service never shows
+    whether the task has succeeded, `POST /finish` ends the episode, and the state it ends in is judged
+    after the agent is gone. A step limit or cap, the end of the agent's session, the task's own failure
+    rule or a simulator error also end it.
+
+    **Extensions used in this document.** `x-eai-modes` (per-mode behaviour of an operation),
+    `x-eai-capability` (the capability an operation, response or field belongs to), `x-eai-optional`
+    (an operation a service may lack: then a 404), `x-eai-client-internal` (an operation the shipped
+    client and the MCP server use themselves; no MCP tool), `x-eai-mcp` (the `efe-robot` MCP tool that
+    sends the operation's request), `x-eai-rcb1-meta` (the schema of an RCB1 header's `meta`).
+  license:
+    name: see the repository
+servers:
+  - url: http://sim:8000
+    description: the sim sidecar on the task's compose network
+  - url: http://localhost:8000
+    description: the same service when Harbor's egress control puts it in the agent's network namespace
+tags:
+  - name: core
+    description: Endpoints every eai-standard/3.0 service serves.
+  - name: optional
+    description: Endpoints a service serves only with a capability (a reset budget, a kinematic model); otherwise 404.
+  - name: client-internal
+    description: Endpoints the shipped client and the MCP server use themselves; the MCP server offers no tool for them.
+  - name: match
+    description: |
+      The match extension (`/spec.match`; Embodied Olympics - Match; docs/protocol/eai-standard.md "Match extension").
+      Declared deviations (`/spec.timing.deviations`): there is no `/finish` (404; the match's rules end the
+      episode), no `/reset` and no `/kinematics` (404); the realtime clock starts at the start barrier (every
+      seat's `/start`), not at the first `/submit`; there is no recorder, so `/observe` with `last_s = n` answers
+      with the sport's own frames of now (`meta.last_s` says what they span), no video; the world freezes after
+      every unit for the reviews (`/ready`); rows are commands, never interpolated; a request body is at most
+      8 MiB (`/spec.max_request_bytes`, 413 above it); a seat answers 403 to a host it is not bound to and 429
+      (empty body) with too many requests in flight; a turn-based hold chunk's `seconds` (at most `max_chunk_s`)
+      counts real seconds. After the match is over `/submit` is a 409 while `/observe` still answers 200 (the final
+      state, no images).
+x-eai-mcp:
+  description: |
+    The `efe-robot` MCP server (embodied_first_exam/standard/mcp/) offers one tool per agent-facing endpoint;
+    each tool sends its endpoint's request and returns the reply's `meta` unchanged, with each RCB1 part written
+    as a file under /app/obs/. GET /status and GET /operations/{id} have no tool. A match (tag `match`) has
+    the same `spec`, `observe` and `submit` tools on these endpoints, plus the extension's calls `start`,
+    `ready` (and `say`, `team` in a team format) as tools; no `finish`, `reset` or `kinematics`.
+  tools:
+    spec: {operationId: getSpec, method: GET, path: /spec}
+    observe: {operationId: observe, method: POST, path: /observe}
+    submit: {operationId: submit, method: POST, path: /submit}
+    finish: {operationId: finish, method: POST, path: /finish, when: '/spec.success_signal starts with "hidden"'}
+    reset: {operationId: reset, method: POST, path: /reset, when: /spec.budget.reset > 0}
+    kinematics: {operationId: kinematics, method: POST, path: /kinematics, when: /spec.kinematics present}
+  match_tools:
+    start: {operationId: matchStart, method: POST, path: /start}
+    ready: {operationId: matchReady, method: POST, path: /ready}
+    say: {operationId: matchSay, method: POST, path: /say, when: team formats}
+    team: {operationId: matchTeam, method: POST, path: /team, when: team formats}
+  no_tool:
+    getStatus: its fields come back in every reply's meta
+    getOperation: the MCP server re-queries it itself when a reply of an operations service is lost
+
+paths:
+  /spec:
+    get:
+      operationId: getSpec
+      tags: [core]
+      summary: The robot's facts (action types, cameras, proprioception layout, budgets, timing).
+      description: |
+        Fixed for the service's life. The first request to the service, whatever the endpoint (this one
+        included), starts the agent's clock (`meta.time_s`).
+      x-eai-capability: base
+      x-eai-modes:
+        standard: as described
+        realtime: adds `timing.realtime = true`, `slowdown`, `wall_s_per_control_step`, `max_ahead_steps`
+        match: adds `match` (the match service's own spec), `endpoints`, `timing.deviations`
+      x-eai-mcp: {tool: spec}
+      responses:
+        "200":
+          description: The spec.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Spec"}
+        "409":
+          $ref: "#/components/responses/GaveUp"
+  /status:
+    get:
+      operationId: getStatus
+      tags: [client-internal]
+      summary: Counters of the episode, no images.
+      description: |
+        Client-internal: the shipped client's `wait_ready()` polls it after a connection error; the MCP server
+        has no status tool (the same fields come back in every reply's `meta`). Never refused after `/finish`.
+      x-eai-capability: base
+      x-eai-client-internal: true
+      x-eai-mcp: null
+      x-eai-modes:
+        standard: as described
+        realtime: adds `running`, `planned_steps`, `lag_s`
+        match: the match `meta` (score, phase, review_due, match_over, state) with `ok`
+      responses:
+        "200":
+          description: The status.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Status"}
+        "409":
+          $ref: "#/components/responses/GaveUp"
+  /observe:
+    post:
+      operationId: observe
+      tags: [core]
+      summary: Read what is already recorded; no time passes.
+      description: |
+        A pure read: it never lets time pass, never waits and never changes the plan.
+        `last_s = 0` (the default) returns the current frame (`last/<cam>`, and `frames/<cam>` with one row)
+        and the proprioception of now; `last_s = n` returns the frames the recorder took in the last n robot
+        seconds (at most `/spec.timing.recorder.buffer_s`), at least `1 / video_fps` apart, with the
+        proprioception of their steps; `meta.last_s` is what they cover (0 when nothing was recorded in the
+        window: then the current frame). `meta.frame_step` (every answer with images from /observe, /submit and
+        /reset, every layer) is the control step the newest image shows. Per-frame depth with `last_s > 0`
+        (`include_depth`; shared/operations `depth: "frames"`) is served only when every requested camera is listed in
+        `/spec.timing.recorder.depth`; otherwise it is a 400 (ask for depth with `last_s = 0`, the current frame's
+        depth). shared/operations `depth: "last"` with `last_s > 0` is not refused: it returns the current frame's depth
+        (`last_depth/<cam>`), not the recorder's.
+        `seconds > 0` is a 400 whose message names the hold chunk (`POST /submit` with
+        `{"type", "interpolate": "hold", "seconds"}`). After `/finish` it is a 409; after any other end of the
+        episode (the step limit, a failure rule) it still answers.
+      x-eai-capability: base
+      x-eai-mcp: {tool: observe}
+      x-eai-modes:
+        standard: |
+          The world is frozen between submits. last_s = 0 renders the current frame; last_s = n reads the ring the
+          recorder filled during earlier /submit calls (10 fps, records "during /submit", RGB only: recorder.depth
+          is [], so per-frame depth with last_s > 0 is a 400; shared/operations depth "last" with last_s > 0 returns the
+          current frame's last_depth; cleared at a reset). On the sidecar layer in standard mode `cameras: []` also means every camera.
+        realtime: |
+          Answered at once on the HTTP thread from the recorder's ring (never reaches the simulator thread, never
+          starts the clock). The recorder runs continuously while the clock runs: 30 fps with a camera worker,
+          10 fps on the simulator's thread (recorder.fps says which), with the depth of recorder.depth's cameras
+          (per-frame depth with last_s > 0 for any other camera: 400). A service without a recorder answers last_s
+          with the current frame. `cameras: []` returns no images, only proprioception. Before the first frame of the
+          episode is rendered the answer has no images and sets `frames_skipped` / `frames_pending`.
+        match: |
+          No recorder (a declared deviation): last_s = n answers with the sport's own frames of now; adds the `view`
+          part, `frame_step/<cam>` parts and `meta.observation`. After the match is over: 200, the final state, no images.
+      requestBody:
+        required: false
+        description: JSON, or an RCB1 frame whose header `meta` holds the same fields (no parts). An empty body is `{}`.
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ObserveRequest"}
+          application/x-rcb1:
+            schema: {$ref: "#/components/schemas/Rcb1Frame"}
+            x-eai-rcb1-meta: "#/components/schemas/ObserveRequest"
+      responses:
+        "200":
+          description: The frames and proprioception as an RCB1 frame.
+          content:
+            application/x-rcb1:
+              schema: {$ref: "#/components/schemas/Rcb1Frame"}
+              x-eai-rcb1-meta: "#/components/schemas/ObserveMeta"
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "403": {$ref: "#/components/responses/SeatNotAuthorized"}
+        "408": {$ref: "#/components/responses/DeadlinePassed"}
+        "409": {$ref: "#/components/responses/Conflict"}
+        "413": {$ref: "#/components/responses/TooLarge"}
+        "429": {$ref: "#/components/responses/TooMany"}
+        "500": {$ref: "#/components/responses/SimulatorError"}
+  /submit:
+    post:
+      operationId: submit
+      tags: [core]
+      summary: Run a chunk of action rows, or a hold chunk; the only way time passes.
+      description: |
+        A chunk: `type` + rows (`T x dim`, an RCB1 array part `actions` float32 or a JSON list of rows), rows
+        `dt` apart (a positive whole multiple of the control period; a non-interpolable type takes dt = one
+        control step), streamed with `interpolate` = `linear` (default) or `hold`; at most `max_chunk_s` of
+        robot time. Out-of-limit values are clipped and reported (`clipped`, `n_clipped`).
+
+        A hold chunk: `{"type": <type>, "interpolate": "hold", "seconds": n}` and no rows holds the
+        target in force for n seconds of robot time (whole control steps, at least one) and answers as any
+        `/submit` (`meta.hold = true`, `executed_rows = 0`, `duration_s`). `max_chunk_s` is the one cap of a chunk
+        and of a hold chunk in every layer. Rows together with `seconds` (any value, 0 too), or no rows without a
+        hold, are a 400 in every layer.
+
+        Every answer adds `duration_s` (the robot seconds the chunk ran, or in realtime mode the plan covers)
+        and `planned_duration_s` (rows x dt as sent; a hold chunk: its `seconds`). With the agent-ended
+        feature no answer depends on the task's success: no `done`, no `reason = "success"`, no 409 from a
+        success. At the step limit the chunk stops at that step and the episode ends (`reason = "step_limit"`).
+      x-eai-capability: base
+      x-eai-mcp: {tool: submit}
+      x-eai-modes:
+        standard: |
+          Gym's env.step: blocks until the rows have run and answers with their video (`video` default mp4),
+          one proprio row per recorded frame, `duration_s`, `planned_duration_s`. While it runs the recorder keeps
+          every camera every 1 / timing.recorder.fps robot seconds for later /observe last_s. A hold chunk's
+          `seconds` is at most max_chunk_s (every layer). With images the answer adds `frame_step`.
+        realtime: |
+          Answers at once. The chunk becomes the plan from control step `at` (integer of the episode; default the
+          next step; at most timing.max_ahead_steps ahead, else 400), replacing what was planned from there; rows
+          whose steps have run are dropped (`late_steps`); after the plan's last row its target is held. The first
+          /submit of an episode (again after a reset or a crash recovery) starts the clock. The answer carries the
+          newest recorded frames of now (default `video` none: no mp4), `frame_step` (also from a service without a recorder), and `start_step`,
+          `late_steps`, `plan_end_step`, `end_step` (= plan_end_step), `duration_s` (robot seconds the plan
+          covers). A hold chunk plans the target in force at `at` for n seconds (cap max_chunk_s).
+        match: |
+          A row is an action object of the match (JSON `rows`, or an RCB1 `actions` part: float32 in the type's
+          layout or kind json); one chunk is one type and one `entity`. Lockstep: rows run one after the other,
+          answered after the last. Realtime: as above, rows are commands (never interpolated); meta adds
+          `effects`, `replaced_rows`. Turn-based: one row, your turn's action. A hold chunk: lockstep waits n game
+          seconds, realtime clears the entity's plan from `at` for n seconds, turn-based waits up to n real
+          seconds for your turn. While the world is frozen or not started: 200 with `ok: false` and `not_now`.
+      requestBody:
+        required: true
+        description: "RCB1: the header `meta` holds the fields and the part `actions` the rows (float32 (T, dim); absent for a hold chunk). JSON: the rows inline as `actions`."
+        content:
+          application/x-rcb1:
+            schema: {$ref: "#/components/schemas/Rcb1Frame"}
+            x-eai-rcb1-meta: "#/components/schemas/SubmitRequest"
+          application/json:
+            schema: {$ref: "#/components/schemas/SubmitRequestJson"}
+      responses:
+        "200":
+          description: The chunk's answer as an RCB1 frame.
+          content:
+            application/x-rcb1:
+              schema: {$ref: "#/components/schemas/Rcb1Frame"}
+              x-eai-rcb1-meta: "#/components/schemas/SubmitMeta"
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "403": {$ref: "#/components/responses/SeatNotAuthorized"}
+        "408": {$ref: "#/components/responses/DeadlinePassed"}
+        "409": {$ref: "#/components/responses/Conflict"}
+        "413": {$ref: "#/components/responses/TooLarge"}
+        "429": {$ref: "#/components/responses/TooMany"}
+        "500": {$ref: "#/components/responses/SimulatorError"}
+  /finish:
+    post:
+      operationId: finish
+      tags: [core]
+      summary: End the episode; the state it ends in is judged.
+      description: |
+        Required in the standard and realtime modes (`/spec.success_signal` starts with "hidden").
+        Ends the episode with `reason = "finished"` and answers `{"ok": true, ...}` with `/status`'s fields.
+        After it every call but `GET /spec` and `GET /status` is a 409, `/finish` itself included; a `/finish`
+        after any other end (the step limit, a failure rule) is a 409 too. A match answers 404. The verdict (the task's success rule on the end state, with its settle or hold
+        window run after the agent is gone) is never returned to the agent; it is written to the trial's record
+        (`final.json`: `ended_by` = `finish`, `success`).
+      x-eai-capability: "base (agent-ended episodes)"
+      x-eai-mcp: {tool: finish}
+      x-eai-modes:
+        standard: answered between calls; the world was already frozen
+        realtime: answered by the simulator thread between control steps; the clock stops with the episode (no step runs after it)
+        match: not offered (404); the match's rules end it
+      requestBody:
+        required: false
+        description: |
+          Optional and ignored: no layer parses it. Clients send `{}`; an empty or malformed body is
+          accepted as well. Every layer reads the body and drops it; its Content-Length is checked as every POST's:
+          a bad one is a 400, one over the body limit a 413.
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/FinishRequest"}
+      responses:
+        "200":
+          description: The episode has ended.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/FinishResponse"}
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "409": {$ref: "#/components/responses/Conflict"}
+        "413": {$ref: "#/components/responses/TooLarge"}
+  /reset:
+    post:
+      operationId: reset
+      tags: [optional]
+      summary: Abandon the running episode and start a new one from the same frozen state.
+      description: |
+        Only where the task declares a reset budget N > 0 (`/spec.budget.reset`, `/spec.reset`); otherwise 404.
+        No physics runs; answers with the new episode's current frame (with images, `meta.frame_step` is the new
+        episode's first step). `meta` adds `episode`, `resets_left`,
+        `control_steps_total`. 409 when the budget is spent, or after `/finish` or the end of the session. Only the last episode is graded. The shared and operations
+        layers have no `/reset` route of their own (an adapter that serves one adds it).
+      x-eai-optional: true
+      x-eai-capability: reset
+      x-eai-mcp: {tool: reset}
+      x-eai-modes:
+        standard: as described
+        realtime: the new episode starts paused; its clock starts at its first /submit
+        match: not offered (404)
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ResetRequest"}
+          application/x-rcb1:
+            schema: {$ref: "#/components/schemas/Rcb1Frame"}
+            x-eai-rcb1-meta: "#/components/schemas/ResetRequest"
+      responses:
+        "200":
+          description: The new episode's first frame.
+          content:
+            application/x-rcb1:
+              schema: {$ref: "#/components/schemas/Rcb1Frame"}
+              x-eai-rcb1-meta: "#/components/schemas/ResetMeta"
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "409": {$ref: "#/components/responses/Conflict"}
+        "413": {$ref: "#/components/responses/TooLarge"}
+        "500": {$ref: "#/components/responses/SimulatorError"}
+  /kinematics:
+    post:
+      operationId: kinematics
+      tags: [optional]
+      summary: Stateless forward / inverse kinematics of the robot's own model.
+      description: |
+        Never steps physics, never advances time, never ends the episode; no collision checking. What it
+        answers is in `/spec.kinematics`. A malformed request is a 400; no IK solution is `ok: false`, never an
+        error. Served by the shared and the operations layers (a sidecar or realtime service and a match answer 404). After `/finish`
+        (agent-ended shared/operations) it is a 409; after any other end it still answers.
+      x-eai-optional: true
+      x-eai-capability: shared
+      x-eai-mcp: {tool: kinematics}
+      x-eai-modes:
+        standard: as described
+        realtime: not served by the realtime layer (404)
+        match: not offered (404)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/KinematicsRequest"}
+      responses:
+        "200":
+          description: The answer.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/KinematicsResponse"}
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "409": {$ref: "#/components/responses/Conflict"}
+        "413": {$ref: "#/components/responses/TooLarge"}
+        "500": {$ref: "#/components/responses/SimulatorError"}
+  /operations/{id}:
+    get:
+      operationId: getOperation
+      tags: [client-internal]
+      summary: The record of an operation (operations capability).
+      description: |
+        Client-internal: after a lost reply the operations client and the MCP server query the operation instead of
+        re-sending the actions. Read-only, never steps physics. Only a service with `/spec.operations` serves it (others: 404). After
+        `/finish` it is a 409, as every call but GET /spec and GET /status.
+      x-eai-capability: operations
+      x-eai-client-internal: true
+      x-eai-mcp: null
+      x-eai-modes:
+        standard: as described
+        realtime: not served (the realtime layer has no operations)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {$ref: "#/components/schemas/OperationId"}
+      responses:
+        "200":
+          description: The operation record.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/OperationRecord"}
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "409":
+          description: |
+            After `/finish` (agent-ended episodes: every call but GET /spec and GET /status is a 409), or a
+            service that gave up on the trial (`gave_up: true`).
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Conflict"}
+        "404":
+          description: Unknown operation id (body `{}`), or a service without the operations capability.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - {type: object, maxProperties: 0}
+                  - {$ref: "#/components/schemas/Error"}
+  /start:
+    post:
+      operationId: matchStart
+      tags: [match]
+      summary: You are ready; the match begins when every seat has started (the start barrier).
+      description: |
+        A realtime match's clock starts at this barrier, not at the first `/submit` (declared deviation).
+        An RCB1 request is answered in RCB1 (header `meta` with the match's reply under `reply`).
+      x-eai-capability: match
+      x-eai-mcp: {tool: start}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
+      responses:
+        "200":
+          description: The match's reply.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/MatchReply"}
+            application/x-rcb1:
+              schema: {$ref: "#/components/schemas/Rcb1Frame"}
+              x-eai-rcb1-meta: "#/components/schemas/MatchRcb1ReplyMeta"
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "403": {$ref: "#/components/responses/SeatNotAuthorized"}
+        "409": {$ref: "#/components/responses/Conflict"}
+        "413": {$ref: "#/components/responses/TooLarge"}
+        "429": {$ref: "#/components/responses/TooMany"}
+        "500": {$ref: "#/components/responses/SimulatorError"}
+  /ready:
+    post:
+      operationId: matchReady
+      tags: [match]
+      summary: Your review after a unit; answered once the world goes on.
+      x-eai-capability: match
+      x-eai-mcp: {tool: ready}
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                why: {type: string, maxLength: 2000}
+                plan: {type: string, maxLength: 2000}
+      responses:
+        "200":
+          description: The match's reply.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/MatchReply"}
+            application/x-rcb1:
+              schema: {$ref: "#/components/schemas/Rcb1Frame"}
+              x-eai-rcb1-meta: "#/components/schemas/MatchRcb1ReplyMeta"
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "403": {$ref: "#/components/responses/SeatNotAuthorized"}
+        "409": {$ref: "#/components/responses/Conflict"}
+        "413": {$ref: "#/components/responses/TooLarge"}
+        "429": {$ref: "#/components/responses/TooMany"}
+        "500": {$ref: "#/components/responses/SimulatorError"}
+  /say:
+    post:
+      operationId: matchSay
+      tags: [match]
+      summary: A message to your team (team formats only; otherwise 404).
+      x-eai-capability: match
+      x-eai-mcp: {tool: say}
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text: {type: string}
+      responses:
+        "200":
+          description: The match's reply.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/MatchReply"}
+            application/x-rcb1:
+              schema: {$ref: "#/components/schemas/Rcb1Frame"}
+              x-eai-rcb1-meta: "#/components/schemas/MatchRcb1ReplyMeta"
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "403": {$ref: "#/components/responses/SeatNotAuthorized"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "429": {$ref: "#/components/responses/TooMany"}
+        "500": {$ref: "#/components/responses/SimulatorError"}
+  /team:
+    post:
+      operationId: matchTeam
+      tags: [match]
+      summary: Your team's messages since index `since` (team formats only; otherwise 404).
+      x-eai-capability: match
+      x-eai-mcp: {tool: team}
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                since: {type: integer, minimum: 0}
+      responses:
+        "200":
+          description: The messages.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/MatchReply"}
+            application/x-rcb1:
+              schema: {$ref: "#/components/schemas/Rcb1Frame"}
+              x-eai-rcb1-meta: "#/components/schemas/MatchRcb1ReplyMeta"
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "403": {$ref: "#/components/responses/SeatNotAuthorized"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "429": {$ref: "#/components/responses/TooMany"}
+        "500": {$ref: "#/components/responses/SimulatorError"}
+    get:
+      operationId: matchTeamGet
+      tags: [match]
+      summary: The same as POST /team, with `since` in the query.
+      x-eai-capability: match
+      x-eai-mcp: {tool: team}
+      parameters:
+        - name: since
+          in: query
+          required: false
+          schema: {type: integer, minimum: 0, maximum: 999999999999}
+      responses:
+        "200":
+          description: The messages.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/MatchReply"}
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "403": {$ref: "#/components/responses/SeatNotAuthorized"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "429": {$ref: "#/components/responses/TooMany"}
+
+components:
+  responses:
+    BadRequest:
+      description: |
+        The request is malformed or not allowed; nothing ran. Examples: an unknown action type or camera, a
+        wrong row shape, NaN/inf, `dt` not a whole multiple of the control period, a chunk over `max_chunk_s`,
+        rows together with `seconds`, no rows without a hold chunk, `/observe` with `seconds > 0`, `last_s < 0`,
+        `video_fps` outside [1, `max_video_fps`], an `interpolate` other than linear or hold, `dt`, `seconds`,
+        `last_s` or `video_fps` not a JSON number (a boolean or a string), a hold chunk's `seconds` over
+        `max_chunk_s`, depth with `last_s > 0` for a
+        camera not in `timing.recorder.depth`, more images than `max_frames_per_call`, a bad Content-Length, a body that
+        is neither a JSON object nor an RCB1 frame, a malformed kinematics request, a malformed operation id or
+        request deadline (operations), realtime `at` more than `max_ahead_steps` ahead.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Error"}
+    NotFound:
+      description: No such endpoint here (an optional capability the service lacks, or a match's /finish, /reset, /kinematics).
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Error"}
+    Conflict:
+      description: |
+        The episode (or the trial) is over for this call; nothing ran. After `/finish` every call but GET /spec
+        and GET /status; `/submit` and `/finish` after any end; `/reset` past its budget or after `/finish`;
+        a service that gave up on the trial (`gave_up: true`, every endpoint); an operation id already
+        admitted (`operation_id`, `operation`); a match that is over (`match_over: true`).
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Conflict"}
+    GaveUp:
+      description: The service gave up on this trial (an infrastructure end) and refuses every request.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Conflict"}
+    TooLarge:
+      description: Request body over 64 MiB (a match - 8 MiB); refused unread.
+      x-eai-capability: base
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Error"}
+    DeadlinePassed:
+      description: "operations: `request_deadline_unix_s` passed before execution started; nothing ran."
+      x-eai-capability: operations
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Error"}
+    TooMany:
+      description: |
+        A match seat over its request budget (20 per second, 4 open; an empty body), or a match core's own 429.
+      x-eai-capability: match
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - {$ref: "#/components/schemas/Error"}
+              - {type: object, maxProperties: 0}
+    SeatNotAuthorized:
+      description: "Match: the request does not come from this seat's host."
+      x-eai-capability: match
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Error"}
+    SimulatorError:
+      description: |
+        The simulator failed while serving the call; on `/submit` and `/observe` the episode ends with
+        `reason = "error"`. A /kinematics 500 does not end the episode.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Error"}
+
+  schemas:
+    # ------------------------------------------------------------------ RCB1
+    Rcb1Frame:
+      type: string
+      format: binary
+      contentMediaType: application/x-rcb1
+      description: |
+        An RCB1 frame, raw bytes (never base64):
+        `"RCB1"` (4 bytes) | header length (uint32 little-endian) | header (UTF-8 JSON, `Rcb1Header`) |
+        blob_0 | blob_1 | ... (in the order of `header.parts`, each `len` bytes, no gaps).
+        An `array` blob is the C-order raw bytes of `dtype` in `shape`; `mp4` is H.264; `json` is UTF-8 JSON;
+        `jpeg` and `bytes` are raw. `rcb1.py` (shipped with the client) encodes and decodes it
+        (`python -m rcb1 unpack f dir`).
+    Rcb1Header:
+      type: object
+      required: [v, meta, parts]
+      properties:
+        v: {const: 1}
+        meta: {type: object, description: "The answer's meta (or a request's fields)."}
+        parts:
+          type: array
+          items: {$ref: "#/components/schemas/Rcb1Part"}
+    Rcb1Part:
+      type: object
+      required: [name, kind, len]
+      properties:
+        name: {$ref: "#/components/schemas/Rcb1PartName"}
+        kind: {enum: [mp4, jpeg, array, json, bytes]}
+        len: {type: integer, minimum: 0}
+        dtype: {type: string, description: "array: numpy dtype string, e.g. uint8, float32, int64, float16"}
+        shape: {type: array, items: {type: integer, minimum: 0}}
+        fps: {type: number, description: "mp4: frames per second"}
+        n: {type: integer, description: "mp4: number of frames"}
+        codec: {type: string, description: "bytes: e.g. zlib (depth_frames)"}
+        unit: {type: string}
+        format: {type: string, description: "bytes: e.g. png (the match's view)"}
+        note: {type: string}
+    Rcb1PartName:
+      description: |
+        Every part shares one frame axis N where it has one (one entry per recorded frame of the call).
+      anyOf:
+        - {pattern: "^video/[^/]+$", description: "mp4: H.264 of the N frames (video = mp4 | both)"}
+        - {pattern: "^frames/[^/]+$", description: "array uint8 (N,H,W,3): the raw frames (video = frames | both; realtime/match: always for the current frame)"}
+        - {pattern: "^last/[^/]+$", description: "array uint8 (H,W,3): the newest frame, always"}
+        - {const: proprio, description: "array float32 (N,D): one proprio row per frame, columns /spec.proprio_layout (match: one row, columns meta.proprio.layout)"}
+        - {const: frame_step, description: "array int64 (N,): the control step of each frame (shared/operations every answer; sidecar an /observe with last_s > 0; match)"}
+        - {const: frame_time_s, description: "array float64 (N,): frame_step / control_hz (shared, match)"}
+        - {pattern: "^frame_step/[^/]+$", description: "match: array int64, the control step of each of a camera's frames"}
+        - {pattern: "^extrinsic_cv/[^/]+$", description: "shared: array float64 (N,3,4), world -> camera (OpenCV axes) at each frame"}
+        - {pattern: "^cam2world_gl/[^/]+$", description: "a benchmark's own service: array float64 (N,4,4), a moving camera's pose at each frame"}
+        - {pattern: "^last_depth/[^/]+$", description: "shared: array float32 (H,W), z-depth of the last frame in metres (depth = last | frames)"}
+        - {pattern: "^depth_frames/[^/]+$", description: "shared: bytes, codec zlib, dtype uint16, shape (N,H,W), unit mm (depth = frames)"}
+        - {pattern: "^depth/[^/]+$", description: "a request with include_depth: true: array float16 (N,H,W), z-depth in metres"}
+        - {const: view, description: "match: bytes, format png, the match's own tiled image"}
+        - {const: actions, description: "request only: the rows of /submit, array float32 (T, dim) (match: or kind json, a list of action objects)"}
+    # ------------------------------------------------------------------ requests
+    CameraList:
+      type: array
+      items: {type: string}
+      description: |
+        Camera names from /spec.cameras; repeated names count once. Absent: every camera (sidecar/realtime) or
+        /spec.default_cameras (the shipped client sends it). `[]`: realtime - no images, only proprioception;
+        sidecar standard - every camera.
+    ViewFields:
+      type: object
+      properties:
+        cameras: {$ref: "#/components/schemas/CameraList"}
+        video:
+          enum: [mp4, frames, both, none]
+          description: "Default: mp4 for a standard /submit, none for a realtime /submit, frames for /observe and /reset. /observe and /reset never encode video for the current frame (mp4 is answered as frames)."
+        video_fps:
+          type: number
+          minimum: 1
+          default: 10
+          description: |
+            Frames per robot second in the answer, a JSON number (a boolean or a string is a 400). At most
+            `/spec.max_video_fps` (sidecar: 30; shared/operations: 30, or the control rate where that is higher, unless the
+            service declares `max_video_fps`); outside [1, max] it is a 400 in every layer. The sidecar layer casts the value
+            to an integer.
+        depth:
+          oneOf:
+            - {enum: [none, last, frames]}
+            - {type: boolean}
+          description: "shared/operations (true = last): none | last (last_depth/<cam>) | frames (also depth_frames/<cam>). Ignored by the sidecar and the realtime layers, which read include_depth."
+          x-eai-capability: shared
+        include_depth:
+          type: boolean
+          default: false
+          description: "depth/<cam> float16 metres per frame (the sidecar and the realtime layers; the shared layer with no depth field: the same)."
+        note: {type: string, description: Free text kept in the trial's record (truncated).}
+        operation_id:
+          $ref: "#/components/schemas/OperationId"
+        request_deadline_unix_s:
+          type: number
+          description: "operations: Unix seconds; a passed deadline before execution is a 408."
+          x-eai-capability: operations
+    ObserveRequest:
+      allOf:
+        - {$ref: "#/components/schemas/ViewFields"}
+        - type: object
+          properties:
+            last_s:
+              type: [number, "null"]
+              minimum: 0
+              default: 0
+              description: "0 (or null): the current frame; n: the frames recorded in the last n robot seconds (capped at timing.recorder.buffer_s)."
+            seconds:
+              enum: [0, null]
+              deprecated: true
+              description: "Any value other than 0 (or null, read as absent) is a 400 that names the hold chunk."
+            query: {description: "match: the observation's query (the match's own)."}
+            team_since: {type: integer, minimum: 0, description: "match: team messages since this index."}
+    SubmitRequest:
+      description: A chunk with rows, or a hold chunk without rows.
+      oneOf:
+        - {$ref: "#/components/schemas/ChunkRequest"}
+        - {$ref: "#/components/schemas/HoldChunkRequest"}
+    SubmitRequestJson:
+      description: "A JSON /submit body: a chunk with its rows inline (`actions`, or a match's `rows`), or a hold chunk."
+      oneOf:
+        - allOf:
+            - {$ref: "#/components/schemas/ChunkRequest"}
+            - anyOf:
+                - {required: [actions]}
+                - {required: [rows]}
+        - {$ref: "#/components/schemas/HoldChunkRequest"}
+    ChunkCommon:
+      allOf:
+        - {$ref: "#/components/schemas/ViewFields"}
+        - type: object
+          required: [type]
+          properties:
+            type: {type: string, description: "An action type of /spec.action_types (match: also <type>@<entity>)."}
+            at:
+              type: [integer, "null"]
+              minimum: 0
+              description: "Realtime and match: the control step of the episode the chunk starts at (null/absent: the next step)."
+              x-eai-capability: realtime
+            entity: {type: string, description: "match: the robot or rod the rows command."}
+    ChunkRequest:
+      allOf:
+        - {$ref: "#/components/schemas/ChunkCommon"}
+        - type: object
+          properties:
+            seconds:
+              type: "null"
+              description: "A chunk with rows takes no `seconds` (any number, 0 too, is a 400); null is read as absent."
+            actions:
+              type: array
+              minItems: 1
+              items:
+                type: array
+                items: {type: number}
+              description: "JSON rows (T, dim); in an RCB1 request the part `actions` (float32) instead."
+            rows:
+              type: array
+              minItems: 1
+              description: "match: JSON action objects (or numeric rows in the type's layout)."
+            dt:
+              type: [number, "null"]
+              exclusiveMinimum: 0
+              description: "Seconds between rows; default (absent or null) one control period; a whole multiple of it (never rounded). Rows x dt is at most max_chunk_s (a planner type such as ee_pose: the planner's own timing)."
+            interpolate: {enum: [linear, hold], default: linear}
+    HoldChunkRequest:
+      allOf:
+        - {$ref: "#/components/schemas/ChunkCommon"}
+        - type: object
+          required: [type, interpolate, seconds]
+          properties:
+            interpolate: {const: hold}
+            seconds:
+              type: number
+              exclusiveMinimum: 0
+              description: "Robot seconds to hold the target in force (whole control steps, at least one); at most max_chunk_s in every layer (match turn-based: real seconds of waiting for your turn)."
+            actions: {type: array, maxItems: 0}
+            rows: {type: array, maxItems: 0}
+    ResetRequest:
+      $ref: "#/components/schemas/ViewFields"
+    FinishRequest:
+      type: object
+      description: "`{}`, what clients send. The body is ignored by every layer, so anything else is accepted too."
+    KinematicsRequest:
+      oneOf:
+        - type: object
+          required: [op, q]
+          properties:
+            op: {const: fk}
+            q: {type: array, items: {type: number}, description: "joint positions in /spec.kinematics.joint_names order"}
+            links: {type: array, items: {type: string}, description: "default: every /spec.kinematics.links entry"}
+            base_pose: {$ref: "#/components/schemas/Pose7"}
+        - type: object
+          required: [op, targets]
+          properties:
+            op: {const: ik}
+            targets:
+              type: object
+              minProperties: 1
+              additionalProperties: {$ref: "#/components/schemas/Pose7"}
+              description: "frame (from /spec.kinematics.ik_targets) -> pose"
+            seed: {type: array, items: {type: number}}
+            base_pose: {$ref: "#/components/schemas/Pose7"}
+            tol_pos_m: {type: number, minimum: 0.00001, maximum: 0.5}
+            tol_rot_rad: {type: number, minimum: 0.0001, maximum: 3.2}
+            max_iters: {type: integer, minimum: 1, maximum: 5000}
+    Pose7:
+      type: array
+      items: {type: number}
+      minItems: 7
+      maxItems: 7
+      description: "x y z + a quaternion in /spec.world.quaternion_order"
+    OperationId:
+      type: string
+      pattern: "^[A-Za-z0-9_-]{1,80}$"
+      description: "operations: an operation id; a malformed one is a 400, an admitted one a 409."
+      x-eai-capability: operations
+    # ------------------------------------------------------------------ answers
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: {type: string}
+        detail: {type: string}
+        reason: {type: [string, "null"]}
+    Conflict:
+      type: object
+      anyOf:
+        - {required: [error]}
+        - {required: [reason]}
+      properties:
+        error: {type: string}
+        reason: {type: [string, "null"], description: "how the episode ended (finished, step_limit, failed, timeout, error, ...)"}
+        resets_left: {type: integer, minimum: 0}
+        budget: {type: integer, description: "the reset budget (budget exhausted)"}
+        gave_up: {const: true, description: "the service gave up on the trial (an infrastructure end)"}
+        infra_error: {type: integer}
+        done: {const: true}
+        match_over: {const: true}
+        operation_id: {$ref: "#/components/schemas/OperationId"}
+        operation: {$ref: "#/components/schemas/OperationRecord"}
+    Proprio:
+      type: object
+      required: [layout, now]
+      properties:
+        layout: {type: array, items: {type: string}}
+        now: {type: array, items: {type: [number, "null", boolean, string]}}
+      description: "The proprioception of now; columns are the benchmark's (/spec.proprio_layout)."
+    Counters:
+      type: object
+      description: "What every /status and every meta report about the episode (keys a layer or adapter adds are allowed)."
+      required: [calls, control_steps, done, reason]
+      properties:
+        calls: {type: integer, minimum: 0, description: "agent calls served"}
+        rows: {type: integer, minimum: 0, description: "sidecar: action rows executed"}
+        step: {type: integer, description: "rows executed so far (shared-layer adapters, match)"}
+        control_steps: {type: integer, minimum: 0, description: "control steps of the current episode"}
+        done: {type: boolean, description: "the episode has ended (never because of a success when the success is hidden)"}
+        reason: {type: [string, "null"], description: "how it ended: finished, step_limit, failed, timeout, error, reset, ... (never success when hidden)"}
+        step_limit: {type: integer, description: "with a step limit"}
+        steps_left: {type: integer, minimum: 0, description: "with a step limit"}
+        episode: {type: integer, description: "with a reset budget: the episode number"}
+        control_steps_total: {type: integer, description: "with a reset budget: control steps over the trial"}
+        resets_left: {type: integer, minimum: 0, description: "with a reset budget"}
+        running: {type: boolean, description: "realtime: the clock runs", x-eai-capability: realtime}
+        planned_steps: {type: integer, description: "realtime: steps in the plan", x-eai-capability: realtime}
+        lag_s: {type: number, description: "realtime: how far behind the clock the simulator is", x-eai-capability: realtime}
+    Status:
+      allOf:
+        - {$ref: "#/components/schemas/Counters"}
+        - type: object
+          properties:
+            elapsed_s: {type: number, description: "seconds since the agent's first request"}
+            resumes: {type: integer, description: "shared/operations: crash recoveries"}
+    FinishResponse:
+      allOf:
+        - {$ref: "#/components/schemas/Status"}
+        - type: object
+          required: [ok]
+          properties:
+            ok: {const: true}
+            reason: {const: finished}
+            done: {const: true}
+    Meta:
+      description: "The meta of every RCB1 answer. Keys a benchmark's adapter adds (its step info, without success or progress keys) are allowed."
+      allOf:
+        - {$ref: "#/components/schemas/Counters"}
+        - type: object
+          required: [proprio, time_s, time_left_s]
+          properties:
+            protocol: {type: string, description: "match: the protocol id"}
+            physics_steps: {type: [integer, "null"]}
+            sim_time_s: {type: [number, "null"], description: "robot seconds of the episode"}
+            time_s: {type: number, minimum: 0, description: "the agent's wall clock since its first request"}
+            time_left_s: {type: [number, "null"], minimum: 0, description: "budget.wall_clock_s - time_s, never below 0"}
+            proprio: {$ref: "#/components/schemas/Proprio"}
+            cameras: {type: object, description: "a benchmark's calibration of the requested cameras at the last frame (intrinsic_cv, extrinsic_cv, cam2world_gl)"}
+            stopped: {type: [string, "null"], description: "shared: why the service stopped the call early (max_call_wall_s, client_disconnected)", x-eai-capability: shared}
+            degraded: {type: string, description: "the answer was over 256 MB: these parts were dropped"}
+            frames_skipped: {type: integer, description: "images left out (budget, or none rendered yet)"}
+            frames_pending: {type: string, description: "realtime: why there are no frames yet"}
+            operation_id: {type: [string, "null"], description: "operations: the request's operation id, echoed", x-eai-capability: operations}
+            ok: {type: boolean}
+            frame_step: {type: integer, minimum: 0, description: "the control step the newest image shows; on every /observe, /submit and /reset answer with images (every layer; realtime also without a recorder)"}
+    ObserveMeta:
+      allOf:
+        - {$ref: "#/components/schemas/Meta"}
+        - type: object
+          properties:
+            obs_id: {type: integer}
+            last_s: {type: number, minimum: 0, description: "the robot seconds the returned frames cover (0: the current frame)"}
+            seconds: {const: 0, description: "always 0"}
+            control_steps_watch: {const: 0, description: "always 0"}
+            observation: {description: "match: the match's observation fields"}
+            not_now: {type: string, description: "match (turn-based, before the start)"}
+    SubmitMeta:
+      allOf:
+        - {$ref: "#/components/schemas/Meta"}
+        - if: {required: [hold]}
+          then:
+            description: "a hold chunk's answer, every layer (and the match)"
+            required: [executed_rows]
+            properties:
+              executed_rows: {const: 0}
+        - if: {required: [running]}
+          then:
+            description: "a realtime answer (the realtime layer, a realtime match): what the plan covers"
+            required: [plan_end_step, end_step]
+        - type: object
+          required: [duration_s, planned_duration_s]
+          properties:
+            chunk_id: {type: [integer, "null"]}
+            type: {type: string}
+            hold: {const: true, description: "a hold chunk"}
+            executed_rows: {type: integer, minimum: 0, description: "standard: rows executed; a hold chunk: 0 (every layer, realtime too)"}
+            control_steps_chunk: {type: integer, minimum: 0, description: "standard: control steps the chunk ran"}
+            duration_s: {type: [number, "null"], minimum: 0, description: "standard: robot seconds the chunk ran; realtime: robot seconds the plan covers; match turn-based: null"}
+            planned_duration_s: {type: [number, "null"], minimum: 0, description: "rows x dt as sent (a hold chunk: its seconds)"}
+            clipped:
+              type: array
+              items:
+                type: object
+                properties:
+                  row: {type: integer}
+                  index: {type: integer}
+                  reason: {type: string}
+            n_clipped: {type: integer, minimum: 0}
+            n_rows: {type: integer, description: "realtime: rows sent", x-eai-capability: realtime}
+            dt: {type: number, x-eai-capability: realtime}
+            interpolate: {enum: [linear, hold], x-eai-capability: realtime}
+            at: {type: [integer, "null"], x-eai-capability: realtime}
+            start_step: {type: [integer, "null"], description: "realtime: the step the plan starts at", x-eai-capability: realtime}
+            late_steps: {type: integer, minimum: 0, description: "realtime: rows dropped because their steps had run", x-eai-capability: realtime}
+            plan_end_step: {type: [integer, "null"], description: "realtime: the step after the plan's last row", x-eai-capability: realtime}
+            end_step: {type: [integer, "null"], description: "realtime: = plan_end_step", x-eai-capability: realtime}
+            plan: {type: array, description: "a planner type's per-row result (a failed plan is reported here, not as an error)"}
+            effects: {type: array, description: "match realtime: planned_step, effect_step, late_steps of rows since the last answer"}
+            replaced_rows: {type: integer}
+            late_rows: {type: integer}
+            not_now: {type: string, description: "match: the world is frozen or not started; nothing ran (ok false)"}
+    ResetMeta:
+      allOf:
+        - {$ref: "#/components/schemas/Meta"}
+        - type: object
+          required: [episode, resets_left]
+    KinematicsResponse:
+      type: object
+      required: [ok, op]
+      properties:
+        ok: {type: boolean, description: "false: no IK solution (never an error)"}
+        op: {enum: [fk, ik]}
+        frame: {type: string, description: "world, or base for a mobile robot"}
+        poses:
+          type: object
+          additionalProperties: {$ref: "#/components/schemas/Pose7"}
+          description: "fk: link -> pose"
+        q: {type: [array, "null"], items: {type: number}, description: "ik: the solution"}
+        error:
+          type: object
+          description: "ik: frame -> {pos_m, rot_rad} of the returned q"
+          additionalProperties:
+            type: object
+            properties:
+              pos_m: {type: [number, "null"]}
+              rot_rad: {type: [number, "null"]}
+        note: {type: string}
+    OperationRecord:
+      type: object
+      required: [operation_id, status]
+      properties:
+        operation_id: {$ref: "#/components/schemas/OperationId"}
+        status: {enum: [admitted, completed, error, interrupted]}
+        rows_before: {type: integer, description: "control rows executed before the call"}
+        committed_rows: {type: integer, description: "rows executed when the call ended"}
+        stopped: {type: [string, "null"]}
+        execution_uncertain: {const: true, description: "after a crash recovery: an admitted operation became interrupted"}
+        restored_committed_rows: {type: integer, description: "rows the resumed episode replayed"}
+    # ------------------------------------------------------------------ /spec
+    Spec:
+      type: object
+      required: [protocol, action_types, cameras]
+      description: "A benchmark adds its own keys (simulator, robot, task_text, static, robot facts); none says where things are or whether the task has succeeded."
+      properties:
+        protocol:
+          type: string
+          const: eai-standard/3.0
+          description: "the protocol (= the task's [metadata] protocol); what a service serves beyond the base is said by its capabilities (operations, timing.realtime, kinematics, match)"
+        operations: {type: boolean, description: "the operations capability: operation ids, request deadlines, GET /operations/{id}", x-eai-capability: operations}
+        control_dt: {type: [number, "null"], description: "seconds per control step (sidecar, realtime, match)"}
+        control_hz: {type: [number, "null"], description: "(shared, match)"}
+        max_control_steps: {type: integer, description: "the episode's step cap where the service has one (sidecar: rcb_service.py and the benchmarks' own servers; shared/operations: an adapter with a cap of its own), lowered to the step limit when there is one; its end is reason step_limit. Absent: no cap but the step limit (step_limit / steps_left) and the wall clock"}
+        max_chunk_s: {type: number, description: "the robot seconds a chunk, and a hold chunk, may cover (every layer)"}
+        max_video_fps: {type: integer}
+        max_frames_per_call: {type: integer, description: "images one answer may carry (cameras x frames, depth counted again)"}
+        max_call_wall_s: {type: number, x-eai-capability: shared}
+        max_request_bytes: {type: integer, description: "match: 8 MiB"}
+        proprio_layout: {type: [array, "null"], items: {type: string}}
+        proprio_groups: {type: object, description: "group -> [first column, count, meaning]"}
+        cameras:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              rgb: {type: boolean}
+              depth: {type: boolean}
+              intrinsic_cv: {type: array}
+              mount: {type: object}
+        default_cameras: {type: array, items: {type: string}}
+        action_types:
+          type: object
+          description: "type -> {dim, layout, limits, semantics, ...}; `not_yet`: types not offered yet"
+        budget:
+          type: object
+          properties:
+            reset: {type: integer, minimum: 0}
+            steps: {type: [integer, "null"], description: "the step limit, with one"}
+            wall_clock_s: {type: [number, "null"]}
+            clock: {type: string, description: "shared/match: what time_s counts from (sidecar: top-level `clock`)"}
+        clock: {type: string, description: "sidecar: what time_s / time_left_s count from"}
+        timing: {$ref: "#/components/schemas/Timing"}
+        reset: {type: string, description: "with a reset budget: what /reset does"}
+        success_signal: {type: string, pattern: "^hidden", description: "agent-ended episodes: the success is hidden; POST /finish ends the episode"}
+        on_service_error: {type: string}
+        kinematics: {type: object, description: "shared: what /kinematics answers (endpoint, joint_names, frame, links, tcp_frames, ee_frames, ik_targets, ik)", x-eai-capability: shared}
+        robot_spec: {type: object, x-eai-capability: shared}
+        world: {type: object, x-eai-capability: shared}
+        depth: {type: object, x-eai-capability: shared}
+        match: {type: object, description: "match: the match service's own spec"}
+        endpoints: {type: object}
+        entities: {type: array, items: {type: string}}
+    Timing:
+      type: object
+      properties:
+        realtime: {type: boolean, x-eai-capability: realtime}
+        slowdown: {type: number, x-eai-capability: realtime}
+        control_dt: {type: [number, "null"]}
+        wall_s_per_control_step: {type: number, x-eai-capability: realtime}
+        max_ahead_steps: {type: integer, x-eai-capability: realtime}
+        clock: {type: string}
+        submit: {type: string}
+        observe: {type: string}
+        no_images: {type: string}
+        recorder:
+          type: object
+          description: "The recorder that /observe last_s reads."
+          properties:
+            cameras: {type: array, items: {type: string}}
+            fps: {type: number, description: "frames per robot second (RCB_CAMERA_FPS)"}
+            buffer_s: {type: number, description: "robot seconds kept (RCB_LOOKBACK_S)"}
+            records: {type: string, description: "when it records (standard: during /submit; realtime: continuously)"}
+            depth: {type: array, items: {type: string}, description: "the cameras whose depth it keeps ([] in standard mode): depth with last_s > 0 only for these"}
+            resolution: {type: object}
+            rendered_by: {type: string, description: "realtime: a process of its own, or the simulator's thread"}
+        deviations:
+          type: array
+          description: "match: each rule the match cannot take, with what it does and why"
+          items:
+            type: object
+            required: [rule, here, why]
+            properties:
+              rule: {type: string}
+              here: {type: string}
+              why: {type: string}
+    # ------------------------------------------------------------------ match
+    MatchMeta:
+      description: "The match extension's meta (every answer and /status)."
+      allOf:
+        - {$ref: "#/components/schemas/Meta"}
+        - type: object
+          required: [score, review_due, match_over, phase]
+          properties:
+            score: {type: [object, "null"]}
+            side: {}
+            review_due: {type: boolean}
+            match_over: {type: boolean}
+            phase: {enum: [prepare, running, play, review, over]}
+            world: {}
+            state: {type: object}
+            effects: {type: array}
+    MatchReply:
+      type: object
+      required: [ok, meta]
+      properties:
+        ok: {type: boolean}
+        meta: {$ref: "#/components/schemas/MatchMeta"}
+        accepted: {type: boolean}
+        sent: {}
+        messages: {type: array}
+    MatchRcb1ReplyMeta:
+      allOf:
+        - {$ref: "#/components/schemas/MatchMeta"}
+        - type: object
+          required: [reply]
+          properties:
+            reply: {type: object, description: "the match's reply (accepted, ok, messages, ...)"}

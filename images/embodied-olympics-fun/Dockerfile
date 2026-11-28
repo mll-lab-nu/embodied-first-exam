@@ -1,13 +1,13 @@
 # embodied-olympics-fun (earlier tag: robofunolympics): the Embodied Olympics simulator for the Embodied Olympics - Fun tasks (tasks/embodied-olympics-fun/README.md):
 # MuJoCo 3.3.7 on CPU (bit-exact replay) with OSMesa rendering (EGL on a GPU for the standard-realtime twins, since 0.2.1), and Embodied Olympics' robot library with its
-# Unitree G1 (PROTOCOL §2.1: a base image holds the simulator and its assets) at /opt/roboolympics:
+# Unitree G1 (docs/protocol/tasks.md: a base image holds the simulator and its assets) at /opt/roboolympics:
 #   bodies/              the robot library (model, meshes, real limits, the one servo path, the joint-group arbiter,
 #                        kinematics, the walking policies that come with the robot), unchanged
 #                        (with the G1's optional FALCON and AGILE walking policies, numpy ports, since 0.2.0)
 #   athletics/           the G1 running policy of Embodied Olympics' athletics (run_policy.py, policy/)
 # Source and file list: roboolympics/SOURCE.md; every file is checked against roboolympics/manifest.sha256 here.
 # No task code, no referee and no solution is in the image: those are in the task directories.
-# Build: scripts/build_images.sh (context: this directory).
+# Build: scripts/images.sh build (context: this directory).
 FROM docker.io/library/python:3.12.11-slim-bookworm@sha256:519591d6871b7bc437060736b9f7456b8731f1499a57e22e6c285135ae657bf7
 ENV DEBIAN_FRONTEND=noninteractive PIP_NO_CACHE_DIR=1 PYTHONDONTWRITEBYTECODE=1 MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa \
     OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 \

@@ -21,13 +21,17 @@ Rules:
   `game ready "WHY" "PLAN"`, a short review, within 600 s of real time (`timing.review_timeout_s` in `game spec`), or
   your side loses the match (`ready_timeout`), even when you are ahead. After a stoppage the world stays frozen until
   you send `game ready`: watch for the freeze (your program's log, `game status`) and review at once.
+- Start window: send `game start` within 1800 s of real time after the match service starts (`start.window_s` in
+  `game spec`), or you lose the match (`no_show`). The match does not run before that: read `game spec` and prepare your
+  program first.
 - You may write a program that observes, measures in the images, computes your next action and sends it, without a new
   model response for each action; you stay in the loop (watch its log, stop, fix and restart it). Only you send
   `game start` and `game ready`.
 
 The match (RoboCup Humanoid Soccer League rules, with these changes):
-- Two halves of 5 minutes of game time; more goals after two halves wins, or a 10-goal lead at any time (the mercy
-  rule). No change of ends (each team's frame stays), no timeouts, no designated goalkeeper, no substitutes.
+- Two halves of 5 minutes of game time (a half runs on for up to 3 s while the ball is still moving); more goals after
+  two halves wins, or a 10-goal lead at any time (the mercy rule). No change of ends (each team's frame stays), no
+  timeouts, no designated goalkeeper, no substitutes.
 - If the score is level after two halves, there is a penalty shoot-out of 3 kicks each. Then come up to 3 sudden-death
   rounds, each won by the better kick (goal, saved, post, wide, other, no kick), and then a coin toss drawn from the
   seed. There are no draws.
@@ -46,7 +50,7 @@ A (blue) against a scripted team B (red) at level 2. The world waits for you: it
 hardware: one live episode.
 
 ### Client
-The service at `http://localhost:8000` speaks eai-standard/2.x with the match extension (`eai-standard/2.1+match/1.0`): the endpoints
+The service at `http://localhost:8000` speaks eai-standard/3.0 with the match extension: the endpoints
 of every standard task, plus `/start` and `/ready`. The shared client is installed (`from rcb_client import Robot`).
 
 | HTTP | |

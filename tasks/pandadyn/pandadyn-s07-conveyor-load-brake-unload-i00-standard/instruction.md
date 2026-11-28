@@ -1,15 +1,15 @@
 # Panda Dynamic Scenes · Conveyor pick, carriage load, braking and dock unload (S07) (standard)
 
 ## Task
-Grasp the part from the moving conveyor, lift it about a hand's length and set it on the coasting carriage, letting go
+Grasp the part from the moving conveyor, lift it about a hand's width and set it on the coasting carriage, letting go
 while the carriage is moving. Then grip the carriage's handle and stop it, with the part still on it, before it reaches
 the end of its rail; finally lift the part off and set it down in the dock.
 
 ## Goal
-Success: both fingers grasp the part while it still rides the conveyor and lift it about a hand's length; the part is
-set on the moving carriage and let go while the carriage still moves; then both fingers grip the carriage's handle (the
+Success: both fingers grasp the part while it still rides the conveyor and lift it about a hand's width; the part is set
+on the moving carriage and let go while the carriage still moves; then both fingers grip the carriage's handle (the
 handle only) and bring the carriage to a stop, the part still on it; the part is grasped again and lifted about a hand's
-length off the carriage; finally it is set down in the dock and left there at rest.
+width off the carriage; finally it is set down in the dock and left there at rest.
 
 The steps count only in this order. Once a step is done, it stays done. The task is done when its last step is done, and
 it stays done even if a failure ends the episode afterwards. The task fails, and the episode ends at once, when:
@@ -41,7 +41,7 @@ as if it were real hardware.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`). Its docstring (`help(rcb_client)`) lists the calls and their
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`). Its docstring (`help(rcb_client)`) lists the calls and their
 arguments. Where the docstring's example numbers differ, this page and `r.spec()` are right.
 
 | call | what it does |

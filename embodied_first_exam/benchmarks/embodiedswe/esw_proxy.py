@@ -297,7 +297,7 @@ def _limits() -> None:
 # the system's software trees, its own solution copy and /proc entries of its own; it may write only its scratch
 # directory, and it can open no TCP connection. Everything else (other processes' /proc entries, /tests, /logs, the
 # trusted work files, /tmp, /cache, /app) is out of reach whatever the file modes say. A PID namespace would need
-# CAP_SYS_ADMIN, which a verifier container does not get (PROTOCOL H.1: no service widens its container).
+# CAP_SYS_ADMIN, which a verifier container does not get (docs/protocol/invariants.md H.1: no service widens its container).
 LANDLOCK_ABI_MIN = 4
 _FS_EXECUTE, _FS_WRITE_FILE, _FS_READ_FILE, _FS_READ_DIR = 1, 2, 4, 8
 _FS_ALL_V1 = (1 << 13) - 1                   # execute .. make_sym

@@ -42,7 +42,7 @@ class Runtime:
         signal.signal(signal.SIGUSR1, lambda *_: self.request_finalize())
 
     def request_finalize(self):
-        # From the signal (or the service's own deadline) on, nothing runs the simulator for the agent (PROTOCOL H.4):
+        # From the signal (or the service's own deadline) on, nothing runs the simulator for the agent (docs/protocol/invariants.md H.4):
         # the cutoff is persisted, a deployment's running episode worker is killed (its round cannot count), and an
         # error here never takes the service (PID 1) down before it has written final.json.
         try:
@@ -73,7 +73,7 @@ class Runtime:
             with self.lock:
                 final = self.session.finalize(self.cutoff)
             if not (self.session.root / "video.json").exists():
-                self.session.render_video(final)   # after the verdict, never part of it (PROTOCOL §4)
+                self.session.render_video(final)   # after the verdict, never part of it (docs/protocol/tasks.md#grading)
         except Exception as error:   # no final.json: the collect hook times out and the trial is infrastructure
             self.session.audit({"operation": "watch", "status": "crashed", "error": type(error).__name__})
 
@@ -125,7 +125,7 @@ def handler(runtime):
             runtime.session.audit({"operation": "http", "path": self.path[:256], "outcome": "rejected"})
             self.reply(404, {"error": "Unknown route"})
 
-        do_PUT = do_DELETE = do_PATCH = do_HEAD = do_OPTIONS = do_TRACE = do_CONNECT = unknown   # every non-protocol path is 404 (PROTOCOL H.3)
+        do_PUT = do_DELETE = do_PATCH = do_HEAD = do_OPTIONS = do_TRACE = do_CONNECT = unknown   # every non-protocol path is 404 (docs/protocol/invariants.md H.3)
 
         def do_POST(self):
             if self.path not in tuple("/" + o for o in OPERATIONS):

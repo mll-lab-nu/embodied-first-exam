@@ -4,8 +4,8 @@
 Pick up the large blue pitcher and lift it clear of the table.
 
 ## Goal
-Success: the gripper holds the large blue pitcher with all of it lifted at least a hand's width above the table, still
-over the table. The replay of your trajectory ends as soon as the task is done (later rows are never executed).
+Success: the gripper holds the large blue pitcher with all of it lifted at least a few centimetres above the table,
+still over the table. The replay of your trajectory ends as soon as the task is done (later rows are never executed).
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`. It
 holds `task` and `actions`, a (T, 8) float array of at most 100,000 rows (one per control step, 1.9 h of robot time).

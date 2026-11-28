@@ -1,34 +1,46 @@
-# embodied-olympics-fun-shuttle-run-i00-standard
+# Embodied Olympics · 4 x 10 m shuttle run (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
-| Twin | `embodied-olympics-fun-shuttle-run-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `shuttle_run` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: positive by injection (real running on all four legs, the three about-turns set by hand: 23.0 s); negatives: turning short, a foot only on the line, two legs only, arms over the finish without the torso, down, walking. With the built-in gaits a leg takes about 6 s and an about-turn on the walking policy 3.4 s: about 33 s against the 30 s limit. A turn counts only with the foot beyond the line between its cones (every ground contact point at |y| <= 3 m), the finish only where the torso's leading point crosses the start line between its cones, and the pelvis may not leave the court (|y| > 4 m or more than 10 m beyond a line fails). Positive by injection (the standing robot moved by hand beyond each line in turn, then through the start line: real foot contacts and an interpolated torso crossing); negatives: nop, a turn touch past the cones, out of the court, a finish past the cones. A model run's oval loop round the court (turns and finish on the lines' extensions, up to 8.3 m wide) fails: 'left the court' at 4.99 s. Every rule above is judged in the family's own 1 ms substep hook.; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-shuttle-run-i00-standard` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
+| Mode | standard |
+| Instance | `shuttle_run`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Run the 4 x 10 m shuttle: to the far line and back twice, putting a foot beyond the line at each turn. (Embodied Olympics `shuttle-run`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Run the 4 x 10 m shuttle: to the far line and back twice, putting a foot beyond the line at each turn.
 
-## Difficulty
-Forty metres with three reversals in 30 s: the walking gait covers 19 m in that time, and the running gait turns slowly, needs metres to stop, and falls when it is handed over to another gait at speed, so every leg has to be braked and reversed without losing seconds. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
+## Success criteria
+Two lines cross the floor 10 m apart: the start line, which the robot stands just behind, and the far line. Each line
+has cones at its ends, 3 m to either side of the centre line. The referee's stages, in order: turn 1, turn 2, turn 3,
+finish.
+- Turn 1 and turn 3: a foot on the ground wholly beyond the far line (every part of the foot past it; a foot on the
+  line does not count), touching the ground only between the line's cones.
+- Turn 2: the same at the start line, a foot wholly behind it.
+- Finish: after turn 3, the leading point of the torso (not the head, arms, legs or feet) reaches the start line. The
+  success is called at that moment.
+Turns count only in this order. How the robot faces and turns is free.
 
-## Reference solution
-None (as `embodied-olympics-fun-shuttle-run-i00-privileged`).
+Fouls (each fails the attempt): the torso's leading point reaches the start line for the finish outside its cones
+(more than 3 m from the centre line); the pelvis leaves the court (more than 4 m to either side of the centre line,
+or more than 10 m beyond either line). The generic fall rule is off: a fall does not end the attempt, and the robot may
+get up and go on, but the pelvis below 0.4 m for 10 s in a row fails it. Time limit: 30 s (3,000 control steps).
 
-## Verification
-The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
-infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
-`/data/final.json`: pass iff the live attempt succeeded. The
-rules: Two lines cross the floor: the start line x = 0 and the far line x = 10.0 m (the planes meant are the edges of the painted lines that face each other). The clock starts at t = 0. You run four legs: to the far line, back to the start line, to the far line, back to the start line. At each of the three turns you must put a foot on the ground wholly beyond the line: every part of that foot at x > 10.0 m at the far line (turns 1 and 3), at x < 0 at the start line (turn 2); a foot across that edge does not count (a foot wholly on the paint beyond it does), and the foot must be between the cones at the line's ends (every point where it touches the ground at |y| <= 3.0 m). The turns count in this order only. After the third turn you finish at the moment the leading point of your torso (not the head, arms, legs or feet) reaches the start line between its cones (|y| <= 3.0 m at that point). Which way you face and how you turn is up to you. You succeed when you finish within 30 s of robot time. A fall does not end the attempt: you are down while your pelvis is below 0.4 m, you may get up and go on, but 10.0 s down in a row end it. You fail when down for 10.0 s, when your torso reaches the start line outside its cones at the finish, when your pelvis leaves the court (more than 4.0 m to either side of the centre line y = 0, or more than 10 m beyond either line), or after 30 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The referee's
+success call is an event: once it is made at some control step, the attempt is a success. It is never shown to the
+agent and does not end the attempt: the physics goes on until the agent's `/finish`, the attempt's time limit, or the
+end of the agent's time (2 h), and nothing after the call undoes it. A failure the referee calls before any
+success (a foul, a fall, the physics diverging) ends the attempt at once with 0. Reaching the time limit or the end of
+the session without a success call scores 0. The agent has 5 resets, each starting a new attempt from the
+frozen start; only the last attempt (the one after the last reset) is graded, and a success in an earlier attempt does
+not count. A simulator error raised by the agent's own call ends the attempt with 0. An attempt that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,13 +50,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | track-and-jumps |
-| Rule book | The 4 x 10 m shuttle run of school fitness test batteries (the speed-agility test of the ALPHA-Fitness battery): two parallel lines 10 m apart, four legs, the line crossed at every turn, the time taken when the runner crosses the start line at the end of the fourth leg; deviations: the sponges the ALPHA version has the runner carry between the lines are left out (the robot has no fingers), and a turn needs one foot on the ground beyond the line where ALPHA asks for both · the start: no starter and no reaction time; the clock runs from t = 0 with the robot standing behind the start line · the finish is timed as in athletics (World Athletics TR 19): the leading point of the torso link's collision mesh on the plane of the start line, interpolated between 1 ms physics steps · a fallen runner: a robot whose pelvis is below 0.4 m is down; it may get up and go on, but 10.0 s down in a row end the attempt · the lane: ALPHA runs the test on a marked course between the two lines; here the turns and the finish count only between the cones at the lines' ends (/y/ <= 3.0 m), and the pelvis may not leave the court (4.0 m to either side of the centre line): a loop round the far line instead of a reversal, or a finish past the cones, is not the shuttle · the qualifying time, 30 s, is this benchmark's own round number: school norms for this test are 10 to 14 s |
-| Stages | turn 1 → turn 2 → turn 3 → finish |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 3000 control steps (30 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

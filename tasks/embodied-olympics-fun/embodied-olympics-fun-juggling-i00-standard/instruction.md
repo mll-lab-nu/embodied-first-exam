@@ -1,12 +1,13 @@
 # Embodied Olympics · keepie-uppie (standard)
 
 ## Task
-Drop the football from your hands and keep it up for ten touches in a row with your feet, legs or head, without it
+Drop the football from your hands and keep it up for ten counted touches with your feet, legs or head, without it
 touching the ground.
 
 ## Goal
-Success: you keep the ball up for ten touches in a row with your feet, legs or head, without it touching the ground,
-your arms or your trunk.
+Success: you keep the ball up for ten counted touches with your feet, legs or head, without it touching the ground,
+your arms or your trunk; a touch after the first counts when it strikes the ball up, and a ball that only bounces off
+you, leaving slower than it came, is not counted.
 
 The referee in the service judges these stages, in order: **each of the 10 touches**. Once the referee calls success, it
 stays; the attempt continues until you finish. The first foul before a success ends the attempt as a failure. A reset
@@ -40,7 +41,7 @@ MuJoCo). The robot runs as a service you reach through its client or its MCP too
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`) is your whole interface to the robot. Its docstring is the full
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`) is your whole interface to the robot. Its docstring is the full
 reference (`python -c "import rcb_client; help(rcb_client)"`); its examples use another benchmark's names: for this task
 `r.spec()` is authoritative.
 

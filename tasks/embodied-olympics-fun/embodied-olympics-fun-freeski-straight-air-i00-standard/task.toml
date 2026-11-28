@@ -18,7 +18,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-freeski-straight-air-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): Embodied Olympics freeski-straight-air on the same frozen instance as embodied-olympics-fun-freeski-straight-air-i00-privileged. Ski down the in-run, jump off the kicker with no spin or flip, then land on your skis and ride away over the finish line. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 5 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): Embodied Olympics freeski-straight-air on the same frozen instance as embodied-olympics-fun-freeski-straight-air-i00-privileged. Ski down the in-run, jump off the kicker with no spin or flip, then land on your skis and ride away over the finish line. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 5 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "standard-mode", "trajectory", "freeski-straight-air"]
 
 [metadata]
@@ -27,19 +27,19 @@ simulator = "mujoco"
 robot = "unitree-g1"
 family = "freeski_straight_air"
 category = "track-and-jumps"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
+protocol = "eai-standard/3.0"
 instance_seed = 0
 expert_time_estimate_hours = 42.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested: Big air on a level-A FIS course (ICR Book VI 3102.4.1: a 6 m level start platform, a 38 m in-run at 35 degrees, a 2.1 m kicker at 25 degrees, a 15 m table, a 36 degree landing). The robot starts itself from the level platform and rides the in-run and the kicker on its own control (the Embodied Olympics freeski reference skier, its drop-in re-searched in this physics). Positive by a declared magic action: during the jump's flight only, the robot and its skis are turned as one rigid body about their centre of mass so that the skis meet the landing slope parallel to it (about 60 degrees of pitch over 1.5 s); the take-off, the flight's path, the touchdown, the landing and the ride-away past the finish line are physics and the robot's own control. The referee measures the trick from the pelvis's rotation in the air only: measured spin 0.4 degrees, flip 21 degrees beyond the straight air's own turn (a straight air). Negatives: the same jump with another trick's rotation (wrong trick), a hand on the snow and a sit-down after the landing (fell), no jump, doing nothing (did not start); hand-made flights for every other trick, half-unit tolerances, a flip without inversion, a switch take-off, a landing on the table and the body first. Contacts in the flight and the landing: ski edge spheres in the snow at most 10 mm, no ski-body, ski-ski or body-snow contact. Without the magic action the reference lands 25-40 degrees tail-first and falls within 0.3 s in 8 of 8 starts.; human review in the pull request that adds the benchmark (PROTOCOL §4)"
+oracle_evidence = "no reference solution; the referee is tested: Big air on a level-A FIS course (ICR Book VI 3102.4.1: a 6 m level start platform, a 38 m in-run at 35 degrees, a 2.1 m kicker at 25 degrees, a 15 m table, a 36 degree landing). The robot starts itself from the level platform and rides the in-run and the kicker on its own control (the Embodied Olympics freeski reference skier, its drop-in re-searched in this physics). Positive by a declared magic action: during the jump's flight only, the robot and its skis are turned as one rigid body about their centre of mass so that the skis meet the landing slope parallel to it (about 60 degrees of pitch over 1.5 s); the take-off, the flight's path, the touchdown, the landing and the ride-away past the finish line are physics and the robot's own control. The referee measures the trick from the pelvis's rotation in the air only: measured spin 0.4 degrees, flip 21 degrees beyond the straight air's own turn (a straight air). Negatives: the same jump with another trick's rotation (wrong trick), a hand on the snow and a sit-down after the landing (fell), no jump, doing nothing (did not start); hand-made flights for every other trick, half-unit tolerances, a flip without inversion, a switch take-off, a landing on the table and the body first. Contacts in the flight and the landing: ski edge spheres in the snow at most 10 mm, no ski-body, ski-ski or body-snow contact. Without the magic action the reference lands 25-40 degrees tail-first and falls within 0.3 s in 8 of 8 starts.; human review in the pull request that adds the benchmark (docs/protocol/tasks.md#grading)"
 
 [verifier]
 timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -67,7 +67,7 @@ timeout_sec = 7200.0
 # Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md). The agent's
 # container holds no simulator, no referee and no instance.
-network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/invariants.md H.6)
 
 [environment]
 build_timeout_sec = 1800.0
@@ -75,7 +75,7 @@ cpus = 4
 memory_mb = 10240
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

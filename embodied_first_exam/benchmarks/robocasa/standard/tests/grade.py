@@ -1,7 +1,7 @@
 """RoboCasa-series standard-mode verifier (separate sandbox, no network): grades what the sim service wrote.
 
 The agent never touched the service. /data/final.json holds the service's verdict on the live episode (graded_by
-"live"; docs/protocol/README.md H.4): success = the environment's success check holds on the
+"live"; docs/protocol/invariants.md H.4): success = the environment's success check holds on the
 state after the last executed control step (live_success), the scene was not solved at the start, and the episode did
 not end on a simulator error. Nothing is replayed (replays = 0).
 
@@ -17,6 +17,25 @@ video decides nothing.
 import json
 import os
 import shutil
+
+def agent_end_fields(d):
+    """An agent-ended episode's record (docs/protocol/tasks.md#modes: final.json success_signal / ended_by, step_limit / steps_used):
+    evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
+    if not isinstance(d, dict) or d.get("success_signal") != "hidden":
+        return {}
+    by = d.get("ended_by")
+    out = {"ended_finish": int(by == "finish"), "ended_step_limit": int(by == "step_limit"),
+           "ended_session_end": int(by == "session_end"), "hidden_success_seen": int(bool(d.get("hidden_success_seen")))}
+    if d.get("step_limit"):
+        def n(k):
+            try:
+                v = float(d.get(k) or 0)
+            except (TypeError, ValueError):
+                return 0
+            return int(v) if abs(v) < 1e18 else 0      # NaN and inf too
+        out.update(step_limit=n("step_limit"), steps_used=n("steps_used"))
+    return out
+
 
 LOG = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 DATA = os.environ.get("RCB_DATA", "/data")
@@ -60,7 +79,7 @@ def main() -> None:
     finalize_error = bool(d.get("finalize_error"))
     infra = bool(d.get("infra_error")) or finalize_error or not d.get("finalized")
     # the service's verdict (live success, not solved at the start, no simulator error), and the live check itself
-    ok = d.get("graded_by") == "live" and d.get("success") is True and live and not infra and d.get("reason") != "error"   # PROTOCOL §4: a simulator error is the agent's 0
+    ok = d.get("graded_by") == "live" and d.get("success") is True and live and not infra and d.get("reason") != "error"   # docs/protocol/tasks.md#grading: a simulator error is the agent's 0
     write(
         {
             "success": int(ok),
@@ -81,6 +100,7 @@ def main() -> None:
             "missing_log": 0,
             "infra_error": int(infra),
             "grader_error": int(finalize_error),
+            **agent_end_fields(d),
         }
     )
 

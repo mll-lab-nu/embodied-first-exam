@@ -32,7 +32,7 @@ The attempt fails at once if:
   other than its inner side; or, before you have left correctly, the front half
 - the shot drops below or behind the line of your shoulders, falls off the palm, is touched by anything but your right
   hand and trunk, or is thrown rather than pushed
-- it lands outside the sector or short of 6 m, or you touch it after the release
+- it lands outside the sector or short of 6 m, or you touch it after the release before it lands
 - you fall
 
 ## Robot Interface
@@ -42,7 +42,7 @@ MuJoCo). The robot runs as a service you reach through its client or its MCP too
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`) is your whole interface to the robot. Its docstring is the full
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`) is your whole interface to the robot. Its docstring is the full
 reference (`python -c "import rcb_client; help(rcb_client)"`); its examples use another benchmark's names: for this task
 `r.spec()` is authoritative.
 

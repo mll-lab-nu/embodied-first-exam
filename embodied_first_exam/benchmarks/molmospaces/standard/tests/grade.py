@@ -7,12 +7,31 @@ Numeric-only reward.json; a reward is always written.
 infra_error = 1 means no verdict on the agent (success is 0, the trial is not the agent's failure). The agent can reach
 none of these: final.json is missing (the service never came up or its record was not collected: missing_log) or
 unreadable (also grader_error); the collect hook did not finish (`finalized` false: only the service's own running copy
-is there); a give-up after crashes between calls or a failed resume (docs/protocol/standard_mode.md §13); the service not
+is there); a give-up after crashes between calls or a failed resume (embodied_first_exam/standard/README.md#crash-recovery); the service not
 ending its episode for the collect hook; a frozen start that did not rebuild (instance_mismatch: checked by the service
 when it builds the scene, before the agent is served). A give-up after crashes during a call is finalized by the
 service and stays the agent's failure, and so is a simulator error raised by the agent's actions (reason "error")."""
 
 import json, os, shutil, traceback
+
+def agent_end_fields(d):
+    """An agent-ended episode's record (docs/protocol/tasks.md#modes: final.json success_signal / ended_by, step_limit / steps_used):
+    evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
+    if not isinstance(d, dict) or d.get("success_signal") != "hidden":
+        return {}
+    by = d.get("ended_by")
+    out = {"ended_finish": int(by == "finish"), "ended_step_limit": int(by == "step_limit"),
+           "ended_session_end": int(by == "session_end"), "hidden_success_seen": int(bool(d.get("hidden_success_seen")))}
+    if d.get("step_limit"):
+        def n(k):
+            try:
+                v = float(d.get(k) or 0)
+            except (TypeError, ValueError):
+                return 0
+            return int(v) if abs(v) < 1e18 else 0      # NaN and inf too
+        out.update(step_limit=n("step_limit"), steps_used=n("steps_used"))
+    return out
+
 
 LOG = "/logs/verifier"
 DATA = "/data"
@@ -54,7 +73,7 @@ def grade(d: dict):
         "video_pending": int(bool(d.get("video_pending"))),
         "grader_error": 0,
         "instance_mismatch": int(mismatch),
-        # an infrastructure failure, not the agent's (PROTOCOL §2.6): the module docstring lists the cases
+        # an infrastructure failure, not the agent's (docs/protocol/tasks.md#grading): the module docstring lists the cases
         "infra_error": int(infra),
         "gave_up": int(bool(d.get("gave_up"))),
         "sim_crashed_on_call": int(d.get("reason") == "sim_crashed_on_call"),
@@ -88,7 +107,7 @@ def main():
                 shutil.copy(f"{DATA}/{f}", f"{LOG}/{f}")
         except OSError:
             traceback.print_exc()  # evidence for humans: it never decides the verdict
-    write(ok, out)
+    write(ok, {**out, **agent_end_fields(d)})
 
 
 if __name__ == "__main__":

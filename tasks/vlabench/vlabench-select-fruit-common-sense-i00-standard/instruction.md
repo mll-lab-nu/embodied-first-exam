@@ -4,7 +4,7 @@
 Put the pear on the plate.
 
 ## Goal
-Success: the pear is on the plate.
+Success: the pear is over the plate, at most a hand's width above it (lying on it, or still held just above it).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -21,7 +21,7 @@ tools, as if it were real hardware: one live episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`. Its docstring is the full reference:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`. Its docstring is the full reference:
 `python -c "import rcb_client; help(rcb_client)"`. Where the docstring's example numbers differ, this page and `spec()`
 are right.
 

@@ -49,9 +49,9 @@ entry point is `control_public.anycar_drift_v3`; the coefficients of its current
 ### Feedback
 Each round reuses the same 3 development cases. Each response preserves the public course in `feedback.command`, all 161
 noisy telemetry rows and all 161 video frames at 10 Hz through 16 seconds. The course includes the public start position
-and target heading. An episode that crashes, leaves its course or arena, or makes the simulation diverge ends at that
-moment: its telemetry and frames stop there. Diagnose failures from the returned video frames and noisy telemetry, then
-revise.
+and target heading. An episode that makes the simulation diverge ends at that moment: its telemetry and frames stop
+there. A crash or leaving the course or arena does not stop the episode, but it already counts as failed. Diagnose
+failures from the returned video frames and noisy telemetry, then revise.
 
 ## Limits
 - Time: 14400 s of wall-clock time from the start of your session. Everything counts, including waiting for the

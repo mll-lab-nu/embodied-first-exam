@@ -4,7 +4,7 @@
 Take the soda can from behind the cabinet's sliding door and put it on top of the cabinet.
 
 ## Goal
-Success: the can is on top of the cabinet and nearly still.
+Success: the can is at the height of the cabinet's top, just above its top surface, and nearly still.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -25,7 +25,7 @@ hardware: one live episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`):
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)

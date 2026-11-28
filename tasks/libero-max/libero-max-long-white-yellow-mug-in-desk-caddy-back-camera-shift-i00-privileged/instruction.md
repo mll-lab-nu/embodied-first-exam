@@ -5,7 +5,8 @@ Put the mug in the back compartment of the caddy.
 
 ## Goal
 Success: the mug rests in the caddy's back compartment, the narrow cell along its tall wall. The mug is too wide to go
-down into it, so resting on its opening, touching the caddy, counts; any other cell does not. Your trajectory is
+down into it, so it counts once the mug's middle is within the back cell's space, resting on its opening; any other cell
+does not. Your trajectory is
 replayed from the fixed start. The episode ends as soon as the task is done, and the trajectory must end on that step:
 any action after it makes the trajectory invalid.
 

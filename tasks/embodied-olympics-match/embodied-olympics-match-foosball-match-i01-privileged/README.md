@@ -1,36 +1,42 @@
-# embodied-olympics-match-foosball-match-i01-privileged
+# Embodied Olympics · foosball, game against level 3 (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Match |
+| Task ID | `embodied-olympics-match-foosball-match-i01-privileged` |
+| Benchmark | [Embodied Olympics - Match](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@0d7f680` |
+| Robot | The four rods of one side of a foosball table |
 | Mode | privileged |
-| Twin | `embodied-olympics-match-foosball-match-i01-standard` |
-| Simulator / robot | `mujoco` / `foosball-rods` |
-| Family / instance | `foosball_match` / seed 7 (allowed seeds: [7, 303, 313]; PROTOCOL §2) |
-| Oracle | `full` — full-state reference program (solution/): the sport's reference player (builtin_players.Reference) fed the true ball state (0.03 s lead) and the opponent's true figures in place of the cameras; a local Harbor oracle run won 5:3 (valid, replay identical); the nop (no program) scores 0 |
-| Agent time budget | 14400 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |
+| Opponent | Scripted computer team at level 3 of 4, playing on the true ball position a short reaction delay ago, with the same rods |
+| Instance | `foosball_match`, seed 7 |
+| Time limit | 4 h |
+| Reference solution | Included |
 
 ## Task
 Win a game of foosball to 5 goals against the computer team.
 
-The privileged twin of `embodied-olympics-match-foosball-match-i01-realtime`: table football on a physical table (ITSF rules, one game to 5 goals): the four motorised rods of one team against the scripted computer team; level 3, seed 7, S = 20.
+## Success criteria
+The instance: the agent's four rods (seat A) against the computer team at level 3, seed 7.
+One game of foosball: the first to 5 goals wins. The game also ends after 240 s of play (frozen time does not count) or 40 rallies; then the player with more goals wins; at equal goals, the player who scored the last goal; if nobody scored, the player with the ball less time in its own half; as a last resort, the player who did not have the first kick-off. There are no draws.
 
-## Difficulty
-Same frozen sport and instance as the twin; full-simulator development and the full state instead of camera images.
+Deliverable: `/app/output/policy/program.py`, with any helper files in the same folder (at most 512 regular files and
+32 MiB; no links or special files, else 0). It defines `make_policy(config)`; the object it returns gets `act(view)`
+with the full state at every control step. Call rules: each call must answer within 5 s, with one command or none; a
+slower call or another answer ends the game with 0. The world runs at 1/20 of real speed while the program computes.
+After every rally the program must answer `{"type": "ready"}` within 300 s, or its side loses the game
+(`ready_timeout`). The formal game is cut off after 6000 s of wall time; an unfinished game scores 0.
 
-## Reference solution
-`solution/solve.sh` submits the full-state reference program (builtin_players.Reference with the true ball and the true opposing figures in place of the overhead image).
+Success: the game ends by the rules (`match_over`) with the program's side as the winner. A forfeit scores 0. A
+simulator error in a control step, after the program's first applied command, also scores 0.
 
-## Verification
-Separate verifier without network; root-owned trusted source, the program as nobody (a process limit; every process
-of nobody is ended with kill(-1) before the verdict, and a survivor is the program's 0, never a retry), the original
-realtime service on the wall clock at S = 20 (the verdict depends on the host's speed, as in the
-realtime twin: the verifier runs on 4 pinned CPUs, part of the configuration key), one
-fresh journal replay, then the replay video (replay.mp4) from the record.
+Graded: one formal match, played after the agent's session in a separate verifier container without network by the
+agent's final program, from a fresh, unmodified start against the same opponent; nothing the agent played during its
+session counts. The task is passed only if that match ends by the rules above with the program's side as the winner.
+A program that fails to load, raises, breaks the call rules above, or leaves a process behind scores 0. A failure of
+the verifier or of the trusted match service, or a replay of the match record that disagrees with the match, is an
+infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -39,9 +45,12 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
+## Others
+Exported by the Embodied Olympics full-simulator exporter from its task `roboolympics/foosball-match-wallclock-program-standard` (upstream commit
+`d71e9f642ead`). The files changed here after the export are listed for this task in
+`ci_checks/benchmarks/embodied-olympics-match/exported.toml`.
 
-### Development copy
-The privileged setting: the full simulator during development (`/opt/fullsim`, read and change any state, reset the
-whole match). In the verifier the program may read the same public copy read-only (`/opt/dev`); the trusted copy that
-runs the formal match is root-only. The public copies hold no reference player (H.2).
+## License
+Embodied Olympics ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics), a private repository) is released
+under the MIT License; its exported match services, referees, scripted opponents and graders inside this task are MIT
+too. The simulator is MuJoCo (Apache License 2.0). No non-commercial terms apply.

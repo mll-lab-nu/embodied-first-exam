@@ -5,10 +5,10 @@ Unfold the blanket and spread it flat on the table, with no part folded over ano
 on the table, not on the fence. Then let go of it and move both arms clear of it.
 
 ## Goal
-Success: the blanket lies fully unfolded and flat on the table, with no part over another, nothing stretched and no
-corner raised, none of it resting on the fence; both arms have let go of it and moved clear, and the cloth is still.
-Letting the blanket fall off the table ends the episode as a failure. A replay ends, as a success, as soon as all of
-this has held for 0.5 s; later rows are not run.
+Success: the blanket lies unfolded and flat on the table, covering nearly all of its own area with almost nothing folded
+over, nothing stretched and no corner raised, none of it resting on the fence; both arms have let go of it and moved
+clear, and the cloth is still. Letting the blanket fall off the table ends the episode as a failure. A replay ends, as a
+success, as soon as all of this has held for 0.5 s; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 14) actions, one row
 per control step (1/40 s), at most 37000 rows (a longer trajectory is invalid). Leave the script that produced it at

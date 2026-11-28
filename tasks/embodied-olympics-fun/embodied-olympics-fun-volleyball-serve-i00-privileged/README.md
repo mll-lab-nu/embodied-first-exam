@@ -1,31 +1,67 @@
-# embodied-olympics-fun-volleyball-serve-i00-privileged
+# Embodied Olympics · volleyball serve (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-volleyball-serve-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree H1-2 humanoid (1.78 m, 67 kg, 27 joints), with Unitree's walking policy |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-volleyball-serve-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-h1-2` |
-| Family / instance | `volleyball_serve` / seed 0 |
-| Oracle | `full` — Reference: a tiny toss off the open left palm by the arm's own movement (no pin, no launch), then the same arm swings up with the trunk's turn and strikes the ball about 0.1 s after the toss with the upper arm and forearm (Rule 12.4.1 allows any part of the arm). Key times, arm keys and trunk lean come from CMA-ES, any arm more than 3 mm into the body rejected. The ball comes in at 0.66 m/s and leaves at 13.6 m/s; it lands 14.2 m ahead (4.7 m beyond the net), 3.8 m right of the middle; success after 1.61 s; live, replay and the state hash agree. The deepest self-overlap is 3.0 mm (the right wrist on the right hip at 0.11 s). 4 of 4 perturbations succeed (servo gains x0.97 / x1.03, the keys after the strike 10 ms earlier / later). Measured: success after 1.61 s of the 12 s limit, live and in a fresh replay, ending in the same state. |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Instance | `volleyball_serve`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | Included |
 
 ## Task
-Serve: toss the ball off your left palm and hit it with one hand over the net into the opponent's court, within 8 s. (Embodied Olympics `volleyball-serve`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Serve: toss the ball off your left palm and hit it with one hand over the net into the opponent's court, within 8 s.
 
-## Difficulty
-The ball has to leave the hit at about 11 m/s (10.8 m/s from 2.2 m up, 11.5 m/s underarm from 1 m) to clear a 2.43 m net 9 m away and still come down inside the far court: a fist at 6 to 7 m/s, about the most a full swing of this arm gives, through a ball the robot has tossed itself off a flat palm (straight up: a palm that moves sideways leaves the ball behind), at the right instant, on a 67 kg robot whose stand has no balance feedback.
+## Success criteria
+An official volleyball court (9.0 m by 9.0 m on each side of the net; the net's top 2.43 m high, with an antenna
+above each side line). The robot stands behind the end line, facing the net, midway between the side lines; the end
+line's outer edge is 0.5 m ahead of the pelvis. A volleyball (0.21 m across, 0.27 kg) starts resting on the robot's
+open left palm; the hands have no fingers and no grip. The referee's stages, in order: toss, hit, over the net, in
+the court.
+- Toss: the ball has touched no part of the robot for 0.03 s; the release is the end of its last contact with a hand.
+  For 0.1 s from the release the hand that held it may still touch it, and the ball must be clear of that hand when
+  that time ends.
+- Hit: the ball's next contact, with one hand or one arm (hand, forearm or upper arm of the same side), beginning
+  within 8.0 s of the start. The ball has been clear of the robot for at least 0.1 s before it and moves at most
+  5.0 m/s just before it; its contacts last at most 0.1 s (over when the ball has been clear for 0.03 s); the ball
+  leaves faster than it arrived. At its first contact no foot touches the court (the end line included) or the floor
+  beyond the side lines' extensions; in the air, this holds for where the robot took off.
+- Over the net: the ball's centre crosses the net's plane above the net's top and between the side lines (it may
+  touch the net).
+- In the court: the ball's first contact with the floor is in the opponent's court (9.0 m by 9.0 m, lines included).
+  The success is called at that contact.
 
-## Reference solution
-`solution/oracle.py` drives the robot through the task's own tooling, closed loop on the privileged state, and writes the trajectory (`solution/solve.sh`). Reference: a tiny toss off the open left palm by the arm's own movement (no pin, no launch), then the same arm swings up with the trunk's turn and strikes the ball about 0.1 s after the toss with the upper arm and forearm (Rule 12.4.1 allows any part of the arm). Key times, arm keys and trunk lean come from CMA-ES, any arm more than 3 mm into the body rejected. The ball comes in at 0.66 m/s and leaves at 13.6 m/s; it lands 14.2 m ahead (4.7 m beyond the net), 3.8 m right of the middle; success after 1.61 s; live, replay and the state hash agree. The deepest self-overlap is 3.0 mm (the right wrist on the right hip at 0.11 s). 4 of 4 perturbations succeed (servo gains x0.97 / x1.03, the keys after the strike 10 ms earlier / later). Measured: success after 1.61 s of the 12 s limit, live and in a fresh replay, ending in the same state.
+Fouls (each fails the attempt at once):
+- before the toss, the ball touches the floor or a part of the robot other than the hands (the palm pads and wrists);
+- the hit has not begun 8.0 s after the start;
+- after the toss the ball touches the floor before the hit, or stays on the hand (not tossed);
+- the hit comes less than 0.1 s after the ball was last touched, the ball reaches it faster than 5.0 m/s, the hit
+  touches more than one arm or another part, lasts longer than 0.1 s, or does not add speed;
+- a foot fault at the hit (as above);
+- the robot touches the ball again after the hit;
+- the ball touches an antenna, crosses the net's plane before the hit, under the net's top or outside the side lines,
+  or lands anywhere but in the opponent's court.
+Fall (a failure at any time): the pelvis lower than 0.35 m, or any part other than the feet on the floor. Time limit:
+12 s (1,200 control steps).
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: You stand behind the end line of an official volleyball court (9.0 m by 9.0 m on each side of the net), facing the net, midway between the side lines; the end line's outer edge is 0.5 m ahead of your pelvis and the net is 9.0 m beyond it, its top 2.43 m high, with an antenna above each side line. A volleyball (0.21 m across, 0.27 kg, in air) starts resting on your open left palm, turned up. Your hands have no fingers and no grip (the grip columns of the action rows do nothing in this task): only the ball's weight and friction keep it on the palm, and it rolls off a palm that tilts or moves sideways. Until the toss only your hands (the palm pads and the wrists) may touch the ball, and the ball may not touch the floor. In order: (1) the toss: the ball has touched no part of you for 0.03 s; the release is the end of its last contact with a hand. For 0.1 s from the release the hand that held it may still touch it (it follows the toss up; any other touch in that time is already the hit), and the ball must be clear of that hand when that time ends. (2) the hit: the next contact of the ball, with one hand or one arm of yours (hand, forearm or upper arm of the same side), within 8.0 s of the start. The ball must have been clear of you for at least 0.1 s before the hit (counted from the end of the last touch of the toss), moving at most 5.0 m/s just before it; the hit's contacts last at most 0.1 s (it is over when the ball has been clear of you for 0.03 s), and the ball leaves the hit faster than it arrived. At the first contact of the hit no foot of yours touches the court (the end line included) or the floor beyond the extensions of the side lines; if you are in the air, this holds for where you took off. (3) the ball crosses the net's plane above the net and between the antennas; it may touch the net. (4) the ball's first contact with the floor is in the opponent's court (9.0 m by 9.0 m, lines included): that is the success. You fail if the hit does not come within 8.0 s, if after the toss the ball touches the floor or any other part of you before the hit, if it is hit before it has been clear for 0.1 s, if it moves faster than 5.0 m/s just before the hit, if the hit is made with more than one arm or another part, lasts longer than 0.1 s or does not add speed, if you touch the ball again or hold it again, if a part of you other than the hands touches it before the toss, at a foot fault, if the ball crosses the net's plane under the net or outside the antennas or touches an antenna, if it lands anywhere else, if you fall (your pelvis lower than 0.35 m above the floor, or any part of you other than the feet on the floor), or after 12 s.
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +70,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | football-and-volleyball |
-| Rule book | FIVB Official Volleyball Rules 2025-2028: Rule 1 (the court 18 m x 9 m, the service zone 9 m wide behind the end line), Rule 2 (the men's net, top at 2.43 m, the antennas), Rule 3 (the ball: 65-67 cm round, 260-280 g), Rule 8 (ball in and out: the lines belong to the court; a ball that touches an antenna or crosses the net's plane outside the crossing space is out), Rule 10.2 (the ball may touch the net while crossing it), Rule 12.4 (the service: the ball is hit with one hand or any part of the arm after being tossed or released from the hands; one toss only; the server does not touch the court or the floor outside the service zone at the hit; the hit comes within 8 s of the whistle); deviations: Rule 12.4.1 (tossed or released from the hand(s)): the robot's hands are flat palm pads without fingers and without grip; the ball starts resting on the open left palm, turned up, and only its weight and friction keep it there (it rolls off a palm that tilts by more than about 2 degrees or moves sideways). The toss is the arm's own movement throwing the ball up off the palm (or letting it fall from it). The ball has left the hand when it has touched no part of the robot for 0.03 s; the release is the end of its last contact; until then only the hands may touch it. The palm pad's contact with the ball is that of a ball on a human hand (a ball thrown at a still palm keeps 0.10 of its speed, as a volleyball dropped onto a supported, relaxed hand does: Ivanova, ISBS 2000), in the world's elliptic friction cones; every other contact keeps the ball's rule-book rebound. · Rule 12.4.1 (tossed, then hit): a referee's eye for 'tossed, then hit' is replaced by numbers: after the release the ball must be clear of the robot for at least 0.1 s before the hit, it may move at most 5.0 m/s just before the hit (the speed of a ball that has fallen about 1.3 m: a toss, not a throw), the hit's contacts last at most 0.1 s, and the ball must leave the hit faster than it arrived. · Rule 12.4.3 (the server's feet) is judged at the first contact of the hit, or at the take-off before it when the robot is in the air; the whistle is the start of the episode. · No opponents (nobody receives the serve), no wind. |
-| Stages | toss → hit → over the net → in the court |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `6509b2b06de12fdb630e30ce5e11658044741ab032ef93e59677b6f830405d2c` |
-| Episode | 1200 control steps (12 s at 100 Hz) |
-| Action | sim rows of 141 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

@@ -138,7 +138,7 @@ def start(key: dict):
     """(family, instance, episode) of a Embodied Safety Exam instance key (`embodied_safety_exam.verify.start`). Under the control
     interface the episode's steps are not counted against its budget of calls; its robot time is the technical cap of
     the service (spec.max_control_steps): in standard mode the agent's wall clock is the only budget it plans by
-    (PROTOCOL §4.5)."""
+    (docs/protocol/eai-standard.md#post-reset-reset-capability)."""
     from embodied_safety_exam import verify
     dev = os.environ.get("RCB_ESE_DEV") == "1"              # development renders only (make_instances.py --dev)
     if not dev and dict(key).get("interface") != "control":

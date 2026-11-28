@@ -1,4 +1,4 @@
-"""eai-standard/2.1 sim service for Embodied Olympics - Fun -- the sidecar's entry point (`python /srv/server.py`).
+"""eai-standard/3.0 sim service for Embodied Olympics - Fun -- the sidecar's entry point (`python /srv/server.py`).
 
 The simulator-specific half only: `RoboFun` implements rcb_service.Sim for one frozen instance, through rcb_rfo.Episode
 (the Unitree G1 or H1-2 in the family's venue, with the family's referee). The protocol, the episode, crash recovery
@@ -14,12 +14,11 @@ Settings come from environment/docker-compose.yaml:
   RCB_INSTANCE     the frozen instance (the privileged twin's instance.json)
   RCB_RESET_BUDGET, RCB_WALL_CLOCK_S, RCB_DATA   the service's own
 What leaves this process: the robot's own sensors (its two head cameras, with depth on the left one, its joint encoders
-and motor torques, its two IMUs, whether each hand holds something), the venue's fixed camera, and, once an
-attempt is over, the referee's call (meta["outcome"]: "success" or the rule that ended the attempt) with the number of
-the task's stages reached. Never an object's pose, the robot's position in the venue, or the referee's state during an episode.
+and motor torques, its two IMUs, whether each hand holds something), the venue's fixed camera, and, once the referee
+has ended an attempt on a foul or a fall, the rule broken (meta["outcome"]). Never an object's pose, the robot's
+position in the venue, or the referee's state during an episode.
 
-Agent-ended episodes (RCB_AGENT_END=1, PROTOCOL §3; rcb_service.AGENT_END): the referee's success call is an event, and
-counts the moment it is made (end_judgement "events"): the referee does nothing more once it has called the attempt, so
+Agent-ended episodes (docs/protocol/tasks.md#modes): the referee's success call is an event, and counts the moment it is made (end_judgement "events"): the referee does nothing more once it has called the attempt, so
 nothing after its call undoes it, but the attempt does not end there: the physics goes on (rfo World.run_after_done)
 until the agent's POST /finish, the end of its session, a reset, or the attempt's time limit (the service's step cap,
 "step_limit"). A foul or a fall the referee calls before a success ends the attempt as a failure ("failed"), and only
@@ -45,11 +44,10 @@ _service_meta = rcb_service.Service.meta
 
 
 def _meta_with_call(self) -> dict:
-    if self.agent_end:   # only a failure the referee called ends an attempt early: its rule, and nothing else
-        return {**_service_meta(self), **({"outcome": self.sim.ep.outcome()}
-                                          if self.done and self.reason == "failed" and self.sim.ep.outcome() not in
-                                          (None, "success") else {})}
-    return {**_service_meta(self), **(self.sim.referee_call() if self.done else {})}
+    # only a failure the referee called ends an attempt early: its rule, and nothing else
+    return {**_service_meta(self), **({"outcome": self.sim.ep.outcome()}
+                                      if self.done and self.reason == "failed" and self.sim.ep.outcome() not in
+                                      (None, "success") else {})}
 
 
 rcb_service.Service.meta = _meta_with_call
@@ -79,10 +77,9 @@ class RoboFun:
         self.mounts, self.facts = t0["cameras"], t0["robot"]
         self.data = os.environ.get("RCB_DATA", "/data")
         # agent-ended episodes: the referee's success call is an event (it counts once made); the physics runs on
-        self.agent_end = rcb_service.AGENT_END
         self.end_judgement = "events"
         self.hidden_keys = ("outcome", "stages_reached", "stages_total", "step_cap")
-        self.ep.world.run_after_done = self.agent_end
+        self.ep.world.run_after_done = True
 
     # ------------------------------------------------------------------ the rcb_service.Sim contract
     def spec(self) -> dict:
@@ -97,10 +94,7 @@ class RoboFun:
             "robot": self.facts["model"],
             "task_text": self.task_text,
             "rules": self.rules,
-            "episode": (f"one attempt: it ends at the success, at a rule violation (a fall, a foul; the rules say "
-                        f"which), or after {self.instance['time_limit_s']:g} s ({self.max_control_steps} control steps)"
-                        if not self.agent_end else
-                        "one attempt: it ends at POST /finish, at a rule violation before a success (a fall, a "
+            "episode": ("one attempt: it ends at POST /finish, at a rule violation before a success (a fall, a "
                         f"foul; the rules say which), or after {self.instance['time_limit_s']:g} s "
                         f"({self.max_control_steps} control steps); the referee's success call counts once made, and "
                         "the attempt goes on after it until you finish"),
@@ -123,10 +117,7 @@ class RoboFun:
                                  "the episode's time" + ("; jaw_opening_* (m), jaw_speed_* (m/s, + opening), jaw_force_* "
                                  "(N, the clamp force, + closing): a gripper's jaws; its holding_* is 1 while both jaws "
                                  "touch the same object" if self.facts.get("real_hands") else "")},
-            "referee": ("once an attempt is over, every response's meta carries the referee's call: meta['outcome'] "
-                        "('success' or the rule that ended it) and meta['stages_reached'] of meta['stages_total']"
-                        if not self.agent_end else
-                        "an attempt the referee ends on a foul or a fall: every response's meta carries the rule "
+            "referee": ("an attempt the referee ends on a foul or a fall: every response's meta carries the rule "
                         "(meta['outcome']); nothing tells you about a success or the stages reached"),
         }
 
@@ -188,20 +179,14 @@ class RoboFun:
     def hold(self) -> tuple[str, np.ndarray]:
         return self.ep.hold()
 
-    def referee_call(self) -> dict:
-        """The referee's call on the attempt as it stands (given to the agent only once the attempt is over)."""
-        v = self.ep.verdict()
-        return {"outcome": self.ep.outcome(), "stages_reached": len(v["stages"]), "stages_total": v["stages_total"]}
-
     def step(self, row: np.ndarray) -> tuple[bool, bool, dict]:
         done = self.ep.step_raw(row)
-        if self.agent_end:   # a success is only recorded; a foul ends the attempt, its time limit is the step cap
-            if self.ep.success():
-                return False, True, {}
-            if done:
-                return True, False, ({"step_cap": True} if self.ep.world.ref.failed == "time" else {})
-            return False, False, {}
-        return done, self.ep.success(), (self.referee_call() if done else {})
+        # a success is only recorded; a foul ends the attempt, its time limit is the step cap
+        if self.ep.success():
+            return False, True, {}
+        if done:
+            return True, False, ({"step_cap": True} if self.ep.world.ref.failed == "time" else {})
+        return False, False, {}
 
     def reset(self) -> None:
         self.ep.reset()
@@ -227,7 +212,7 @@ class RoboFun:
                  **{k: str(v) for k, v in meta.items()})
 
     def render_video(self, rows: np.ndarray, path: str) -> None:
-        replay(self.instance, rows, video=path, after_done=self.agent_end)
+        replay(self.instance, rows, video=path, after_done=True)
 
 
 def build() -> RoboFun:

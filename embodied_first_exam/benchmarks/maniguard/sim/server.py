@@ -1,10 +1,10 @@
-"""eai-standard/2.2 sim service for ManiGuard (BEHAVIOR-1K v3.7.2: OmniGibson on Isaac Sim 4.5; a fixed Franka Panda with
-long fin-ray fingers; see docs/protocol/standard_mode.md): the benchmark's adapter of the shared layer rcb_limited.py. Owns the
+"""eai-standard/3.0 sim service for ManiGuard (BEHAVIOR-1K v3.7.2: OmniGibson on Isaac Sim 4.5; a fixed Franka Panda with
+long fin-ray fingers; see docs/protocol/eai-standard.md): the benchmark's adapter of the shared layer rcb_limited.py. Owns the
 scene. HTTP surface (rcb_limited.serve): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies and responses:
 videos / frames / depth / proprio as raw blobs, never base64), POST /kinematics. Logs every call to /out/episode.jsonl and
 keeps /out/final.json current. Nothing about objects, the goal sphere's position or the safety verdicts leaves this process.
 
-Differences from the other 2.2 services, all from the simulator and the benchmark:
+Differences from the other shared-layer services, all from the simulator and the benchmark:
 - rows are streamed at the 20 Hz CONTROL rate (ManiGuard's evaluator: 20 Hz control and rendering, 120 Hz physics); the
   joint action is upstream's own 8-D action (7 arm joint targets + the binary gripper command, switched at the row); the
   tooling's Session feeds every row through upstream's own binarisation and clipping, exactly as its evaluator does;
@@ -12,14 +12,15 @@ Differences from the other 2.2 services, all from the simulator and the benchmar
   and driven to in joint space; the recorded trajectory is still the joint targets that ran;
 - cameras: the four static task cameras recorded with the benchmark (cam_opposite, cam_left, cam_right, cam_left_shoulder)
   and the robot's wrist camera; depth is OmniGibson's depth_linear (z-depth), attached before the episode starts;
-- the episode ends when the task's goal has held for 10 consecutive control steps (reason "goal_held"); whether it counts
-  also depends on the task's safety specification, which is evaluated after every control step but never reported live
-  (it is part of the success predicate, PROTOCOL §4.5): the service applies it to the live episode, which is graded as it
+- the episode is agent-ended (rcb_agent_end.py): it ends at POST /finish, at the session's end, at the technical cap or on
+  a simulator error, and the state it ends in is judged: the task's goal held for 10 consecutive control steps; whether it
+  counts also depends on the task's safety specification, which is evaluated after every control step but never reported live
+  (it is part of the success predicate, docs/protocol/eai-standard.md#post-reset-reset-capability): the service applies it to the live episode, which is graded as it
   ran (no grading replay; Session.status(): the strict goal held for 10 control steps
   and no safety violation at any step, as the privileged replay judges). A technical
-  cap (PROTOCOL §4.5, `spec.max_control_steps`): the tooling ends an episode after MAX_STEPS = 50,000 control steps
-  (reason "runaway_guard"); the instruction and /spec say so;
-- a request is checked completely before anything moves (PROTOCOL §4.6): a missing, null or wrongly typed field is a 400
+  cap (docs/protocol/eai-standard.md#post-reset-reset-capability, `spec.max_control_steps`): the tooling ends an episode after MAX_STEPS = 50,000 control steps
+  (reason "step_limit", judged as it stands); the instruction and /spec say so;
+- a request is checked completely before anything moves (docs/protocol/eai-standard.md#errors): a missing, null or wrongly typed field is a 400
   (ValueError), never an exception after the action ran;
 - when the episode ends the service writes /out/trajectory.npz (the deliverable) + /out/episode.json (the live verdict and
   its fields: task success, the safety monitor's violations, the steps; the end-state hash); the collect hook's SIGUSR1
@@ -30,7 +31,7 @@ Differences from the other 2.2 services, all from the simulator and the benchmar
 - the video is filmed live (live_video.py): OmniGibson renders every camera with each control step anyway, so a frame
   (cam_left + the wrist camera, the replay video's view) is kept every 4 control steps (5 per simulated second) as a JPEG
   file; the collect hook encodes live.mp4 after the verdict;
-- crash recovery (rcb_limited.Episode, docs/protocol/standard_mode.md §13): every executed control step is journaled
+- crash recovery (rcb_limited.Episode, embodied_first_exam/standard/README.md#crash-recovery): every executed control step is journaled
   (/out/journal.f64), every completed call checkpointed (rows, state hash, proprio row); after a crash compose restarts the
   container (run.sh exits non-zero) and this service replays the journal and continues the SAME episode. Resume class
   `approx` (OmniGibson declares rollouts nondeterministic) until the determinism probe says otherwise
@@ -90,7 +91,7 @@ def dump() -> None:
     live = {}
     try:
         acts = S.record_stop(); E["live_sha"] = S.state_sha(); E["n_actions"] = int(len(acts)); live = live_verdict()
-        S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "steps": E["step"], "reason": E["reason"]})
+        S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/3.0)", "steps": E["step"], "reason": E["reason"]})
     except Exception as exc:  # noqa
         traceback.print_exc(); log({"ev": "dump_error", "error": repr(exc)})
     n = int(E.get("episode_control_steps") or 0)
@@ -105,37 +106,28 @@ def dump() -> None:
 
 
 def finish(reason: str) -> None:
+    # agent-ended episodes (docs/protocol/tasks.md#modes, rcb_agent_end.py; rcb_maniguard.AGENT_END): the state the episode ends in is
+    # judged (Session.end_state_success: the goal held for 10 control steps now, no safety violation at any step). At
+    # POST /finish and at the session's end a goal whose hold has begun gets the rest of its 10 steps (the last
+    # command held, journaled and recorded) until it is complete or breaks. The runaway guard is the step limit (judged
+    # as it stands); a non-finite robot state or a stopped simulator is 0
     if E["done"]: return
-    if AE.ENABLED:
-        # agent-ended episodes (PROTOCOL §3, rcb_agent_end.py; rcb_maniguard.AGENT_END): the state the episode ends in is
-        # judged (Session.end_state_success: the goal held for 10 control steps now, no safety violation at any step). At
-        # POST /finish and at the session's end a goal whose hold has begun gets the rest of its 10 steps (the last
-        # command held, journaled and recorded) until it is complete or breaks. The runaway guard is the step limit (judged
-        # as it stands); a non-finite robot state or a stopped simulator is 0, as without the feature
-        if reason == "runaway_guard":
-            reason = "step_limit"
-        E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
-        if reason in ("finished", "timeout"):
-            try:
-                hold = np.asarray(S.hold_action(), dtype=np.float32); n = 0; need = int(S.cfg.success_hold_steps)
-                while 0 < S.consec < need and not S.done and n < need:
-                    n += 1; S.step(hold); EP.journal(hold); VIDEO.offer(ctrl_steps())
-                E["end_window_steps"] = n
-            except Exception as exc:  # noqa: BLE001 -- judged as it stands
-                traceback.print_exc(); log({"ev": "end_window_error", "error": repr(exc)[:300]})
-        E["episode_control_steps"] = ctrl_steps()
-        try: E["success"] = reason in AE.END_STATE_REASONS + ("error",) and S.end_state_success()
-        except Exception: E["success"] = False  # noqa: E701
-        log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1),
-             "success": bool(E["success"]), "end_window_steps": E.get("end_window_steps")})
-        dump()
-        return
-    E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
-    try:
-        E["success"] = live_verdict()["success"]
-    except Exception:  # noqa: BLE001
-        pass
-    log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"])})
+    if reason == "runaway_guard":
+        reason = "step_limit"
+    E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
+    if reason in ("finished", "timeout"):
+        try:
+            hold = np.asarray(S.hold_action(), dtype=np.float32); n = 0; need = int(S.cfg.success_hold_steps)
+            while 0 < S.consec < need and not S.done and n < need:
+                n += 1; S.step(hold); EP.journal(hold); VIDEO.offer(ctrl_steps())
+            E["end_window_steps"] = n
+        except Exception as exc:  # noqa: BLE001 -- judged as it stands
+            traceback.print_exc(); log({"ev": "end_window_error", "error": repr(exc)[:300]})
+    E["episode_control_steps"] = ctrl_steps()
+    try: E["success"] = reason in AE.END_STATE_REASONS + ("error",) and S.end_state_success()
+    except Exception: E["success"] = False  # noqa: E701
+    log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1),
+         "success": bool(E["success"]), "end_window_steps": E.get("end_window_steps")})
     dump()
 
 
@@ -152,7 +144,7 @@ if not S.instance_matches:
     EP.give_up(f"instance_mismatch: the rebuilt scene (state {S.instance_sha}) is not the frozen instance and its poses differ",
                infra=True)   # never returns
 CAMS = S.camera_names()                 # cam_opposite, cam_left, cam_right, cam_left_shoulder, wrist
-# /spec max_frames_per_call (PROTOCOL §3 "Images per call"): the longest /observe (a 30 s window at the control rate,
+# /spec max_frames_per_call (docs/protocol/tasks.md#modes "Images per call"): the longest /observe (a 30 s window at the control rate,
 # + the first and the last frame) with every camera and its depth
 BUDGET_WATCH_S = 30.0   # the budget is a 30 s watch's whatever max_chunk_s is: the sim memory cap and the instruction use it
 MAX_FRAMES = (int(round(BUDGET_WATCH_S * CTRL_HZ)) + 2) * 2 * len(CAMS)
@@ -193,7 +185,7 @@ def cam_spec(c: str) -> dict:
 
 
 SPEC = {
-    "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "maniguard (BEHAVIOR-1K 3.7.2: OmniGibson on Isaac Sim 4.5)",
+    "protocol": PROTOCOL, "simulator": "maniguard (BEHAVIOR-1K 3.7.2: OmniGibson on Isaac Sim 4.5)",
     "robot": "franka-panda-longfinger", "task_text": os.environ.get("RCB_TASK_TEXT", S.prompt),
     "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: cam_spec(c) for c in CAMS},
@@ -222,17 +214,13 @@ SPEC = {
                        "robot_spec.base.pose", "up": "+z", "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "xyzw",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV (x right, y down, z forward); cam2world_gl: OpenGL (x right, y up, z backward)"},
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "7200"))},
-    # not a budget but a technical cap (PROTOCOL §4.5): the tooling ends an episode there, whatever its state
+    # not a budget but a technical cap (docs/protocol/eai-standard.md#post-reset-reset-capability): the tooling ends an episode there, whatever its state
     "max_control_steps": int(M.MAX_STEPS),
     "episode": (f"one episode, no reset: it ends when you call POST /finish or when your time is over (timeout; the service never "
                 f"tells you whether you have succeeded), judged on that state (a goal hold that has begun gets the rest of its 10 "
                 f"control steps, your last command held), after {int(M.MAX_STEPS)} control steps ({M.MAX_STEPS / CTRL_HZ / 60:.1f} min "
                 "of simulated time; reason step_limit, judged as it stands), or on a simulator error (error; nonfinite: a non-finite "
-                "robot state; sim_stopped: the simulator stopped running)") if AE.ENABLED else
-               (f"one episode, no reset: it ends when the goal has held for 10 consecutive control steps (reason goal_held), after "
-               f"{int(M.MAX_STEPS)} control steps ({M.MAX_STEPS / CTRL_HZ / 60:.1f} min of simulated time; reason runaway_guard, a "
-               "failure), when your time is over (timeout), or on a simulator error (error; nonfinite: a non-finite robot state; "
-               "sim_stopped: the simulator stopped running)"),
+                "robot state; sim_stopped: the simulator stopped running)"),
     "robot_spec": RSPEC,
     "kinematics": KSPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
@@ -347,14 +335,12 @@ def clip_joint_row(row: np.ndarray, clipped: list, ri: int) -> np.ndarray:
 
 
 def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
-    """One recorded and journaled control step. True when the call must stop: the episode is over (the goal held for 10
-    control steps, a non-finite robot state, the runaway guard), or the layer stops the call (max_call_wall_s, the client
-    hung up)."""
+    """One recorded and journaled control step. True when the call must stop: the episode is over (a non-finite robot
+    state, the runaway guard), or the layer stops the call (max_call_wall_s, the client hung up)."""
     a = np.asarray(a, dtype=np.float32)
     over = S.step(a); stop = EP.journal(a); rec.tick(); VIDEO.offer(ctrl_steps())
-    if AE.ENABLED:       # the state's success, recorded only (never shown); a held goal never ends the episode
-        AE.hidden_success(E, S.end_state_success(), log, ctrl_steps())
-    if over: finish("goal_held" if S.reason == "success" else str(S.reason))
+    AE.hidden_success(E, S.end_state_success(), log, ctrl_steps())   # recorded only (never shown); a held goal never ends it
+    if over: finish(str(S.reason))
     return E["done"] or stop
 
 
@@ -490,5 +476,4 @@ open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes}{', resumed at call ' + str(E['calls']) if resumed else ''})", flush=True)
 AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
                     on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row,
-                    **({"finish": lambda: finish("finished"),
-                        "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})))
+                    finish=lambda: finish("finished"), end_step_limit=lambda: finish("step_limit")))

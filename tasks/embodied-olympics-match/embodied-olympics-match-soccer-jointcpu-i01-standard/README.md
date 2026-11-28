@@ -1,43 +1,53 @@
-# embodied-olympics-match-soccer-jointcpu-i01-standard
+# Embodied Olympics · robot soccer 2 v 2 at the joint level (CPU tier), match against level 5 (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Match |
-| Mode | standard (`eai-standard/2.1+match/1.0`) |
-| Twin | `embodied-olympics-match-soccer-jointcpu-i01-privileged` |
-| Simulator / robot | `mujoco` / `booster-t1` |
-| Family / instance | `soccer_jointmatch` / seed 101 (allowed seeds: [101, 1, 2]; PROTOCOL §2) |
-| Oracle | `partial` — soccer-2v2-11, level 5 = our joint-level RL team (sports/soccer/rl/joint/v2: an omnidirectional gait trained with PPO at the joint level, about 1e9 steps, and an RL-trained strategy layer). The three frozen GPU-tier programs of GPT-6 Astra from our v5 pilot (developed on soccer-2v2-10 against level 2, unchanged) win 30 % of 90 practice matches against level 5 v2 (40 % against v1; against v1 on further seeds 48/150 = 32 % and 43 % of 150); a mirror match of v1 is even (24/50); scripted levels 2 and 3 never beat it (0/20, 0/40). Our joint-level reference team (the oracle) lost to level 5 v1 0:10 in both tasks on vanilla Harbor 0.23.0 (valid, replay identical, replay.mp4) |
-| Agent time budget | 14400 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-soccer-0.1.0` |
+| Task ID | `embodied-olympics-match-soccer-jointcpu-i01-standard` |
+| Benchmark | [Embodied Olympics - Match](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@0d7f680` |
+| Robot | Booster T1 humanoids (the agent's team) |
+| Mode | standard |
+| Opponent | Learned team at level 5: two Booster T1s under joint control like yours (12 leg joint targets every 20 ms, the same limits), each walking on a gait policy trained by reinforcement learning (PPO), with a learned plan choosing what each robot does; it reads the simulator's true state |
+| Instance | `soccer_jointmatch`, seed 101 |
+| Time limit | 4 h |
+| Reference solution | Pipeline check only |
 
 ## Task
 Win a 2 v 2 robot soccer match against the other team.
 
-Humanoid robot soccer 2 v 2 at the joint level, coach format: the agent commands both Booster T1s (lower bodies) of its
-team with 12 leg joint targets per robot every 20 ms (no walking policy, no kick skill), against a learned opponent team at the joint level (level 5: its two T1s walk on a policy trained with reinforcement learning on the same joint interface and limits as yours; a learned strategy layer decides what each robot does),
-under the RoboCup Humanoid Soccer League rules with stated deviations. Any method: hand-written control, planning,
-optimisation or learning. A practice service runs full copies of the match world (the opponent as a black box).
+## Success criteria
+One 2 v 2 match at the joint level, of two halves of 5 minutes of game time (a half runs on for up to 3 s while the
+ball still rolls). The team with more goals after two halves wins; a 10-goal lead wins at once. Level after two halves:
+a shoot-out of 3 kicks each (decided as soon as one team cannot be caught), then up to 3 sudden-death rounds, each won
+by the better kick (goal, saved, post, wide, other, no kick, in this order), then a coin toss drawn from the seed. There
+are no draws. In the shoot-out the striker has 20 s to touch the ball, and a keeper more than 0.6 m from its goal line
+before the touch concedes a goal. A kick-off team that scores before it touched the ball outside the centre circle gets
+no goal.
 
-## Difficulty
-Frozen development instance: seed 101, a learned opponent team at the joint level (level 5: its two T1s walk on a policy trained with reinforcement learning on the same joint interface and limits as yours; a learned strategy layer decides what each robot does), S = 10. Not one of the sport's official
-(hidden) seeds, so results here are previews, not official Embodied Olympics results.
+A win is then checked for the released Booster walking policy. The match is replayed, and for a sample of each of
+your robots' joint rows (every 20th control step, at most 600 per robot, spread over the match) the policy's closest
+possible row is fitted (its velocity command and gait phase free, from the robot's state up to 3 control steps
+earlier). If for either robot more than half of these rows are fitted within
+0.02 rad (RMS), the win is void and scores 0. A win whose check gives no result, or whose replay does not reproduce the
+match, is an infrastructure failure, not a score. `METHOD.md` and `NOTES.md` are not graded.
 
-## Reference solution
-`solution/`: our joint-level reference team (capture-point walking, `joint_oracle.py` on `team.py`, `walker.py`, `dcm.py`)
-through the same HTTP interface, after a short check of the practice service. soccer-2v2-11, level 5 = our joint-level RL team (sports/soccer/rl/joint/v2: an omnidirectional gait trained with PPO at the joint level, about 1e9 steps, and an RL-trained strategy layer). The three frozen GPU-tier programs of GPT-6 Astra from our v5 pilot (developed on soccer-2v2-10 against level 2, unchanged) win 30 % of 90 practice matches against level 5 v2 (40 % against v1; against v1 on further seeds 48/150 = 32 % and 43 % of 150); a mirror match of v1 is even (24/50); scripted levels 2 and 3 never beat it (0/20, 0/40). Our joint-level reference team (the oracle) lost to level 5 v1 0:10 in both tasks on vanilla Harbor 0.23.0 (valid, replay identical, replay.mp4).
+The world runs in lockstep: it advances only during the agent's waits and up to the step at which its action
+takes effect.
 
-## Verification
-Separate sandbox, no network. The match is graded live (owner, 2026-10-17): the sim service records the
-match's scores, winner and reason as it plays it and nothing replays it to grade it (`final.json` `graded_by` live,
-`replays` 0; the replay video is drawn after the verdict). The verifier (`tests/grade.py`, our core's grader) applies
-the validity rule
-(technical failures void the trial, a player's own problems are a valid loss), and writes reward.json; success = a
-valid, finished match that the agent won. `tests/fexam_reward.py` adds the hub's fields (`infra_error`, `realtime`,
-`slowdown`, `opponent_level`, `gpu_tier`, `replay_video`). The replay video `replay.mp4` comes with every finished match.
+Success: the match ends by these rules, team A won it and the check found no released policy. Your side loses the match
+at once, a valid 0, if you do not send `game start` within 7200 s of real time after the match service starts or before
+your session ends (`no_show`); if a review is not sent with `game ready` within 300 s of real time after a stoppage (a
+goal, half time, a dropped ball, full time when level, each shoot-out kick; `ready_timeout`, even when you are ahead);
+or if your session ends before the match is over (`abandoned`).
 
-## Resources
-Caps per container (PROTOCOL §6).
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
+
+Graded: the live match, as the trusted match service recorded it while it was played; nothing is replayed. There is
+one match and no reset, and the agent cannot end it with `/finish`: the match's rules end it. A technical failure of
+the match service (a crash, an error in its bookkeeping, rendering or metering) voids the trial as an infrastructure
+failure, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -48,24 +58,12 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Resource tier | **CPU only**: 6 cores, 16 GB; numpy, SciPy, MuJoCo (no ML framework) |
-| Images | agent `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-soccer-joint-cpu-0.1.2@sha256:4b0eb7b85f713b09ddcf8675f5dd7542e54986df50a4ace0c96d9ee13ec0626f`; sim and practice `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-soccer-0.1.0` |
+## Others
+Exported by the Embodied Olympics soccer pilot exporter from its task `roboolympics/soccer-match-wallclock-program-lowlevel-standard` (upstream commit
+`7ae66874c32e`). The files changed here after the export are listed for this task in
+`ci_checks/benchmarks/embodied-olympics-match/exported.toml`.
 
-### The pair
-This task and embodied-olympics-match-soccer-jointgpu-i01-standard are the same frozen match (seed, opponent, slowdown, start window, review limit, cutoff)
-and differ only in the agent's resources: the CPU tier has 6 cores and numpy / SciPy / MuJoCo; the GPU tier adds one
-NVIDIA GPU with mjlab 1.6.0 + rsl_rl 5.4.2, the full 2 v 2 match world on the GPU (thousands of matches in parallel,
-the scripted levels compiled) and a single-T1 GPU environment. The pair measures what a GPU and the time to use it are
-worth to an agent that builds a robot controller.
-
-### Notes
-Source: Embodied Olympics joint-level soccer pilot v5 (task `soccer-match-wallclock-program-lowlevel-standard`), physics revision
-`soccer-2v2-11` (near-rigid foot-turf contact). The rules, the referee, the opponent, the observation, the reviews and
-the grader are ours, unchanged; the seat is unmetered (Harbor records the model's usage), the instance is frozen, and the
-session is the hub's 4 h (v5 had 9 h with 30 min reviews). The agent image is the v5 seat image, prebuilt
-(built by the pilot; `environment/Dockerfile` pins it by digest).
-
-Standard twin of `embodied-olympics-match-soccer-jointcpu-i01-realtime`: the same export, the world in lockstep (`environment/sim/core/lockstep.py`; `eai-standard/2.1+match/1.0` in tasks/embodied-olympics-match/README.md).
+## License
+Embodied Olympics ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics), a private repository) is released
+under the MIT License; its exported match services, referees, scripted opponents and graders inside this task are MIT
+too. The simulator is MuJoCo (Apache License 2.0). No non-commercial terms apply.

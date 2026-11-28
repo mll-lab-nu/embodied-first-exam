@@ -1,7 +1,3 @@
 [[replace]]
 old = "arx_x5/0/pick_from_conveyor_by_image_0.json"
 new = "arx_x5/1/pick_from_conveyor_by_image_0.json"
-
-[[replace]]
-old = "sha256 `b35518107e88e78d`"
-new = "sha256 `56369087a9507e41`"

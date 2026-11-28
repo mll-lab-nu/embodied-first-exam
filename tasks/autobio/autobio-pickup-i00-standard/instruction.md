@@ -4,7 +4,7 @@
 Pick up the 50 mL tube from the rack by its cap and lift it more than a hand's width.
 
 ## Goal
-Success: the gripper holds the tube by its cap and has lifted it more than a hand's width. A physics warning (an
+Success: the tube, touched at its cap by the gripper, has been lifted more than a hand's width. A physics warning (an
 unstable simulation, for instance after the robot was driven hard into something) ends the episode at once, as a
 failure.
 
@@ -26,7 +26,7 @@ episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                    # connects (waits while the service starts)

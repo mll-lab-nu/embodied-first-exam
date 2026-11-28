@@ -2,7 +2,7 @@
 
 Every Session the replay builds (and every Session.reset() after the build) must be at the frozen instance's start
 state for its hand: Session.state_sha() equal to instance.json `start_state_sha[<hand>]`, recorded from a fresh build.
-A scene that starts anywhere else is no replay of this task (PROTOCOL H.4, `instance_mismatch`, an infrastructure
+A scene that starts anywhere else is no replay of this task (docs/protocol/invariants.md H.4, `instance_mismatch`, an infrastructure
 failure, never the agent's 0): this process writes that verdict to replay.py's --out file and exits 0 without
 running a row. Arguments are replay.py's.
 """

@@ -7,8 +7,8 @@ the button's cap up and press it once. Finish with the cap pulled up while both 
 ## Goal
 Success: the two cubes have swapped mats in three moves through the empty mat, each nearly centred on its new mat, the
 button was pressed after each move, and both arms are back where they started while the cap is pulled up. Press the
-button exactly three times in the whole episode: a fourth counted press ends the episode as a failure, and fewer than
-three means no success.
+button exactly three times in the whole episode: a press counts when the cap goes from pulled fully up to below halfway
+down, and a fourth such press ends the episode as a failure.
 
 The three moves and the button presses count as they happen, in order.
 
@@ -34,7 +34,8 @@ Rules:
 - A press is counted when the cap goes from r more than 0.95 to r less than 0.5 (readings in between keep the last of
   these two states). Exactly 3 counted presses are needed; a 4th ends the episode at once as a failure.
 - Order: the check runs 12 stages, at most one per action: for each of the three moves a cube raised, then set on its
-  new mat, then the cap pressed, then up; at the last 'up', both arms must also be back.
+  new mat while the other cube is on a mat (its own start mat after the first move, the empty mat after the second, the
+  first cube's start mat after the third), then the cap pressed, then up; at the last 'up', both arms must also be back.
 - Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
   starting orientation.
 - The 700-step limit is 28 s of simulated time.
@@ -46,7 +47,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)

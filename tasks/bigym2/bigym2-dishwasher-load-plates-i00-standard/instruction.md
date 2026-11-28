@@ -5,9 +5,9 @@ Move both plates from the dish rack into the dishwasher's lower rack, standing o
 from where you start, and let go.
 
 ## Goal
-Success: both plates stand on edge in the dishwasher's lower rack, each facing left or right as seen from where you
-start, and neither gripper touches them, for a second. A plate touching the floor ends the episode as a failure. A fall
-(the pelvis tipping far over, or dropping low) makes the episode a failure without ending it.
+Success: both plates stand on edge touching the dishwasher's lower rack, each facing left or right as seen from where
+you start, and neither gripper's fingers touch them, for a second. A plate touching the floor ends the episode as a
+failure. A fall (the pelvis tipping far over, or dropping low) makes the episode a failure without ending it.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -27,7 +27,7 @@ robot runs as a service you reach through its client or its MCP tools, as if it 
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`, its docstring the full reference
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`, its docstring the full reference
 (`python -c "import rcb_client; help(rcb_client)"`); the action type is `"whole_body"`:
 
 | call | endpoint | what it does |

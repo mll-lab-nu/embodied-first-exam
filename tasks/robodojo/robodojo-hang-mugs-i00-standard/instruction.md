@@ -1,12 +1,12 @@
 # RoboDojo · hang_mugs (standard)
 
 ## Task
-Hang the three mugs by their handles on the rack arms that point left or right. Then move both arms back to where they
+Hang the three mugs by their handles on the arms of the rack, any arm for each. Then move both arms back to where they
 started.
 
 ## Goal
-Success: each of the three mugs hangs by its handle, handle above the mug, on a rack arm that points left or right;
-nothing holds the mugs; and both arms are back where they started.
+Success: each of the three mugs hangs by its handle, handle above the mug, on any arm of the rack; nothing holds the
+mugs; and both arms are back where they started.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -23,12 +23,15 @@ Rules:
   mug's mid-height.
 - Lifted: each mug's centre (the middle of the mug) more than 0.045 m higher than at the start.
 - Handle high: each mug's handle point higher than z = 0.9 m, which is 0.135 m above the table top.
-- Both direction checks compare every mug, whichever arm it hangs on, with the lower arm that points right: as the check
-  takes it, that arm rises 22° and its hook's up direction leans 22° from vertical toward the pole.
+- Both direction checks compare each mug with the arm whose hook point is nearest to its handle point. As the check
+  takes them, each arm points straight out from the pole and rises, and its hook's up direction leans from vertical
+  toward the pole by the same angle: 22° for the lower arm that points right and 24° for the lower left one, 22° for the
+  middle arm that points toward you and 28° for the one pointing away, 30° for the upper right arm and 22° for the upper
+  left one.
 - Handle up: each mug's handle direction (from the mug's axis out through the handle, horizontal at the start) less than
   60° from that hook's up direction.
 - Along the arm: each mug's handle cross direction (across the handle, the way an arm passes through it, horizontal at
-  the start) less than 60° from that lower right arm's direction, either way round.
+  the start) less than 60° from that arm's direction, either way round.
 - On a hook: each mug's handle point less than 0.045 m (3-D distance) from some hook point.
 - Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
   starting orientation.
@@ -41,7 +44,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)

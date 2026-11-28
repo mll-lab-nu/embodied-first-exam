@@ -6,7 +6,8 @@ away.
 
 ## Goal
 Success: the tomato lies on the plate, away from its edge, the plate still on the counter, and your hand has let go of
-the tomato and moved away. Your trajectory is replayed from the fixed start. What counts is the state after its last
+the tomato and moved well away from it (what counts is how far the hand is from it). Your trajectory is replayed from
+the fixed start. What counts is the state after its last
 action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 12)`

@@ -30,7 +30,7 @@ reach through its client or its MCP tools, as if it were real hardware.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`); its docstring is the full reference
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`); its docstring is the full reference
 (`python -c "import rcb_client; help(rcb_client)"`). The calls and the endpoints they use:
 
 | call | endpoint | what it does |

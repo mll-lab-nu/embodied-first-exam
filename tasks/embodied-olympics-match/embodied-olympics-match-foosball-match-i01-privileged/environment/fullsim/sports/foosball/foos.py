@@ -26,7 +26,7 @@ import numpy as np
 from foos_policy import Policy
 
 REVISION = 'foosball-program-v2'
-DT, PHYSICS_DT = .01, .001                  # 10 ms control step (eai-standard-realtime/1.0), 1 kHz physics
+DT, PHYSICS_DT = .01, .001                  # 10 ms control step (the realtime service), 1 kHz physics
 SUBSTEPS = round(DT / PHYSICS_DT)
 LATENCY_STEPS = 2                           # a command reaches the motors 2 control steps (20 ms) after it is taken
 POINTS_TO_WIN = 5                           # one game to 5 points (the ITSF points target of a standard game)

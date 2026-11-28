@@ -1,7 +1,3 @@
 [[replace]]
 old = "arx_x5/0/put_bottles_into_dustbin_0.json"
 new = "arx_x5/1/put_bottles_into_dustbin_0.json"
-
-[[replace]]
-old = "sha256 `3c2168f460d48dde`"
-new = "sha256 `61fa33de0ecf92c4`"

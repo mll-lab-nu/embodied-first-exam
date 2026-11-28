@@ -1,14 +1,14 @@
 # RoboDojo · hang_mugs_random (standard)
 
 ## Task
-Hang the three mugs on the mug rack: the red mug by its handle on an arm that points left or right, and the two pink
-pumpkin mugs on any arm, opening facing up or up-left and handle sideways. Then move both arms back to where they
-started.
+Hang the three mugs on the mug rack, each on any arm: the red mug by its handle, and the two pink pumpkin mugs with the
+opening facing up or tilted toward the rack's centre and the handle along the arm. Then move both arms back to where
+they started.
 
 ## Goal
-Success: each of the three mugs hangs on the mug rack: the red mug by its handle, handle above the mug, on an arm that
-points left or right; each pink pumpkin mug with its opening facing up or up-left and its handle sideways; and both arms
-are back where they started.
+Success: each of the three mugs hangs on an arm of the mug rack, any arm: the red mug by its handle, handle above the
+mug; each pink pumpkin mug with its opening facing up or tilted toward the rack's centre and its handle along its arm;
+and both arms are back where they started.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -26,16 +26,17 @@ Rules:
   and 1.0 cm above mid-height on the pink pumpkin mugs.
 - Lifted: each mug's centre (the middle of the mug) more than 0.045 m higher than at the start.
 - Handle high: each mug's handle point higher than z = 0.9 m, which is 0.135 m above the table top.
-- Both direction checks compare every mug, whichever arm it hangs on, with the lower arm that points right: as the check
-  takes it, that arm rises 28° and its hook's up direction leans 28° from vertical toward the pole (to the left).
+- Both direction checks compare each mug with the arm whose hook point is nearest to its handle point. As the check
+  takes them, each arm points straight out from the pole and rises, and its hook's up direction leans from vertical
+  toward the pole by the same angle: 28° for the lower arm that points right, 22° for the other five.
 - Red mug, handle up: its handle direction (from the mug's axis out through the handle, horizontal at the start) less
   than 60° from that hook's up direction.
 - Red mug, along the arm: its handle cross direction (across the handle, the way an arm passes through it, horizontal at
-  the start) less than 60° from that lower right arm's direction, either way round.
+  the start) less than 60° from that arm's direction, either way round.
 - Pink pumpkin mugs, opening: the direction from the mug's bottom to its opening less than 60° from that hook's up
   direction.
-- Pink pumpkin mugs, handle: the direction from the mug's axis out through its handle less than 60° from that lower
-  right arm's direction, either way round.
+- Pink pumpkin mugs, handle: the direction from the mug's axis out through its handle less than 60° from that arm's
+  direction, either way round.
 - On a hook: each mug's handle point less than 0.045 m (3-D distance) from some hook point.
 - Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
   starting orientation.
@@ -48,7 +49,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)

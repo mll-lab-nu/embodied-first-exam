@@ -4,8 +4,8 @@
 Move the 50 mL tube to the other rack, into the row farther from the robot, at the end next to the first rack.
 
 ## Goal
-Success: the tube stands upright in that slot, all the way down. A physics warning (an unstable simulation, for instance
-after the robot was driven hard into something) ends the episode at once, as a failure.
+Success: the tube is in that slot, all the way down. A physics warning (an unstable simulation, for instance after the
+robot was driven hard into something) ends the episode at once, as a failure.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -25,7 +25,7 @@ live episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                    # connects (waits while the service starts)

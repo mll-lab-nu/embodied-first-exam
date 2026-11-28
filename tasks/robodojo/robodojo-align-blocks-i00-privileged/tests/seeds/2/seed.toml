@@ -1,7 +1,3 @@
 [[replace]]
 old = "arx_x5/0/align_blocks_0.json"
 new = "arx_x5/2/align_blocks_0.json"
-
-[[replace]]
-old = "sha256 `45caba46237c5c80`"
-new = "sha256 `9fa9c51f418c2529`"

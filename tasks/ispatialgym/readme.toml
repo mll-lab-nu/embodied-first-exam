@@ -1,0 +1,229 @@
+# README data for tasks/ispatialgym/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text:
+#   upstream  iSpatialGym @ fddcf75 (github.com/kmy17518/iSpatialGym): the BDDL problems
+#             ispatialgym/assets/bddl/activity_definitions/<activity>/problem<N>.bddl (`:goal` and `:measure`; the
+#             problem of each task is named in environment/sim/upstream.json, sha256 checked);
+#             ispatialgym/tasks/ispatialgym_task.py _check_goal L450-465 (G = the goal heads other than pose_settled,
+#             S = the pose_settled heads, M = every `:measure` atom within tolerance), DEFAULT_POSE_SETTLED_CONFIG L49-56
+#             (45 steps; 2 mm / 5 mrad, joints 5 mrad or 5 mm), official_success = geometric_success L611;
+#             ispatialgym/eval/metrics.py SuccessTracker.update L136-155 (settle-eval on: success at the first step t
+#             with S and G and M held over the last 45 steps; `first` latches) and report L181;
+#             ispatialgym/eval/predicates.py L1-60 (OmniGibson's verdict, else the geometric fallbacks for ontop,
+#             under, touching, inside; settled_by_drift L80-104); ispatialgym/eval/geometry.py orientation_error L90
+#             (the angle over the target's listed symmetries); ispatialgym/eval/group_entity.py _evaluate L164-206;
+#             ispatialgym/eval/tolerance_profile.py (isg-v2, scale 3; object scaling's depth target -> full position).
+#   tolerances  each task's environment/sim/facts.json `tolerances` (the isg-v2 values x 3 as applied at load) and
+#             goal.json `tro_ispatialgym` (target kind, metric, frame, symmetries); no target value is printed here.
+#   tooling   embodied_first_exam/benchmarks/ispatialgym/privileged/environment/rcb_ispatialgym.py: TOLERANCE_SCALE
+#             3.0 L54, SETTLE_EVAL / SETTLE_STEPS 45 L55-56, Session.step L397-421 (AGENT_END: success latched,
+#             only max_steps ends it; otherwise the first success ends it), hold_action L391-395, run_rows L754-778.
+#   graders   privileged/tests/grade.py (one fresh-process replay); sim/server.py check_success L119-120, ctrl_step
+#             L333-342, finish L155-182; standard/tests/grade.py grade L19-30.
+# Standard texts give no world coordinates; targets are named, never their values.
+
+[benchmark]
+name = "iSpatialGym"
+citation = "iSpatialGym Authors, 2026"   # no paper; the upstream LICENSE's copyright holder
+url = "https://github.com/kmy17518/iSpatialGym"
+repo = "kmy17518/iSpatialGym"
+commit = "fddcf75"
+
+[license]
+text = """
+iSpatialGym ([kmy17518/iSpatialGym](https://github.com/kmy17518/iSpatialGym) @ `fddcf75`) and its evaluation data
+(Hugging Face `kmy17518/ispatialgym-eval-data`, revision `v1.0`, which holds the goal images) are released under the MIT
+License. Its BEHAVIOR-1K fork (OmniGibson and bddl) is MIT. The scenes, objects and robot assets are the BEHAVIOR Data
+Bundle, under its End User License Agreement: **non-commercial academic research use only (NC)**, no redistribution;
+the dataset is mounted at run time and never copied into an image or this repository. NVIDIA Isaac Sim 5.1 and
+Omniverse Kit are proprietary; building the simulator image accepts NVIDIA's licence terms.
+"""
+
+[robots]
+r1pro = "Galaxea R1 Pro mobile bimanual manipulator (holonomic wheeled base, 4-joint trunk, two 7-joint arms with parallel-jaw grippers)"
+
+# privileged/tests/grade.py L44-82: no file -> missing_trajectory; size cap, `actions` ndim 2, 23 columns, numeric,
+# rows <= facts.json max_steps, else bad_trajectory (0); one `rcb_ispatialgym.py replay` subprocess (cmd_replay
+# L781-796, run_rows L754-778: one Session.step per row, stop when step() returns True); RCB_AGENT_END is unset in the
+# privileged compose file, so step() L414-418 ends the replay at the first official_success. A row that fails to step
+# (step() refuses a non-finite row, L402-403) -> StepError -> sim_error, 0; no result or instance_ok = 0 ->
+# infra_error; the replay's timeout -> infra_error. No settle window is added after the last row.
+[modes.privileged]
+success = """
+Success is iSpatialGym's own geometric success with settle-eval on, as its evaluation judges a policy run. On some
+control step the conditions above have held on that step and on each of the 44 steps before it (45 consecutive control
+steps, 1.5 s at 30 Hz). On that step the robot and every object named above are also at rest: over the last 45 steps
+the object's root pose stayed within 2 mm and 5 mrad of where it was at the first of them, and each of its joints within
+5 mrad (5 mm for a sliding joint). For the robot this covers its base pose and all its joints.
+
+The graded file is `/app/output/trajectory.npz`: an array `actions` of shape (T, 23), at most {vars[steps]} rows, one
+row per 30 Hz control step. The verifier replays it once, open-loop, in a fresh process from the frozen start. The task
+succeeds if the success above is reached at some control step of that replay; the replay stops there. Nothing runs after
+the last row, so a trajectory whose rows end before the success is reached scores 0. There is no fall rule: a robot
+that has tipped over does not end the replay.
+
+A missing file, a file without `actions`, another shape, a non-numeric array or more than {vars[steps]} rows scores 0.
+A row that is not 23 finite numbers stops the replay and scores 0. A replay that gives no result or runs out of its
+time limit, or a frozen start that does not rebuild as recorded, is an infrastructure error, not a score.
+"""
+
+# sim/server.py (RCB_AGENT_END=1 in the sim service): ctrl_step L333-342 (a success never ends the episode; only the
+# step limit does, reason step_limit); finish L155-182: at "finished" (POST /finish) and "timeout" (the session's end)
+# the last command is held with the base at 0 (rcb_ispatialgym.hold_action) while not S.success, at most 45 steps;
+# success = reason in END_STATE_REASONS + ("error",) and check_success() = S.success, which Session.step L410-413 sets
+# from the latched official_success (metrics.py `first`). standard/tests/grade.py L26-28: reason "error" or gave_up
+# (sim_crashed_on_call) -> 0; not finalized or infra_error (instance_mismatch, sim_crashed, resume_failed) -> infra.
+[modes.standard]
+success = """
+Success is iSpatialGym's own geometric success with settle-eval on, as its evaluation judges a policy run. On some
+control step the conditions above have held on that step and on each of the 44 steps before it (45 consecutive control
+steps, 1.5 s at 30 Hz). On that step the robot and every object named above are also at rest: over the last 45 steps
+the object's root pose stayed within 2 mm and 5 mrad of where it was at the first of them, and each of its joints within
+5 mrad (5 mm for a sliding joint). For the robot this covers its base pose and all its joints.
+
+Graded is the one live episode (no reset), judged by the simulator service at every control step; nothing is replayed.
+The task passes if the success above is reached at any control step of the episode. Once reached it stands, even if the
+scene changes afterwards. The service never reports it and it does not end the episode.
+
+The episode ends at the agent's `POST /finish`, when the agent's session ends, or after {vars[steps]} control steps. At
+`/finish` and at the session's end, if the success has not been reached yet, the service holds the robot's last command
+with the base stopped for up to 45 control steps and stops as soon as it is reached; steps that held before count. At the
+step limit the episode is judged as it stands. There is no fall rule: a robot that has tipped over does not end the
+episode.
+
+A simulator error raised by the agent's calls scores 0, and so do repeated service crashes that all happened while
+serving the agent's calls. A frozen start that does not rebuild as recorded (checked before the agent is served), a crash
+the episode cannot be resumed from, or a service that leaves no finalized result is an infrastructure error, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families: one task per family and mode. Relations are OmniGibson's object states with upstream's fallbacks
+# (predicates.py L1-60, constants L28-36): ontop / under: OmniGibson's verdict, else rays across the resting object's
+# contact patch, else bottom within 8 mm of the support under its footprint centre, centre over the support's footprint
+# and up axis within 15 deg of vertical; touching: OmniGibson's contact, else convex hulls within 3 mm; inside:
+# OmniGibson's container volume, else (a container without one) the AABB centre inside the container's AABB with the
+# container on both sides along at least 2 axes. `grasped` / `not grasped`: OmniGibson's robot grasp state (assisted
+# grasp). Pose errors: position = distance of the object's origin from its target position; orientation = the angle of
+# the rotation between the object's and the target's orientation, the smallest over the target's listed symmetries.
+
+# alignment/problem0.bddl L20-32; facts.json: board_game.n.01_1 orientation only, 0.15 rad; max_steps 1612
+[families.alignment_axial]
+vars = { steps = "1,612" }
+success = """
+The board game is on the breakfast table (`ontop`), no gripper holds it, and its orientation is within 0.15 rad of its
+target orientation. Its position is not checked.
+"""
+
+# alignment/problem3.bddl L19-30; facts.json: painting.n.01_1 orientation only, 0.15 rad; max_steps 2272
+[families.alignment_vertical]
+vars = { steps = "2,272" }
+success = """
+No gripper holds the painting, and its orientation is within 0.15 rad of its target orientation. Its position is not
+checked.
+"""
+
+# camera_relocalization/problem2.bddl L23-32; goal.json: link robot_r1:zed_link:Camera:0, frame world, full position
+# and orientation; facts.json: 0.15 m / 0.45 rad (scale group large); max_steps 1324
+[families.camera_relocalization_obstructed]
+vars = { steps = "1,324" }
+success = """
+The robot's head camera (`robot_r1:zed_link:Camera:0`) is within 15 cm of the pose the goal image was taken from, and its
+orientation is within 0.45 rad of that pose's orientation. No object is checked.
+"""
+
+# configuration_matching/problem6.bddl L21-34; goal.json: blender.n.01_1 full pose, articulation j_lid; facts.json:
+# pose 0.09 m / 0.30 rad, j_lid 0.4305 rad; max_steps 2382. `open`: OmniGibson's Open (an openable joint more than 5 %
+# of its range from closed; open_state.py JOINT_THRESHOLD_BY_TYPE in the BEHAVIOR-1K fork 6a61946)
+[families.configuration_matching_articulation_open_small_scale]
+vars = { steps = "2,382" }
+success = """
+The blender is open (OmniGibson's `open`: an openable joint more than 5 % of its range away from closed), it is on the
+breakfast table (`ontop`), and no gripper holds it. Its position is within 9 cm of its target position and its
+orientation within 0.30 rad of its target orientation. Its lid joint `j_lid` is within 0.4305 rad of its target angle.
+"""
+
+# configuration_matching/problem11.bddl L25-41; goal.json group targets_group.n.01_1: members 4 toy dice + tray,
+# assignment exchangeable (cost layout), tray pinned to its own slot, 10 layout relations; group_entity.py _evaluate
+# L164-206 (slot pose per member; relative pose T_from^-1 T_to per relation); facts.json: group pose 0.09 m / 0.30 rad,
+# layout 0.03 m / 0.15 rad; max_steps 8298. Pointwise atoms on the group (not grasped, pose_settled) expand per member.
+[families.configuration_matching_block_design]
+vars = { steps = "8,298" }
+success = """
+Each of the four toy dice is on the tray (`ontop`), and no gripper holds a die or the tray. The dice are
+interchangeable: upstream matches each die to one die place of the goal, the matching that fits the layout best, and the
+tray has its own place. Each die and the tray is within 9 cm of its place's target position and within 0.30 rad of
+that place's target orientation. For every pair among the five (10 pairs), the pose of one relative to the other is within 3 cm and
+0.15 rad of the target relative pose. The robot, the four dice and the tray are the objects that must be at rest.
+"""
+
+# inter_object_relation_satisfaction/problem0.bddl L22-36; goal.json: brussels_sprouts position only, bowl full pose
+# with 72 symmetries (turns about its own z axis in 5 deg steps); facts.json: 0.09 m / 0.30 rad; max_steps 2370
+[families.inter_object_relation_satisfaction_inside_small_scale]
+vars = { steps = "2,370" }
+success = """
+The brussels sprouts are inside the bowl (`inside`), and no gripper holds either. The brussels sprouts are within 9 cm
+of their target position (their orientation is not checked). The bowl is within 9 cm of its target position and within
+0.30 rad of its target orientation, where any turn about its own vertical axis in steps of 5° counts as the same
+orientation.
+"""
+
+# inter_object_relation_satisfaction/problem14.bddl L22-36; goal.json: marker full pose, pencil full pose with 72
+# symmetries (turns about its own x axis in 5 deg steps); facts.json: 0.09 m / 0.30 rad; max_steps 2076.
+# `nextto`: OmniGibson's NextTo state, no upstream fallback.
+[families.inter_object_relation_satisfaction_nextto_small_scale]
+vars = { steps = "2,076" }
+success = """
+The marker is next to the pencil (OmniGibson's `nextto`), and no gripper holds either. Each of the two is within 9 cm of
+its target position and within 0.30 rad of its target orientation; for the pencil, any turn about its own long (x) axis
+in steps of 5° counts as the same orientation.
+"""
+
+# inter_object_relation_satisfaction/problem1.bddl L21-35; goal.json: pack of kielbasa full pose, platter full pose
+# with symmetries identity and a half turn about z; facts.json: 0.09 m / 0.30 rad; max_steps 1900
+[families.inter_object_relation_satisfaction_ontop_small_scale]
+vars = { steps = "1,900" }
+success = """
+The pack of kielbasa is on the platter (`ontop`), and no gripper holds either. Each of the two is within 9 cm of its
+target position and within 0.30 rad of its target orientation; for the platter, a half turn about its own vertical axis
+counts as the same orientation.
+"""
+
+# inter_object_relation_satisfaction/problem3.bddl L22-36; goal.json: both boxes full pose, no symmetries; facts.json:
+# 0.09 m / 0.30 rad; max_steps 3142
+[families.inter_object_relation_satisfaction_touching_small_scale]
+vars = { steps = "3,142" }
+success = """
+The box of sanitary napkins touches the box of tissues (`touching`), and no gripper holds either. Each of the two is
+within 9 cm of its target position and within 0.30 rad of its target orientation.
+"""
+
+# inter_object_relation_satisfaction/problem4.bddl L23-37; under(saucer, teacup): the saucer supports the teacup
+# (predicates.py L56-59); goal.json: teacup full pose, saucer full pose with 72 symmetries (z, 5 deg); facts.json:
+# 0.09 m / 0.30 rad; max_steps 2214
+[families.inter_object_relation_satisfaction_under_small_scale]
+vars = { steps = "2,214" }
+success = """
+The saucer is under the teacup (`under`: the teacup rests on the saucer), and no gripper holds either. Each of the two is
+within 9 cm of its target position and within 0.30 rad of its target orientation; for the saucer, any turn about its own
+vertical axis in steps of 5° counts as the same orientation.
+"""
+
+# mental_rotation/problem3.bddl L18-29; goal.json: carving_knife orientation only, world frame; facts.json: 0.4376 rad;
+# max_steps 300
+[families.mental_rotation]
+vars = { steps = "300" }
+success = """
+A gripper of the robot holds the carving knife (`grasped`), and the knife's orientation is within 0.4376 rad of its
+target orientation. Its position is not checked.
+"""
+
+# object_scaling/problem1.bddl L19-30; goal.json: apple position in the frame agent.n.01_1::robot_r1:zed_link:Camera:0
+# (metric depth, switched to full position at load: tolerance_profile.py apply_to_task L178-184, facts.json note);
+# facts.json: 0.03 m; max_steps 300
+[families.object_scaling]
+vars = { steps = "300" }
+success = """
+A gripper of the robot holds the apple (`grasped`), and the apple's position relative to the robot's head camera
+(`robot_r1:zed_link:Camera:0`) is within 3 cm of its target position relative to that camera. Its orientation is not
+checked.
+"""

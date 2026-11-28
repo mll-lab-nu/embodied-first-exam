@@ -3,5 +3,5 @@
  "grader": "grader/box_to_bin.py",
  "title": "Carry the box from the shelf to the bin (Unitree G1, walking, Pink IK)",
  "text": "Take the box off the shelf in front of you, carry it to the blue bin on the table to your right, and leave it in the bin.",
- "success": "Success: the box was taken off the shelf and carried over to the bin, and it now rests inside the bin's walls, let go of and still (not held, not across the rim)."
+ "success": "Success: the box was taken off the shelf and carried over to the bin, and it now rests still inside the bin's walls (not across the rim)."
 }

@@ -4,8 +4,9 @@
 Put the white mug in the centre of the table.
 
 ## Goal
-Success: the white mug stands right at the centre of the table, within a few centimetres, and neither gripper finger
-touches it. The replay of your trajectory ends as soon as the task is done (later rows are never executed).
+Success: the white mug rests on the table right at its centre, within a few centimetres, in any orientation, and neither
+gripper finger touches it. The replay of your trajectory ends as soon as the task is done (later rows are never
+executed).
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`. It
 holds `task` and `actions`, a (T, 8) float array of at most 100,000 rows (one per control step, 1.9 h of robot time).

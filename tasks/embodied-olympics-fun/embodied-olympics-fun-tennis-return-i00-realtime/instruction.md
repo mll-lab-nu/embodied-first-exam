@@ -5,8 +5,8 @@ Return the serve: after it bounces once, hit it with the racket in your right ha
 without letting go of the racket.
 
 ## Goal
-Success: after the serve bounces once in your service box, you hit it with the racket in your right hand over the net
-and it first lands in the far singles court (the lines are in); you never let go of the racket.
+Success: after the serve bounces once on your side of the net, you hit it with the racket in your right hand over the
+net and it first lands in the far singles court (the lines are in); you never let go of the racket.
 
 The referee in the service judges these stages, in order: **bounce → racket → over the net → in**. Once the referee
 calls success, it stays; the attempt continues until you finish. The first foul before a success ends the attempt as a
@@ -46,7 +46,7 @@ clock that does not stop while you think.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.3`, realtime mode) is your whole interface to the robot. Its
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`, realtime mode) is your whole interface to the robot. Its
 docstring is the full reference (`python -c "import rcb_client; help(rcb_client)"`); its examples use another
 benchmark's names: for this task `r.spec()` is authoritative.
 

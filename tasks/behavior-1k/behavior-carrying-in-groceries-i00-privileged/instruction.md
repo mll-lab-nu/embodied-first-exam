@@ -1,15 +1,17 @@
 # BEHAVIOR-1K · carrying_in_groceries (privileged)
 
 ## Task
-Put the tomato and the milk from the car into one fridge, then close the car and every kitchen fridge.
+Put the tomato and the milk from the car into one fridge, then close the car and the kitchen fridge
+(`electric_refrigerator.n.01_1`).
 
 ## Goal
-Success: the tomato and the carton of milk are both inside one and the same refrigerator, the car is closed, and every
-kitchen refrigerator is closed. It counts only once the scene has settled: nothing the task names (a tool included) is
-still in a gripper, and everything has come to rest. The replay of your trajectory ends as soon as the task is done.
-After your last row, the robot is held still for a few seconds (as `s.settle()` does). A success that settles during
-that time counts, so you need not record that wait. A fall of the robot or a simulator breakdown (a runaway or
-non-finite state, e.g. after the robot tumbles) ends the replay as a failure.
+Success: the tomato and the carton of milk are both inside one and the same refrigerator, the car is closed, and the
+kitchen refrigerator the task names (`electric_refrigerator.n.01_1`) is closed. It counts only once the scene has
+settled: nothing the task names (a tool included) is still in a gripper, and everything has come to rest. The replay of
+your trajectory ends as soon as the task is done. After your last row, the robot is held still for a few seconds (as
+`s.settle()` does). A success that settles during that time counts, so you need not record that wait. A fall of the
+robot or a simulator breakdown (a runaway or non-finite state, e.g. after the robot tumbles) ends the replay as a
+failure.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`. It
 holds `actions` (T, 25), one row per control step, and `task`. It has at most 40,000 rows (22 min of simulated time). A

@@ -1,7 +1,3 @@
 [[replace]]
 old = "arx_x5/0/pour_balls_into_vase_0.json"
 new = "arx_x5/1/pour_balls_into_vase_0.json"
-
-[[replace]]
-old = "sha256 `171eb88834b95ede`"
-new = "sha256 `480040768a83840f`"

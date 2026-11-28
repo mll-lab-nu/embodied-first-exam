@@ -21,7 +21,9 @@ Rules:
   you, turned up to 36° to either side. The rack is 20.5 cm wide, 9.6 cm deep and 6 cm tall, with two rows of five
   holes.
 - A tube's position, as the check measures it, is the middle of its closed bottom end, on its axis.
-- Deep in the rack: each tube's lowest point more than 0.045 m below the top of the rack.
+- Deep in the rack: the bottom of each tube's bounding box more than 0.045 m below the top of the rack's.
+- In the rack: each tube's position, seen from above, inside the rack's 20.5 × 9.6 cm outline and higher than the
+  rack's underside.
 - Upright: each tube's axis, from its closed bottom to its cap, less than 30° from straight up.
 - Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
   starting orientation.
@@ -34,7 +36,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)

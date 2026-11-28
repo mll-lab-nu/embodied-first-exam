@@ -10,7 +10,7 @@ over HTTP bodies (Content-Type: application/x-rcb1) and equally usable over a ra
 A server's frames go into the body once: frames_part() names a list of arrays (one frame axis) without stacking them,
 size() gives a frame's length from its parts' sizes before anything is built (so a response limit can drop parts
 first), and encode() writes each such array into the body once and lets go of it, so building a response holds the
-captured frames plus one response body (docs/protocol/README.md §3 and §6, the sim's memory cap). The bytes are the
+captured frames plus one response body (docs/protocol/tasks.md#modes, resources.md, the sim's memory cap). The bytes are the
 same as for the stacked array.
 """
 from __future__ import annotations

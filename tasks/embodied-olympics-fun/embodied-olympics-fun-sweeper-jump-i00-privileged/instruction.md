@@ -1,20 +1,20 @@
 # Embodied Olympics · sweeper jump (privileged)
 
 ## Task
-Jump the sweeping boom 3 times in a row without being hit, then land on your podium and stand still before it comes
-round again.
+Jump the sweeping boom 3 times in a row without being hit, then land on your feet and stand still for 1 s on your
+podium.
 
 ## Goal
-Success: you jump the boom three times in a row without it touching you, then land on your feet on the podium and stand
-still for 1 s before it comes round again.
+Success: you jump the boom three times in a row without it touching you, then land on your feet and stand still on the
+podium for 1 s, the boom never touching you.
 
 The referee judges these stages, in order: **jump 1 → jump 2 → jump 3 → landing → stand**. An attempt ends at the
 success, at the first foul or after 30 s (3000 control steps) of robot time.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`. It holds `actions`: one sim row of 151
 floats per control step. It is replayed open-loop from the fixed start, one row per control step, until the referee ends
-the attempt. It scores 1 if the replay succeeds, else 0. If the rows run out first, the attempt is judged on its state
-at that point. At most 3000 rows are used. Every row must be finite, including rows after the attempt's end; a NaN or an
+the attempt. It scores 1 if the replay succeeds, else 0. If the rows run out before the referee calls a success, it
+scores 0. At most 3000 rows are used. Every row must be finite, including rows after the attempt's end; a NaN or an
 infinite value scores 0.
 
 Put two files beside it. `gen.py` is the script that produced it: it must run and reproduce `trajectory.npz`, reading

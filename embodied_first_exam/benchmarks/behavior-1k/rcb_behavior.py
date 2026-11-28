@@ -106,7 +106,7 @@ SETTLE_STEPS = 150              # 5 s: after the last action the robot holds sti
 # Simulator breakdown (2026-10-14, failure analysis item 25: NaN after tumbling, a body at z = 1.7e16 m with the episode
 # still running): the episode ends there, a failure recorded as `sim_breakdown` (2026-10-16: most breakdowns seen were
 # the agent's own tumbles, e.g. 23 GLM standard episodes ended on a NaN base orientation; whether a breakdown is
-# infrastructure, voided and retried under PROTOCOL H.5, is the owner's decision). Checked on the robot every control step and on the goal objects every BREAKDOWN_OBJECT_EVERY steps.
+# infrastructure, voided and retried under docs/protocol/invariants.md H.5, is the owner's decision). Checked on the robot every control step and on the goal objects every BREAKDOWN_OBJECT_EVERY steps.
 BREAKDOWN_POS_M = 1.0e4         # a robot or goal-object position farther than 10 km from the origin
 BREAKDOWN_SPEED_M_S = 100.0     # the robot base faster than 100 m/s
 BREAKDOWN_OBJECT_EVERY = 30
@@ -345,7 +345,7 @@ TASKS: dict[str, dict] = {
     "carrying_in_groceries": dict(
         challenge_task="carrying_in_groceries",
         scene="house_double_floor_lower",
-        text='Put the tomato and the milk from the car into one fridge, then close the car and every kitchen fridge.',
+        text='Put the tomato and the milk from the car into one fridge, then close the car and the kitchen fridge.',
         simulator="behavior", robot="r1pro", image="behavior",
     ),
     "turning_on_radio": dict(
@@ -839,7 +839,7 @@ class PrimitiveError(RuntimeError):
     """A primitive could not be planned or executed (the episode is still alive unless said otherwise)."""
 
 
-# --------------------------------------------------------------------------- rcb-limited/2.2 inputs: geometry helpers
+# --------------------------------------------------------------------------- shared-layer inputs: geometry helpers
 GL2CV = np.diag([1.0, -1.0, -1.0, 1.0])   # camera frame, OpenGL axes (x right, y up, z back) -> OpenCV (x right, y down, z forward)
 DEPTH_MAX_M = 65.535                      # z-depth beyond this reads 0 (as the limited service's uint16-millimetre encoding)
 KIN_TOL_POS_M, KIN_TOL_ROT_RAD, KIN_MAX_ITERS = 0.001, 0.01, 200   # IK defaults
@@ -1391,7 +1391,7 @@ class Session:
         self._policy.next = a
         _, truncated = self.ev.step()       # OmniGibson's own `terminated` is the bare BDDL goal: the success rule decides
         # the order: a breakdown first (nothing else means anything then), the success rule (a success on the same step as
-        # a fall stands), the fall rule. Agent-ended episodes (agent_end, PROTOCOL §3): the success rule never ends the
+        # a fall stands), the fall rule. Agent-ended episodes (agent_end, docs/protocol/tasks.md#modes): the success rule never ends the
         # episode (now_success says whether it holds now), a breakdown or a fall still does
         if self._breakdown_step():
             ended = True
@@ -1910,7 +1910,7 @@ class Session:
         imageio.imwrite(str(path.with_suffix(".last.png")), frames[-1])
         return {**self.status(), "n_frames": len(frames), "video": str(path)}
 
-    # ---- rcb-limited/2.2 inputs, the same in both modes (the limited service imports this module): camera calibration and
+    # ---- shared-layer inputs, the same in both modes (the limited service imports this module): camera calibration and
     # mounting, depth, the robot's spec sheet, its measured state, stateless kinematics. Nothing here steps physics or
     # changes the simulator state: cameras and depth read what the renderer produced, kinematics is math on the robot model.
     TCP_FRAMES = {"left": "left_tcp", "right": "right_tcp"}

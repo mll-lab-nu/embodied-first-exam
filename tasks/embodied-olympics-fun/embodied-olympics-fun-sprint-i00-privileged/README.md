@@ -1,31 +1,51 @@
-# embodied-olympics-fun-sprint-i00-privileged
+# Embodied Olympics · 50 m sprint (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-sprint-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-sprint-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `sprint` / seed 0 |
-| Oracle | `full` — Reference: stand through the start procedure, react to the gun, then the running policy at 3.5 m/s steered to the lane's centre; 9 of 10 perturbed runs at 2.5 to 4.0 m/s finished. Measured: success after 19.54 s of the 34.2 s limit, live and in a fresh replay, ending in the same state. |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Instance | `sprint`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | Included |
 
 ## Task
-Run the 50 m: start on the gun and sprint down your lane until your torso reaches the finish line. (Embodied Olympics `sprint`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Run the 50 m: start on the gun and sprint down your lane until your torso reaches the finish line.
 
-## Difficulty
-The gun has to be seen, not guessed: moving early disqualifies and waiting costs time. Then 50 m in a 1.22 m lane: the walking gait covers 20 m in the time, the running gait has to be held straight for a quarter of a minute at a speed close to where it falls.
+## Success criteria
+A straight 50 m lane, 1.22 m wide; the robot stands just behind the start line facing the finish. "On your marks" is
+at t = 0, "set" 2 s later, and the gun between 1.2 and 2.2 s after "set" (fixed for the task, not announced); a lamp
+shows the phase. The referee's stages, in order: start, finish.
+- Start: the robot's start movement, the first moment its pelvis is more than 0.05 m from where it was at "set", or
+  the front end of a foot reaches the start line (on the ground or in the air). It must come at least 0.1 s after the
+  gun.
+- Finish: the leading point of the torso (not the head, arms, legs or feet) reaches the finish line, within 30 s of
+  the gun. The success is called at that moment.
 
-## Reference solution
-`solution/oracle.py` drives the robot through the task's own tooling, closed loop on the privileged state, and writes the trajectory (`solution/solve.sh`). Reference: stand through the start procedure, react to the gun, then the running policy at 3.5 m/s steered to the lane's centre; 9 of 10 perturbed runs at 2.5 to 4.0 m/s finished. Measured: success after 19.54 s of the 34.2 s limit, live and in a fresh replay, ending in the same state.
+Fouls (each fails the attempt): a false start (a start movement before the gun or less than 0.1 s after it, or a
+foot reaching the start line at any time before that, "set" included); from the gun on, the pelvis more than 0.61 m
+to either side of the lane's centre line; 30 s after the gun without a finish. The generic fall rule is off: a fall
+does not end the race, and the robot may get up and run on, but from the gun on, the pelvis below 0.4 m for 10 s in a
+row fails it. Time limit: 34.2 s (3,420 control steps), with the 30 s from the gun ending the attempt first.
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: World Athletics rules for the straight sprint. The lane runs along +x, 1.22 m wide, centred on y = 0. The start line is 0.05 m wide; its far edge is x = 0 and the finish line's near edge is x = 50.0 m. The start: "on your marks" at t = 0, "set" 2.0 s later, the gun between 1.2 and 2.2 s after "set" (fixed for this task, not announced). Your start movement is the first moment your pelvis is more than 0.05 m from where it was at "set", or the front end of a foot reaches the start line (x > -0.05 m, on the ground or in the air). A start movement before the gun, or earlier than 0.1 s after it, is a false start; so is a foot reaching the start line before "set". From the gun on you must keep your lane: your pelvis may not be more than half the lane's width from y = 0. You finish at the moment the leading point of your torso (not the head, arms, legs or feet) reaches the finish line; the time counts from the gun. You succeed with a valid finish within 30.0 s of robot time after the gun. A fall does not end the race: you are down while your pelvis is below 0.4 m, you may get up and run on, but 10.0 s down in a row end it. You fail on a false start, on leaving the lane, when down for 10.0 s, or when 30.0 s after the gun have passed.
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +54,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | track-and-jumps |
-| Rule book | World Athletics Competition and Technical Rules, 2024 edition: TR 16 (the start: 16.5 the line, 16.6-16.8 false starts), TR 17.3 (lanes), TR 18.2 and TR 19 (the finish, timing); the distance is the 50 m of indoor athletics; deviations: the distance: 50.0 m, the short sprint of indoor athletics, on an outdoor straight; not the 100 m · TR 16.3-16.4 (starting blocks, crouch start): a standing start without blocks, the feet 0.02 m behind the start line; a robot of this build has no crouch start · TR 16.6-16.8 (start information system): the start movement is measured on the robot instead of the blocks: the pelvis more than 0.05 m from its place at "set", or a foot reaching the start line; a false start disqualifies at once, there is no recall · TR 16 (the starter's voice and gun): the robot has no hearing; the commands are shown by a start lamp beside the lane (red, yellow at "set", green at the gun) · TR 17.3 (lanes): the lane is judged by the pelvis: its centre more than half a lane width from the lane's centre line disqualifies at once; feet on the lines are not judged · TR 17 (a fallen athlete): a robot whose pelvis is below 0.4 m is down; it may get up and run on, but 10.0 s down in a row end the race (did not finish) · TR 19 (photo finish): the time is the instant the leading point of the torso link's collision mesh reaches the plane of the finish line's near edge, interpolated between 1 ms physics steps · TR 14 (the track): a flat straight of three 1.22 m lanes, the robot alone in the middle one; no wind · a race has no time to beat; here the run counts only if it finishes within 30.0 s of robot time after the gun (this benchmark's qualifying time: a mean of about 1.7 m/s, beyond the walking gait) |
-| Stages | start → finish |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `96f71984c3c44e5983033b13ecb2c762578edb53bc2a08e6f4ee39a25ee4c0a8` |
-| Episode | 3420 control steps (34.2 s at 100 Hz) |
-| Action | sim rows of 151 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

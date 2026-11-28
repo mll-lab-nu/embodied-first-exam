@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""INVARIANT hook (docs/protocol/README.md Appendix H.7: twins share one frozen instance), this benchmark's own:
+"""INVARIANT hook (docs/protocol/invariants.md H.7: twins share one frozen instance), this benchmark's own:
 ci_checks/run_invariants.sh runs every ci_checks/benchmarks/*/invariant-* hook with the task directories in scope.
 
 A privileged match's frozen settings are its tests/match_instance.json (sport, level, seed, slowdown); its standard and

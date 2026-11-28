@@ -3,7 +3,7 @@
  "kind": "rcb",
  "suite": "robopaint",
  "task": "robopaint-oil-pearlearring-i01-standard",
- "protocol": "eai-standard/2.2",
+ "protocol": "eai-standard/3.0",
  "realtime": false,
  "tools": [
   "spec",

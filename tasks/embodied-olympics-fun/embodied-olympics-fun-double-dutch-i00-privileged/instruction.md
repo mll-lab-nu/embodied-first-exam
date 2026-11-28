@@ -1,20 +1,21 @@
 # Embodied Olympics · double dutch (privileged)
 
 ## Task
-Jump Double Dutch: get into the two turning ropes and jump them 10 times in a row, one rope per jump, without a rope
+Jump Double Dutch: get into the two turning ropes and make 10 counted jumps (one rope counts per jump) without a rope
 touching you, then land on your feet.
 
 ## Goal
-Success: you get into the middle of the turning ropes, jump them ten times in a row, one rope per jump, without a rope
-touching you, and land on your feet.
+Success: you get into the middle of the turning ropes, make ten counted jumps without a rope touching you, and land on
+your feet; a jump counts when a rope passes under both feet while you are in the air, and a second rope in the same
+jump is not counted.
 
 The referee judges these stages, in order: **the entry, each of the 10 jumps, the landing**. An attempt ends at the
 success, at the first foul or after 25 s (2500 control steps) of robot time.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`. It holds `actions`: one sim row of 151
 floats per control step. It is replayed open-loop from the fixed start, one row per control step, until the referee ends
-the attempt. It scores 1 if the replay succeeds, else 0. If the rows run out first, the attempt is judged on its state
-at that point. At most 2500 rows are used, and every one must be finite, also those after the attempt's end (a NaN or an
+the attempt. It scores 1 if the replay succeeds, else 0. If the rows run out before the referee calls a success, it
+scores 0. At most 2500 rows are used, and every one must be finite, also those after the attempt's end (a NaN or an
 infinite value scores 0).
 
 Put two files beside it. `gen.py` is the script that produced it: it must run and reproduce `trajectory.npz`, reading

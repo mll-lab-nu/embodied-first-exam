@@ -1,18 +1,21 @@
-"""The efe-robot MCP server in every standard and realtime task (docs/protocol/standard_mode.md "MCP tools"): what
+"""The efe-robot MCP server in every standard and realtime task (docs/protocol/eai-standard.md "MCP tools"): what
 `scripts/task_conventions.py` `normalize` writes into a task so that its robot service is reachable through the service's
 client (HTTP, as before) and through MCP tools, the agent's choice.
 
 Per task (manifest(): None for a task without it, exception() says why):
-  environment/efe_mcp/        the server (SERVER_FILES, copied unchanged from this directory; suites.py too for a
-                              match) and manifest.json: the task's tool list (TOOLS rule below), its protocol and mode
-  environment/Dockerfile      `COPY efe_mcp /opt/tools/efe_mcp` (DOCKER_LINE) after the task's last /opt/tools line
+  environment/efe_mcp/        manifest.json only: the task's tool list (TOOLS rule below), its protocol and mode
+  environment/Dockerfile      after the task's last /opt/tools line: the server (SERVER_FILES of this directory; suites.py
+                              too for a match) from the files-only image standard-files (docker_lines(): `COPY --from=
+                              <image@digest> /mcp/<file> ... /opt/tools/efe_mcp/`, images/standard-files/FILES.json),
+                              then `COPY efe_mcp /opt/tools/efe_mcp` (DOCKER_LINE): /opt/tools/efe_mcp/ holds the same
+                              files as when every task carried a copy
   task.toml                   one `[[environment.mcp_servers]]` entry (TOML_BLOCK): Harbor registers the server with the
                               agent's harness (Claude Code, Codex, Gemini CLI, ...) as a stdio server
   instruction.md              the mode line names both routes and `### MCP tools` (section()) follows `### Client`
 
 The tools of an RCB task (manifest "kind": "rcb"): spec, observe, submit and finish everywhere; reset where the task
-declares a reset budget; kinematics where its service serves POST /kinematics (the 2.2 / 2.4 layer with an adapter that
-passes `kinematics=`). No other endpoint gets a tool: GET /status (its fields come back in every reply's meta) and
+declares a reset budget; kinematics where its service serves POST /kinematics (the shared or the operations layer with an
+adapter that passes `kinematics=`). No other endpoint gets a tool: GET /status (its fields come back in every reply's meta) and
 GET /operations/<id> (the server re-queries it itself after a lost reply); ENDPOINTS is the table, and
 ci_checks/check-mcp-tools.py holds every served route to it."""
 from __future__ import annotations
@@ -24,8 +27,12 @@ SERVER_FILES = ("server.py", "rcb_tools.py", "schema.py", "workspace.py", "schem
 SUITE_FILES = ("suites.py",)                  # a match's tools (kind "eo-match")
 DIR = "environment/efe_mcp"
 DOCKER_LINE = "COPY efe_mcp /opt/tools/efe_mcp"
-DOCKER_COMMENT = "# the robot's MCP tools (docs/protocol/standard_mode.md \"MCP tools\"): the server Harbor starts, efe-robot"
-TOML_MARK = "# The robot's MCP tools (docs/protocol/standard_mode.md \"MCP tools\"): Harbor starts this server for the agent."
+DOCKER_COMMENT = "# the robot's MCP tools (docs/protocol/eai-standard.md \"MCP tools\"): the server Harbor starts, efe-robot"
+IMAGE = "standard-files"                      # the files-only image that carries the server (/mcp/<file>)
+IMAGE_DIR = "mcp"                             # this directory in that image (its source: embodied_first_exam/standard)
+DEST = "/opt/tools/efe_mcp/"
+SERVER_LINE = re.compile(r"^COPY --from=\S+ (?:/" + IMAGE_DIR + r"/\S+ )+/opt/tools/efe_mcp/(?:schema/)?$")
+TOML_MARK = "# The robot's MCP tools (docs/protocol/eai-standard.md \"MCP tools\"): Harbor starts this server for the agent."
 TOML_BLOCK = TOML_MARK + """
 [[environment.mcp_servers]]
 name = "efe-robot"
@@ -46,7 +53,7 @@ ENDPOINTS = {
     "POST /kinematics": "kinematics",
     "POST /finish": "finish",
     "GET /status": None,           # its fields (done, reason, budgets, time and steps left) come back in every reply's meta
-    "GET /operations/<id>": None,  # 2.4: the server re-queries it itself when a reply is lost (rcb_tools._lost)
+    "GET /operations/<id>": None,  # the operations capability: the server re-queries it itself when a reply is lost (rcb_tools._lost)
 }
 NO_TOOL = {
     "GET /status": "its fields come back in every tool result's meta",
@@ -64,39 +71,66 @@ EO_NO_TOOL = {
 EO_TOOLS = ("spec", "observe", "submit", "start", "ready")
 EO_TEAM_TOOLS = ("say", "team")              # a team format's
 # tasks that keep only their own interface, and why (their docs say so too)
+EO = "embodied-olympics-match"
+
+
+def on_match_extension(task: pathlib.Path | None) -> bool:
+    """A match that serves the match extension (docs/protocol/eai-standard.md#match-extension): it carries environment/sim/eai_std/."""
+    return task is not None and (pathlib.Path(task) / "environment/sim/eai_std").is_dir()
+
+
 EXCEPTIONS = (
-    (lambda folder, name, protocol: protocol.startswith("eai-policy/"),
+    (lambda folder, name, protocol, task: protocol.startswith("eai-policy/"),
      "RoboEngineer (eai-policy): the agent hands in a policy the platform runs; there is no live robot to call"),
-    (lambda folder, name, protocol: folder == "embodied-olympics-match" and "-matchlow-" in name,
+    (lambda folder, name, protocol, task: folder == EO and "-matchlow-" in name,
      "a matchlow match: the player delivers skill code the platform runs in the loop; tool calls cannot deliver it"),
-    (lambda folder, name, protocol: folder == "embodied-olympics-match" and protocol.startswith(EO_EXPORTED),
+    (lambda folder, name, protocol, task: folder == EO and not on_match_extension(task),
      "an exported match without the match extension (no environment/sim/eai_std/; the G1 table-tennis tasks): its "
      "service serves only the seat API /<SEAT>/<call> of the `game` command, not the /spec, /observe and /submit the "
      "tools call"),
 )
-RCB_PROTOCOLS = ("eai-standard/2.1", "eai-standard/2.2", "eai-standard/2.3", "eai-standard/2.4")
-KIN_PROTOCOLS = ("eai-standard/2.2", "eai-standard/2.4")       # the layers that route POST /kinematics
-EO_PROTOCOLS = ("eai-standard/2.1+match/", "eai-standard/2.3+match/")   # the match extension (standard_mode.md Part 5)
-# a match exported as it is (Embodied Olympics core's own protocol names): the seat API only, no eai_std/ (EXCEPTIONS)
-EO_EXPORTED = ("eai-standard-lockstep/", "eai-standard-realtime/", "eai-standard-turn/")
 
 
-def eo_clock(task: pathlib.Path, protocol: str) -> str:
-    """realtime | lockstep | turn: a match-extension task says it in its sim's EAI_STD_CLOCK (the fencing bout and the
-    standard twins both declare eai-standard/2.1+match/1.0); an exported one in its protocol's name."""
-    if protocol.startswith(("eai-standard-realtime/", "eai-standard/2.3+match/")):
+def service_layer(task: pathlib.Path) -> str:
+    """The task's service layer: "operations" (operations/rcb_limited.py), "shared" (rcb_limited.py), "realtime"
+    (realtime/rcb_realtime.py), else "sidecar" (a benchmark's rcb_service.py copy, or its own server). From what its sim
+    image takes from the files-only image standard-files, else from what the sim directory's server imports (so a task
+    whose Dockerfile lost its layer still counts as that layer's, and the identity check flags it)."""
+    sim = pathlib.Path(task) / "environment/sim"
+    try:
+        txt = (sim / "Dockerfile").read_text()
+    except OSError:
+        txt = ""
+    if "/operations/rcb_limited.py" in txt:
+        return "operations"
+    if re.search(r"(?m)^\s*/rcb_limited\.py\b|\s/rcb_limited\.py\s", txt):
+        return "shared"
+    if "/realtime/rcb_realtime.py" in txt:
         return "realtime"
-    if protocol.startswith("eai-standard-turn/"):
-        return "turn"
+    for name, layer in (("rcb_realtime.py", "realtime"), ("rcb_limited.py", "shared")):
+        if (sim / name).is_file():
+            return layer
+    try:
+        src = (sim / "server.py").read_text()
+    except OSError:
+        src = ""
+    if re.search(r"(?m)^\s*(import rcb_limited\b|from rcb_limited import)", src):
+        return "shared"
+    return "sidecar"
+
+
+def eo_clock(task: pathlib.Path) -> str:
+    """realtime | lockstep | turn: a match on the extension says it in its sim's EAI_STD_CLOCK."""
     try:
         txt = (pathlib.Path(task) / "environment/docker-compose.yaml").read_text()
     except OSError:
         txt = ""
-    return "turn" if 'EAI_STD_CLOCK: "turn"' in txt else "lockstep"
+    m = re.search(r'EAI_STD_CLOCK: "(\w+)"', txt)
+    return m.group(1) if m else ("realtime" if pathlib.Path(task).name.endswith("-realtime") else "lockstep")
 
 
-def exception(folder: str, name: str, protocol: str) -> str | None:
-    return next((why for rule, why in EXCEPTIONS if rule(folder, name, protocol)), None)
+def exception(folder: str, name: str, protocol: str, task: pathlib.Path | None = None) -> str | None:
+    return next((why for rule, why in EXCEPTIONS if rule(folder, name, protocol, task)), None)
 
 
 _KIN: dict[str, bool] = {}
@@ -119,29 +153,44 @@ def serves_kinematics(task: pathlib.Path, folder: str) -> bool:
 def manifest(task: pathlib.Path, folder: str, mode: str, protocol: str, resets: int | None) -> dict | None:
     """The task's manifest.json, or None (a privileged task, an exception, a protocol without tools)."""
     task = pathlib.Path(task)
-    if mode not in ("standard", "realtime") or exception(folder, task.name, protocol):
+    if mode not in ("standard", "realtime") or exception(folder, task.name, protocol, task):
         return None
-    if protocol in RCB_PROTOCOLS:
-        tools = ["spec", "observe", "submit"]
-        if resets:
-            tools.append("reset")
-        if protocol in KIN_PROTOCOLS and serves_kinematics(task, folder):
-            tools.append("kinematics")
-        tools.append("finish")
-        return {"manifest": FORMAT, "kind": "rcb", "suite": folder, "task": task.name, "protocol": protocol,
-                "realtime": mode == "realtime" or protocol == "eai-standard/2.3", "tools": tools}
-    if folder == "embodied-olympics-match" and protocol.startswith(EO_PROTOCOLS):
+    if folder == EO:
         m = json.loads((HERE / "manifests/embodied-olympics-match.json").read_text())
         m.update({"manifest": FORMAT, "task": task.name, "protocol": protocol,
-                  "realtime": eo_clock(task, protocol) == "realtime",
-                  "turn": eo_clock(task, protocol) == "turn"})
+                  "realtime": eo_clock(task) == "realtime", "turn": eo_clock(task) == "turn"})
         m["tools"] = list(EO_TOOLS) + (list(EO_TEAM_TOOLS) if m.get("team") else [])   # = suites.tools_for (tests)
         return m
-    return None
+    tools = ["spec", "observe", "submit"]
+    if resets:
+        tools.append("reset")
+    if service_layer(task) in ("shared", "operations") and serves_kinematics(task, folder):
+        tools.append("kinematics")
+    tools.append("finish")
+    return {"manifest": FORMAT, "kind": "rcb", "suite": folder, "task": task.name, "protocol": protocol,
+            "realtime": mode == "realtime", "tools": tools}
 
 
 def files_for(m: dict) -> tuple[str, ...]:
     return SERVER_FILES + (SUITE_FILES if m.get("kind") != "rcb" else ())
+
+
+def image_ref() -> str:
+    """The pinned standard-files image (images/standard-files/FILES.json "image")."""
+    return json.loads((ROOT / "images" / IMAGE / "FILES.json").read_text())["image"]
+
+
+def docker_lines(m: dict) -> list[str]:
+    """The task Dockerfile's MCP lines: the server's files from standard-files at their paths under /opt/tools/efe_mcp/,
+    then the task's own manifest.json (DOCKER_LINE)."""
+    ref = image_ref()
+    top = [f for f in files_for(m) if "/" not in f]
+    sub = sorted({f.rsplit("/", 1)[0] for f in files_for(m) if "/" in f})
+    lines = [f"COPY --from={ref} " + " ".join(f"/{IMAGE_DIR}/{f}" for f in top) + f" {DEST}"]
+    for d in sub:
+        lines.append(f"COPY --from={ref} " + " ".join(f"/{IMAGE_DIR}/{f}" for f in files_for(m)
+                                                       if f.rsplit("/", 1)[0] == d) + f" {DEST}{d}/")
+    return [DOCKER_COMMENT] + lines + [DOCKER_LINE]
 
 
 def apply(task: pathlib.Path, m: dict | None) -> None:
@@ -152,8 +201,7 @@ def apply(task: pathlib.Path, m: dict | None) -> None:
         if d.exists():
             shutil.rmtree(d)
     else:
-        want = {f: (HERE / f).read_bytes() for f in files_for(m)}
-        want["manifest.json"] = (json.dumps(m, indent=1, ensure_ascii=False) + "\n").encode()
+        want = {"manifest.json": (json.dumps(m, indent=1, ensure_ascii=False) + "\n").encode()}   # the rest: standard-files
         if d.exists():
             for p in sorted(d.rglob("*"), reverse=True):
                 rel = p.relative_to(d).as_posix()
@@ -169,7 +217,7 @@ def apply(task: pathlib.Path, m: dict | None) -> None:
     df = task / "environment/Dockerfile"
     if df.is_file():
         s = df.read_text()
-        t = dockerfile(s, m is not None)
+        t = dockerfile(s, m)
         if t != s:
             df.write_text(t)
     tt = task / "task.toml"
@@ -180,15 +228,17 @@ def apply(task: pathlib.Path, m: dict | None) -> None:
             tt.write_text(t)
 
 
-def dockerfile(s: str, on: bool) -> str:
-    lines = [ln for ln in s.rstrip("\n").split("\n") if ln.strip() not in (DOCKER_LINE, DOCKER_COMMENT)]
-    if on:
+def dockerfile(s: str, m: dict | None) -> str:
+    """The Dockerfile with the MCP lines (docker_lines(m)) after its last /opt/tools line, or without them (None)."""
+    lines = [ln for ln in s.rstrip("\n").split("\n")
+             if ln.strip() not in (DOCKER_LINE, DOCKER_COMMENT) and not SERVER_LINE.match(ln.strip())]
+    if m is not None:
         at = max((i for i, ln in enumerate(lines) if "/opt/tools" in ln and not ln.lstrip().startswith("#")), default=None)
         if at is None:      # a match's seat: before WORKDIR
             at = next((i for i, ln in enumerate(lines) if ln.startswith("WORKDIR")), len(lines)) - 1
         while at + 1 < len(lines) and lines[at].rstrip().endswith("\\"):
             at += 1
-        lines[at + 1:at + 1] = [DOCKER_COMMENT, DOCKER_LINE]
+        lines[at + 1:at + 1] = docker_lines(m)
     return "\n".join(lines) + "\n"
 
 

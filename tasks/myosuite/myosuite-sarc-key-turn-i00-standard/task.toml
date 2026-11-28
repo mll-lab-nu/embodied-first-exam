@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/myosuite-sarc-key-turn-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite sarc_key_turn (MyoHand, 39 muscles) on the same frozen instance as myosuite-sarc-key-turn-i00-privileged: Turn the key held between the thumb and the index finger by more than 3.14 rad (half a turn). Task: Turn the key more than half a turn and hold it there for a second. The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): MyoSuite sarc_key_turn (MyoHand, 39 muscles) on the same frozen instance as myosuite-sarc-key-turn-i00-privileged: Turn the key held between the thumb and the index finger by more than 3.14 rad (half a turn). Task: Turn the key more than half a turn and hold it there for a second. The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myohand", "code-as-policy", "trajectory", "sarc_key_turn", "standard-mode"]
 
 [metadata]
@@ -21,8 +21,8 @@ task_type = "trajectory"
 simulator = "myosuite"            # MyoSuite 2.12.2 on MuJoCo 3.6.0 (CPU)
 robot = "myohand"
 family = "sarc_key_turn"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
+protocol = "eai-standard/3.0"
 oracle = "none"
 oracle_evidence = "the privileged twin's positive example (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-sarc-key-turn-i00-privi__iVBaqTS`, 230 rows) rounded to float32, as the client sends it, and streamed through the client: the service scores it 1 live and in both replays, in two fresh trials (tasks/myosuite/README.md); human review in PR #65"
 instance_seed = 0                 # myoSarcHandKeyTurnFixed-v0: seed(0), then reset(seed=0)
@@ -33,7 +33,7 @@ timeout_sec = 600.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -55,7 +55,7 @@ timeout_sec = 1800                # the video's one render pass gets what is lef
 timeout_sec = 3600.0
 # The agent reaches the model APIs and the package registries, nothing else (scripts/set_agent_egress.py HOSTS). MyoSuite's
 # trained baselines ship in its PyPI wheel (and a standard-mode agent could rebuild the simulator from it): reachable,
-# left to the instruction's honour rule (PROTOCOL §5).
+# left to the instruction's honour rule (docs/protocol/tasks.md#instructionmd).
 network_mode = "allowlist"
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 
@@ -65,7 +65,7 @@ cpus = 4
 memory_mb = 7168
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

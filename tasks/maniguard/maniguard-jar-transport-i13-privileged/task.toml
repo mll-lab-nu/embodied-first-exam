@@ -11,7 +11,7 @@ task_type = "trajectory"          # trajectory | policy   (see docs/protocol/REA
 simulator = "maniguard"           # ManiGuard on BEHAVIOR-1K v3.7.2 (OmniGibson 3.7.2, Isaac Sim 4.5; PhysX on the CPU)
 robot = "franka-panda-longfinger"
 family = "jar_transport"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 oracle = "full"
 instance_seed = 13                 # = the ManiGuard-Bench task index (jar_transport/task_0013/base); scene = environment/instance/; identity = dataset.toml digest
 expert_time_estimate_hours = 2.0
@@ -26,9 +26,9 @@ timeout_sec = 23400.0             # a fresh-process replay, at most max(3600, 90
                                   # 0.05-0.09 s): 10900 s for the 50,000 rows a trajectory may hold (twice that with --repeat 2) + 1600 s; the grader
                                   # ends a replay that would run past it and writes the reward itself (replay_timed_out)
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
-network_mode = "no-network"       # PROTOCOL H.6: the verifier has no network
+network_mode = "no-network"       # docs/protocol/invariants.md H.6: the verifier has no network
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -49,7 +49,7 @@ gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada"]
 [verifier.environment]
 build_timeout_sec = 5400.0
 cpus = 8                          # the agent container's (tasks/maniguard/README.md, Other hosts: CPU)
-memory_mb = 24576                 # 1.5 x the verifier's measured 15.8 GB peak, rounded up (PROTOCOL §6)
+memory_mb = 24576                 # 1.5 x the verifier's measured 15.8 GB peak, rounded up (docs/protocol/resources.md)
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

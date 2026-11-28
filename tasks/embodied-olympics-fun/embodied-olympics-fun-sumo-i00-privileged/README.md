@@ -1,31 +1,52 @@
-# embodied-olympics-fun-sumo-i00-privileged
+# Embodied Olympics · sumo (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-sumo-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-sumo-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `sumo` / seed 0 |
-| Oracle | `full` — Reference: FALCON walking-policy rows with privileged poses: it pushes with the forearms low, steering 1 m beyond the opponent outwards, and wins at 11.6 s (the opponent down); 8 of 10 perturbed starts and 29 of 40 with its own numbers +-3 % succeed, below the 9 of 10 bar (chaotic shoving of two walking policies). Measured: success after 14.8 s of the 30 s limit, live and in a fresh replay, ending in the same state. |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Opponent | A second Unitree G1 (scripted): from 0.5 s it walks straight at the robot, arms forward at chest height, turning to face it |
+| Instance | `sumo`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | Included |
 
 ## Task
-Win a sumo bout: make your opponent step out of the ring or touch down with anything but its feet before you do. (Embodied Olympics `sumo`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Win a sumo bout: make your opponent step out of the ring or touch down with anything but its feet before you do.
 
-## Difficulty
-The opponent is as heavy and as strong as you and walks into you on a balance policy that pushes back; the robot must stay on its feet under the impact and the shove, and turn the contact into the opponent leaving the ring or going down, with only fists and no belt to grip.
+## Success criteria
+One bout on a dohyo: a rigid clay mound 0.55 m high and 6.7 m square with a ring of straw bales whose inside edge is a
+circle 4.55 m across. The opponent is a second Unitree G1 that starts behind the other starting line, facing the
+robot. From t = 0.5 s it walks at its walking policy's largest forward command (0.8 m/s) straight at the robot,
+turning at most 1.0 rad/s to face the robot's pelvis, with both arms stretched forward at chest height; it never grips
+and never changes this plan. The referee's one stage is the win, and the success is called with it.
 
-## Reference solution
-`solution/oracle.py` drives the robot through the task's own tooling, closed loop on the privileged state, and writes the trajectory (`solution/solve.sh`). Reference: FALCON walking-policy rows with privileged poses: it pushes with the forearms low, steering 1 m beyond the opponent outwards, and wins at 11.6 s (the opponent down); 8 of 10 perturbed starts and 29 of 40 with its own numbers +-3 % succeed, below the 9 of 10 bar (chaotic shoving of two walking policies). Measured: success after 14.8 s of the 30 s limit, live and in a fresh replay, ending in the same state.
+The decision is judged at every physics step (1 ms). A robot loses when any part of it touches the arena floor below
+the mound, when any part touches the clay beyond the outside edge of the bales, or when any part other than its feet
+touches the clay or a bale. The robot wins when the opponent loses this way first. The attempt fails:
+- when the robot loses first, or when the robot's pelvis drops lower than 0.35 m above the clay;
+- when both lose in the same physics step (no decision);
+- when a foot of the robot touches the opponent's pelvis or torso (a forbidden kick);
+- at the time limit with no decision: 30 s (3,000 control steps).
+The generic fall rule is off; these rules replace it.
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: The bout is on a dohyo: a clay mound 0.55 m high, 6.7 m square, with a ring of straw bales whose inside edge is a circle 4.55 m across (the bales stand 0.05 m proud of the clay). You stand facing the opponent behind your starting line (the white lines are 0.7 m apart, across the middle of the ring); the opponent, another Unitree G1, stands behind its line facing you. The bout starts at t = 0; the opponent charges at t = 0.5 s and keeps walking into you, arms forward, turning to face you. You win at the first moment the opponent touches the ground outside the ring (the mound beyond the bales, or the floor below the mound) with any part of its body, or touches the clay or the bales inside with any part other than its feet, provided you have not done the same before. You lose (the attempt fails) if that happens to you first: any part of you on the ground outside the ring, any part other than your feet on the clay or the bales, or your pelvis lower than 0.35 m above the clay. Both in the same instant is no decision and fails. Kicking the opponent's trunk (its pelvis or torso) with a foot is forbidden and fails. If there is no decision after 30 s, you fail.
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +55,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | throwing-catching-striking |
-| Rule book | Japan Sumo Association, the rules of professional sumo (honzumo): the dohyo (the ring of 4.55 m inside the shobu-dawara bales on a raised clay mound, the two shikiri-sen starting lines 0.9 m long, 0.06 m wide and 0.7 m apart); the decision (kimarite / shobu-dawara rules): a wrestler loses when any part of his body touches the ground outside the ring, or any part other than the soles of his feet touches the ground inside it, first; forbidden techniques (kinjite) lose the bout (among them striking with a closed fist and kicking the chest or stomach); there are no weight classes; deviations: the opponent: a second Unitree G1 with a scripted policy, not a wrestler: from t = 0.5 s it walks at the walking policy's largest forward command (0.8 m/s commanded) straight at you, turning (at most 1.0 rad/s) to face your pelvis, both arms stretched forward at chest height; it never grips, never changes its plan and never gives up; it acts only through its own motors (Unitree's walking policy on the legs, the robot library's joint servo on the arms) · the tachiai: no shikiri ritual, no fists on the clay and no matta (false start): both stand behind their starting lines at t = 0, and the bout is on from then; the opponent charges at t = 0.5 s · the bodies: neither robot wears a mawashi (there is no belt to grip; the G1's hands are fists, pushing with them counts as an open-hand thrust, not a punch); 'the soles of the feet' are each foot's sole and foot shell (the G1's ankle-roll link) · the dohyo: a rigid mound 0.55 m high and 6.7 m square, its clay a firm surface with friction 0.6 (packed clay, 0.5 to 0.7 for clay courts after Nigg 2003; no sand layer, no give); the ring's bales are a row of 20 rigid half-buried capsules standing 0.05 m proud, their inside edge on the 4.55 m circle; the four tokudawara (the bales set outwards at the four sides) are not modelled · the decision is the referee's, on contact: the first physics step (1 ms) in which a part of a robot other than its feet touches the mound, the bales or the floor, or any part touches the mound outside the bales or the floor below it; both in the same step is no decision (in sumo a rematch); a bout with no decision after 30 s fails (honzumo has no time limit for the bout itself) · a kick with a foot on the opponent's trunk (pelvis or torso) is the kinjite of kicking the chest or stomach and loses the bout · you also lose when your pelvis is lower than 0.35 m above the clay (the benchmark's fall line: for the G1 a squat with the hips at the heels, from which it cannot get up; a rikishi is judged by touch alone) |
-| Stages | win |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `c21c898d861922507998e3396ad58656af3894de5fbe7518bd180b614e07c0f4` |
-| Episode | 3000 control steps (30 s at 100 Hz) |
-| Action | sim rows of 151 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

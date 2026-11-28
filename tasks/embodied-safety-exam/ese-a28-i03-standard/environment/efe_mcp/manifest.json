@@ -3,7 +3,7 @@
  "kind": "rcb",
  "suite": "embodied-safety-exam",
  "task": "ese-a28-i03-standard",
- "protocol": "eai-standard/2.1",
+ "protocol": "eai-standard/3.0",
  "realtime": false,
  "tools": [
   "spec",

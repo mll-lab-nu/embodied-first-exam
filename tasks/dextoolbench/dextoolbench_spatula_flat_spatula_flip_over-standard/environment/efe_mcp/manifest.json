@@ -3,7 +3,7 @@
  "kind": "rcb",
  "suite": "dextoolbench",
  "task": "dextoolbench_spatula_flat_spatula_flip_over-standard",
- "protocol": "eai-standard/2.1",
+ "protocol": "eai-standard/3.0",
  "realtime": false,
  "tools": [
   "spec",

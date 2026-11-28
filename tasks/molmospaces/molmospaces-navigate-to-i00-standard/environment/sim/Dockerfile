@@ -3,14 +3,14 @@
 # FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
 FROM ghcr.io/mll-lab-nu/efe:molmospaces-0.2.5
 COPY . /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:molmospaces-files-0.7.0@sha256:d3bf0ca2fad858799ca5c39206072d180db36421a76cd6f00596aefa46183b8e \
+COPY --from=ghcr.io/mll-lab-nu/efe:molmospaces-files-0.8.0@sha256:585b6553aef9333a610c08b03e880c56c7e756820e9870c62fce3a46a7e8cad4 \
      /sim/finalize.sh \
      /privileged/environment/rcb_molmospaces.py \
      /sim/server.py \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.7.0@sha256:1ab8c16d4372a0b44f5c0ea7f819f6febafcfdc132013b1736a04f360375b28f \
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.9.0@sha256:2cf5b6f826d698eaa0dcddf1561e6c673ca0ddabac2c3868d823598eb3cb75b6 \
      /rcb1.py \
      /rcb_limited.py \
      /run.sh \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:agent-end-files-0.4.0@sha256:96a5c925a9128ed91e1654e2b9aac99373517c80c3aa5e47b8f74880a0c413d0 /rcb_agent_end.py /srv/rcb_agent_end.py
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.9.0@sha256:2cf5b6f826d698eaa0dcddf1561e6c673ca0ddabac2c3868d823598eb3cb75b6 /agent_end/rcb_agent_end.py /srv/rcb_agent_end.py

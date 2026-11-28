@@ -6,8 +6,8 @@ post, the stopper ball and the base behind, no closer to the goal than they were
 
 ## Goal
 Success: all of the cord and its handle are inside the green dashed goal square and still, the cord loop still closed at
-its middle tie, and the post, stopper ball and base are no closer to the goal than at the start. Breaking the cord loop
-at its middle tie ends the episode as a failure.
+its middle tie, and the post, stopper ball and base reach no more than a few millimetres closer to the goal than their
+nearest part did at the start. Breaking the cord loop at its middle tie ends the episode as a failure.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts. Make sure
 everything is at rest when you send `/finish`.
@@ -26,7 +26,7 @@ as a service you reach through its client or its MCP tools, as if it were real h
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.4`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects to the existing service; retries until ready (default timeout 3600 s)

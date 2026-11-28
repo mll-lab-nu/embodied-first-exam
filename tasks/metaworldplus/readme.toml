@@ -1,0 +1,455 @@
+# README data for tasks/metaworldplus/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text:
+#   upstream  Meta-World @ 59fc34d, metaworld/envs/sawyer_<env>_v3.py: `evaluate_state` (its "success" key) and the
+#             values it takes from `compute_reward` / `_get_pos_objects`; TARGET_RADIUS defaults to 0.05
+#             (metaworld/sawyer_xyz_env.py L156) where an env does not set its own.
+#   graders   embodied_first_exam/benchmarks/metaworldplus/privileged/tests/grade.py (one fresh-process replay) and
+#             .../privileged/environment/mw_tool.py (Session.replay / step / check: info["success"] of env.step);
+#             embodied_first_exam/benchmarks/metaworldplus/sim/server_mw.py finalize() (S.check() on the live state)
+#             and .../standard/tests/grade.py.
+# Line numbers below are those of the pinned upstream files.
+
+[benchmark]
+name = "Meta-World"
+citation = "McLean et al., 2025"     # upstream README "Citation": Meta-World+ (NeurIPS 2025 D&B); original: Yu et al., 2019
+url = "https://github.com/Farama-Foundation/Metaworld"
+repo = "Farama-Foundation/Metaworld"
+commit = "59fc34d"
+
+[license]
+text = """
+Meta-World ([Farama-Foundation/Metaworld](https://github.com/Farama-Foundation/Metaworld) @ `59fc34d`) is released
+under the [MIT License](https://github.com/Farama-Foundation/Metaworld/blob/59fc34d7768af9785e4688c3e1db671424f4a6c3/LICENSE)
+(Copyright (c) 2019 Meta-World Team). The Sawyer robot and object models (MuJoCo XML and meshes) used here ship in that
+repository under the same license; no non-commercial terms apply. The simulator is MuJoCo 3.3.0 (Apache License 2.0).
+Meta-World's scripted policies (`metaworld/policies/`) are not part of the task image.
+"""
+
+[robots]
+sawyer = "Rethink Robotics Sawyer arm with a two-finger gripper"
+
+# privileged/tests/grade.py main(): missing file -> missing_trajectory; mw_tool.load_npz (<= 2 MB, .npy members only,
+# <= 64 members, no pickle), ["actions"] KeyError, mw_tool.as_actions (shape (T, 4), finite, clipped to [-1, 1]) and
+# 1 <= T <= MAX_STEPS = 500 -> invalid_trajectory; one subprocess replay (Session.replay: reset to the frozen instance,
+# step each row, success = info["success"] after the last row); a simulator instability raises in Session.step
+# (env._did_see_sim_exception) -> the replay process fails -> grader_error, success 0.
+[modes.privileged]
+success = """
+The check is Meta-World's own success test for `{env}-v3` (`evaluate_state`, its `success` value), applied to one
+state: the state after the last action of the delivered trajectory. The verifier, in a separate sandbox without
+network, replays `/app/output/trajectory.npz` (array `actions`, shape (T, 4) with 1 ≤ T ≤ 500, values clipped to
+[-1, 1]) once, open-loop, in a fresh process from its own copy of the frozen start, one action per control step.
+Meeting the condition at an earlier step does not count. The target point is `target_pos` of `s.state()`; distances
+are straight-line distances in metres in the world frame unless the axes compared are named.
+
+A missing file scores 0, and so does an invalid one: not a plain `.npz` of at most 2 MB holding only arrays (at most
+64 members), no `actions` array, a shape other than (T, 4), a NaN or infinite value, or T outside 1 to 500. A replay
+during which the simulator becomes unstable scores 0.
+"""
+
+# sim/server_mw.py: RCB_AGENT_END=1 (docker-compose), POST /finish -> finish("finished"); SIGUSR1 from the collect hook
+# at the session's end -> finish("timeout"); no RCB_MAX_CONTROL_STEPS / RCB_STEP_LIMIT in the compose (no step cap); no
+# reset endpoint; a simulator error -> finish("error"). finalize(): success = S.check() on the live state after the last
+# executed control step AND reason != "error" AND reason in ("finished", "timeout", "step_limit"); the success is never
+# shown (hidden_success_*). _check_start(): RCB_INSTANCE_SHA / RCB_START_SHA mismatch -> instance_mismatch, infra_error.
+# standard/tests/grade.py: success = final.json success AND live_success AND no infra_error AND reason != "error".
+[modes.standard]
+success = """
+The check is Meta-World's own success test for `{env}-v3` (`evaluate_state`, its `success` value), applied to one
+state: the live simulator's state after the last executed control step of the one episode; nothing is replayed. The
+episode ends when the agent sends `/finish`, or when the agent's session ends (at the latest after {timeout}); there is
+no reset, no step limit and no other termination. Meeting the condition earlier in the episode does not count, and the
+service never reports success while the episode runs. The target point is `meta["task"]["target_pos"]`; distances are
+straight-line distances in metres in the world frame unless the axes compared are named.
+
+An episode ended by a simulator error (actions that make the simulation unstable) scores 0. The scene is checked to
+start at the frozen instance (instance and starting-state hashes) before the agent is served; a mismatch is an
+infrastructure failure, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families: the pass condition only (which state is graded: [modes]). "within" = <=, "less than" = <, as in the source.
+
+# sawyer_assembly_peg_v3.py evaluate_state L70-82 (success from compute_reward); compute_reward L199 wrench_center =
+# site "RoundNut", L221 _reward_pos; _reward_pos L155-164: radius = |(target - centre)[:2]| < 0.02 and
+# (target - centre)[2] > 0.
+[families."metaworld/assembly"]
+success = """
+The centre of the nut's ring (site `RoundNut`) is less than 2 cm from the target point horizontally (x and y) and
+lower than it: the ring is around the peg, below the target point at the peg's top.
+"""
+
+# sawyer_basketball_v3.py evaluate_state L87 (obj_to_target <= TARGET_RADIUS = 0.08, L17); compute_reward L148-156:
+# obj = body "bsktball" centre of mass (L104), target z set to 0.3, scale (1, 1, 2).
+[families."metaworld/basketball"]
+success = """
+The ball's centre is within 8 cm of the point with the target point's x and y and the height z = 0.30 m, with the
+height difference counted double: √(Δx² + Δy² + (2·Δz)²) ≤ 0.08 m.
+"""
+
+# sawyer_bin_picking_v3.py evaluate_state L107 (obj_to_target <= 0.05); compute_reward L171 (3D norm);
+# _get_pos_objects L126 (body "obj" centre of mass).
+[families."metaworld/bin-picking"]
+success = """
+The object's centre is within 5 cm of the target point.
+"""
+
+# sawyer_box_close_v3.py evaluate_state L83 (success from compute_reward); compute_reward L225:
+# |obs[4:7] - target| < 0.08; _get_pos_objects L102: get_body_com("top_link") = data.body("top_link").xpos in gymnasium
+# 1.1.1 (mujoco_env.py L166-168): the lid body's origin (boxtop.xml: the underside of the lid's plate, at its centre), not
+# its centre of mass. Target z 0.133, about the handle's top on a closed lid; no orientation or contact test.
+[families."metaworld/box-close"]
+success = """
+The lid's reference point (its body origin: the centre of the lid's plate, on its underside) is less than 8 cm from the
+target point, as it is when the lid rests on the box, closing it. Only that point's position is checked, not the lid's
+tilt or whether it touches the box.
+"""
+
+# sawyer_button_press_v3.py evaluate_state L74 (obj_to_target <= 0.02); compute_reward L139 |target_y - obj_y|;
+# _get_pos_objects L93: body "button" centre of mass + (0, -0.193, 0).
+[families."metaworld/button-press"]
+success = """
+The button's face (the button's centre shifted 19.3 cm in -y) is within 2 cm of the target point along y; only y is
+compared (the button is pushed in).
+"""
+
+# sawyer_button_press_topdown_v3.py evaluate_state L74 (<= 0.024); compute_reward L135 |target_z - obj_z|;
+# _get_pos_objects L93: button centre of mass + (0, 0, 0.193).
+[families."metaworld/button-press-topdown"]
+success = """
+The button's top (the button's centre shifted 19.3 cm up) is within 2.4 cm of the target point in height; only z is
+compared (the button is pushed down).
+"""
+
+# sawyer_button_press_topdown_wall_v3.py evaluate_state L76 (<= 0.024); compute_reward L140 |target_z - obj_z|;
+# _get_pos_objects L95: button centre of mass + (0, 0, 0.193).
+[families."metaworld/button-press-topdown-wall"]
+success = """
+The button's top (the button's centre shifted 19.3 cm up) is within 2.4 cm of the target point in height; only z is
+compared (the button is pushed down).
+"""
+
+# sawyer_button_press_wall_v3.py evaluate_state L76 (<= 0.03); compute_reward L143 |target_y - obj_y|;
+# _get_pos_objects L95: button centre of mass + (0, -0.193, 0).
+[families."metaworld/button-press-wall"]
+success = """
+The button's face (the button's centre shifted 19.3 cm in -y) is within 3 cm of the target point along y; only y is
+compared (the button is pushed in).
+"""
+
+# sawyer_coffee_button_v3.py evaluate_state L80 (<= 0.02); compute_reward L146 |target_y - obj_y|;
+# _get_pos_objects L102: site "buttonStart".
+[families."metaworld/coffee-button"]
+success = """
+The face of the coffee machine's button (site `buttonStart`) is within 2 cm of the target point along y; only y is
+compared (the button is pushed in).
+"""
+
+# sawyer_coffee_pull_v3.py evaluate_state L77 (obj_to_target <= 0.07); compute_reward return L186: the unscaled 3D
+# distance (the (2, 2, 1) scale is for the reward only); _get_pos_objects L104: body "obj" centre of mass.
+[families."metaworld/coffee-pull"]
+success = """
+The mug's centre is within 7 cm of the target point.
+"""
+
+# sawyer_coffee_push_v3.py evaluate_state L77 (<= 0.07); compute_reward return L187 (unscaled 3D distance);
+# _get_pos_objects L104: body "obj" centre of mass.
+[families."metaworld/coffee-push"]
+success = """
+The mug's centre is within 7 cm of the target point.
+"""
+
+# sawyer_dial_turn_v3.py evaluate_state L76 (target_to_obj <= TARGET_RADIUS = 0.07, L16); compute_reward L129-135;
+# _get_pos_objects L88-98: dial centre of mass + 0.05 * (sin a, -cos a, 0), a = joint "knob_Joint_1".
+[families."metaworld/dial-turn"]
+success = """
+The dial's marker point (on its rim, 5 cm from the dial's centre, turning with the dial) is within 7 cm of the target
+point.
+"""
+
+# sawyer_disassemble_peg_v3.py evaluate_state L84 (success from compute_reward); compute_reward L215:
+# obs[6] > target_z; _get_pos_objects L106: site "RoundNut-8" (assembly_peg.xml: the end of the nut's handle).
+[families."metaworld/disassemble"]
+success = """
+The nut, measured at the end of its handle (site `RoundNut-8`), is higher than the target point; only the height (z)
+is compared.
+"""
+
+# sawyer_door_close_v3.py evaluate_state L112 (obj_to_target <= 0.08); compute_reward L134 (3D norm);
+# _get_pos_objects L68: geom "handle".
+[families."metaworld/door-close"]
+success = """
+The door's handle is within 8 cm of the target point.
+"""
+
+# sawyer_door_lock_v3.py evaluate_state L78 (<= 0.02); compute_reward L138 |target_z - obj_z|;
+# _get_pos_objects L103: site "lockStartLock".
+[families."metaworld/door-lock"]
+success = """
+The lock's tip (site `lockStartLock`) is within 2 cm of the target point in height; only z is compared.
+"""
+
+# sawyer_door_v3.py (door-open-v3) evaluate_state L79: |obs[4] - target_x| <= 0.08; _get_pos_objects L98: geom "handle".
+[families."metaworld/door-open"]
+success = """
+The door's handle is within 8 cm of the target point along x; only x is compared.
+"""
+
+# sawyer_door_unlock_v3.py evaluate_state L76 (<= 0.02); compute_reward L154 |target_x - lock_x|;
+# _get_pos_objects L101: site "lockStartUnlock".
+[families."metaworld/door-unlock"]
+success = """
+The lock's tip (site `lockStartUnlock`) is within 2 cm of the target point along x; only x is compared.
+"""
+
+# sawyer_drawer_close_v3.py evaluate_state L81 (target_to_obj <= TARGET_RADIUS + 0.015; the class sets only
+# _TARGET_RADIUS, so TARGET_RADIUS is sawyer_xyz_env.py's 0.05: 0.065); compute_reward L127-133 (3D norm);
+# _get_pos_objects L93: body "drawer_link" centre of mass + (0, -0.16, 0.05).
+[families."metaworld/drawer-close"]
+success = """
+The drawer's handle point (the drawer's centre shifted 16 cm in -y and 5 cm up) is within 6.5 cm of the target point.
+"""
+
+# sawyer_drawer_open_v3.py evaluate_state L79 (handle_error <= 0.03); compute_reward L125 (3D norm);
+# _get_pos_objects L94: body "drawer_link" centre of mass + (0, -0.16, 0).
+[families."metaworld/drawer-open"]
+success = """
+The drawer's handle point (the drawer's centre shifted 16 cm in -y) is within 3 cm of the target point.
+"""
+
+# sawyer_faucet_close_v3.py evaluate_state L77 (<= 0.07); compute_reward L134-139 (3D norm);
+# _get_pos_objects L102: site "handleStartClose" + (0, 0, -0.01).
+[families."metaworld/faucet-close"]
+success = """
+The end of the faucet's handle (site `handleStartClose`, 1 cm lower) is within 7 cm of the target point.
+"""
+
+# sawyer_faucet_open_v3.py evaluate_state L76 (<= 0.07); compute_reward L133: obj = obs[4:7] + (-0.04, 0, 0.03);
+# _get_pos_objects L98: site "handleStartOpen" + (0, 0, -0.01); net offset (-0.04, 0, +0.02).
+[families."metaworld/faucet-open"]
+success = """
+A point at the end of the faucet's handle (site `handleStartOpen` shifted by -4 cm in x and +2 cm in z) is within
+7 cm of the target point.
+"""
+
+# sawyer_hammer_v3.py evaluate_state L77 (success from compute_reward); compute_reward L204:
+# joint "NailSlideJoint" qpos > 0.09 (the `reward > 5.0` at L205 gates only the reward bonus).
+[families."metaworld/hammer"]
+success = """
+The nail has been driven more than 9 cm into the block (its slide joint `NailSlideJoint` is past 0.09 m). Nothing is
+compared with the target point, which marks where the nail's head ends up; where the hammer ends does not matter.
+"""
+
+# sawyer_hand_insert_v3.py evaluate_state L84 (obj_to_target <= 0.05); compute_reward L138 (3D norm);
+# _get_pos_objects L103: body "obj" centre of mass.
+[families."metaworld/hand-insert"]
+success = """
+The object's centre is within 5 cm of the target point.
+"""
+
+# sawyer_handle_press_v3.py evaluate_state L78 (target_to_obj <= TARGET_RADIUS = 0.02, L16); compute_reward L133
+# |obj_z - target_z|; _get_pos_objects L94: site "handleStart". Not persistent: measured when the instances were frozen
+# (tasks/metaworldplus/README.md "Tasks").
+[families."metaworld/handle-press"]
+success = """
+The handle's grip (site `handleStart`) is within 2 cm of the target point in height; only z is compared.
+
+In this environment the success state does not persist on its own: holding still after reaching it can lose it within
+10 control steps. Only the graded state counts.
+"""
+
+# sawyer_handle_press_side_v3.py evaluate_state L91 (<= TARGET_RADIUS = 0.02, L29); compute_reward L147
+# |obj_z - target_z|; _get_pos_objects L107: site "handleStart".
+[families."metaworld/handle-press-side"]
+success = """
+The handle's grip (site `handleStart`) is within 2 cm of the target point in height; only z is compared.
+"""
+
+# sawyer_handle_pull_v3.py evaluate_state L78 (obj_to_target <= TARGET_RADIUS, sawyer_xyz_env.py's 0.05);
+# compute_reward L133 |target_z - obj_z|; _get_pos_objects L96: site "handleRight".
+[families."metaworld/handle-pull"]
+success = """
+The handle's grip (site `handleRight`) is within 5 cm of the target point in height; only z is compared.
+"""
+
+# sawyer_handle_pull_side_v3.py evaluate_state L79 (obj_to_target <= 0.08); compute_reward L136-138 (scale 1, 1, 1:
+# 3D norm); _get_pos_objects L97: site "handleCenter". Not persistent: measured when the instances were frozen.
+[families."metaworld/handle-pull-side"]
+success = """
+The handle's centre (site `handleCenter`) is within 8 cm of the target point.
+
+In this environment the success state does not persist on its own: holding still after reaching it can lose it within
+10 control steps. Only the graded state counts.
+"""
+
+# sawyer_lever_pull_v3.py evaluate_state L92 (lever_error <= pi / 24); compute_reward L165-168:
+# lever_error = |-qpos("LeverAxis") - pi / 2|; the target point enters only the reward (L180-181).
+[families."metaworld/lever-pull"]
+success = """
+The lever has been turned to within 7.5 degrees (π/24) of a quarter turn (90 degrees) from the position it starts in
+(the angle of its joint `LeverAxis`). Only that angle is compared; nothing is measured against the target point, which
+marks where the lever's end is after the turn.
+"""
+
+# sawyer_peg_insertion_side_v3.py evaluate_state L115 (obj_to_target <= 0.07); compute_reward L171-177:
+# |(site "pegHead" - target) * (1, 2, 2)|.
+[families."metaworld/peg-insert-side"]
+success = """
+The peg's head (site `pegHead`) is within 7 cm of the target point, with the y and z differences counted double:
+√(Δx² + (2·Δy)² + (2·Δz)²) ≤ 0.07 m.
+"""
+
+# sawyer_peg_unplug_side_v3.py evaluate_state L75 (obj_to_target <= 0.07); compute_reward L131 (3D norm);
+# _get_pos_objects L91: site "pegEnd".
+[families."metaworld/peg-unplug-side"]
+success = """
+The peg's end (site `pegEnd`) is within 7 cm of the target point.
+"""
+
+# sawyer_pick_out_of_hole_v3.py evaluate_state L79 (<= 0.07); compute_reward L146 (3D norm);
+# _get_pos_objects L106: body "obj" centre of mass.
+[families."metaworld/pick-out-of-hole"]
+success = """
+The object's centre is within 7 cm of the target point.
+"""
+
+# sawyer_pick_place_v3.py evaluate_state L98 (<= 0.07); compute_reward L261 (3D norm);
+# _get_pos_objects L122: body "obj" centre of mass.
+[families."metaworld/pick-place"]
+success = """
+The object's centre is within 7 cm of the target point.
+"""
+
+# sawyer_pick_place_wall_v3.py evaluate_state L98 (<= 0.07); compute_reward return L249 (unscaled 3D distance);
+# _get_pos_objects L119: geom "objGeom".
+[families."metaworld/pick-place-wall"]
+success = """
+The object's centre is within 7 cm of the target point.
+"""
+
+# sawyer_plate_slide_v3.py evaluate_state L80 (<= 0.07); compute_reward L138 (3D norm); _get_pos_objects L95: geom "puck".
+[families."metaworld/plate-slide"]
+success = """
+The plate's centre is within 7 cm of the target point.
+"""
+
+# sawyer_plate_slide_back_v3.py evaluate_state L78 (<= 0.07); compute_reward L136; _get_pos_objects L93: geom "puck".
+[families."metaworld/plate-slide-back"]
+success = """
+The plate's centre is within 7 cm of the target point.
+"""
+
+# sawyer_plate_slide_back_side_v3.py evaluate_state L93 (<= 0.07); compute_reward L160; _get_pos_objects L108: geom "puck".
+[families."metaworld/plate-slide-back-side"]
+success = """
+The plate's centre is within 7 cm of the target point.
+"""
+
+# sawyer_plate_slide_side_v3.py evaluate_state L78 (<= 0.07); compute_reward L134; _get_pos_objects L93: geom "puck".
+[families."metaworld/plate-slide-side"]
+success = """
+The plate's centre is within 7 cm of the target point.
+"""
+
+# sawyer_push_v3.py evaluate_state L101 (target_to_obj <= TARGET_RADIUS = 0.05, L31); compute_reward L179 (3D norm);
+# _get_pos_objects L121: body "obj" centre of mass.
+[families."metaworld/push"]
+success = """
+The object's centre is within 5 cm of the target point.
+"""
+
+# sawyer_push_back_v3.py evaluate_state L82 (target_to_obj <= 0.07); compute_reward L264 (3D norm);
+# _get_pos_objects L102: geom "objGeom".
+[families."metaworld/push-back"]
+success = """
+The object's centre is within 7 cm of the target point.
+"""
+
+# sawyer_push_wall_v3.py evaluate_state L102 (obj_to_target <= 0.07); compute_reward return L233 (unscaled 3D
+# distance); _get_pos_objects L122: geom "objGeom".
+[families."metaworld/push-wall"]
+success = """
+The object's centre is within 7 cm of the target point.
+"""
+
+# sawyer_reach_v3.py evaluate_state L86 (reach_dist <= 0.05); compute_reward L151: |tcp_center - target|.
+[families."metaworld/reach"]
+success = """
+The point between the fingertips (`tcp`) is within 5 cm of the target point.
+"""
+
+# sawyer_reach_wall_v3.py evaluate_state L88 (<= 0.05); compute_reward L156: |tcp_center - target|.
+[families."metaworld/reach-wall"]
+success = """
+The point between the fingertips (`tcp`) is within 5 cm of the target point.
+"""
+
+# sawyer_shelf_place_v3.py evaluate_state L81 (obj_to_target <= 0.07); compute_reward L166 (3D norm);
+# _get_pos_objects L103: body "obj" centre of mass.
+[families."metaworld/shelf-place"]
+success = """
+The object's centre is within 7 cm of the target point.
+"""
+
+# sawyer_soccer_v3.py evaluate_state L82 (target_to_obj <= 0.07); compute_reward return L264: the unscaled 3D distance
+# (the x scaling at L236 is for the reward only); _get_pos_objects L103: body "soccer_ball" centre of mass.
+[families."metaworld/soccer"]
+success = """
+The ball's centre is within 7 cm of the target point.
+"""
+
+# sawyer_stick_pull_v3.py evaluate_state L68-87: |handle - target| <= 0.12 and _stick_is_inserted(handle, stick_end)
+# (L187-194: end_x >= handle_x, |end_y - handle_y| <= 0.04, |end_z - handle_z| <= 0.06); handle = obs[11:14] = site
+# "insertion" (L108-114, thermos.xml); stick_end = site "stick_end" (stick.xml, the stick's far end). No grasp term.
+# Not persistent: measured when the instances were frozen.
+[families."metaworld/stick-pull"]
+success = """
+The thermos's handle (site `insertion`, the loop the stick goes into) is within 12 cm of the target point AND the stick
+is still in the handle: the stick's far end (site `stick_end`) is at or beyond the handle in x, within 4 cm of it in y
+and within 6 cm of it in z. A thermos that is at the target with the stick pulled out does not count; whether the
+stick is held does not matter.
+
+In this environment the success state does not persist on its own: holding still after reaching it can lose it within
+10 control steps. Only the graded state counts.
+"""
+
+# sawyer_stick_push_v3.py evaluate_state L82-91: success = grasp_success and |container - target| <= 0.12;
+# grasp_success = touching_main_object (sawyer_xyz_env.py L401-440: positive contact force between geom "objGeom" of
+# the stick and each of leftpad_geom / rightpad_geom) and obs[3] > 0 (gripper opening) and stick_z - 0.01 >
+# stick_init_z (stick body centre of mass); container = site "insertion" + (0, 0.09, 0) (_get_pos_objects L103-110).
+[families."metaworld/stick-push"]
+success = """
+The thermos (the point 9 cm in +y from its handle, site `insertion`) is within 12 cm of the target point AND the stick
+is still held and lifted: both finger pads touch the stick with a positive contact force, the gripper is not fully
+shut (its opening is above 0), and the stick's centre is more than 1 cm above the height it started at. A thermos that
+is at the target after the stick has been let go does not count.
+"""
+
+# sawyer_sweep_v3.py evaluate_state L83 (target_to_obj <= 0.05); compute_reward L239 (3D norm);
+# _get_pos_objects L97: body "obj" position.
+[families."metaworld/sweep"]
+success = """
+The object's centre is within 5 cm of the target point.
+"""
+
+# sawyer_sweep_into_goal_v3.py (sweep-into-v3) evaluate_state L84 (target_to_obj <= 0.05); compute_reward L228-230:
+# the target's z replaced by the object's (x, y only); _get_pos_objects L99: body "obj" centre of mass.
+[families."metaworld/sweep-into"]
+success = """
+The object's centre is within 5 cm of the target point horizontally (x and y); the height is not compared.
+"""
+
+# sawyer_window_close_v3.py evaluate_state L96 (target_to_obj <= TARGET_RADIUS = 0.05, L28); compute_reward L143
+# |obj_x - target_x|; _get_pos_objects L108: site "handleCloseStart".
+[families."metaworld/window-close"]
+success = """
+The window's handle (site `handleCloseStart`) is within 5 cm of the target point along x; only x is compared.
+"""
+
+# sawyer_window_open_v3.py evaluate_state L92 (<= TARGET_RADIUS = 0.05, L27); compute_reward L136 |obj_x - target_x|;
+# _get_pos_objects L104: site "handleOpenStart".
+[families."metaworld/window-open"]
+success = """
+The window's handle (site `handleOpenStart`) is within 5 cm of the target point along x; only x is compared.
+"""

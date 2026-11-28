@@ -224,7 +224,7 @@ def water_aim_deg(model, data) -> float:
 
 
 # instance.npz is in the agent's container (/app/instance.npz), and a task's reference solution is the actions of the
-# recording its instance was restored from: its `meta` must not say where the scene came from (PROTOCOL §2.7, no pointer
+# recording its instance was restored from: its `meta` must not say where the scene came from (docs/protocol/leakage.md, no pointer
 # to a solution where the agent can reach). save_instance refuses such keys, and values that name a recording.
 PROVENANCE_KEYS = ("source", "demo", "dataset", "episode", "recording", "reference", "solution", "zarr", "url")
 PROVENANCE_VALUE = re.compile(r"demo|episode|dataset|recording|replay\.zarr|huggingface|https?://", re.I)
@@ -288,7 +288,7 @@ class Session:
         import mujoco
         self._mj = mujoco
         self.task = task
-        # agent-ended episodes (PROTOCOL §3): a success is only recorded (now_success, the check as the state now is)
+        # agent-ended episodes (docs/protocol/tasks.md#modes): a success is only recorded (now_success, the check as the state now is)
         # and never ends the episode; a task failure still does
         self.hide_success = bool(hide_success)
         self.now_success = False

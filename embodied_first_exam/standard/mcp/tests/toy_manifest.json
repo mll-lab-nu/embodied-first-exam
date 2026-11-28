@@ -1,2 +1,2 @@
-{"manifest": "efe-mcp-manifest/1", "kind": "rcb", "suite": "toy", "task": "toy", "protocol": "eai-standard/2.2", "realtime": false,
+{"manifest": "efe-mcp-manifest/1", "kind": "rcb", "suite": "toy", "task": "toy", "protocol": "eai-standard/3.0", "realtime": false,
  "tools": ["spec", "observe", "submit", "finish"]}

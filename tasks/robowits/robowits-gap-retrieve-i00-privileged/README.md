@@ -1,46 +1,43 @@
-# robowits-gap-retrieve-i00-privileged
+# RoboWits · gap_retrieve (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboWits |
+| Task ID | `robowits-gap-retrieve-i00-privileged` |
+| Benchmark | [RoboWits](https://github.com/UMass-Embodied-AGI/RoboWits) (Lin et al., 2026), upstream `UMass-Embodied-AGI/RoboWits@9cc30ae` |
+| Robot | Bimanual Marvin: two 7-DoF arms with Pika parallel grippers |
 | Mode | privileged |
-| Twin | `robowits-gap-retrieve-i00-standard` |
-| Simulator / robot | `robowits` / `marvin-bimanual` |
-| Family / instance | `gap_retrieve` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `none` — No reference solution: RoboWits ships no expert or planner for its seed tasks. Solvable: model trial robowits-gap-retrieve-i00-limite__hTYhCVz (robowits-lunaxh-limited-0929, standard) graded success=1, deterministic=1 by the separate verifier; nop scored 0. These records are from earlier versions of the task (before protocol v1.0, on the same frozen instance and predicate); not re-run on this version (static validation only, 2026-10-01). Human review per family (protocol §4). Re-graded with the current grader (two AMD workstations; the earlier positives were graded on the Intel laptop, so a trajectory that fails the earlier grader on AMD too says nothing either way): all four recorded positives fail the -i00 grader on AMD as well (inconclusive). Not confirmed under the current grader yet. |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
+| Instance | `gap_retrieve`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-Put the lemon on the green target area. One replayable trajectory from the frozen instance (evaluation scene 0 of
-RoboWits task 3), with the privileged tooling (`rcb_robowits.py`: the scene's state, resets, thin primitives, replay);
-the success criterion as graded is in `instruction.md`.
+Put the lemon on the green target area.
 
-## Difficulty
-Retrieve a lemon from a narrow gap and place it on a target area. The lemon is located in a narrow channel formed by
-two boundary blocks. The gap is too narrow for the gripper to enter directly. The robot must first move one boundary
-block to widen the gap, then retrieve the lemon. The tooling's primitives are thin (IK moves, joint moves, gripper,
-hold).
+## Success criteria
+The goal: the lemon's bounding-box bottom is within 2 cm of the table top. The footprints of the lemon and of the
+green target area lie inside the table area. At least 80 % of the lemon's footprint lies over the target area's
+footprint. Neither gripper's end-effector point is inside the lemon's bounding box grown by 3 cm on every side. No
+part of the robot touches the lemon. Graded object: the lemon.
 
-## Reference solution
-None: RoboWits ships no expert or planner, and none is written for this family (`oracle = "none"`). Evidence that it
-is solvable: `oracle_evidence` in `task.toml` and the positive example cited in the review table of PR #3 (the trial
-is published on the results site).
+The verifier, in a separate sandbox without network, replays `/app/output/trajectory.npz` once in a fresh process
+from its own copy of the frozen instance: a reset, then the rows open-loop, one per 1/30 s control step. A settle
+window follows the last row. The robot holds the last row's joint targets for 30 control steps (1 s), and nothing is
+checked. For 60 more control steps (2 s) the goal must then hold at every 6th step and at the last one. Through those
+60 steps the set of graded objects must not change, and no graded object may move more than 2 mm from where it was
+when they began. The task scores 1 only if the window passes.
 
-## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, once; pass iff
-RoboWits' `_check_success` holds after the replay and the rebuilt frozen scene matches
-the recorded one (`tests/grade.py`; a scene that does not match is the host's failure, `infra_error = 1`, never the
-agent's 0), plus `/logs/verifier/replay.mp4`. What the predicate checks, in words:
-`instruction.md`, "Success criterion (as graded)". The trajectory is the per-control-step JOINT_ABS record (T, 16);
-Genesis' CPU backend restores the frozen snapshot exactly, so in-process repeats and fresh processes agree bit for bit
-on one CPU vendor (tasks/robowits/README.md).
+Where the goal names the table area, it is the world-frame rectangle 0.21 ≤ x ≤ 1.00 m, −0.69 ≤ y ≤ 0.69 m;
+the table top is at z = 0.76 m.
 
-No oracle; human review in PR #3 (PROTOCOL §4): the positive example, the `nop` result and the predicate
-summary are in the PR's review table.
+A missing file scores 0, and so does an invalid one. Invalid means: not a readable `.npz`, no `task` or `actions`
+entry, an entry over 256 MB, a `task` other than this family, `actions` that are not finite numbers of shape (T, 16),
+or T over 200,000. The window runs past the cap of 200,000 control steps, so a trajectory of up to 200,000 rows gets
+its full window. The rebuilt scene must match the frozen instance: the same state hash, or every object within 2 mm
+and 0.02 (quaternion components) and every joint within 0.002 rad of the recorded pose. A scene that does not match,
+or does not build, is an infrastructure error, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -51,11 +48,14 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `main`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| RoboWits task | `03-gap-retrieve-v0` (RoboWits @ 9cc30ae, Genesis 0.4.7: CPU physics backend, EGL rendering on the GPU) |
-| Instance | entry 0 of RoboWits' `eval_dataset_50/03.json`; object poses and the expected state hash in `environment/instance.json` (the verifier's copy in `tests/`) |
-| Robot | Marvin bimanual: 2 × 7-DoF arms with Pika parallel grippers; JOINT_ABS actions (T, 16) at 30 Hz |
-| GPU | EGL camera rendering only (`environment/docker-compose.yaml`, `tests/docker-compose.yaml`) |
-| BlenderKit models | not redistributable, so not in the image: mounted read-only from `$RCB_ROBOWITS_BLENDERKIT` (how to obtain them: `images/robowits/NOTICE`) |
+## Others
+The frozen scene is entry 0 of RoboWits' `eval_dataset_50/03.json` (RoboWits task
+`robowits/03-gap-retrieve-v0`).
+
+## License
+RoboWits ([UMass-Embodied-AGI/RoboWits](https://github.com/UMass-Embodied-AGI/RoboWits) @ `9cc30ae`) is MIT-licensed,
+as declared in its `pyproject.toml`. Genesis 0.4.7 is under the Apache License 2.0, and RoboWits' asset bundle
+(`XHRlyb2001/RoboWits_assets`) also under Apache-2.0. Most families also load BlenderKit models. BlenderKit licenses
+each model to the account that downloads it, and these models may not be redistributed, so they are not in the image
+or the repository. Users fetch them with their own BlenderKit key, or use the encrypted research bundle, whose terms
+allow **non-commercial academic research only** (`images/robowits/NOTICE`).

@@ -7,7 +7,7 @@ keys between strikes.
 ## Goal
 Success: the mallet head has struck all eight keys in order from left to right, staying on each key long enough to be
 seen (a quick tap can be missed). The head need not touch a key; bringing it down close over the key counts as a strike.
-Between strikes, lift the head well clear, about a hand's width above the keys.
+Between strikes, lift the mallet clear, at least a finger's width higher than it was at the last strike.
 
 The strikes count as they happen.
 
@@ -42,7 +42,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)

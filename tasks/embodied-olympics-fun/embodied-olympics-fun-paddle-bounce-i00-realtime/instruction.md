@@ -1,12 +1,13 @@
 # Embodied Olympics · paddle bounce (realtime)
 
 ## Task
-Bounce the table-tennis ball on the paddle in your right hand 20 times in a row, each time back up to the height it was
-dropped from, without letting go of the paddle.
+Bounce the table-tennis ball on the paddle in your right hand 20 times, each a hit that sends it back up to the height
+it was dropped from, without letting go of the paddle.
 
 ## Goal
-Success: you hit the dropped ball up 20 times in a row on the blade, each time to at least the height it was dropped
-from, and never let go of the paddle.
+Success: you hit the dropped ball up 20 times on the blade, each time to at least the height it was dropped from, and
+never let go of the paddle; a hit counts only when the blade drives the ball up, and a ball that only rebounds off the
+blade, leaving slower than it came, is not counted.
 
 The referee in the service judges these stages, in order: **each of the 20 bounces**. Once the referee calls success, it
 stays; the attempt continues until you finish. The first foul before a success ends the attempt as a failure. A reset
@@ -43,7 +44,7 @@ clock that does not stop while you think.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.3`, realtime mode) is your whole interface to the robot. Its
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`, realtime mode) is your whole interface to the robot. Its
 docstring is the full reference (`python -c "import rcb_client; help(rcb_client)"`); its examples use another
 benchmark's names: for this task `r.spec()` is authoritative.
 

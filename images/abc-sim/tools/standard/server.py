@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for the ABC Sim tasks (docs/protocol/standard_mode.md): the adapter of the shared layer
+"""eai-standard/3.0 sim service for the ABC Sim tasks (docs/protocol/eai-standard.md): the adapter of the shared layer
 rcb_limited.py (/srv/rcb_limited.py, from the shared standard files); the simulator is rcb_abc.Session (abc_sim on
 MuJoCo 3.6.0, CPU physics, EGL rendering). HTTP surface: GET /spec, GET /status, POST /observe, POST /submit,
 POST /kinematics, and POST /reset when the run grants resets (RCB_RESET_BUDGET; the standard tasks' default is 0).
@@ -6,9 +6,7 @@ Every call is logged to /data/episode.jsonl.
 
 The episode is the frozen instance's (environment/sim/instance.npz, the privileged twin's). The action is abc_sim's own
 14 numbers per control step: the two arms' joint position targets (rad) and gripper openings (0 closed .. 1 open). The
-episode ends the moment the task's success has held for 1.02 s (30 control steps; ball tray: the countdown completed
-with the ball on the tray and both handles held), at the task's failure (ball tray only), or when the agent's time is
-over (the collect hook). Nothing about the scene leaves this process: the proprioception is the robot's own joints,
+episode is agent-ended (below). Nothing about the scene leaves this process: the proprioception is the robot's own joints,
 grippers and tool frames; every camera is fixed in the world or rides on an arm.
 
 Crash recovery (rcb_limited.Episode, resume class `exact`: MuJoCo on the CPU repeats bit for bit in a fresh process):
@@ -16,12 +14,12 @@ every executed row is journaled; after a crash the service rebuilds the episode 
 the committed resets did. When the episode ends the service writes /data/trajectory.npz + /data/episode.json; the collect
 hook (finalize.sh) makes it exit and writes the verdict.
 
-The verdict is the live episode's (PROTOCOL H.4): `success` in episode.json is the task's rule as Session.step applied
-it to the steps this service ran (its 1.02 s hold is part of the rule). Nothing is replayed to grade it. The frozen
+The verdict is the live episode's (docs/protocol/invariants.md H.4): `success` in episode.json is the task's rule on the state this
+service's episode ended in (its 1.02 s hold is part of the rule). Nothing is replayed to grade it. The frozen
 initial state is checked when the episode begins: a fresh start whose built scene does not hash to the instance's
 recorded sha gives up as an infrastructure failure (`instance_mismatch`) before the agent is served.
 
-Agent-ended episodes (RCB_AGENT_END=1, PROTOCOL §3; rcb_agent_end.py, robodojo's sim/server.py is the reference): a
+Agent-ended episodes (docs/protocol/tasks.md#modes; rcb_agent_end.py, robodojo's sim/server.py is the reference): a
 success never ends the episode and is never shown (rcb_abc.Session.agent_end: the state's success, recorded after every
 control step with AE.hidden_success); POST /finish, the end of the agent's session or a failure end it. The verdict is
 the state the episode ends in, with the task's hold window run from there (judge_end: the robot holds its last command
@@ -68,7 +66,7 @@ NU = 14
 EP = L.Episode(DATA, dim=NU, resume="exact", persist=AE.persist(("resets", "reset_at")))
 EP.startup()  # start count, back-off after failed starts, the startup watchdog until scene_built()
 S = M.Session(instance=INSTANCE)
-S.agent_end = AE.ENABLED  # agent-ended episodes: a success never ends the episode (rcb_abc.Session)
+S.agent_end = True  # agent-ended episodes: a success never ends the episode (rcb_abc.Session)
 MD = S.model
 DT = S.dt
 CTRL_HZ = 1.0 / DT
@@ -181,12 +179,7 @@ ONE = "one episode, no reset" if not RESET_BUDGET else (
     f"an episode (with up to {RESET_BUDGET} resets: POST /reset starts a new one; only the last is graded)")
 EPISODE = (f"{ONE}: it ends at POST /finish, when your time is over, on a simulator error"
            + (", or in failure the moment the ball leaves the tray or a handle is let go during the countdown"
-              if S.rule == "tray" else "") + "; nothing tells you whether you have succeeded" if AE.ENABLED else
-           f"{ONE}: it ends in success the moment the task's goal has held for {M.HOLD_STEPS} control steps in a row "
-           f"({round(M.HOLD_STEPS * DT, 2)} s), or when your time is over" if S.rule != "tray" else
-           f"{ONE}: it ends in success when the tray's countdown completes with the ball on the tray and both handles "
-           "held throughout, in failure the moment the ball leaves the tray or a handle is let go during the "
-           "countdown, or when your time is over")
+              if S.rule == "tray" else "") + "; nothing tells you whether you have succeeded")
 JOINT_TEXT = ("one row per control step, 14 numbers in `layout` order: each arm's six joint position targets (rad) and its "
               "gripper opening (0 = closed, 1 = open: each finger 0.0475 m from closed; up to 1.042). Rows are `dt` apart "
               f"(a whole multiple of the {DT:g} s control period, at most 0.5 s), `linear` (default: from the previous "
@@ -235,7 +228,6 @@ def _link_T_site(site: str) -> list:
     return T.tolist()
 SPEC = {
     "protocol": L.PROTOCOL,
-    "protocol_compat": list(L.COMPAT),
     "simulator": "ABC Sim (abc_sim) on MuJoCo 3.6.0 (CPU physics; cameras rendered over EGL)",
     "robot": "two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) at a table",
     "task_text": TASK_TEXT,
@@ -306,13 +298,11 @@ if RESET_BUDGET:
         f"POST /reset (JSON or RCB1 {{cameras, video_fps, depth}}; no physics) abandons the running episode, or follows "
         f"one that has ended, and starts a new one from the same frozen starting state, {RESET_BUDGET} times in all; it "
         "returns the new episode's first frames and proprioception. Only the last episode is graded: an episode you "
-        "reset away is never graded, " + ("POST /finish ends the trial (409 after it)" if AE.ENABLED else
-                                           "a success ends the trial (409 after it)")
-        + ", and when your time is up the episode then running is the one graded. The wall clock never restarts. "
+        "reset away is never graded, POST /finish ends the trial (409 after it), and when your time is up the episode then running is the one graded. The wall clock never restarts. "
         "/status and every meta add `episode`, `resets_left` and `control_steps_total` (all episodes); `control_steps` "
         "counts the current episode's."
     )
-L.check_spec(SPEC)  # a spec that misses a 2.2 field or names a forbidden one never starts the episode
+L.check_spec(SPEC)  # a spec that misses a required field or names a forbidden one never starts the episode
 EP.scene_built()
 
 
@@ -366,22 +356,19 @@ def finish(reason: str) -> None:
     E["reason"] = reason
     E["t_end"] = time.time()
     E["episode_control_steps"] = ctrl_steps()
-    if AE.ENABLED:   # agent-ended: the state the episode ends in, with the task's hold window; any other end is 0
-        try:
-            E["success"] = reason in AE.END_STATE_REASONS and judge_end()
-        except Exception as exc:  # noqa: BLE001 -- a window the simulator cannot run judges nothing: no success
-            traceback.print_exc()
-            E["end_window"] = {"error": repr(exc)[:300]}
-            E["success"] = False
-    else:
-        E["success"] = bool(S.success) and reason != "error"
+    try:   # the state the episode ends in, with the task's hold window; any other end is 0
+        E["success"] = reason in AE.END_STATE_REASONS and judge_end()
+    except Exception as exc:  # noqa: BLE001 -- a window the simulator cannot run judges nothing: no success
+        traceback.print_exc()
+        E["end_window"] = {"error": repr(exc)[:300]}
+        E["success"] = False
     EP.log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"]),
             "episode": E["resets"] + 1, "journal_rows": EP.rows})
     dump()
 
 
 def judge_end() -> bool:
-    """An agent-ended episode's verdict on the state it ended in. Hold rule: the robot holds its last command for
+    """The episode's verdict on the state it ended in. Hold rule: the robot holds its last command for
     HOLD_STEPS control steps (about a second), and the goal must have held for HOLD_STEPS steps in a row at the end of
     that window (the steps already held count); run on a snapshot, restored afterwards (the journal stays the
     episode's). Ball tray: the countdown has completed and the ball has stayed on the tray (Session.success)."""
@@ -417,8 +404,7 @@ def ctrl_step(a, rec) -> bool:
     ROWS.append(np.asarray(a, dtype=np.float64))
     stop = EP.journal(a)
     rec.tick()
-    if AE.ENABLED:  # the state's success is only recorded (never shown); a failure still ends the episode
-        AE.hidden_success(E, S.success, EP.log, ctrl_steps())
+    AE.hidden_success(E, S.success, EP.log, ctrl_steps())
     if not running:
         finish(S.reason or "done")
     return E["done"] or stop
@@ -591,12 +577,10 @@ def do_observe(meta: dict):
 def reset_counters() -> dict:
     if not RESET_BUDGET:
         return {}
-    if AE.ENABLED:   # agent-ended: nothing here may depend on the success; after /finish (or the session's end) no
-        # reset; after the step limit one may follow while the budget lasts (as rcb_service._resets_left)
-        over = E.get("exiting") or (E["done"] and E["reason"] in NO_RESET_REASONS)
-        left = 0 if over else RESET_BUDGET - E["resets"]
-    else:
-        left = 0 if (E["success"] or E.get("exiting")) else RESET_BUDGET - E["resets"]
+    # nothing here may depend on the success; after /finish (or the session's end) no reset; after the step limit one
+    # may follow while the budget lasts (as rcb_service._resets_left)
+    over = E.get("exiting") or (E["done"] and E["reason"] in NO_RESET_REASONS)
+    left = 0 if over else RESET_BUDGET - E["resets"]
     return {"episode": E["resets"] + 1, "resets_left": left, "control_steps_total": EP.rows}
 
 
@@ -609,8 +593,8 @@ NO_RESET_REASONS = ("finished", "timeout")   # the ends that close the trial (a 
 
 
 def check_finish_reset() -> None:
-    """Agent-ended: after /finish (or the end of the session) no reset follows; after a step_limit end one may."""
-    if AE.ENABLED and E["done"] and E["reason"] in NO_RESET_REASONS:
+    """After /finish (or the end of the session) no reset follows; after a step_limit end one may."""
+    if E["done"] and E["reason"] in NO_RESET_REASONS:
         raise Refused({"error": "episode finished", "reason": E["reason"], "resets_left": 0})
 
 
@@ -628,8 +612,6 @@ def do_reset(meta: dict):
         cams, fps = cameras_of(meta), video_fps(meta)
         L.check_frames(len(cams), 2, L.depth_mode(meta) in ("frames", "legacy"), MAX_FRAMES)
     check_finish_reset()
-    if E["success"] and not AE.ENABLED:
-        raise Refused({"error": "trial finished: an episode succeeded", "reason": E["reason"], "resets_left": 0})
     if E["resets"] >= RESET_BUDGET:
         raise Refused({"error": "reset budget exhausted", "reason": "reset budget exhausted", "budget": RESET_BUDGET,
                        "resets_left": 0})
@@ -639,8 +621,8 @@ def do_reset(meta: dict):
     E["resets"] += 1
     E["reset_at"] = list(E["reset_at"]) + [EP.rows]
     E.update(done=False, reason=None, success=False, t_end=None, episode_control_steps=None, dumped=False)
-    if AE.ENABLED:   # the new episode's hidden success starts afresh (the trial's record stays)
-        E.update(now_success=False, seen_step=None, end_window=None, finish_t=None)
+    # the new episode's hidden success starts afresh (the trial's record stays)
+    E.update(now_success=False, seen_step=None, end_window=None, finish_t=None)
     EP._ck = None  # the state changed without a journal row: the checkpoint after this call must hash it anew
     E["calls"] += 1
     EP.log({"ev": "reset", "call": E["calls"], "episode": E["resets"] + 1, "journal_rows": EP.rows,
@@ -719,7 +701,7 @@ print(f"{L.PROTOCOL} ABC Sim service ready ({S.family}; gl {M.GL}; startup {EP.n
 
 
 def make_handler(svc: L.Service):
-    """The shared 2.2 handler, plus POST /reset when the run grants resets (the shared layer has no reset)."""
+    """The shared layer's handler, plus POST /reset when the run grants resets (the shared layer has no reset)."""
     base = AE.make_handler(svc)   # rcb_limited's handler (with POST /finish when episodes are agent-ended)
 
     class Hdl(base):
@@ -769,10 +751,9 @@ def make_handler(svc: L.Service):
 def serve(svc: L.Service, port: int) -> None:
     svc.spec.setdefault("on_service_error", L.ON_SERVICE_ERROR)
     svc.spec.setdefault("max_call_wall_s", EP.max_call_wall_s)
-    if AE.ENABLED:   # as AE.serve: fail closed without finish(), and /spec states the success signal
-        if getattr(svc, "finish", None) is None:
-            raise RuntimeError("RCB_AGENT_END=1, but this service has no finish()")
-        svc.spec["success_signal"] = AE.SUCCESS_SIGNAL_NOTE
+    if getattr(svc, "finish", None) is None:   # as AE.serve: fail closed without finish(), and /spec states the success signal
+        raise RuntimeError("this service has no finish()")
+    svc.spec["success_signal"] = AE.SUCCESS_SIGNAL_NOTE
     L.check_spec(svc.spec)
     L.bind(port, make_handler(svc)).serve_forever()
 
@@ -781,8 +762,7 @@ try:
     serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics,
                      status=status, on_submit_error=lambda exc: finish("error"), log=EP.log, episode=EP,
                      state_sha=S.state_sha, proprio=proprio_row,
-                     **({"finish": lambda: finish("finished"),
-                         "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})),
+                     finish=lambda: finish("finished"), end_step_limit=lambda: finish("step_limit")),
           port=int(os.environ.get("RCB_PORT", "8000")))
 except Exception:  # noqa: BLE001
     traceback.print_exc()

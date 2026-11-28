@@ -97,7 +97,7 @@ def _tool(name, **args):
         body = {k: v for k, v in out.items() if k not in ("episode_over", "http_status", "path", "tool_s")}
         return None, _json(409, body)
     if isinstance(out, dict) and out.get("reply_lost"):
-        # no reply reached the tool server: the client sees what it would have seen, the request failing (and, on 2.4,
+        # no reply reached the tool server: the client sees what it would have seen, the request failing (and, on the operations layer,
         # GET /operations/<id> answers from the record the server fetched)
         op = out.get("operation")
         if isinstance(op, dict) and (op.get("operation_id") or op.get("id")):
@@ -160,6 +160,8 @@ def _post(url, data=None, json=None, **_):          # noqa: A002 (requests' own 
     if err is not None:
         return err
     out.pop("tool_s", None)
+    if path == "/finish":                           # its reply carries the status fields: GET /status answers them
+        _LAST_META.update({k: v for k, v in out.items() if k != "ok"})
     return _json(200, out)
 
 

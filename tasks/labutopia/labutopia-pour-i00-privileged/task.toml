@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/labutopia-pour-i00-privileged"
-description = "LabUtopia pour (Pour; a chemistry laboratory with a Franka Panda on Isaac Sim): produce one replayable trajectory of joint targets. Pick up the small beaker and tip it over the large beaker as if pouring into it, then turn it back upright and hold it over the large beaker for a couple of seconds. Frozen scene instance (LabUtopia's reset, seed 0); graded by one fresh-process replay with a copy of LabUtopia's own success check."
+description = "LabUtopia pour (Pour; a chemistry laboratory with a Franka Panda on Isaac Sim): produce one replayable trajectory of joint targets. Pick up the small beaker and tip it over the large beaker as if pouring into it, then turn it back upright and hold it over the large beaker for about a second and a half. Frozen scene instance (LabUtopia's reset, seed 0); graded by one fresh-process replay with a copy of LabUtopia's own success check."
 keywords = ["robotics", "labutopia", "isaac-sim", "laboratory", "chemistry", "franka-panda", "code-as-policy", "trajectory", "pour", "privileged"]
 
 [metadata]
@@ -11,7 +11,7 @@ task_type = "trajectory"
 simulator = "labutopia"           # LabUtopia @ 8df7278 on NVIDIA Isaac Sim 6.1.0 (PhysX on the CPU, RTX cameras)
 robot = "franka-panda"
 family = "pour"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 oracle = "full"
 level = 1                         # LabUtopia's own level for the task (config level1_pour)
 instance_seed = 0                 # numpy's and Python's random generators before LabUtopia's reset
@@ -22,7 +22,7 @@ timeout_sec = 5400.0              # one replay of about a minute (limited to 240
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

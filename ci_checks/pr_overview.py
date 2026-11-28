@@ -2,7 +2,7 @@
 """A pull request's overview: what it changes, for the sticky comment and the labels (the job `advisories` of .github/workflows/static-checks.yml).
 
 As Terminal-Bench's task-pr-overview: the changed tasks with their mode, oracle, cutoff and main's caps, a table of
-the cutoffs it changes (old -> new; PROTOCOL §2: the task author's decision, stated in the pull request), the cutoffs per benchmark and mode after it
+the cutoffs it changes (old -> new; docs/protocol/tasks.md: the task author's decision, stated in the pull request), the cutoffs per benchmark and mode after it
 (several numbers in one benchmark and mode are marked: a pull request says why), twins whose cutoffs differ, and the
 scope its static checks run on (ci_checks/ci_scope.py), and the advisory checks' findings ("Advisories (not blocking)",
 from the file the CI job `advisories` writes: --advisories FILE). Labels:
@@ -80,7 +80,7 @@ def main(argv: list[str]) -> int:
         for n, a, b in moves:
             t = tc.task_dir(n)
             groups[(tc.bench_of(t), tc.mode_of(t), a, b)].append(n)
-        out += ["", "### Cutoff changes (PROTOCOL §2: the task author's decision; say old -> new and why above)", "",
+        out += ["", "### Cutoff changes (docs/protocol/tasks.md: the task author's decision; say old -> new and why above)", "",
                 "| Benchmark | Mode | Old | New | Tasks |", "|---|---|---|---|---|"]
         out += [f"| {bench} | {mode} | {a} s | {b} s | {len(ns)} (`{ns[0]}`{', ...' if len(ns) > 1 else ''}) |"
                 for (bench, mode, a, b), ns in sorted(groups.items(), key=lambda kv: (kv[0][0], kv[0][1]))]
@@ -119,18 +119,18 @@ def main(argv: list[str]) -> int:
         for (bench, mode), v in sorted(vals.items()):
             vs = sorted(v, key=lambda x: (x is None, x or 0))
             out.append(f"| {bench} | {mode} | {' / '.join(f'{x} s' for x in vs)}"
-                       + (" **(several numbers: the pull request says why, PROTOCOL §2)**" if len(vs) > 1 else "") + " |")
+                       + (" **(several numbers: the pull request says why, docs/protocol/tasks.md)**" if len(vs) > 1 else "") + " |")
         pairs = sorted({p for t in every for p in tc.cutoff_pairs(t) if tc.cutoff_for(p[0]) != tc.cutoff_for(p[1])})
         twins = [f"`{b.name}` {tc.cutoff_for(b)} s, `{a.name}` {tc.cutoff_for(a)} s" for a, b in pairs]
         if twins:
-            out += ["", "**Twins with different cutoffs** (the required job `invariants` fails; PROTOCOL Appendix H.7): " + "; ".join(twins[:10])]
+            out += ["", "**Twins with different cutoffs** (the required job `invariants` fails; docs/protocol/invariants.md H.7): " + "; ".join(twins[:10])]
     if adv_file is not None:
         lines = [ln for ln in (adv_file.read_text(errors="replace").splitlines() if adv_file.is_file() else []) if ln.strip()]
         out += ["", "### Advisories (not blocking)", ""]
         if not lines:
             out.append("None: every advisory check passed (the required job `invariants` decides the merge).")
         else:
-            out.append(f"{len(lines)} finding(s) of the advisory checks (PROTOCOL §1-§7 are recommendations; only Appendix H "
+            out.append(f"{len(lines)} finding(s) of the advisory checks (conventions; only the invariants of docs/protocol/invariants.md "
                        "blocks). Fix them or say in the pull request why the task departs:")
             out += ["", "```"] + [ln[:300] for ln in lines[:60]] + (["... %d more" % (len(lines) - 60)] if len(lines) > 60 else []) + ["```"]
     out += ["", "Maintainers: comment `/validate` to run the oracle (where `oracle = \"full\"`) and `nop` on the changed tasks."]

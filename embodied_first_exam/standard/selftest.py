@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CPU-only self-test of the eai-standard/2.2 shared layer's crash recovery (rcb_limited.Episode, run.sh, the client).
+"""CPU-only self-test of the shared layer's crash recovery (rcb_limited.Episode, run.sh, the client).
 
 Runs toy_server.py under run.sh the way a task's `sim` sidecar runs, with a small supervisor in place of compose's
 `restart: on-failure:6` (it restarts run.sh when it exits non-zero, keeping the record dir), and drives it with the
@@ -110,7 +110,7 @@ def exact_resume_between_calls():
     c = Compose("exact_between")
     try:
         r = c.robot()
-        expect(r.spec()["protocol"] == "eai-standard/2.2", "spec.protocol")
+        expect(r.spec()["protocol"] == "eai-standard/3.0", "spec.protocol")
         expect("on_service_error" in r.spec() and r.spec().get("max_call_wall_s") == 900.0, "spec crash-recovery fields")
         for i, x in enumerate((0.2, 0.3, 0.4)):
             res = r.submit("joint_position", chunk(5, x), dt=0.05, video="none", note=f"c{i}")
@@ -410,7 +410,7 @@ def simulator_error_ends_the_episode():
 
 @case
 def malformed_requests_are_400_and_change_nothing():
-    """PROTOCOL §4.6: a request the service cannot read is the caller's mistake (400): no physics, the episode goes on.
+    """docs/protocol/eai-standard.md#errors: a request the service cannot read is the caller's mistake (400): no physics, the episode goes on.
     Raw JSON bodies, as an agent without the shipped client may send them."""
     c = Compose("malformed")
     try:
@@ -516,12 +516,6 @@ def a_repeated_camera_is_one_camera():
 
 
 @case
-def client_accepts_both_names():
-    for p, ok in (("eai-standard/2.2", True), ("eai-standard/2.1", True), ("rcb-limited/2.1", True), ("rcb-limited/1.0", False), ("x/2.2", False)):
-        expect(p.startswith(rcb_client.ACCEPTED) == ok, p)
-
-
-@case
 def agent_clock_starts_at_the_first_request_and_survives_a_resume():
     """meta time_s / time_left_s (rcb_limited.agent_time): not started by the service's start or by a probe that only
     connects to the port, started by the agent's first request (any endpoint), and not set back by a resume."""
@@ -558,7 +552,7 @@ def agent_clock_starts_at_the_first_request_and_survives_a_resume():
 
 @case
 def every_adapter_reports_the_agents_clock():
-    """Each eai-standard/2.2 adapter (tasks/<benchmark>/<task>/environment/sim/server.py next to a copy of this layer, in
+    """Each adapter of the shared layer (tasks/<benchmark>/<task>/environment/sim/server.py next to a copy of this layer, in
     the directory or taken by the sidecar's Dockerfile from a files-only image) computes meta time_s and time_left_s from
     the agent's first request: from rcb_limited.agent_time (or the first-request time the layer keeps in E["t_first"]),
     never from the service's start or the episode's own t0."""
@@ -568,6 +562,7 @@ def every_adapter_reports_the_agents_clock():
     tasks = os.path.join(root, "tasks")
     sys.path.insert(0, os.path.join(root, "scripts"))
     import files_image
+    import task_conventions as tc
 
     def served(sim: str, name: str) -> str:
         """The file the sidecar serves at /srv/<name>: the directory's copy, else the one its Dockerfile copies in."""
@@ -575,14 +570,11 @@ def every_adapter_reports_the_agents_clock():
         if os.path.isfile(p) or not os.path.isfile(os.path.join(sim, "Dockerfile")):
             return p
         return str(files_image.copied(Path(sim) / "Dockerfile").get("/srv/" + name, p))
-    # a copy of this layer: the same PROTOCOL line (not the same bytes: a layer change reaches the tasks through each
-    # benchmark's own regeneration, and the adapters' clock does not depend on it)
-    proto = next(x for x in open(os.path.join(HERE, "rcb_limited.py"), encoding="utf-8") if x.startswith("PROTOCOL ="))
     seen, bad = {}, []
     for sim in sorted(glob.glob(os.path.join(tasks, "*", "*", "environment", "sim"))):
         f, lay = served(sim, "server.py"), served(sim, "rcb_limited.py")
-        if not os.path.isfile(f) or not os.path.isfile(lay) or proto not in open(lay, encoding="utf-8").read().splitlines(keepends=True):
-            continue                               # another protocol's service
+        if not os.path.isfile(f) or not os.path.isfile(lay) or tc.service_layer(Path(sim).parents[1]) != "shared":
+            continue                               # another layer's service
         src = open(f, encoding="utf-8").read(); h = hashlib.sha256(src.encode()).hexdigest()
         if h in seen:
             continue
@@ -591,14 +583,14 @@ def every_adapter_reports_the_agents_clock():
             lines = [x for x in src.splitlines() if re.search(rf'"{key}":', x)]
             if not lines or not all(re.search(r"agent_time\(", x) for x in lines) or any('E["t0"]' in x or "T_FIRST" in x or "T_BOOT" in x for x in lines):
                 bad.append(f"{os.path.relpath(f, tasks)}: {key} {[x.strip()[:120] for x in lines]}")
-    expect(os.path.isdir(tasks) and len(seen) >= 10, f"found only {len(seen)} eai-standard/2.2 adapters under {tasks}")
+    expect(os.path.isdir(tasks) and len(seen) >= 10, f"found only {len(seen)} shared-layer adapters under {tasks}")
     expect(not bad, "adapters whose clock does not start at the agent's first request:\n  " + "\n  ".join(bad))
 
 
 @case
 def kinematics_wrong_types_are_400():
     """/kinematics with wrong-typed fields (a string for q, a list for max_iters, null tolerances) is the client's
-    error, 400, never a 500 (as in 2.4); the service's kinematics never runs and the episode goes on."""
+    error, 400, never a 500 (as in the operations layer); the service's kinematics never runs and the episode goes on."""
     from http.server import HTTPServer
     ran = []
     kin = {"joint_names": ["a", "b"], "links": ["tcp"], "ik_targets": ["tcp"], "frame": "world"}
@@ -656,7 +648,7 @@ def standard_3_0_observe_reads_hold_chunks_let_time_pass():
     try:
         r = c.robot()
         sp = r.spec()
-        expect(sp.get("standard") == "eai-standard/3.0", f"spec.standard {sp.get('standard')}")
+        expect(sp.get("protocol") == "eai-standard/3.0", f"spec.protocol {sp.get('protocol')}")
         rec = (sp.get("timing") or {}).get("recorder") or {}
         expect(rec.get("cameras") == ["top"] and rec.get("fps") == 10.0 and rec.get("buffer_s") == 3.0
                and rec.get("records") == "during /submit" and rec.get("depth") == [], f"recorder {rec}")

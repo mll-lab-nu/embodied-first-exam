@@ -1,31 +1,37 @@
-# abc-sim-nuts-bolts-i00-privileged
+# ABC Sim · sort nuts and bolts (privileged)
 
 | | |
 |---|---|
-| Benchmark | ABC Sim |
+| Task ID | `abc-sim-nuts-bolts-i00-privileged` |
+| Benchmark | [ABC Sim](https://github.com/amazon-far/abc) (Allshire et al., 2026), upstream `amazon-far/abc@d0832d1` |
+| Robot | Two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each), side by side at a table |
 | Mode | privileged |
-| Twin | `abc-sim-nuts-bolts-i00-standard` |
-| Simulator / robot | `mujoco` / `i2rt-yam-bimanual` |
-| Family / instance | `nuts_bolts` / seed 0 (allowed seeds: [0, 3, 7]; PROTOCOL §2) |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.3.0` |
+| Instance | `nuts_bolts`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-ABC Sim `sort_nuts_and_bolts` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Put all the nuts in one bin and all the bolts in the other.
-9 nuts and 10 bolts lie on the table with two bins, a teal one and an orange one (loose objects, turned at some angle). The deliverable is one replayable trajectory (`/app/output/trajectory.npz`, `(T, 14)`, one row per 0.034 s control step).
+Put all the nuts in one bin and all the bolts in the other.
 
-## Difficulty
-First-pass rating: hard. Long horizon: 19 small parts, each a separate grasp (nuts are flat rings, bolts thin cylinders), placed into two bins. The action is joint-level (two 6-joint arms and two grippers; no motion primitives), and the goal has to hold, so passing through it does not count.
+## Success criteria
+All the nuts and all the bolts are sorted into the two bins: every nut is in one bin and every bolt is in the other,
+either way round. A part counts as in a bin when its origin lies inside that bin's goal region (a box fixed in the
+bin's frame); a part in the other bin or in neither fails. This must hold for 30 consecutive control steps (1.02 s).
 
-## Reference solution
-The commanded actions of one of upstream's validation demonstrations of this task, replayed from the frozen instance and cut at the success step: `solution/oracle.npy`, 2872 rows (float32 values, so the standard twin's client sends the same rows), success after the last one. Replayed, checked and saved by `solution/solve.sh`.
+The verifier, in a separate sandbox without network, replays `/app/output/trajectory.npz` (array `actions`, shape
+(T, 14) with 1 ≤ T ≤ 20,000, all values finite) once, open-loop, in a fresh process from its own copy of the frozen
+instance, one row per 0.034 s control step. The rule above is checked after every control step. Where the condition
+must hold for 30 consecutive control steps, the episode ends in success at the 30th of them. The replay stops at the
+step the episode ends; later rows are not run. The task scores 1 when the replayed episode ends in success; a
+trajectory whose rows run out first scores 0.
 
-## Verification
-`/opt/abc-tools/grade.py` in a separate sandbox without network: one replay of `/app/output/trajectory.npz`, in a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff the episode ends in success. `nop`: no trajectory, reward 0.
+A missing file scores 0, and so does an invalid one: not a readable `.npz`, no `actions` array, a shape other than
+(T, 14), a NaN or infinite value, T outside 1 to 20,000, or a `family` entry that names another family. A replay that
+does not start at the instance's recorded state hash, or that gives no result within 40 min, is a grader error, not a
+score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -35,14 +41,11 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `main`.
 - Recommended GPU: any NVIDIA GPU with EGL (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Upstream | ABC Sim, `abc_sim` of github.com/amazon-far/abc @ d0832d1 (Apache-2.0; assets CC BY 4.0 / MIT), on MuJoCo 3.6.0 |
-| Instance | the scene of one of upstream's validation demonstrations (its assembled scene XML, initial qpos and randomization record); the model-side state its randomizer sets outside the XML written into the scene; state hash `36a10f65fd90f73b`, checked on every load |
-| Actions | 14 joint-position targets per control step (0.034 s, 17 physics substeps of 2 ms) |
-| Success | the upstream evaluator `sort_nuts_and_bolts` held 30 control steps |
-
-### Provenance
-The frozen instance (`instance.npz`) and the reference solution (`solution/oracle.npy`) were made at generation time from
-an upstream validation demonstration; see `tasks/abc-sim/README.md`.
+## License
+ABC Sim (`abc_sim` of [amazon-far/abc](https://github.com/amazon-far/abc) @ `d0832d1`) is released under the
+[Apache License 2.0](https://github.com/amazon-far/abc/blob/d0832d12651d1b260a652861a14648dc5f3660c7/LICENSE). Its
+simulator assets are under CC BY 4.0 (RoboCasa's Objaverse, LightWheel and AI-generated packs, Google Scanned Objects,
+individually credited Sketchfab creators), CC0 (freepoly.org), MIT (the I2RT YAM robot model, a LIBERO drawer fixture)
+and Apache-2.0 (everything modelled in-house); no non-commercial terms apply. The licences and credits ship in the image
+at `/opt/abc/ASSET_LICENSES.md` (`images/abc-sim/ASSET_LICENSES.md`). The simulator is MuJoCo 3.6.0 (Apache License
+2.0).

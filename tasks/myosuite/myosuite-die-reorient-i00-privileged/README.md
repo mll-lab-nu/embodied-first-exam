@@ -1,31 +1,41 @@
-# myosuite-die-reorient-i00-privileged
+# MyoSuite · die_reorient (privileged)
 
 | | |
 |---|---|
-| Benchmark | MyoSuite |
+| Task ID | `myosuite-die-reorient-i00-privileged` |
+| Benchmark | [MyoSuite](https://github.com/MyoHub/myosuite) (Caggiano et al., 2022), upstream `MyoHub/myosuite@5635e1a` |
+| Robot | MyoHand: musculoskeletal model of the human forearm and hand, 39 muscles |
 | Mode | privileged |
-| Twin | `myosuite-die-reorient-i00-standard` |
-| Simulator / robot | `myosuite` / `myohand` |
-| Family / instance | `die_reorient` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `none` — a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-die-reorient-i00__EtyJ3X7` (225 rows); today's verifier scores its trajectory 1 in two fresh trials (tasks/myosuite/README.md); human review in PR #65 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
+| Instance | `die_reorient`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-MyoSuite `myoChallengeDieReorientP1-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Turn the die in your palm until it matches the see-through target die, and hold it there for a second.
-A die rests in the palm of the upturned hand; a translucent target die shows the goal orientation. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 39)`, one row per 10 ms control step).
+Turn the die in your palm until it matches the see-through target die, and hold it there for a second.
 
-## Difficulty
-First-pass rating: hard. The action is muscle-level (39 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint control from muscle excitations. MyoSuite's goal has to hold for 1.0 s, so passing through the goal does not count.
+## Success criteria
+Success rule (MyoChallenge 2022 `myoChallengeDieReorientP1-v0`, its `solved` held): the die is within 0.025 m of the
+target die's position (MyoSuite corrects for the display offset between the two), and the length of the difference
+between the die's and the target's Euler angles is below 0.262 rad, held for 100 consecutive control steps (1 s at 10
+ms per step).
 
-## Reference solution
-None. Solvability evidence: a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-die-reorient-i00__EtyJ3X7` (225 rows); today's verifier scores its trajectory 1 in two fresh trials (tasks/myosuite/README.md); human review in PR #65.
+Failure (MyoSuite's `done`, ends the episode with 0): the die is more than 0.2 m from the target position (dropped).
 
-## Verification
-`tests/grade.py` in a separate sandbox without network: one replay of `/app/output/trajectory.npz`, in a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff the episode ends in success (the goal held 100 control steps). No oracle; human review in PR #65. `nop`: no trajectory, reward 0.
+The replay ends in success at the first control step at which the goal has held for 100 consecutive control steps, or
+with 0 at a failure.
 
-## Resources
-Caps per container (PROTOCOL §6).
+Graded file: `/app/output/trajectory.npz` with `actions`, a numeric array with one row per control step and one column
+per actuator (muscles first, in the layout the tooling gives), as `s.save_trajectory(...)` writes it, at most
+612,000 rows. After the agent's session it is replayed once, open-loop, from the frozen start in a fresh process
+of a separate verifier container without network. The replay runs the rows in order until the episode ends as above;
+later rows are not run. If the rows run out before the episode has ended in success, the task fails. A missing file,
+a file that is not such an array, a file for another family, a wrong row width, an empty array, more rows than the
+limit, a non-finite value, or an `.npz` entry larger than the row limit allows scores 0. A replay that gives no result
+(it times out or dies), or a frozen start that does not rebuild with its recorded hash, is reported as
+`grader_error` (infrastructure), not as a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,13 +44,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
-| Instance | `myoChallengeDieReorientP1-v0` after `seed(0)` and `reset(seed=0)` (`rcb_myosuite.py make-instance`); state hash `7e5922c982779368`, checked on every load |
-| Actions | 39 actuator commands per control step (10 ms, 5 physics substeps); success rule `hold` (tasks/myosuite/README.md) |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
-
-### Provenance
-The frozen instance (`environment/instance.npz`) and its scene facts were made at generation time; see `tasks/myosuite/README.md`.
+## License
+MyoSuite ([MyoHub/myosuite](https://github.com/MyoHub/myosuite), version 2.12.2, tag `v2.12.2` = `5635e1a`) is
+released under the Apache License 2.0, as are the models it bundles (MyoSim, the MPL prosthetic arm, the object,
+furniture and YCB models). The MyoDex reference motions (the `dex_*` families) derive from the GRAB motion-capture
+dataset; MyoSuite asks their users to comply with GRAB's licence, which allows non-commercial scientific research
+only. The simulator is MuJoCo (Apache License 2.0).

@@ -1,0 +1,209 @@
+# README data for tasks/ambench/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text:
+#   checks    AM-Bench @ 60bf5b7 (ambench/ambench, cloned for this check), source/ambench/ambench/tasks/<task>/<task>_env.py
+#             `_get_success` and the task's <task>_env_cfg.py thresholds; base/base_env.py _get_dones L113-123 (terminated
+#             = success; truncated = episode_length_buf >= max_episode_length - 1); assets/object_specs.py L16-19.
+#   tooling   embodied_first_exam/benchmarks/ambench/privileged/environment/rcb_ambench.py: Session.step L674-696
+#             (success = terminated at that step; timeout = truncated without success; MAX_STEPS = 8000, L59),
+#             RotateValve's unwrapped angle L634-651 (replaces `_get_success`), hide_success L578-590 (standard: the
+#             success never ends the episode, kept as now_success), load_trajectory L1095-1108, _replay_rows L1111-1116.
+#   graders   privileged/tests/grade.py load_trajectory L52-75, the replay loop L125-185 (up to [metadata] replays = 3
+#             fresh processes, any success counts, instance_ok required); sim/server.py END_JUDGEMENT / END_WINDOW
+#             L111-112, judge_end L127-141, finish L144-153, ctrl_step L362-372; sim/finalize.sh (GPU faults,
+#             instance check); standard/tests/grade.py L42-44.
+# Episode lengths (vars): <task>_env_cfg.py episode_length_s; the time-out step is 120 x length - 1 (texts.json).
+
+[benchmark]
+name = "AM-Bench"
+citation = "Wang et al., 2026"     # CITATION.cff of the pinned commit (first author Yutong Wang)
+url = "https://github.com/ambench/ambench"
+repo = "ambench/ambench"
+commit = "60bf5b7"
+
+[license]
+text = """
+AM-Bench ([ambench/ambench](https://github.com/ambench/ambench) @ `60bf5b7`) is released under the
+[Apache License 2.0](https://github.com/ambench/ambench/blob/60bf5b73041df4eab571f7d9f0a297aeecbf2e0d/LICENSE); its
+third-party notices are in `THIRD_PARTY_NOTICES.md` of that commit. It runs on Isaac Lab (BSD-3-Clause) and NVIDIA
+Isaac Sim 5.1.0, under the [NVIDIA Isaac Sim / Omniverse licence](https://docs.isaacsim.omniverse.nvidia.com/latest/common/NVIDIA_Omniverse_License_Agreement.html);
+Isaac Sim may not be redistributed, so the simulator image is built locally and never published. The scenes load files
+from NVIDIA's public asset buckets (baked into the image), under NVIDIA's terms.
+"""
+
+[robots]
+ambench-fahexa = "AM-Bench's FA-Hexa: a fully actuated hexarotor with a 4-joint arm and a two-finger gripper"
+
+# privileged/tests/grade.py: missing file -> missing_trajectory; load_trajectory L52-75: unreadable / no `task` or
+# `actions` -> bad_trajectory, `task` != the env id -> wrong_task, shape (T, 8) with T <= 8000, finite, every row's
+# quaternion of non-zero length -> else bad_trajectory. Replays: up to 3 fresh processes, stop at the first success;
+# success = some replay succeeded AND every replay's rebuilt start matched initial_sha (L170-178). A replay with no
+# result, a time-out of the replay process, GPU faults in its output (run once more first) or instance_ok 0 ->
+# grader_error + infra_error.
+[modes.privileged]
+success = """
+The verifier replays `/app/output/trajectory.npz` (`task` = the environment's id, `actions` of shape (T, 8) with
+T ≤ 8000) open-loop, in a fresh process in a separate sandbox without network, from its own copy of the frozen
+instance, and does so up to 3 times, each in a new process. It stops at the first replay that succeeds, and one is
+enough. Each row is one control step of 1/120 s: AM-Bench's end-effector pose action (position, quaternion, gripper;
+the gripper value is clipped to [-1, 1]). In a replay, the condition above is checked after every control step, and
+the first step at which it holds ends the replay as a success. Rows after it are not executed. AM-Bench's own time-out
+ends a replay as a failure: after {vars[len]} of simulated time (control step {vars[last]}), or when the rows run out.
+
+A missing file scores 0, and so does an invalid one: not a readable `.npz`, no `task` or `actions` entry, a `task`
+that names another environment, the wrong shape, more than 8000 rows, a non-finite value, or a row whose quaternion
+has zero length. A replay that gives no result or runs out of its time, a replay whose output shows GPU faults
+(PhysX kernels that failed to launch, CUDA out of memory), and a replay whose rebuilt start does not match the frozen
+instance are infrastructure failures, not a score.
+"""
+
+# sim/server.py: RCB_AGENT_END=1; Session(hide_success=True): the success is recorded after every control step
+# (now_success), never latched, never shown, and never ends the episode. Ends: POST /finish ("finished"), the collect
+# hook ("timeout"), AM-Bench's time-out ("step_limit", ctrl_step L369), a simulator error ("error"). finish():
+# success = judge_end() on the end state for "state" tasks (L132). finalize.sh: live GPU faults, instance mismatch, no
+# episode.json -> infra_error; tests/grade.py: success AND not infra AND not sim_error. budget reset 0 (L227).
+[modes.standard]
+success = """
+The graded episode is the one live episode, as it ran; nothing is replayed to grade it. There is no reset, and the
+simulated clock advances only with the control steps the agent runs (1/120 s each). The episode ends when the agent
+sends `/finish`, when the agent's session ends (at the latest after {timeout}), or at AM-Bench's own time-out, after
+{vars[len]} of simulated time (control step {vars[last]}); the time-out is judged like the other ends. Meeting the
+condition does not end the episode, and the service never reports success while it runs.
+
+An episode that ends in a simulator error scores 0. A live episode whose physics logged GPU faults, a scene whose
+rebuilt start does not match the frozen instance, and a service that never wrote its record are infrastructure
+failures, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families. `privileged`: the check at one control step of a replay (the first such step is the success). `success`
+# (the standard text): the check on the state at the last control step, unless the family says otherwise.
+
+# press_button_env.py _get_success L36-39: button joint >= button_pressed_threshold = 0.004 (cfg L170; joint range 0 to
+# 0.01 m, cfg L168). Standard: END_JUDGEMENT "event" (server.py L111, L130-131): the check held at some control step.
+[families.press_button_fahexa]
+vars = { len = "20 s", last = "2399" }
+privileged = """
+At one control step, the red button's slider joint is pressed in by at least 4 mm (its travel is 0 to 10 mm). The
+first such step ends the replay as a success.
+"""
+success = """
+At some control step of the episode, the red button's slider joint is pressed in by at least 4 mm (its travel is 0 to
+10 mm). Once that has happened it counts: the button springs back, and it need not stay in.
+"""
+
+# push_slider_env.py _get_success L37-46: slider joint >= slider_pushed_threshold = 0.45 m (cfg L178); start -0.5 (cfg L157).
+[families.push_slider_fahexa]
+vars = { len = "26 s", last = "3119" }
+privileged = """
+At one control step, the knob's slider joint is at 0.45 m or more along the rail (it starts at -0.5 m, so
+that is 0.95 m of travel toward the right end as seen from the robot). The first such step ends the replay as a success.
+"""
+success = """
+At the last control step, the knob's slider joint is at 0.45 m or more along the rail (it starts at -0.5 m, so
+that is 0.95 m of travel toward the right end as seen from the robot).
+"""
+
+# rotate_valve_env.py _get_success L33-40 (valve_target_angle = 17/18 pi, cfg L156), replaced by rcb_ambench.py
+# L634-651: the same comparison on the unwrapped angle (the sum of per-step changes since the reset, each wrapped into
+# [-pi, pi)); positive = clockwise from the robot's side.
+[families.rotate_valve_fahexa]
+vars = { len = "20 s", last = "2399" }
+privileged = """
+At one control step, the valve wheel's total rotation since the start is at least 170° (17π/18 rad) clockwise as seen
+from the robot. The total is the sum of the wheel's per-step changes, so a counter-clockwise turn takes away from it.
+The first such step ends the replay as a success.
+"""
+success = """
+At the last control step, the valve wheel's total rotation since the start is at least 170° (17π/18 rad) clockwise as
+seen from the robot. The total is the sum of the wheel's per-step changes, so a counter-clockwise turn takes away from
+it.
+"""
+
+# open_door_env.py _get_success L34-42: door hinge > door_opened_threshold_deg = 20 (cfg L136).
+[families.open_door_fahexa]
+vars = { len = "15 s", last = "1799" }
+privileged = """
+At one control step, the door's hinge is open by more than 20°, away from the robot. The first such step ends the
+replay as a success.
+"""
+success = """
+At the last control step, the door's hinge is open by more than 20°, away from the robot.
+"""
+
+# peg_in_hole_env.py _get_success L42-74: tip = peg root + R(peg) (peg_length / 2, 0, 0) (peg_length 0.15,
+# object_specs.py L19); in the hole's root frame: x > peg_insertion_depth_min = 0 (cfg L171) and |y|, |z| < half the
+# hole's side (hole_side_length 0.06, object_specs.py L16, scaled in y and z by a factor drawn in [0.75, 1.5] at start-up,
+# peg_in_hole_events.py L109-155).
+[families.peg_in_hole_fahexa]
+vars = { len = "20 s", last = "2399" }
+privileged = """
+At one control step, the peg's front tip (7.5 cm from the peg's centre along its axis) is, in the socket's own frame,
+past the socket body's origin along the socket's axis (x > 0), and within half the opening's side of the socket's axis
+in both other directions (|y| and |z| below half the side: 3 cm × the instance's scale, drawn between 0.75 and 1.5).
+The first such step ends the replay as a success.
+"""
+success = """
+At the last control step, the peg's front tip (7.5 cm from the peg's centre along its axis) is, in the socket's own
+frame, past the socket body's origin along the socket's axis (x > 0), and within half the opening's side of the
+socket's axis in both other directions (|y| and |z| below half the side: 3 cm × the instance's scale, drawn between
+0.75 and 1.5).
+"""
+
+# ndt_env.py check_success L53-65: instant = |ee_x - goal_x| < 0.03 and |ee_yz - goal_yz| < 0.08 (cfg L64-65); a
+# counter of consecutive instant steps, success when >= 100 (cfg L66). Standard: END_WINDOW 120 steps (server.py
+# L112, L133-139) at /finish and at the session's end.
+[families.ndt_fahexa]
+vars = { len = "20 s", last = "2399" }
+privileged = """
+The end-effector link is at the inspection point for 100 consecutive control steps (0.83 s): less than 3 cm from it
+along x, and less than 8 cm from it in the y-z plane, at each of those steps. The step that completes the 100 ends the
+replay as a success.
+"""
+success = """
+The end-effector link has been at the inspection point for at least 100 consecutive control steps (0.83 s) at the end
+of the episode: less than 3 cm from it along x, and less than 8 cm from it in the y-z plane, at each of those steps.
+When the episode ends at `/finish` or at the session's end without that, the robot holds its last command for up to
+120 more control steps (1 s), and the episode succeeds if the count reaches 100 in that time (the steps already held
+count).
+"""
+
+# lemon_harvesting_env.py _get_success L66-75: lemon root inside the tote's box (tote root + (+-0.2, +-0.15, 0..0.17),
+# container_size cfg L132, L32-41, L77-82) AND gripper width (sum of the finger joints) > 0.0898 (cfg L164). Whether the
+# lemon left its stem is a sub-criterion only, not part of the success.
+[families.lemon_harvesting_fahexa]
+vars = { len = "30 s", last = "3599" }
+privileged = """
+At one control step, both: the lemon's origin is inside the tote's box (within 0.20 m of the tote's origin along x,
+within 0.15 m along y, and 0 to 0.17 m above it), and the gripper is fully open (the two finger joints sum to more than
+0.0898 m). The first such step ends the replay as a success.
+"""
+success = """
+At the last control step, both: the lemon's origin is inside the tote's box (within 0.20 m of the tote's origin along
+x, within 0.15 m along y, and 0 to 0.17 m higher than it), and the gripper is fully open (the two finger joints sum to
+more than 0.0898 m).
+"""
+
+# cabinet_pick_place_env.py _get_success L39-62: can root z - (env origin z + drawer_top_z 1.67) in [0, 0.05) and
+# |can linear velocity| < 0.1 m/s (cfg L110-113). No horizontal check; a can still held at that height passes.
+[families.cabinet_pick_place_fahexa]
+vars = { len = "60 s", last = "7199" }
+privileged = """
+At one control step, both: the can's origin is 0 to 5 cm above the cabinet's top surface (at least 0, less than 5 cm),
+and the can moves slower than 0.1 m/s. Only the height is compared, not the horizontal position, and a can still held
+at that height passes. The first such step ends the replay as a success.
+"""
+success = """
+At the last control step, both: the can's origin is 0 to 5 cm higher than the cabinet's top surface (at least 0, less
+than 5 cm), and the can moves slower than 0.1 m/s. Only the height is compared, not the horizontal position, and a can
+still held at that height passes.
+"""
+
+# pull_lever_env.py _get_success L37-44: lever joint > lever_pull_angle_min = 40 deg (cfg L187), start 0 (cfg L169). Standard task only.
+[families.pull_lever_fahexa]
+vars = { len = "20 s", last = "2399" }
+no_twin = "GPU PhysX does not replay this task bit for bit (the gripper's first contact with the lever resolves differently in fresh processes), so an open-loop trajectory cannot be graded; the task ships in standard mode only, graded by its live episode"
+success = """
+At the last control step, the lever's joint angle is more than 40° (it starts at 0°, the middle of its range;
+positive is up).
+"""

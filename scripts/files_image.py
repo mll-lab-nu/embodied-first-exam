@@ -20,7 +20,7 @@ nanosecond), directories at the fixed mtime 1000000000; the config holds only th
 build time or history. So any checkout of the same sources builds the same bytes and the same digest as the pushed
 image, and a user can build a private files-only image instead of pulling it. Its tag is
 ghcr.io/mll-lab-nu/efe:<name>-<VERSION>, or efe-private:<name>-<VERSION> when images/<name>/BUILD_ONLY marks it private
-(PROTOCOL §1: hosts pull it with the organization's token).
+(docs/protocol/tasks.md: hosts pull it with the organization's token).
 
     python3 scripts/files_image.py fetch [name ...]       download the pinned files of the images whose source is a Hugging
                                                           Face dataset ("hf" in FILES.json) and check them

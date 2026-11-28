@@ -4,7 +4,8 @@
 Use the hammer to drive the nail into the block.
 
 ## Goal
-Success: the nail is driven into the block until its head reaches the target point.
+Success: the nail is driven into the block until its head is at, or just short of, the target point. Only how far the
+nail has gone in is checked, not what drove it.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -22,7 +23,7 @@ as if it were real hardware: one live episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`.
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`.
 
 ```python
 from rcb_client import Robot

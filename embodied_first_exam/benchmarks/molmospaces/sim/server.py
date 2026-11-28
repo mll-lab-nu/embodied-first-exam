@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for MolmoSpaces (docs/protocol/standard_mode.md, tasks/molmospaces/README.md): the adapter
+"""eai-standard/3.0 sim service for MolmoSpaces (docs/protocol/eai-standard.md, tasks/molmospaces/README.md): the adapter
 of the shared layer rcb_limited.py; the simulator is rcb_molmospaces.Episode (upstream MolmoSpaces, MuJoCo on the CPU).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to
 /data/episode.jsonl; nothing about objects ever leaves this process.
@@ -85,7 +85,6 @@ for _g, _names, _meaning in GROUPS:
 
 SPEC = {
     "protocol": L.PROTOCOL,
-    "protocol_compat": list(L.COMPAT),
     "simulator": "molmospaces (molmo-spaces 0.2.9, MuJoCo 3.5.0)",
     "robot": INST["episode"]["robot"]["robot_name"],
     "task_text": INST["facts"]["goal"],
@@ -136,9 +135,8 @@ SPEC = {
     "budget": {"reset": 0, "steps": None, "wall_clock_s": WALL_CLOCK_S},
     "max_control_steps": S.horizon,
     "episode": f"one episode, no reset (upstream's evaluation): it ends after {S.horizon} control steps (the benchmark's "
-    f"{INST['facts']['horizon_s']} s horizon), when you submit `done`"
-    + (" or POST /finish (the same)" if AE.ENABLED else "")
-    + ", or when your time is over; success is judged on the state at that moment, also when the task was met earlier "
+    f"{INST['facts']['horizon_s']} s horizon), when you submit `done` or POST /finish (the same)"
+    ", or when your time is over; success is judged on the state at that moment, also when the task was met earlier "
     "and undone",
     "robot_spec": S.robot_spec(),
     "kinematics": S.kinematics_spec(),
@@ -153,7 +151,7 @@ SPEC = {
         "noise": L.DEPTH_NOISE,
     },
 }
-L.check_spec(SPEC)  # a spec that misses a 2.2 field or names a forbidden one never starts the episode
+L.check_spec(SPEC)  # a spec that misses a required field or names a forbidden one never starts the episode
 EP.scene_built()
 
 
@@ -206,8 +204,8 @@ def finish(reason: str) -> None:
     """The episode is over: upstream's verdict on the final state, then the record for the collect hook."""
     if E["done"]:
         return
-    if AE.ENABLED:  # agent-ended episodes (PROTOCOL §3): `done` is the agent's own end, as POST /finish; the horizon is the
-        reason = {"done": "finished", "horizon": "step_limit"}.get(reason, reason)  # step limit (judged as it stands)
+    # agent-ended episodes (docs/protocol/tasks.md#modes): `done` is the agent's own end, as POST /finish; the horizon is the step limit
+    reason = {"done": "finished", "horizon": "step_limit"}.get(reason, reason)  # (judged as it stands)
     E["done"] = True
     E["reason"] = reason
     E["t_end"] = time.time()
@@ -245,11 +243,10 @@ def ctrl_step(a, rec) -> bool:
     ROWS.append(np.asarray(a, dtype=np.float64))
     stop = EP.journal(a)
     rec.tick()
-    if AE.ENABLED:  # the state's success, recorded only (evidence: final.json hidden_success_*); never shown
-        try:
-            AE.hidden_success(E, S.success(), EP.log, ctrl_steps())
-        except Exception:  # noqa: BLE001
-            traceback.print_exc()
+    try:            # the state's success, recorded only (evidence: final.json hidden_success_*); never shown
+        AE.hidden_success(E, S.success(), EP.log, ctrl_steps())
+    except Exception:  # noqa: BLE001
+        traceback.print_exc()
     if S.done:
         finish("horizon")
     return E["done"] or stop
@@ -302,7 +299,7 @@ def cameras_of(meta: dict) -> list:
 
 def number(meta: dict, key: str, default: float) -> float:
     """A numeric request field: `default` when the request has no such field; a finite number otherwise, else a 400 (a
-    null, a string, a list, NaN/inf). Every field is checked before anything moves (PROTOCOL §4.6): a malformed request
+    null, a string, a list, NaN/inf). Every field is checked before anything moves (docs/protocol/eai-standard.md#errors): a malformed request
     never becomes an exception past the checks, which would end the episode."""
     if key not in meta:
         return float(default)
@@ -539,8 +536,8 @@ AE.serve(
         episode=EP,
         state_sha=S.state_sha,
         proprio=proprio_row,
-        **({"finish": lambda: finish("finished"),
-            "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {}),
+        finish=lambda: finish("finished"),
+        end_step_limit=lambda: finish("step_limit"),
     ),
     port=int(os.environ.get("RCB_PORT", "8000")),
 )

@@ -4,7 +4,7 @@
 Open the dishwasher.
 
 ## Goal
-Success: the dishwasher is open at least a sixth of the way (its door, or another of its moving parts). The `done`
+Success: the dishwasher is open at least 15% of the way (its door, or another of its moving parts). The `done`
 action is the same as `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
@@ -23,7 +23,7 @@ live episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`):
 ```python
 from rcb_client import Robot
 r = Robot()                                    # connects (waits while the service builds the episode)

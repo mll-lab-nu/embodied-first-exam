@@ -1,30 +1,34 @@
-# robocasa-turn-on-stove-i00-privileged
+# RoboCasa · TurnOnStove (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboCasa |
+| Task ID | `robocasa-turn-on-stove-i00-privileged` |
+| Benchmark | [RoboCasa](https://github.com/robocasa/robocasa) (Nasiriany et al., 2024), upstream `robocasa/robocasa@756598a` |
+| Robot | Franka Emika Panda arm with a parallel-jaw gripper on an Omron mobile base with a torso lift (robosuite `PandaMobile`) |
 | Mode | privileged |
-| Twin | `robocasa-turn-on-stove-i00-standard` |
-| Simulator / robot | `robosuite` / `franka-panda-omron` |
-| Family / instance | `robocasa/TurnOnStove` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:robocasa-0.1.0` |
+| Instance | `robocasa/TurnOnStove`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-RoboCasa's `TurnOnStove` kitchen task with a Franka Panda arm on an Omron mobile base (with a torso lift): Turn on the front left burner of the stove. Produce one replayable trajectory of the robot's native controller commands on one frozen instance; graded on the state after the last action. Benchmark notes in `tasks/robocasa/README.md`.
+Turn on the front left burner of the stove.
 
-## Difficulty
-Full privileged state, unlimited resets and self-replay; a mobile manipulator in a cluttered kitchen, long-horizon contact-rich manipulation with a 20 Hz controller. The standard twin removes the privileged state.
+## Success criteria
+The front left burner is on: its knob's angle, taken modulo 2π, is at least 0.35 rad and at most 2π − 0.35 rad (at
+least 0.35 rad, about 20°, away from the off position in either direction). The other knobs are not read.
 
-## Reference solution
-The demonstration's own actions (original: 138 actions), executed from the frozen scene by the robot's own controller: 138 actions in `solution/oracle.npz`. The demonstration is a reference solution: it is not in the image and the agent cannot reach it.
+The graded file is `/app/output/trajectory.npz`: a plain `.npz` (at most 8 MB, at most 64 members, arrays only) with an
+array `actions` of shape (T, 12), finite numbers, 1 ≤ T ≤ 3000, one row per control step (1/20 s); each value is
+clipped to its channel's limits ([-1, 1]). The verifier, in a separate sandbox without network, replays it once,
+open-loop, in a fresh process from its own copy of the frozen start, and evaluates the environment's own check
+(`_check_success`) on the state after the last row; meeting the conditions at an earlier step does not count. A scene
+already solved at the start would not count either (the frozen start is not solved).
 
-## Verification
-`tests/grade.py` in a separate sandbox without network: one replay in a fresh process from the verifier's own copy of the instance; `success = success on the final state ∧ not solved at the start`. Reference: a fresh-process replay ends in the live run's state (hash `90815152ab43…`) and succeeds. `nop`: no trajectory, reward 0; the instance is not solved at the start.
+A missing file scores 0, and so does an invalid one: not a readable `.npz` of that kind, no `actions`, a shape other
+than (T, 12), a NaN or infinite value, or T outside 1 to 3000. A replay that fails (a simulator error) scores 0.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -33,10 +37,14 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Source | [RoboCasa](https://github.com/robocasa/robocasa) @ 756598a (v0.2; MIT), robosuite 1.5.1, MuJoCo 3.2.6; [environment source](https://github.com/robocasa/robocasa/blob/756598a5be52e052339bb2d957426e39015c2afb/robocasa/environments/kitchen/single_stage/kitchen_stove.py#L125) |
-| Instance | the initial state of official demonstration episode 0 (`demo_0`, v0.1/single_stage/kitchen_stove/TurnOnStove/2024-05-02); MuJoCo state, model arrays, task state and RNG frozen in `instance.npz` (SHA-256 `bbf8379d0980…`, checked on load) |
-| Deliverable | `(T, 12)` native controller commands, 1 ≤ T ≤ 3000, 20 Hz |
-| Success | the environment's own check (`_check_success`) on the state after the last action |
+## License
+RoboCasa ([robocasa/robocasa](https://github.com/robocasa/robocasa) @ `756598a`, v0.2) is released under the
+[MIT License](https://github.com/robocasa/robocasa/blob/756598a5be52e052339bb2d957426e39015c2afb/LICENSE) (Copyright (c)
+2024 the RoboCasa Team); paper: Nasiriany et al., 2024, "RoboCasa: Large-Scale Simulation of Everyday Tasks for
+Generalist Robots", RSS 2024. robosuite 1.5.1 is MIT-licensed and MuJoCo 3.2.6 is under the Apache License 2.0. The
+kitchen assets are downloaded when the image is built and are not in this repository: fixtures and textures from
+[robocasa/robocasa-assets](https://huggingface.co/datasets/robocasa/robocasa-assets) (CC-BY-4.0), v0.2 fixtures from a
+mirror, [jianzhang96/robocasa-assets](https://huggingface.co/datasets/jianzhang96/robocasa-assets) (Apache-2.0),
+RoboCasa's objaverse and AI-generated object archives (CC-BY-4.0), and the lightwheel and sketchfab object sets of
+[nvidia/PhysicalAI-DigitalCousin-Assets](https://huggingface.co/datasets/nvidia/PhysicalAI-DigitalCousin-Assets) under
+**CC-BY-NC-4.0: non-commercial use only**.

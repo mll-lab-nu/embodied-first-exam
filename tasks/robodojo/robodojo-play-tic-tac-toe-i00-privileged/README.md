@@ -1,41 +1,46 @@
-# robodojo-play-tic-tac-toe-i00-privileged
+# RoboDojo · play_tic_tac_toe (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboDojo |
+| Task ID | `robodojo-play-tic-tac-toe-i00-privileged` |
+| Benchmark | [RoboDojo](https://github.com/RoboDojo-Benchmark/RoboDojo) (Chen et al., 2026), upstream `RoboDojo-Benchmark/RoboDojo@cb2a37d` |
+| Robot | Two ARX X5 arms (6 joints each, parallel two-finger grippers) at a table |
 | Mode | privileged |
-| Twin | `robodojo-play-tic-tac-toe-i00-standard` |
-| Simulator / robot | `robodojo` / `arx-x5-bimanual` |
-| Family / instance | `play_tic_tac_toe` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); marked unvalidated (PROTOCOL §2 `validated`); human review in PR #142 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
+| Opponent | A scripted support arm that places the four crosses with recorded motions, one per move, each in an empty cell picked at random with the layout's fixed seed |
+| Instance | `play_tic_tac_toe`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-Play tic-tac-toe against the opponent arm and go first: put one of your gold rings in an empty cell, then move both arms back to where they started and keep them there until the opponent has placed its cross. Repeat until all nine cells are filled. (RoboDojo's `play_tic_tac_toe`). RoboDojo capability dimension: Long-Horizon. Instance i00 is RoboDojo's own evaluation layout
-`arx_x5/0/play_tic_tac_toe_0.json` (sha256 `b5fe280e548e5845`), frozen in `instance.json`. The deliverable is one replayable trajectory of
-RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
-with no step cap (RoboDojo's own evaluation gives a policy 1100 actions; PROTOCOL §3).
+Play tic-tac-toe against the opponent arm and go first: put one of your gold rings in an empty cell, then move both arms
+back to where they started and keep them there until the opponent has placed its cross. Repeat until all nine cells are
+filled.
 
-## Difficulty
-A RoboDojo Long-Horizon task (rigid (small chess pieces on a board; plus a scripted support arm) objects), graded by RoboDojo's own success thresholds (its evaluation gives a policy 1100 actions; no step cap here, PROTOCOL §3). Privileged mode gives every object's pose and bounding box, the check's code, unlimited resets and
-self-replay; the helpers are only joint moves, gripper commands and RoboDojo's IK. This mode is the control for the
-standard twin.
+## Success criteria
+The support arm starts a move only after its previous one has finished, when the number of cells holding a piece (a
+piece's centre within 0.018 m of the cell's marked point seen from above and 0 to 0.02 m above the board's centre) is
+twice its moves so far plus one, at least one cell is empty (no piece's centre within 0.05 m of its marked point, at
+that height), and both robot arms are within 0.3 m of their start position along x, y and z and less than 30° from
+their start orientation. It makes at most four moves. A cross that misses its cell stays where it lands.
+One check: each of the nine pieces (your five gold rings and the opponent's four crosses) has its centre within
+0.015 m, seen from above, of some cell's marked point, and 0 to 0.02 m above the board's centre. It does not ask that
+the pieces be in different cells, that they lie flat, or that anyone wins. Fail for good: at any action, one of the
+robot's arms is more than 0.3 m from its start position along x, y or z or more than 30° from its start orientation
+while the support arm is more than 0.3 m from its start position along x, y or z or more than 40° from its start
+orientation.
 
-## Reference solution
-None. RoboDojo releases no expert or planner script, and its training demonstrations (Hugging Face
-`RoboDojo-Benchmark/RoboDojo`, `data/`) record no initial state or layout, so none replays on a frozen layout. The task is
-marked unvalidated (PROTOCOL §2 `validated`).
+Graded file: `/app/output/trajectory.npz` with `task` (this task's name) and `actions`, an array of at most 15,000
+rows of 14 finite numbers, one per 25 Hz action, as `s.save_trajectory(...)` writes it. After the agent's session it
+is replayed open-loop from the frozen start in a fresh process of a separate verifier container without network, up
+to 3 times (each in a new process), stopping at the first replay that succeeds; the task is passed if any
+replay succeeds. A replay runs the rows until every check stage has passed (success), a check fails for good (0), or
+the rows run out (0); rows after the success are not run. Privileged mode applies no step limit beyond the 15,000
+rows. A missing file, a file for another task, or a file that is not such an array scores 0. A replay that gives no
+result or runs over its time limit, or a frozen layout that rebuilds to another state than the instance records, is
+an infrastructure failure, not a score.
 
-## Verification
-`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen layout up to 3 times (`[metadata] replays`), each in a
-fresh process (`rcb_robodojo.py replay`), stopping at the first success; reward 1 iff a replay ends in RoboDojo's success (`replays_succeeded`; a replay that did not start from the frozen layout's recorded state hash is `instance_mismatch`, no verdict). No oracle; human review in
-PR #142 (no positive example yet). `nop` (no
-trajectory) scores 0. The success description in `instruction.md` was written from RoboDojo's code
-(`task/RoboDojo/tasks/play_tic_tac_toe.py`, `env/reward_manager/`); the code is the reference.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -45,10 +50,10 @@ Caps per container (PROTOCOL §6).
 - GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, held by `main`.
 - Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.
 
-## Details
-
-### Notes
-- Source: RoboDojo @ `cb2a37d` (MIT), its Isaac Lab 2.3 fork @ `afca7b0`, its cuRobo fork @ `d17b54c`; assets from the
-  Hugging Face dataset `RoboDojo-Benchmark/RoboDojo` @ `35efbc7` (Apache-2.0). The environment is RoboDojo's own evaluator
-  (`src/eval_client/eval_env.py`) with one env and no policy server.
-- tasks/robodojo/README.md has the benchmark's details (determinism, grading, the step limit, the image).
+## License
+RoboDojo ([RoboDojo-Benchmark/RoboDojo](https://github.com/RoboDojo-Benchmark/RoboDojo) @ `cb2a37d`) is released
+under the MIT License; its assets (Hugging Face `RoboDojo-Benchmark/RoboDojo`) under the Apache License 2.0; its Isaac
+Lab fork under the BSD 3-Clause License. The image also contains NVIDIA Isaac Sim 5.1 and its wheels (NVIDIA
+proprietary, no redistribution) and RoboDojo's cuRobo fork (NVIDIA's cuRobo licence): each user builds the image from
+public sources and accepts those terms (`images/robodojo/BUILD_ONLY`). No non-commercial terms apply to RoboDojo's
+own code and assets.

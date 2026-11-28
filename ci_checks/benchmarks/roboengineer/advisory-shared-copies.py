@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""roboEngineer's shared copies (PROTOCOL §1: copies of shared sources are byte-identical), an ADVISORY benchmark hook.
+"""roboEngineer's shared copies (docs/protocol/tasks.md: copies of shared sources are byte-identical), an ADVISORY benchmark hook.
 
 roboEngineer's tasks carry their evaluator and the public nominal tooling as copies in every task dir: the trusted and
 native evaluator modules under environment/sim/scripts/ and the agent's public tooling under environment/public/. Every

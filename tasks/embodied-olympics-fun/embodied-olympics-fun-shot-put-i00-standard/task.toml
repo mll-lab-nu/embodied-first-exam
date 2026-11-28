@@ -18,7 +18,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-shot-put-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): Embodied Olympics shot-put on the same frozen instance as embodied-olympics-fun-shot-put-i00-privileged. Put the shot from the circle so that it lands inside the sector at least 6 m out, then leave the circle from its back half and stand. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 5 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): Embodied Olympics shot-put on the same frozen instance as embodied-olympics-fun-shot-put-i00-privileged. Put the shot from the circle so that it lands inside the sector at least 6 m out, then leave the circle from its back half and stand. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 5 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-h1-2", "humanoid", "standard-mode", "trajectory", "shot-put"]
 
 [metadata]
@@ -27,19 +27,19 @@ simulator = "mujoco"
 robot = "unitree-h1-2"
 family = "shot_put"
 category = "throwing-catching-striking"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
+protocol = "eai-standard/3.0"
 instance_seed = 0
 expert_time_estimate_hours = 10.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested: No reference solution: a CMA-ES search over the four key poses, their times and the legs' drive keys (about 160 generations) finds legal puts of 6.1-6.8 m only with a hand passing through the robot's own body (the right thumb up to 4.7 cm into the right shoulder during the crouch, the left hand up to 6.8 cm into the right hip in the follow-through), which the robot's self-collision rules out; with a penalty for that, no clean put was found. Positive by a declared magic action. The real parts: the stance held by the walking policy with the shot on the open right palm, then after the release the walk backwards out of the rear half and the stand. The injected part, once at 0.5 s: the shot's velocity on the palm set to 8.0 m/s at 38 deg along the robot's heading. It leaves the palm at 7.9 m/s from 1.58 m (push fraction 0.78) and lands 6.29 m from the rim; the same state hash twice. Negatives: nop (time), a 1 m/s put (touched after the release), 30 deg to the side (outside the sector), the arm lowered or taken back, the other hand, the stop board, short, a fall after the landing.; human review in the pull request that adds the benchmark (PROTOCOL §4)"
+oracle_evidence = "no reference solution; the referee is tested: No reference solution: a CMA-ES search over the four key poses, their times and the legs' drive keys (about 160 generations) finds legal puts of 6.1-6.8 m only with a hand passing through the robot's own body (the right thumb up to 4.7 cm into the right shoulder during the crouch, the left hand up to 6.8 cm into the right hip in the follow-through), which the robot's self-collision rules out; with a penalty for that, no clean put was found. Positive by a declared magic action. The real parts: the stance held by the walking policy with the shot on the open right palm, then after the release the walk backwards out of the rear half and the stand. The injected part, once at 0.5 s: the shot's velocity on the palm set to 8.0 m/s at 38 deg along the robot's heading. It leaves the palm at 7.9 m/s from 1.58 m (push fraction 0.78) and lands 6.29 m from the rim; the same state hash twice. Negatives: nop (time), a 1 m/s put (touched after the release), 30 deg to the side (outside the sector), the arm lowered or taken back, the other hand, the stop board, short, a fall after the landing.; human review in the pull request that adds the benchmark (docs/protocol/tasks.md#grading)"
 
 [verifier]
 timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -67,7 +67,7 @@ timeout_sec = 7200.0
 # Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md). The agent's
 # container holds no simulator, no referee and no instance.
-network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/invariants.md H.6)
 
 [environment]
 build_timeout_sec = 1800.0
@@ -75,7 +75,7 @@ cpus = 4
 memory_mb = 10240
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

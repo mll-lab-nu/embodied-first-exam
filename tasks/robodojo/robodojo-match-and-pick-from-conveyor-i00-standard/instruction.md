@@ -1,11 +1,12 @@
 # RoboDojo · match_and_pick_from_conveyor (standard)
 
 ## Task
-Remember the first object on the belt, then pick up its identical copy when it comes by later and lift it about a hand's
-length.
+Remember the first object on the belt, then pick up its identical copy when it comes by later and lift it more than a
+hand's width.
 
 ## Goal
-Success: the identical copy of the first object on the belt is lifted about a hand's length above the belt.
+Success: the identical copy of the first object on the belt is lifted more than a hand's width above where it rode on
+the belt.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -29,7 +30,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)

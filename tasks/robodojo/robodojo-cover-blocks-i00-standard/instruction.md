@@ -27,8 +27,9 @@ Rules:
   the block's outline; the cup's top is higher than the block's top and its lowest point less than 0.03 m above the
   block's underside.
 - Mouth-down: in every state each cup is upside down, its axis less than 10° from vertical.
-- Order: six states must be reached in turn, at most one per step: left block covered; left and middle; all three; red
-  uncovered; red and green uncovered; all three uncovered, with the arms back.
+- Order: six states must be reached in turn, at most one per step: only the left block covered; only the left and
+  middle; all three; red uncovered with green and blue still covered; red and green uncovered with blue still covered;
+  all three uncovered, with the arms back.
 - Never moved: if at any step a block's centre is more than 0.05 m (in 3-D) from where it started, the episode has
   failed.
 - Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
@@ -42,7 +43,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)

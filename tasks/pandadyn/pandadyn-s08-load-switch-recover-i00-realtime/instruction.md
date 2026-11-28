@@ -1,12 +1,12 @@
 # Panda Dynamic Scenes · Load a coasting cart, throw the switch, recover the part (S08) (realtime)
 
 ## Task
-Grasp the part from the moving conveyor, lift it about a hand's length and drop it into the coasting cart without
+Grasp the part from the moving conveyor, lift it about a hand's width and drop it into the coasting cart without
 stopping the cart. Before the cart reaches the switch, push the switch with a finger so that it sends the cart into the
 branch nearer to you, then lift the part back out of the cart and hold it up.
 
 ## Goal
-Success: both fingers grip the part while it still rides the conveyor and lift it about a hand's length; it is dropped
+Success: both fingers grip the part while it still rides the conveyor and lift it about a hand's width; it is dropped
 into the moving cart without stopping the cart; before the cart reaches the switch, a finger pushes the switch clearly
 over toward the branch nearer the robot, where it stays; the cart is deflected by the switch into that branch; finally
 both fingers grip the part again and hold it up, well above the cart and clear of it, before the cart runs far down the
@@ -45,7 +45,7 @@ real speed, one control step (10 ms of robot time) every 60 ms of wall-clock tim
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.3`, realtime mode). Its docstring (`help(rcb_client)`) is the full
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`, realtime mode). Its docstring (`help(rcb_client)`) is the full
 reference.
 
 | call | what it does |

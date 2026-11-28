@@ -7,8 +7,8 @@ without touching the gate, and across the goal line in front of the backstop.
 
 ## Goal
 Success: the paddle's first touch strikes the puck while it still slides fast, so that it slides onto the turning bridge
-and from the bridge onto the exit lane; the paddle intercepts it there, lets it separate and strikes it again; the puck
-slides along the exit lane through the doorway of the swinging gate while the gate is wide open, never touching the
+and from the bridge onto the exit lane; after that the paddle touches it, lets it separate and strikes it again; the
+puck slides along the exit lane through the doorway of the swinging gate while the gate is wide open, never touching the
 gate, and on across the goal line in front of the backstop, not touching the paddle and with the gate still open.
 
 The steps count only in this order. Once a step is done, it stays done. The task is done when its last step is done, and
@@ -43,7 +43,7 @@ real speed, one control step (10 ms of robot time) every 30 ms of wall-clock tim
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.3`, realtime mode). Its docstring (`help(rcb_client)`) is the full
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`, realtime mode). Its docstring (`help(rcb_client)`) is the full
 reference.
 
 | call | what it does |

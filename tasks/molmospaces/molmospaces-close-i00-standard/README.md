@@ -1,44 +1,32 @@
-# molmospaces-close-i00-standard
+# MolmoSpaces · close (standard)
 
 | | |
 |---|---|
-| Benchmark | MolmoSpaces |
-| Mode | standard (`eai-standard/2.2`) |
-| Twin | `molmospaces-close-i00-privileged` |
-| Simulator / robot | `molmospaces` / `franka-robotiq-2f85` |
-| Family / instance | `close` / seed 0 |
-| Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-close-i00-privileged__8SX5TrW (run codex-gpt6_1_sol-high, batch molmo-v2-sol, 2026-10-16); human review in PR #276 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:molmospaces-0.2.5` |
+| Task ID | `molmospaces-close-i00-standard` |
+| Benchmark | [MolmoSpaces](https://github.com/allenai/molmospaces) (Kim et al., 2026), upstream `allenai/molmospaces@7351388` |
+| Robot | Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup) |
+| Mode | standard |
+| Instance | `close`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-Standard-mode twin of `molmospaces-close-i00-privileged` (the same frozen MolmoSpaces episode): Close the open cabinet door. The agent gets only the
-`eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
-(`environment/docker-compose.yaml`), which owns the episode, serves cameras, proprioception and upstream's kinematic
-model, and records every executed row. The collect hook (`environment/sim/finalize.sh`) ends the episode, lets the
-service exit and writes `final.json` from the live episode's result (nothing is replayed to grade it), then renders
-`replay.mp4`; the verifier grades those artifacts in a separate sandbox (`tests/Dockerfile`).
+Close the open cabinet door.
 
-## Difficulty
-That of `molmospaces-close-i00-privileged` (its README), without resets, object poses or a success check: every move is planned from camera
-images, depth and the robot's own proprioception, within the benchmark's 30 s of simulated time.
+## Success criteria
+Success check (upstream `OpeningTask`, close): the cabinet door's hinge is at most 15% of its range away from its
+closed position.
 
-## Reference solution
-None is shipped (see `molmospaces-close-i00-privileged`).
+Graded: the live episode, judged by the simulator service; nothing is replayed. Meeting the goal does not end the
+episode and is not shown to the agent. The episode ends at the agent's `/finish` (or the `done` action, which is the
+same), at the horizon (455 control steps, 30 s of robot time), or when the agent's time
+(1 h) runs out. It is passed if upstream's success check holds on the state the episode ends in; a success
+reached earlier and then undone does not count. No reset: the one episode is graded. A simulator error raised by the
+agent's actions ends the episode with 0. A frozen start that does not rebuild, or a service crash between the
+agent's calls, is an infrastructure failure, not a score.
 
-## Verification
-`success` = the live episode's success, judged by the sim service (graded live, no replay). The episode
-follows upstream's evaluation: one upstream `Task.step` per executed row; it ends at upstream's `is_done()`
-(455 control steps), at the agent's `done`, or when the agent's time is up; then upstream's
-`judge_success()` on the final state: the target's joint is open at most 15% of its range (it starts 50% open). The service checks the frozen start (the instance's t = 0 state hash)
-when it builds the scene, before the agent is served. `replay.mp4` is rendered by one video-only pass from
-`trajectory.npz` after the verdict, which it never changes. `infra_error = 1` (no verdict on the agent): no, an
-unreadable or an unfinished `final.json`, a service that gave up after crashes between calls or never ended the
-episode, a frozen start the image no longer builds (`instance_mismatch`). No oracle; human review in PR #276 (PROTOCOL §4: per family, this task
-and its twin, a positive example and the `nop` result).
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -49,9 +37,10 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4 / L40S).
 
-## Details
-| | |
-|---|---|
-| Upstream | molmo-spaces 0.2.9, benchmark `molmospaces-bench-v2/20260415`, package `ithor/FrankaCloseHardBench/FrankaCloseHardBench_20260206_json_benchmark` (FrankaCloseHardBench: upstream's Hard configuration of Close, not in its evaluation docs), episode 346 |
-| World-frame information | none in the texts: object names and the goal only; the robot's own pose and the camera calibration come from the service (tasks/molmospaces/README.md) |
-| Benchmark notes | tasks/molmospaces/README.md |
+## License
+MolmoSpaces ([allenai/molmospaces](https://github.com/allenai/molmospaces), molmo-spaces 0.2.9, tag `v0.2.9` @
+`7351388`) is released under the Apache License 2.0 (Allen Institute for Artificial Intelligence). Assets: the scenes
+and AI2-THOR objects are CC BY 4.0; Objaverse objects are ODC-BY 1.0, each also under its creator's CC BY, CC BY-SA or
+CC0 licence, listed with its attribution in the image's `/opt/molmospaces/ATTRIBUTION.md`. The image build refuses
+any asset with non-commercial terms, so no non-commercial terms apply. The simulator is MuJoCo 3.5.0 (Apache License
+2.0).

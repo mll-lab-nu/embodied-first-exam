@@ -2,11 +2,12 @@
 
 ## Task
 Pick up the object with your right hand, pass it to the prosthetic left hand, and set it on top of the goal pillar. Each
-hand must hold it for at least 1 s, and it must never touch the table or the floor.
+hand must touch it for at least 1 s in total, and it must never touch the table or the floor.
 
 ## Goal
-Success: the object rests on top of the goal pillar, touching only the pillar, after your right hand and then the
-prosthetic hand have each held it for at least 1 s, and it has never touched the table or the floor. The episode ends as
+Success: the object rests on top of the goal pillar, touching only the pillar, after your right hand and the prosthetic
+hand have each touched it for at least 1 s in total (in either order), and it has never touched the table or the
+floor. The episode ends as
 soon as the task is done. It ends as a failure if the object is dropped, and after 10 s.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`. It is replayed open-loop

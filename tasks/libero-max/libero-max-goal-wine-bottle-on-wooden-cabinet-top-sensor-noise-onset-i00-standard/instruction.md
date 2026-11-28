@@ -4,7 +4,7 @@
 Put the wine bottle on top of the cabinet.
 
 ## Goal
-Success: the wine bottle stands on top of the cabinet, near the middle of its top.
+Success: the wine bottle is on top of the cabinet, touching it, near the middle of its top (standing or lying).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -21,7 +21,7 @@ or its MCP tools, as if it were real hardware: one live episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`. Its docstring is the full reference:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`. Its docstring is the full reference:
 `python -c "import rcb_client; help(rcb_client)"`. Where the docstring's example numbers differ, this page and `spec()`
 are right.
 

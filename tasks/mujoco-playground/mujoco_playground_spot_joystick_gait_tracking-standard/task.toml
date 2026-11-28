@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/mujoco_playground_spot_joystick_gait_tracking-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): MuJoCo Playground SpotJoystickGaitTracking (Boston Dynamics Spot) on the same frozen instance as mujoco_playground_spot_joystick_gait_tracking-privileged: Make the robot follow the joystick's commands for the whole schedule without falling over, moving its feet in the commanded gait: the same stepping pattern, rhythm and foot height. The agent only gets a client: four cameras that follow the robot (RGB, optional depth), the robot's joints and IMU, joint position chunks at 50 Hz, the feet's kinematics; 10 resets (only the last episode is graded), no world state; the sim service records the episode and grades it live (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): MuJoCo Playground SpotJoystickGaitTracking (Boston Dynamics Spot) on the same frozen instance as mujoco_playground_spot_joystick_gait_tracking-privileged: Make the robot follow the joystick's commands for the whole schedule without falling over, moving its feet in the commanded gait: the same stepping pattern, rhythm and foot height. The agent only gets a client: four cameras that follow the robot (RGB, optional depth), the robot's joints and IMU, joint position chunks at 50 Hz, the feet's kinematics; 10 resets (only the last episode is graded), no world state; the sim service records the episode and grades it live (no grading replay)."
 keywords = ["robotics", "mujoco", "mujoco-playground", "boston-dynamics-spot", "quadruped", "locomotion", "joystick", "code-as-policy", "trajectory", "standard-mode"]
 
 [metadata]
@@ -21,8 +21,8 @@ task_type = "trajectory"
 simulator = "mujoco"
 robot = "boston-dynamics-spot"
 family = "mujoco_playground/SpotJoystickGaitTracking"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
+protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 4.0
@@ -32,7 +32,7 @@ timeout_sec = 600.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -61,7 +61,7 @@ cpus = 2
 memory_mb = 4096
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

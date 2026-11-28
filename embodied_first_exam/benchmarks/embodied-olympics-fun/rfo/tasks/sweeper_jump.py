@@ -60,7 +60,7 @@ class Task(TaskBase):
         "already turning at the start; the machine's program, which changes speed, is not used",
         "the count: one player, and a run of {jumps_required} jumps in a row with no hit is the success (a "
         "round number: the game has no count, its last player standing wins); after the last jump the robot "
-        "must stand still for {stand_s} s on its podium before the boom comes round again",
+        "must stand still for {stand_s} s on its podium",
         "a hit is any touch of the boom on the robot (in the game a light touch may leave a player standing); "
         "a jump is a pass of the boom under both feet while nothing of the robot touches anything",
         "the motor: the 1 hp drive is a speed loop with a torque limit of {motor_torque_nm} N m at the boom "
@@ -91,8 +91,8 @@ class Task(TaskBase):
         self.stages = [f"jump {i}" for i in range(1, int(p["jumps_required"]) + 1)] + ["landing", "stand"]
         self._derived()
 
-    sentence = (("Jump the sweeping boom 3 times in a row without being hit, then land on your podium and stand "
-                 "still before it comes round again."))
+    sentence = ("Jump the sweeping boom 3 times in a row without being hit, then land on your feet and stand still for "
+                "1 s on your podium.")
     rules = ("You stand on a round podium, {podium_diameter_m} m across and {podium_height_m} m high, whose centre "
              "is {podium_radius_m} m from the axis of the motion base, facing the base. A foam boom "
              "{boom_diameter_m} m thick, its axis {boom_axis_above_podium_m} m above the podium's top, turns round "
@@ -102,7 +102,7 @@ class Task(TaskBase):
              "passes under both your feet while nothing of you touches anything (at the moment it passes each foot). "
              "You succeed when, after {jumps_required} counted jumps, your first contact is your feet on the podium "
              "and you then stand still for {stand_s} s (only your feet on the podium, your torso within about 20 "
-             "degrees of vertical, your pelvis slower than 0.35 m/s), before the boom comes round again. You fail "
+             "degrees of vertical, your pelvis slower than 0.35 m/s). You fail "
              "at once if the boom touches any part of you (a hit; grabbing or holding it is a hit too), if any part "
              "of you touches the bed (the floor round the podium) or the motion base, if the boom passes through a "
              "foot that is not above it, on a fall (your pelvis less than {fall_z_above_podium_m} m above the "

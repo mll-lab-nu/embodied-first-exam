@@ -12,12 +12,12 @@ simulator = "mujoco"               # the Embodied Olympics simulator: MuJoCo 3.3
 robot = "unitree-h1-2"
 family = "free_throw"
 category = "basketball-and-rackets"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 # scene = environment/instance.json (the family's parameters + its t = 0 state hash); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 8.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested: The H1-2's own Inspire hands at the core's default forces (20 N fingertips, 30 N thumb; grip factor 1), H2-class arms (no weld): the ball starts between the two open hands, the arms pressing the palms on its sides (held 5 s at rest, the ball settling onto the thumbs and the palms' heels; one hand alone cannot hold the 0.24 m ball). Positive by a declared magic action: real hold, real opening of both hands with the arms moving out of the squeeze; injected at that step: the ball moved 0.15 m up and given the 58-degree shot's velocity (about 8 m/s) to the ring; the flight, the ring and the referee are real; the same state hash twice; a bank shot (injected) is also a goal. Negatives: nop (not released within 5 s), the hands opened (the ball drops to the floor), taken back after the release, the ball on the chest, walking onto the line, leaving the semi-circle, beyond the line while the ball drops in (and the same drop from behind the line is a goal), up through the ring from below, a fall. Stress: random arm targets with the ball held: it presses at most 0.4 mm into the hands.; human review in the pull request that adds the benchmark (PROTOCOL §4)"
+oracle_evidence = "no reference solution; the referee is tested: The H1-2's own Inspire hands at the core's default forces (20 N fingertips, 30 N thumb; grip factor 1), H2-class arms (no weld): the ball starts between the two open hands, the arms pressing the palms on its sides (held 5 s at rest, the ball settling onto the thumbs and the palms' heels; one hand alone cannot hold the 0.24 m ball). Positive by a declared magic action: real hold, real opening of both hands with the arms moving out of the squeeze; injected at that step: the ball moved 0.15 m up and given the 58-degree shot's velocity (about 8 m/s) to the ring; the flight, the ring and the referee are real; the same state hash twice; a bank shot (injected) is also a goal. Negatives: nop (not released within 5 s), the hands opened (the ball drops to the floor), taken back after the release, the ball on the chest, walking onto the line, leaving the semi-circle, beyond the line while the ball drops in (and the same drop from behind the line is a goal), up through the ring from below, a fall. Stress: random arm targets with the ball held: it presses at most 0.4 mm into the hands.; human review in the pull request that adds the benchmark (docs/protocol/tasks.md#grading)"
 
 [verifier]
 timeout_sec = 900.0
@@ -26,7 +26,7 @@ timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -41,7 +41,7 @@ memory_mb = 8192
 timeout_sec = 7200.0
 # Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md).
-network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/invariants.md H.6)
 
 [environment]
 build_timeout_sec = 1800.0

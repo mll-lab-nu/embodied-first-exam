@@ -1,31 +1,41 @@
-# labutopia-pour-i00-standard
+# LabUtopia · pour (standard)
 
 | | |
 |---|---|
-| Benchmark | LabUtopia |
-| Mode | standard (`eai-standard/2.2`) |
-| Twin | `labutopia-pour-i00-privileged` |
-| Simulator / robot | `labutopia` / `franka-panda` |
-| Family / instance | `pour` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:labutopia-0.1.0` |
+| Task ID | `labutopia-pour-i00-standard` |
+| Benchmark | [LabUtopia](https://github.com/Rui-li023/LabUtopia) (Li et al., 2025), upstream `Rui-li023/LabUtopia@8df7278` |
+| Robot | Franka Emika Panda arm (7 joints) with its two-finger gripper |
+| Mode | standard |
+| Instance | `pour`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-LabUtopia's `pour` (Pour (LabUtopia's level-2 PourLiquid is the same task)) on the same frozen instance as `labutopia-pour-i00-privileged`: Pick up the small beaker and tip it over the large beaker as if pouring into it, then turn it back upright and hold it over the large beaker for a couple of seconds.
-On the bench in front of the arm: two glass beakers: a small one, about 11 cm across and 9.5 cm tall (the one to pour), and a large one, about 15.5 cm across and 13 cm tall (the one to pour into). Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
+Pick up the small beaker and tip it over the large beaker as if pouring into it, then turn it back upright and hold it
+over the large beaker for about a second and a half.
 
-## Difficulty
-Same instance and success rule as `labutopia-pour-i00-privileged` (LabUtopia's level 1). Four conditions in a fixed order, three of them counted only while the held beaker is within 7.76 cm of the other one's axis: a tilt of more than 50 degrees and back, in the hand, without losing the beaker. In standard mode the agent loses resets, the simulator and the state of the objects: it sees camera images (glassware is nearly transparent in them and absent from the depth maps) and the robot's proprioception, acts in joint target chunks, and gets one episode, so it has to find the things it handles in the images and recover from its own mistakes without starting over.
+## Success criteria
+In this order, at any point of the episode (once it has happened it counts, whatever follows):
+1. The small beaker's centre rises to more than 0.12 m higher than its starting height.
+2. Its orientation at the next control step is the reference. After that, a step counts only while the small beaker's
+   centre is within 0.0776 m horizontally of the large beaker's centre (LabUtopia's pour distance for this beaker).
+3. At a counted step it is turned more than 50 degrees from the reference.
+4. At a later counted step it is back within 30 degrees of the reference.
+5. After that, it is more than 0.05 m higher than its starting height at 84 counted control steps (1.4 s). These steps need
+   not be consecutive: steps that do not count neither add to nor reset the total.
 
-## Reference solution
-`solution/oracle_stream.py` streams the privileged reference's rows (`solution/oracle.npz`, 985 rows, float32) through the client as `joint_position_velocity` chunks; it uses no privileged information at run time. The service's recorded trajectory is then exactly the privileged reference: success after 985 control steps.
+The graded episode is the one live episode, as it ran; nothing is replayed to grade it. There is no reset. The episode
+ends when the agent sends `/finish`, when the agent's session ends (at the latest after 1 h), or after 36,000
+control steps (600 s of simulated time). Meeting the condition does not end the episode, and the service never reports
+success while it runs. The condition above is checked after every control step. When the episode ends at `/finish` or at the
+session's end while a timed hold of the condition is partly done, the last command is held for up to 120 more control steps,
+and the hold counts if it completes in that time.
 
-## Verification
-Graded by the live episode (docs/protocol/README.md H.4): `success` = the live episode's success, judged by the sim service on the episode the agent ran, with no grading replay; an episode that ended in a simulator error scores 0. The service records every executed control step; the collect hook (`environment/sim/finalize.sh`) ends the service, writes `final.json` from the live episode's record and, after the verdict is on disk, replays the recorded trajectory once from the frozen instance to render `replay.mp4` (a failed video replay costs the video only). `tests/grade.py` (separate sandbox, no network) writes the reward fields (`graded_by_live` = 1, `replays` = 0, `infra_error`, the crash-recovery fields). A missing or unfinished `final.json` (the hook never wrote its verdict) and a live episode that did not start in the instance's recorded state are `infra_error = 1`, never the agent's 0. `nop`: the episode times out, reward 0.
+An episode that ends in a simulator error scores 0. A live episode that did not start in the instance's recorded
+placements, and a service that never wrote its record, are infrastructure failures, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -36,9 +46,11 @@ Caps per container (PROTOCOL §6).
 - GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: RTX 4090, L40S, held by `sim`.
 - Recommended GPU: RTX 4090 24GB / L40S 48GB.
 
-## Details
-| | |
-|---|---|
-| Upstream | LabUtopia (github.com/Rui-li023/LabUtopia @ 8df7278; code MIT, assets CC BY-NC 4.0) on NVIDIA Isaac Sim 6.1.0 (LabUtopia pins 5.1.0; the image is built locally, images/labutopia/BUILD_ONLY) |
-| Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`embodied_first_exam/standard/`); cameras `camera_1`, `camera_2`, `wrist_cam` (512 x 512); action types `joint_position` (9) and `joint_position_velocity` (18); forward and inverse kinematics of the arm |
-| Resources | an RTX-class NVIDIA GPU for the `sim` sidecar (Isaac Sim), 8 CPUs, 32 GB of RAM |
+## License
+LabUtopia ([Rui-li023/LabUtopia](https://github.com/Rui-li023/LabUtopia) @ `8df7278`): the code is under the
+[MIT License](https://github.com/Rui-li023/LabUtopia/blob/8df72784265c375a327ffa3f0a0cf8c676f229a7/LICENSE); the data
+assets (the laboratory scenes and objects) are under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/):
+**non-commercial use only** (research and education). The simulator is NVIDIA Isaac Sim 6.1.0, under the
+[NVIDIA Isaac Sim / Omniverse licence](https://docs.isaacsim.omniverse.nvidia.com/latest/common/NVIDIA_Omniverse_License_Agreement.html);
+it may not be redistributed, so the simulator image is built locally and never published. The robot model and 64
+files from NVIDIA's public asset server come under NVIDIA's terms.

@@ -5,8 +5,9 @@ Put the bok choy with the onions, the leeks with the broccoli, and the corn into
 in one bowl.
 
 ## Goal
-Success: one mixing bowl holds all three bok choy and all three onions, one holds both leeks and both broccoli, and one
-holds all three ears of sweet corn. It counts only once the scene has settled: nothing the task names (a tool included)
+Success: a mixing bowl holds all three bok choy and all three onions, a mixing bowl holds both leeks and both broccoli,
+and a mixing bowl holds all three ears of sweet corn (they need not be different bowls). It counts only once the scene
+has settled: nothing the task names (a tool included)
 is still in a gripper, and everything has come to rest. The replay of your trajectory ends as soon as the task is done.
 After your last row, the robot is held still for a few seconds (as `s.settle()` does). A success that settles during
 that time counts, so you need not record that wait. A fall of the robot or a simulator breakdown (a runaway or

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Agent-ended episodes (docs/protocol/README.md §3 "Agent-ended episodes", required from protocol v3.0; Appendix H.3:
+"""Agent-ended episodes (docs/protocol/eai-standard.md "Agent-ended episodes", required from protocol v3.0; invariants.md H.3:
 the service never shows the task's success). Two tiers:
 
   --tier invariants (the required CI job `invariants`, ci_checks/run_invariants.sh): every standard and realtime task
@@ -63,7 +63,7 @@ def errors(tasks: list[Path], tier: str) -> list[str]:
             if proto not in tc.MODE_REGISTRY[mode]["protocols"] and proto not in tc.own_protocols(t.name, mode):
                 errs.append(f"{rel}: protocol {proto!r} is neither one of {mode} mode's "
                             f"{list(tc.MODE_REGISTRY[mode]['protocols'])} nor one its benchmark's exported.toml lists for "
-                            "this task (only those keep their own rules, PROTOCOL §3)")
+                            "this task (only those keep their own rules, docs/protocol/tasks.md#modes)")
         if not tc.agent_end_required(t):
             continue
         text = (t / "instruction.md").read_text(encoding="utf-8") if (t / "instruction.md").is_file() else ""
@@ -71,7 +71,7 @@ def errors(tasks: list[Path], tier: str) -> list[str]:
             compose = tc.read_text(t / "environment/docker-compose.yaml") or ""
             if not tc.AGENT_END_RE.search(tc.service_block(compose, "sim")):
                 errs.append(f"{rel}: its sim service does not set RCB_AGENT_END: \"1\" (agent-ended episodes are required "
-                            "in standard and realtime mode, PROTOCOL §3; normalize writes it)")
+                            "in standard and realtime mode, docs/protocol/tasks.md#modes; normalize writes it)")
             lines = tc.limits_lines(text)
             fin = [v for k, v in lines if k == "Finish"]
             want = tc.limits_finish(t, next((v for k, v in lines if k == "Steps"), ""))

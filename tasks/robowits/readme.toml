@@ -1,0 +1,291 @@
+# README data for tasks/robowits/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text:
+#   upstream  RoboWits (UMass-Embodied-AGI/RoboWits @ 9cc30ae): gs_gym/envs/robowits/<NN>_<task>.py, `_check_success` of
+#             each shipped family (line numbers below are at 9cc30ae); gs_gym/envs/robowits/utils.py L142-180
+#             check_being_held (either gripper's end-effector point inside the object's bounding box grown by 3 cm).
+#             Every predicate's "table area" is TABLE_X 0.21..1.00, TABLE_Y -0.69..0.69 (world frame), table top z 0.76.
+#   tooling   embodied_first_exam/benchmarks/robowits/privileged/tests/rcb_robowits.py: SETTLE_STEPS 30, CHECK_STEPS 60,
+#             CHECK_STRIDE 6, REST_M 0.002 (L339-342), GRADED (L343-359: "rest" objects, stand_pages "release_also"),
+#             MOVE_CUBE_LINE_X / FALLEN_M (L360-361), _family_clause (move_cube, L735-743), goal() L755-761 (predicate AND
+#             clause AND no robot contact with the graded objects, Genesis' contact list), settle_check() L763-800,
+#             replay() L816-839, step() L697-716 (MAX_STEPS 200,000, L318), _poses_match() L641-660.
+#   graders   privileged: embodied_first_exam/benchmarks/robowits/privileged/tests/grade.py L91-133 (one replay);
+#             standard: embodied_first_exam/benchmarks/robowits/sim/server.py finish() L181-223 (RCB_AGENT_END=1 in every
+#             standard docker-compose), instance check L226-235, and standard/tests/grade.py.
+# Standard READMEs give no world coordinates (README "World-frame information"; ci_checks/benchmarks/robowits/
+# check-world-frame-texts.sh): every family text below is written relative to the objects and the table top. Only the
+# privileged mode text and move_cube's privileged text name world coordinates.
+
+[benchmark]
+name = "RoboWits"
+citation = "Lin et al., 2026"           # upstream README "Citation": lin2026robowits, arXiv:2605.30326
+url = "https://github.com/UMass-Embodied-AGI/RoboWits"
+repo = "UMass-Embodied-AGI/RoboWits"
+commit = "9cc30ae"
+# The frozen scene's dataset entry: seed.toml of the other seeds replaces "entry 0 of RoboWits' `eval_dataset_50/NN.json`".
+others = """
+The frozen scene is entry {seed} of RoboWits' `eval_dataset_50/{vars[ds]}.json` (RoboWits task
+`robowits/{vars[upstream]}`).
+"""
+
+[license]
+text = """
+RoboWits ([UMass-Embodied-AGI/RoboWits](https://github.com/UMass-Embodied-AGI/RoboWits) @ `9cc30ae`) is MIT-licensed,
+as declared in its `pyproject.toml`. Genesis 0.4.7 is under the Apache License 2.0, and RoboWits' asset bundle
+(`XHRlyb2001/RoboWits_assets`) also under Apache-2.0. Most families also load BlenderKit models. BlenderKit licenses
+each model to the account that downloads it, and these models may not be redistributed, so they are not in the image
+or the repository. Users fetch them with their own BlenderKit key, or use the encrypted research bundle, whose terms
+allow **non-commercial academic research only** (`images/robowits/NOTICE`).
+"""
+
+[robots]
+marvin-bimanual = "Bimanual Marvin: two 7-DoF arms with Pika parallel grippers"
+
+# grade.py L91-133: no file -> missing_trajectory; np.load fails / no `task` or `actions` / a member > 256 MB (L36, L45-52)
+# -> bad_trajectory; task != family -> wrong_family (L102); ndim != 2, width != 16, T > MAX_STEPS, non-finite ->
+# bad_trajectory (L104); Session() raises -> instance_build_failed, grader_error = infra_error = 1 (L107-112); success =
+# replay()["success"] (settle_check) AND instance_matches (CPU backend; else infra_error 1, L117-124).
+# rcb_robowits.py replay() L816-839: reset, rows (stop on the cap), then settle_check() with the cap lifted by the
+# window's length when T <= 200,000 (L827-836); step() L697-716 returns True at the 200,000th control step and raises
+# after it.
+[modes.privileged]
+success = """
+The verifier, in a separate sandbox without network, replays `/app/output/trajectory.npz` once in a fresh process
+from its own copy of the frozen instance: a reset, then the rows open-loop, one per 1/30 s control step. A settle
+window follows the last row. The robot holds the last row's joint targets for 30 control steps (1 s), and nothing is
+checked. For 60 more control steps (2 s) the goal must then hold at every 6th step and at the last one. Through those
+60 steps the set of graded objects must not change, and no graded object may move more than 2 mm from where it was
+when they began. The task scores 1 only if the window passes.
+
+Where the goal names the table area, it is the world-frame rectangle 0.21 ≤ x ≤ 1.00 m, −0.69 ≤ y ≤ 0.69 m;
+the table top is at z = 0.76 m.
+
+A missing file scores 0, and so does an invalid one. Invalid means: not a readable `.npz`, no `task` or `actions`
+entry, an entry over 256 MB, a `task` other than this family, `actions` that are not finite numbers of shape (T, 16),
+or T over 200,000. The window runs past the cap of 200,000 control steps, so a trajectory of up to 200,000 rows gets
+its full window. The rebuilt scene must match the frozen instance: the same state hash, or every object within 2 mm
+and 0.02 (quaternion components) and every joint within 0.002 rad of the recorded pose. A scene that does not match,
+or does not build, is an infrastructure error, not a score.
+"""
+
+# server.py finish() L181-223 with AE.ENABLED: "finished" (POST /finish) and "timeout" (session end, agent_exit folded
+# in) -> settle(journal_step) = Session.settle_check on the live simulator; "step_guard" -> "step_limit": check_success()
+# = Session.goal() as it stands (no window); "error" (simulator) -> success stays False. L226-235: instance_matches false
+# -> give_up("instance_mismatch", infra=True) before the agent is served. standard/tests/grade.py: success =
+# final.json success AND graded_by live AND not infra AND reason != "error".
+[modes.standard]
+success = """
+Graded: the live episode the simulator service ran; nothing is replayed. There is one episode and no reset. The
+episode ends when the agent sends `/finish` or when its session ends (at the latest after {timeout}). Success is never
+shown and never ends the episode. The verdict is a settle window on the live simulator, from the state the episode
+ends in. The robot holds the last command for 30 control steps (1 s), and nothing is checked. For 60 more control
+steps (2 s) the goal must then hold at every 6th step and at the last one. Through those 60 steps the set of graded
+objects must not change, and no graded object may move more than 2 mm from where it was when they began. The window's
+steps are part of the recorded episode.
+
+Where the goal names the table area, it is a fixed rectangle, 0.79 m deep (away from the robot) and 1.38 m wide,
+that the predicates use as the table's extent. Heights are measured from the table top.
+
+The episode also ends on a simulator error, which scores 0. It also ends after 200,000 control steps: the goal is then
+judged as it stands, with no window. A window cut short by that cap does not pass. The scene is checked against the
+frozen instance before the agent is served; a mismatch is an infrastructure failure, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------- families
+# "held" below = upstream check_being_held (utils.py L142-180). "touches" = Genesis' contact list (rcb_robowits.py
+# touching_robot / goal L745-761). "Graded objects" = GRADED[family]["rest"] (L343-359).
+
+# 01_align_blocks.py L152-238: every object but table/robot with pos inside the table area +-3 cm (L203-218); each cube's
+# bounds zmin within 2.5 cm of 0.76 (L195-201, L220-222); the farthest pair >= 3 cm (L226-230); the third centre within
+# 1.0 cm of the line through that pair (L232-236).
+[families.align_blocks]
+vars = { ds = "01", upstream = "01-align-blocks-v0" }
+success = """
+The goal: seen from above, the two centres of the three target cubes that are farthest apart are at least 3 cm apart,
+and the third centre is within 1.0 cm of the straight line through them. Each cube's bounding-box bottom is within
+2.5 cm of the table top. Every object in the scene except the table and the robot, the ruler included, has its centre
+over the table area enlarged by 3 cm on every side. No part of the robot touches any of the three cubes. Graded
+objects: the three cubes.
+"""
+
+# 12_ball_into_bottle.py L162-265: ball radius = half the smallest bounds side (L215-226); ball bottom > table + 2 mm
+# (L228-230); ball centre (xy) inside the bottle's 2D hull (L232-254); ball top < bottle bounds top - 11 cm (L256-257);
+# ball bottom > bottle bounds bottom + 2 mm (L258); not_fallen: ball and bottle bounds zmin >= table - 5 cm (L193-206,
+# L260-261).
+[families.ball_into_bottle]
+vars = { ds = "12", upstream = "12-ball-into-bottle-v0" }
+success = """
+The goal: the small ball's centre, seen from above, lies inside the red bottle's footprint. The top of the ball is more
+than 11 cm below the top of the bottle's bounding box. The bottom of the ball is more than 2 mm above the table top
+and more than 2 mm above the bottom of the bottle's bounding box. The ball's radius here is half the smallest side of
+its bounding box. Neither the ball's nor the bottle's bounding-box bottom is more than 5 cm below the table top. No
+part of the robot touches the ball. Graded object: the ball.
+"""
+others = """
+The frozen scene is entry {seed} of RoboWits' `eval_dataset_50/{vars[ds]}.json` (RoboWits task
+`robowits/{vars[upstream]}`).
+
+The red bottle's base collides as a thin shell (about 3.5 mm) in the simulator. A ball that falls through it ends on
+the table, and the goal then fails.
+"""
+
+# 17_ball_onto_tower.py L182-265: tower base and ball hull (else centre) inside the table area +-1 mm (L196-215); ball
+# speed < 0.05 m/s and |vz| < 0.03 m/s (L217-224); ball centre z > base bounds top + 5 mm (L231-233); ball centre (xy)
+# inside the base's 2D hull (L235-258); not held (L261).
+[families.ball_onto_tower]
+vars = { ds = "17", upstream = "17-ball-onto-tower-v0" }
+success = """
+The goal: the footprints of the tower base and of the ball lie inside the table area (within 1 mm). The ball moves
+slower than 5 cm/s, and slower than 3 cm/s vertically. Its centre is more than 5 mm above the top of the tower base's
+bounding box and, seen from above, inside the tower base's footprint. Neither gripper's end-effector point is inside
+the ball's bounding box grown by 3 cm on every side. No part of the robot touches the ball. Graded object: the ball.
+"""
+
+# 10_collect_screws.py L131-185: screw centre over the table area +-2 cm and z >= table - 5 cm (L173-178); screw centre
+# inside the container's bounds, +-1 mm in x and y, +-2 cm in z (L144-158, L180-184).
+[families.collect_screws]
+vars = { ds = "10", upstream = "10-collect-screws-v0" }
+success = """
+The goal: the screw's centre is over the table area enlarged by 2 cm on every side, no more than 5 cm below the table
+top, and inside the container's bounding box, enlarged by 1 mm horizontally and by 2 cm up and down. No part of the
+robot touches the screw. Graded object: the screw.
+"""
+
+# 13_cover_with_lid.py L158-250: the pot's hull inside the table area +-1 mm (L204-209); for each of "small lid", "lid
+# medium", "lid large": hull inside the table area +-1 mm, centre z > pot centre z + 1 cm, area ratio lid/pot in
+# 0.85..1.40, overlap (lid hull ∩ pot hull) / lid area >= 0.80 (L217-248); exactly one valid lid (L250). GRADED: "lid
+# large" (rest, no contact).
+[families.cover_with_lid]
+vars = { ds = "13", upstream = "13-cover-with-lid-v0" }
+success = """
+The goal: the pot's footprint lies inside the table area (within 1 mm). Exactly one of the three lids (small, medium,
+large) meets all of these: its footprint lies inside the table area (within 1 mm); its centre is more than 1 cm higher
+than the pot's centre; its footprint's area is 0.85 to 1.40 times the pot's; and at least 80 % of its footprint lies
+over the pot's footprint. No part of the robot touches the large lid. Graded object: the large lid.
+"""
+
+# 06_dominos.py L173-282: overlap (red block 2D hull ∩ target hull) / red block area >= 0.5 (L274-282); nothing else.
+[families.dominos]
+vars = { ds = "06", upstream = "06-dominos-v0" }
+success = """
+The goal: at least 50 % of the red block's footprint, seen from above, lies over the green target area's footprint.
+Nothing else about the scene is part of the predicate. No part of the robot touches the red block. Graded object: the
+red block.
+"""
+
+# 03_gap_retrieve.py L136-279: lemon bounds zmin within 2 cm of the table top (L251-259); lemon and target hulls inside
+# the table area +-0.1 mm (L261-264); overlap / lemon area >= 0.8 (L266-271); not held (L273-277).
+[families.gap_retrieve]
+vars = { ds = "03", upstream = "03-gap-retrieve-v0" }
+success = """
+The goal: the lemon's bounding-box bottom is within 2 cm of the table top. The footprints of the lemon and of the
+green target area lie inside the table area. At least 80 % of the lemon's footprint lies over the target area's
+footprint. Neither gripper's end-effector point is inside the lemon's bounding box grown by 3 cm on every side. No
+part of the robot touches the lemon. Graded object: the lemon.
+"""
+
+# 09_hold_cup.py L151-301: overlap (cup hull ∩ target hull) / cup area >= 0.5 (L263-276); cup speed <= 0.005 m/s
+# (L278-283); roll and pitch each <= 20 deg (L158, L165-178, L285); cup hull inside the table area (L287-295); not held
+# (L297).
+[families.hold_cup]
+vars = { ds = "09", upstream = "09-hold-cup-v0" }
+success = """
+The goal: at least 50 % of the cup's footprint lies over the green target area's footprint. The cup moves no faster
+than 5 mm/s. Its roll and pitch angles are each within 20° of zero. Its footprint lies inside the table area. Neither
+gripper's end-effector point is inside the cup's bounding box grown by 3 cm on every side. No part of the robot touches
+the cup. Graded object: the cup.
+"""
+
+# 28_move_cube.py L165-185: a rigid cube with centre x > 0.9 (L172-183). rcb_robowits.py _family_clause L735-743: the
+# cubes with x > 0.9 and bounds zmin >= 0.76 - 0.02 (FALLEN_M); at least one; they are the graded objects (GRADED
+# "move_cube": rest [] + the clause's cubes).
+[families.move_cube]
+vars = { ds = "28", upstream = "28-move-cube-v0" }
+success = """
+The goal: at least one of the three cubes has its centre past the goal line, on the side away from the robot, and its
+bounding-box bottom no more than 2 cm below the table top. The cubes that meet both are the graded objects, and no
+part of the robot touches them.
+"""
+privileged = """
+The goal: at least one of the three cubes has its centre past the goal line (x > 0.9 m), and its bounding-box bottom
+no more than 2 cm below the table top. The cubes that meet both are the graded objects, and no part of the robot
+touches them.
+"""
+
+# 24_raise_platform.py L164-279: cups and book bounds zmin >= table - 5 cm (L253-255); book zmin > table + 5 mm
+# (L257-258); each cup centre (xy) inside the book's 2D hull or within 5 cm of it (L259-268); |book zmin - cup bounds
+# top| <= 3.5 cm for both cups (L270-274); book not held (L276).
+[families.raise_platform]
+vars = { ds = "24", upstream = "24-raise-platform-v0" }
+success = """
+The goal: no bounding-box bottom of the two cup supports and the heavy book is more than 5 cm below the table top. The
+book's bounding-box bottom is more than 5 mm above the table top. Each cup's centre, seen from above, lies inside the
+book's footprint or within 5 cm of it. The book's bounding-box bottom is within 3.5 cm of each cup's bounding-box top.
+Neither gripper's end-effector point is inside the book's bounding box grown by 3 cm on every side. No part of the
+robot touches the book. Graded object: the book.
+"""
+
+# 02_retrieve_cube.py L127-303: cube bounds zmin in [table - 1 cm, table + 3 cm] (L279-281); cube and target hulls inside
+# the table area +-1 cm (L256-263, L283-286); overlap with the container (the first of "deep narrow container", "wide
+# open container" present) / cube area < 0.5 (L269-297); overlap with the target / cube area >= 0.5 (L299-303).
+[families.retrieve_cube]
+vars = { ds = "02", upstream = "02-retrieve-cube-v0" }
+success = """
+The goal: the cube's bounding-box bottom is between 1 cm below and 3 cm above the table top. The footprints of the
+cube and of the green target area lie inside the table area enlarged by 1 cm on every side. Less than 50 % of the
+cube's footprint lies over the container's footprint, and at least 50 % of it lies over the target area's. No part of
+the robot touches the cube. Graded object: the cube.
+"""
+
+# 19_stack_bowls.py L109-177: both bowls' hulls inside the table area +-1 cm (L139-160, L167-168); the hull centres
+# (mean of the hull points) within 1 cm + 1 mm of each other (L170-177). No height or order check.
+[families.stack_bowls]
+vars = { ds = "19", upstream = "19-stack-bowls-v0" }
+success = """
+The goal: the footprints of the large and the medium bowl lie inside the table area enlarged by 1 cm on every side,
+and their centres, seen from above, are within 1.1 cm of each other. Which bowl is on top, and their heights, are not
+checked. No part of the robot touches either bowl. Graded objects: both bowls.
+"""
+
+# 14_stack_cubes.py L140-181: both base cubes' bounds zmin within 1.5 cm of the table top (L152-162); their bounds
+# within 1 cm of each other on every axis (L156-165); apex bounds zmin >= base cube 1's bounds top - 1 cm (L167-170);
+# apex centre within 2.5 cm (xy) of the apex target's centre (L172-176); apex not held (L178).
+[families.stack_cubes]
+vars = { ds = "14", upstream = "14-stack-cubes-v0" }
+success = """
+The goal: the bounding-box bottoms of both grey base cubes are within 1.5 cm of the table top, and their bounding
+boxes are within 1 cm of each other along every axis. The red cube's bounding-box bottom is no more than 1 cm below
+the top of the first base cube's bounding box. The red cube's centre is within 2.5 cm, seen from above, of the green
+dot's centre. Neither gripper's end-effector point is inside the red cube's bounding box grown by 3 cm on every side.
+No part of the robot touches any of the three cubes. Graded objects: the three cubes.
+"""
+
+# 16_stand_bulb.py L168-310: the tall object's and the target patch's hulls inside the table area +-1 mm (L269-277);
+# upright = bounds height > its larger horizontal side (L279-285); speed <= 0.05 m/s (L287-292); overlap / tall object
+# area >= 0.8 (L295-305); not held (L307).
+[families.stand_bulb]
+vars = { ds = "16", upstream = "16-stand-bulb-v0" }
+success = """
+The goal: the footprints of the tall object with the curved bottom and of the green target patch lie inside the table
+area (within 1 mm). The tall object's bounding box is taller than its larger horizontal side, and the object moves no
+faster than 5 cm/s. At least 80 % of its footprint lies over the target patch's footprint. Neither gripper's
+end-effector point is inside its bounding box grown by 3 cm on every side. No part of the robot touches it. Graded
+object: the tall object.
+"""
+others = """
+The frozen scene is entry {seed} of RoboWits' `eval_dataset_50/{vars[ds]}.json` (RoboWits task
+`robowits/{vars[upstream]}`), simulated on until both the ring and the tall object were at rest.
+"""
+
+# 07_stand_pages.py L125-181 (ANGLE_TOL_DEG 15, Z_CONTACT_TOL 0.03, L40-42): per page, roll and pitch each within 15 deg
+# of 0 or 180 (L132-146); the 2D hull inside the table area (L148-155); bounds zmin within 3 cm of the table top
+# (L157-161); not held (L178). GRADED: both pages (rest), the stabilizing bar (release_also: no contact).
+[families.stand_pages]
+vars = { ds = "07", upstream = "07-stand-pages-v0" }
+success = """
+The goal, for each of the two pages with eyelets: its roll and pitch angles are each within 15° of 0° or 180°; its
+footprint lies inside the table area; its bounding-box bottom is within 3 cm of the table top; and neither gripper's
+end-effector point is inside its bounding box grown by 3 cm on every side. No part of the robot touches either page
+or the stabilizing bar. Graded objects: the two pages.
+"""

@@ -1,0 +1,454 @@
+# README data for tasks/vlabench/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text:
+#   upstream  VLABench @ cf588fe (OpenMOSS/VLABench), VLABench/tasks/dm_task.py: init_conditions L202-223 (the
+#             conditions of the episode configuration, i.e. each task's instance.json episode.task.conditions, all of
+#             them at once: ConditionSet), should_terminate_episode L298-303; tasks/condition.py: OrderCondition
+#             L30-41, ContainCondition L57-64, NotContainCondition L83-90, IsGraspedCondition L105-110,
+#             ButtonPressedCondition L119-120, AboveCondition L167-176, PourCondition L192-199, JointInRangeCondition
+#             L272-278, LiftCondition L292-297, ConditionSet.is_met L309-311; tasks/components/entity.py: key_sites
+#             L115-125 (group-3 sites), get_xpos L138-139 (the entity's root frame), CommonGraspedEntity.is_grasped
+#             L236-248 / get_grasped_keypoints L250-260; tasks/components/container.py: CommonContainer.contain L46-54,
+#             FlatContainer _build z_threshold = 0.1 L63-71 and contain L84-102, ContainerWithDoor L126-153
+#             (close_threshold = pi/10); tasks/components/specific_entities/common_containers.py: BilliardTable
+#             L76-95, Shelf.contain L171-173; button.py L32-52; interactive_containers.py Microwave.is_activate
+#             L111-120; robots/single_arm/franka.py gripper_geoms L32-35.
+#             The asset annotations (keypoint, grasp-point and horizontal_radius sites, joints) are read from
+#             lerobot/vlabench-assets @ 08d7a44, the files each instance.json names.
+#   tooling   embodied_first_exam/benchmarks/vlabench/privileged/environment/vlb_tool.py: MAX_STEPS = 4000 L37,
+#             load_npz L66-87, Session.reset L197-228 (hash checks L202-207; RCB_AGENT_END: the termination check
+#             replaced by a never-terminating one, the original kept as the success check, L208-210), _env_step
+#             L230-241 (clip into the actuator bounds; done = the native termination), replay L269-277 (a row after
+#             the termination raises EpisodeOver), status L310-312.
+#   graders   privileged/tests/grade.py L71-84 (missing / invalid file), L85-110 (one fresh-process replay, 3600 s;
+#             exit 2 = invalid trajectory), L111-113 (any other failure = grader_error); sim/server.py EVENT_TASKS L58,
+#             end_judgement L80, step L171-173; standard/sidecar/rcb_service.py END_STATE_REASONS L131, _judged L682-685, _step
+#             L939-957, _end L959-976; embodied_first_exam/standard/sidecar/grade.py L113 (reason "error" is 0).
+# Positions are entity origins (Entity.get_xpos). VLABench places a control step at 0.1 s = 100 physics steps of 1 ms.
+# The table top of the `Table` asset (obj/meshes/table/table.xml) is at z = 0.735 + 0.025 = 0.76 m.
+
+[benchmark]
+name = "VLABench"
+citation = "Zhang et al., 2024"      # upstream README "Citation": arXiv 2412.18194
+url = "https://github.com/OpenMOSS/VLABench"
+repo = "OpenMOSS/VLABench"
+commit = "cf588fe"
+
+[license]
+text = """
+VLABench ([OpenMOSS/VLABench](https://github.com/OpenMOSS/VLABench) @ `cf588fe`; Zhang et al., 2024, arXiv:2412.18194)
+code: MIT License (its `LICENSE.txt`). The scene and object assets come from the Hugging Face dataset
+[lerobot/vlabench-assets](https://huggingface.co/datasets/lerobot/vlabench-assets) @ `08d7a44`, which states no licence:
+they are downloaded when the image is built and are never redistributed by this repository or in a published image.
+MuJoCo 3.2.2 and dm_control 1.0.22: Apache-2.0. No non-commercial terms apply.
+"""
+
+[robots]
+franka-panda = "Franka Emika Panda arm (7 joints) with its two-finger gripper, VLABench's model on a fixed base"
+
+# privileged/tests/grade.py main L71-84: no file -> missing_trajectory; load_npz (pickle-free, <= 8 MiB, .npy members
+# only) and `actions` finite (T, 9), 1 <= T <= MAX_STEPS = 4000 -> invalid_trajectory; replay L85-110 (one fresh process,
+# timeout 3600 s): vlb_tool Session.replay steps each row (clipped into the actuator bounds), raising EpisodeOver at a row
+# after the native termination (exit 2 -> invalid_trajectory); success = status()["success"] after the last row, i.e.
+# the termination condition at the last control step. Session() refusing the instance (hash mismatch), a replay crash
+# (a dm_control PhysicsError included) or its timeout -> grader_error = 1 (L111-113).
+[modes.privileged]
+success = """
+Positions are object origins in the world frame of the instruction (metres, z up). A control step is 0.1 s (100 physics
+steps of 1 ms), and VLABench checks the condition after every control step.
+
+The graded file is `/app/output/trajectory.npz`: key `actions`, a finite (T, 9) array with 1 ≤ T ≤ 4000, one row of
+joint and finger targets per control step (rows are clipped into the actuators' bounds). The verifier replays it once,
+open-loop, in a fresh process from the frozen start. VLABench ends the episode at the first control step after which
+the condition holds. The trajectory passes when that is its last row. A row after that step makes the trajectory
+invalid (score 0), and a replay whose rows run out before the condition holds scores 0. A missing file, a file that is
+not a pickle-free npz of at most 8 MiB, or an `actions` array of another shape, with a non-finite value or with more
+than 4000 rows scores 0. A replay that fails with an error, runs over 3600 s, or finds a frozen scene that does not
+rebuild with the recorded model and initial-state hashes is a grader error, not a score.
+"""
+
+# environment/sim/server.py (RCB_AGENT_END=1, RCB_MAX_CONTROL_STEPS=9000, RCB_RESET_BUDGET=0 in the compose file):
+# step() L171-173 returns VLABench's condition after every control step (vlb_tool's success check); done is never set
+# (the termination is replaced, vlb_tool L208-210), so no "failed" end. rcb_service _step L939-957 / _end L959-976: the
+# ends "finished" (POST /finish), "step_limit" (9000 rows) and "timeout" (session end) are judged by _judged L682-685:
+# the condition after the last control step (end_judgement "state"), or any control step's for the EVENT_TASKS
+# (end_judgement "events", the families' `standard` texts); reason "error" -> 0 (sidecar/grade.py L113);
+# sim_crashed_on_call -> 0; instance_mismatch, sim_crashed, resume_failed, no finalized verdict -> infra_error.
+[modes.standard]
+success = """
+Positions are object origins in the world frame of the instruction (metres, z up). A control step is 0.1 s (100 physics
+steps of 1 ms), and the service checks the condition after every control step. It never reports it, and a success does
+not end the episode.
+
+Graded is the one live episode (no reset). It ends at the agent's `POST /finish`, after 9,000 control steps, when the
+agent's session ends, or on a simulator error. Unless stated otherwise above, it passes when the condition holds after
+the last control step of the episode. A simulator error raised by the agent's calls, or simulator crashes during its
+calls that the service cannot resume from, end the episode with 0. A frozen scene that does not rebuild with the
+recorded model and initial-state hashes, or service crashes outside the agent's calls, are infrastructure errors, not a
+score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families. One instance each (instance_seed 0); the condition is the instance's episode.task.conditions
+# (instance.json), plus the task class's own should_terminate_episode where it has one. "Inside the box spanned by the
+# keypoint sites" = CommonContainer.contain (an axis-aligned box, bounds included); a flat container's contain is
+# FlatContainer.contain (the radius branch when the asset has a horizontal_radius_site, else the keypoint footprint).
+
+# add_condiment: conditions above(target_entity bbq_sauce, platform pan_seen) + pour(target_entity bbq_sauce, threshold
+# 0). AboveCondition: bottle origin z >= pan origin z, then pan.contain((x, y, z_pan + 0.01)); pan_seen
+# (tablewares/pans/pan_0) is a FlatContainer with a horizontal_radius_site 0.1247 m from its origin, so the test is
+# the horizontal distance < radius (the height test 0 < 0.01 < 0.1 always holds). PourCondition: bottom_site z -
+# top_site z > 0 (sites of condiment/bbq_sauce/bbq_sauce1).
+[families."vlabench/add_condiment"]
+success = """
+Condition (VLABench's `above` and `pour`, both at once): the BBQ sauce bottle's (`bbq_sauce`) origin is at least as high
+as the pan's (`pan_seen`) origin and less than the pan's radius (its `horizontal_radius_site`, about 12.5 cm)
+horizontally from it; and the bottle's `bottom_site` is higher than its `top_site`. No sauce is simulated.
+"""
+
+# book_rearrange: contain(container shelf_seen, the three books) + order(axis [0], default offset 0.1) over [Don Quixote,
+# Pride and Prejudice, The Metamorphosis]. Shelf.contain with layer None = CommonContainer.contain over the keypoint
+# sites of both layers (containers/shelf/shelf1.xml layer_0 and layer_1). OrderCondition: init_conditions L215-219
+# skips only positions and target_pos_range and passes every other list kwarg through self.entities.get, so axis [0]
+# becomes [None] and no axis is sorted: for x, y and z alike, entity_points[i] - entity_points[i+1] < offset (signed,
+# not absolute).
+[families."vlabench/book_rearrange"]
+success = """
+Condition (VLABench's `contain` and `order`, all at once): the origins of the three books
+(`century17_don_quixote_book`, `century18_pride_and_prejudice_book`, `century20_the_metamorphosis_book`) lie inside
+the axis-aligned box spanned by the bookshelf's (`shelf_seen`) keypoint sites, over both of its shelves; and for each
+of the first two books (Don Quixote, Pride and Prejudice), its x, its y and its z are each less than 0.1 m larger than
+those of the next book (VLABench's loader drops the order condition's axis, so a book may lie up to 0.1 m to the
+robot's right of the next one). Whether the books stand upright or touch each other is not checked.
+"""
+
+# find_unseen_object: not_contain(container cabinet_seen, entities [apple]); cabinet_seen (ContainerWithDrawer,
+# containers/cabinets/short_cabinet/short_cabinet_fix.xml) has its keypoint sites in its three drawer bodies.
+[families."vlabench/find_unseen_object"]
+success = """
+Condition (VLABench's `not_contain`): the apple's origin is outside the axis-aligned box spanned by the cabinet's
+(`cabinet_seen`) keypoint sites. These sites sit on its three drawers, so the box is taken where the drawers are at
+that moment.
+"""
+
+# The four button families: conditions press_button(target_button button1); PressButtonTask; Button.is_pressed =
+# _is_activated (touch sensor of the button's site within target_force_range (0.01, 100) N at the last physics step)
+# and _num_activated_steps > 10 (consecutive physics steps, counted in after_substep). They are EVENT_TASKS in the
+# standard service (sim/server.py L58): `standard` replaces the text there.
+[families."vlabench/friction_qa"]
+success = """
+Condition (VLABench's `press_button`): button `button1`, the one in front of the metal box (the other two buttons have a
+metal cylinder each), is pressed: after the control step, the touch force on the button has been between 0.01 and
+100 N on each of at least the last 11 consecutive physics steps.
+"""
+standard = """
+Condition (VLABench's `press_button`): button `button1`, the one in front of the metal box (the other two buttons have a
+metal cylinder each), is pressed: after the control step, the touch force on the button has been between 0.01 and
+100 N on each of at least the last 11 consecutive physics steps.
+
+The press counts as it happens: the episode passes when the condition held after any one control step of it, even if
+the button is released before the episode ends.
+"""
+
+[families."vlabench/magnetism_qa"]
+success = """
+Condition (VLABench's `press_button`): button `button1`, the one in front of the metal cylinder (the other two buttons
+have a stone capsule and a wooden cylinder), is pressed: after the control step, the touch force on the button has been
+between 0.01 and 100 N on each of at least the last 11 consecutive physics steps.
+"""
+standard = """
+Condition (VLABench's `press_button`): button `button1`, the one in front of the metal cylinder (the other two buttons
+have a stone capsule and a wooden cylinder), is pressed: after the control step, the touch force on the button has been
+between 0.01 and 100 N on each of at least the last 11 consecutive physics steps.
+
+The press counts as it happens: the episode passes when the condition held after any one control step of it, even if
+the button is released before the episode ends.
+"""
+
+# reflection_qa: the Mirrors entity carries one mirror per button, reflectance [0.561, 0.895, 0.357] (instance.json);
+# the config manager's target_button is the button of the largest one (reflection_qa.py load_objects).
+[families."vlabench/reflection_qa"]
+success = """
+Condition (VLABench's `press_button`): button `button1`, the one in front of the most reflective mirror (reflectance
+0.90; the other two 0.56 and 0.36), is pressed: after the control step, the touch force on the button has been between
+0.01 and 100 N on each of at least the last 11 consecutive physics steps.
+"""
+standard = """
+Condition (VLABench's `press_button`): button `button1`, the one in front of the most reflective mirror (reflectance
+0.90; the other two 0.56 and 0.36), is pressed: after the control step, the touch force on the button has been between
+0.01 and 100 N on each of at least the last 11 consecutive physics steps.
+
+The press counts as it happens: the episode passes when the condition held after any one control step of it, even if
+the button is released before the episode ends.
+"""
+
+[families."vlabench/select_painting"]
+success = """
+Condition (VLABench's `press_button`): button `button1`, the one in front of the ukiyo-e painting (`ukiyo-e_painting`),
+is pressed: after the control step, the touch force on the button has been between 0.01 and 100 N on each of at least
+the last 11 consecutive physics steps.
+"""
+standard = """
+Condition (VLABench's `press_button`): button `button1`, the one in front of the ukiyo-e painting (`ukiyo-e_painting`),
+is pressed: after the control step, the touch force on the button has been between 0.01 and 100 N on each of at least
+the last 11 consecutive physics steps.
+
+The press counts as it happens: the episode passes when the condition held after any one control step of it, even if
+the button is released before the episode ends.
+"""
+
+# hammer_nail_and_hang_picture: HammerNailandHangPictureTask (HangPictureTask, select_painting_series.py L217-253):
+# after_step sets should_terminate (latched, reset only by initialize_episode) once the painting's last grasp keypoint
+# (its one group-4 site, paintings/painting.xml) is < 0.05 m from the nail's (the nail asset tools/nail/nail_0 has no
+# grasp site, so CommonGraspedEntity returns the nail entity's origin; the nail is attached to the arena, its body
+# slides inside); termination = should_terminate AND joint_in_range(entities [nail], target_pos_range [0.05, 0.08]);
+# the nail's slide joint has range 0 .. 0.06 m.
+[families."vlabench/hammer_nail_and_hang_picture"]
+success = """
+Condition (both at once): the nail's slide joint is between 0.05 m and 0.08 m, both included (VLABench's
+`joint_in_range`; the joint's own range is 0 to 0.06 m); and after some control step of the episode, the grasp point of the painting
+(`本所立川_painting`, its one grasp site) was less than 0.05 m from the nail's origin (the nail's fixed base; it does
+not move as the nail is driven). Once that has happened it stays counted, even if the painting moves away again.
+"""
+
+# heat_food: HeatFoodTask.should_terminate_episode (heat_food_series.py L86-91) = contain(container microwave_seen,
+# entities [cooked_food]) AND microwave.is_closed (|micro_door_joint qpos| < close_threshold = pi/10) AND
+# microwave.is_activate (the start_button geom in any contact of physics.data.contact). An EVENT_TASK (server.py L58).
+[families."vlabench/heat_food"]
+success = """
+Condition (all three at once, after one control step): the origin of the cooked food (`cooked_food`) is inside the
+axis-aligned box spanned by the microwave's (`microwave_seen`) keypoint sites; the microwave's door is closed: its hinge
+is less than π/10 rad (18°) from its closed position; and the start button's geom is in contact with something. No
+heating is simulated.
+"""
+standard = """
+Condition (all three at once, after one control step): the origin of the cooked food (`cooked_food`) is inside the
+axis-aligned box spanned by the microwave's (`microwave_seen`) keypoint sites; the microwave's door is closed: its hinge
+is less than π/10 rad (18°) from its closed position; and the start button's geom is in contact with something. No
+heating is simulated.
+
+This counts as it happens: the episode passes when the three held together after any one control step of it, even if
+they no longer do when the episode ends.
+"""
+
+# insert_bloom_flower / insert_flower: contain(container vase_seen, entities [tulip] / [rose]); vase_seen (Vase =
+# CommonContainer, containers/vases/vase_1/vase.xml) has two keypoint sites, bottom_site and top_site.
+[families."vlabench/insert_bloom_flower"]
+success = """
+Condition (VLABench's `contain`): the tulip's (`tulip`) origin is inside the axis-aligned box spanned by the vase's
+(`vase_seen`) two keypoint sites, `bottom_site` at its base and `top_site` near its top. Whether the flower stands
+upright is not checked; the two wilted flowers do not count.
+"""
+
+[families."vlabench/insert_flower"]
+success = """
+Condition (VLABench's `contain`): the rose's (`rose`) origin is inside the axis-aligned box spanned by the vase's
+(`vase_seen`) two keypoint sites, `bottom_site` at its base and `top_site` near its top. Whether the flower stands
+upright is not checked.
+"""
+
+# play_math_game: contain(container placemat_seen, entities ["4", "0"]) + order(axis [0], offset 0.1, entities ["4", "0"]);
+# the axis becomes [None] as for book_rearrange: x, y and z each signed, entity_points[0] - entity_points[1] < offset;
+# placemat_seen (tablewares/placemats/placemat_0) has no horizontal_radius_site: FlatContainer footprint branch (x, y
+# within the keypoints' bounds, bounds included; min keypoint z < z < min keypoint z + 0.1).
+[families."vlabench/play_math_game"]
+success = """
+Condition (VLABench's `contain` and `order`, all at once): the origins of the number cubes `4` and `0` both lie
+horizontally within the rectangle spanned by the placemat's (`placemat_seen`) keypoint sites and between 0 and 0.1 m
+above the lowest of those sites (both bounds excluded); and the cube `4`'s x, y and z are each less than 0.1 m larger
+than those of the cube `0` (VLABench's loader drops the order condition's axis, so `4` may lie up to 0.1 m to the
+robot's right of `0`). The other cubes are not checked.
+"""
+
+# put_box_on_painting: contain(container "Dinner and Love on the River", entities [target_box]); the Painting is a
+# FlatContainer without a horizontal_radius_site (paintings/painting.xml): footprint branch as above.
+[families."vlabench/put_box_on_painting"]
+success = """
+Condition (VLABench's `contain`): the box's (`target_box`) origin lies horizontally within the rectangle spanned by the
+keypoint sites of the painting “Dinner and Love on the River” and between 0 and 0.1 m above the lowest of those sites
+(both bounds excluded).
+"""
+
+# select_billiards*: contain(container billiards_table, entities [ball]); BilliardTable._build adds two keypoint sites
+# (dclass keypoint, pos 0.07 0.07 0.1 and -0.07 -0.07 0) to its target_hole body, default container_mid_1
+# (select_billiards, _common_sense; the component has no target_hole), container_right_1 for _spatial (the component's
+# target_hole); the asset's own pocket keypoints are commented out, so contain() sees these two sites only.
+[families."vlabench/select_billiards"]
+success = """
+Condition (VLABench's `contain` on the billiard table): the origin of the striped 14 ball (`striped_14`) is inside the
+axis-aligned box between the two keypoint sites VLABench adds to the target pocket, `container_mid_1` (the middle pocket
+on the robot's right): the points (-0.07, -0.07, 0) m and (0.07, 0.07, 0.1) m in the pocket's frame. No other pocket
+counts.
+"""
+
+[families."vlabench/select_billiards_common_sense"]
+success = """
+Condition (VLABench's `contain` on the billiard table): the origin of the black snooker ball (`snooker_black`, worth 7
+points) is inside the axis-aligned box between the two keypoint sites VLABench adds to the target pocket,
+`container_mid_1` (the middle pocket on the robot's right): the points (-0.07, -0.07, 0) m and (0.07, 0.07, 0.1) m in
+the pocket's frame. No other pocket counts.
+"""
+
+[families."vlabench/select_billiards_spatial"]
+success = """
+Condition (VLABench's `contain` on the billiard table): the origin of the striped 14 ball (`striped_14`) is inside the
+axis-aligned box between the two keypoint sites VLABench adds to the target pocket, `container_right_1` (the corner
+pocket on the robot's right, behind the robot): the points (-0.07, -0.07, 0) m and (0.07, 0.07, 0.1) m in the pocket's
+frame. No other pocket counts.
+"""
+
+# select_book_spatial / select_specific_type_book: not_contain(container shelf_seen, entities
+# [the_story_of_american_freedom]); Shelf.contain with layer None, as for book_rearrange.
+[families."vlabench/select_book_spatial"]
+success = """
+Condition (VLABench's `not_contain`): the origin of the book `the_story_of_american_freedom` (the second from the
+robot's left on the top shelf) is outside the axis-aligned box spanned by the bookshelf's (`shelf_seen`) keypoint sites,
+over both of its shelves.
+"""
+
+[families."vlabench/select_specific_type_book"]
+success = """
+Condition (VLABench's `not_contain`): the origin of the book `the_story_of_american_freedom` (the history book) is
+outside the axis-aligned box spanned by the bookshelf's (`shelf_seen`) keypoint sites, over both of its shelves.
+"""
+
+# select_chemistry_tube*: not_contain(container chemistry_tube_stand, entities [KMnO4] / [CuCl2]); TubeStand =
+# CommonContainer with two keypoint sites (tube/tube_container/tube_stand.xml).
+[families."vlabench/select_chemistry_tube"]
+success = """
+Condition (VLABench's `not_contain`): the origin of the tube of CuCl2 solution (`CuCl2`) is outside the axis-aligned box
+spanned by the tube stand's (`chemistry_tube_stand`) two keypoint sites.
+"""
+
+[families."vlabench/select_chemistry_tube_common_sense"]
+success = """
+Condition (VLABench's `not_contain`): the origin of the tube of KMnO4 solution (`KMnO4`) is outside the axis-aligned box
+spanned by the tube stand's (`chemistry_tube_stand`) two keypoint sites.
+"""
+
+[families."vlabench/select_chemistry_tube_semantic"]
+success = """
+Condition (VLABench's `not_contain`): the origin of the tube of KMnO4 solution (`KMnO4`) is outside the axis-aligned box
+spanned by the tube stand's (`chemistry_tube_stand`) two keypoint sites.
+"""
+
+[families."vlabench/select_chemistry_tube_spatial"]
+success = """
+Condition (VLABench's `not_contain`): the origin of the tube `KMnO4` (the fifth from the robot's left in the row nearest
+the robot) is outside the axis-aligned box spanned by the tube stand's (`chemistry_tube_stand`) two keypoint sites.
+"""
+
+# select_drink: not_contain(container fridge_open, entities [juice_seen]); SelectDrinkTask has no termination of its
+# own, so the door is not checked.
+[families."vlabench/select_drink"]
+success = """
+Condition (VLABench's `not_contain`): the juice's (`juice_seen`) origin is outside the axis-aligned box spanned by the
+fridge's (`fridge_open`) keypoint sites. The fridge door is not checked.
+"""
+
+# select_fruit / select_fruit_common_sense: contain(container plate_seen, entities [banana] / [pear]); plate_seen
+# (tablewares/plates/plate_13) has a horizontal_radius_site 0.1214 m from its origin: FlatContainer radius branch
+# (horizontal distance < radius and 0 < z - z_plate < 0.1).
+[families."vlabench/select_fruit"]
+success = """
+Condition (VLABench's `contain`): the banana's (`banana`) origin is less than the plate's radius (its
+`horizontal_radius_site`, about 12 cm) horizontally from the plate's (`plate_seen`) origin, and between 0 and 0.1 m
+above it (both bounds excluded). Whether the banana rests on the plate is not checked.
+"""
+
+[families."vlabench/select_fruit_common_sense"]
+success = """
+Condition (VLABench's `contain`): the pear's (`pear`) origin is less than the plate's radius (its
+`horizontal_radius_site`, about 12 cm) horizontally from the plate's (`plate_seen`) origin, and between 0 and 0.1 m
+above it (both bounds excluded). Whether the pear rests on the plate is not checked.
+"""
+
+# select_mahjong: contain(container placemat, entities [6_sou]); placemat = tablewares/placemats/placemat_1 with a
+# horizontal_radius_site 0.17 m from its origin: radius branch. The other three mahjong families use placemat_4 (no
+# radius site): footprint branch.
+[families."vlabench/select_mahjong"]
+success = """
+Condition (VLABench's `contain`): the origin of the 6 sou tile (`6_sou`) is less than the placemat's radius (its
+`horizontal_radius_site`, 17 cm) horizontally from the placemat's (`placemat`) origin, and between 0 and 0.1 m above it
+(both bounds excluded).
+"""
+
+[families."vlabench/select_mahjong_semantic"]
+success = """
+Condition (VLABench's `contain`): the origin of the 9 man tile (`9_man`) lies horizontally within the rectangle spanned
+by the placemat's (`placemat`) keypoint sites and between 0 and 0.1 m above the lowest of those sites (both bounds
+excluded).
+"""
+
+[families."vlabench/select_mahjong_spatial"]
+success = """
+Condition (VLABench's `contain`): the origin of the tile `2_sou` (the seventh from the robot's left) lies horizontally
+within the rectangle spanned by the placemat's (`placemat`) keypoint sites and between 0 and 0.1 m above the lowest of
+those sites (both bounds excluded).
+"""
+
+[families."vlabench/select_unique_type_mahjong"]
+success = """
+Condition (VLABench's `contain`): the origin of the tile `8_sou` (the only sou tile) lies horizontally within the
+rectangle spanned by the placemat's (`placemat`) keypoint sites and between 0 and 0.1 m above the lowest of those sites
+(both bounds excluded).
+"""
+
+# select_poker*: is_grasped(entities [card], robot franka) + lift(entities [card], target_height 0.9);
+# CommonGraspedEntity.is_grasped = some contact between a geom of the left or right finger body and a geom of the card;
+# LiftCondition = card origin z >= 0.9 (the Table's top at 0.76 m).
+[families."vlabench/select_nth_largest_poker"]
+success = """
+Condition (VLABench's `is_grasped` and `lift`, both at once): a geom of one of the gripper's fingers is in contact with
+the card `2_of_diamonds` (the lowest card), and the card's origin is at a height of at least 0.9 m (the table top is at
+0.76 m).
+"""
+
+[families."vlabench/select_poker"]
+success = """
+Condition (VLABench's `is_grasped` and `lift`, both at once): a geom of one of the gripper's fingers is in contact with
+the card `ace_of_hearts`, and the card's origin is at a height of at least 0.9 m (the table top is at 0.76 m).
+"""
+
+[families."vlabench/select_poker_semantic"]
+success = """
+Condition (VLABench's `is_grasped` and `lift`, both at once): a geom of one of the gripper's fingers is in contact with
+the card `6_of_spades`, and the card's origin is at a height of at least 0.9 m (the table top is at 0.76 m).
+"""
+
+[families."vlabench/select_poker_spatial"]
+success = """
+Condition (VLABench's `is_grasped` and `lift`, both at once): a geom of one of the gripper's fingers is in contact with
+the card `6_of_spades` (the fourth from the robot's left), and the card's origin is at a height of at least 0.9 m (the
+table top is at 0.76 m).
+"""
+
+# select_toy: contain(container giftbox_seen, entities [mickey]); giftbox_seen is a CommonContainer
+# (containers/boxes/giftbox/giftbox_0, two keypoint sites).
+[families."vlabench/select_toy"]
+success = """
+Condition (VLABench's `contain`): the Mickey Mouse toy's (`mickey`) origin is inside the axis-aligned box spanned by the
+gift box's (`giftbox_seen`) two keypoint sites.
+"""
+
+# take_out_cool_drink: CoolDrinkTask.should_terminate_episode (cool_drink_series.py L125-135) = not_contain(container
+# small_fridge, entities [juice]) AND the first entity whose name contains "fridge" (small_fridge) is_closed: |door
+# qpos| < pi/10 (joint "door", containers/fridge/small_fridge/fridge_small_1).
+[families."vlabench/take_out_cool_drink"]
+success = """
+Condition (both at once): the origin of the juice that starts in the small fridge (`juice`) is outside the axis-aligned
+box spanned by the fridge's (`small_fridge`) keypoint sites; and the fridge door is closed: its hinge is less than
+π/10 rad (18°) from its closed position. The drinks that start outside the fridge do not count.
+"""
+
+# texas_holdem: PokerPlayTask.init_conditions (play_poker_series.py L109-123): get_largest_combination (poker_utils.py
+# L73-81) over the cards in load order (10S, 9H, 8C, 6H, 9D, 7D, JC) keeps the first five-card combination of the
+# highest rank: (10S, 9H, 8C, 6H, 7D), a straight; contain(container target_container, those five). target_container =
+# tablewares/placemats/placemat_1 with a horizontal_radius_site 0.17 m from its origin: radius branch.
+[families."vlabench/texas_holdem"]
+success = """
+Condition (VLABench's `contain`): the origins of the 6 of hearts, the 7 of diamonds, the 8 of clubs, the 9 of hearts and
+the 10 of spades are each less than the placemat's radius (its `horizontal_radius_site`, 17 cm) horizontally from the
+placemat's (`target_container`) origin, and between 0 and 0.1 m above it (both bounds excluded). These are the cards of
+the first straight VLABench's hand ranking finds; the other cards are not checked.
+"""

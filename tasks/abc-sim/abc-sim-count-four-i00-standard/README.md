@@ -1,31 +1,35 @@
-# abc-sim-count-four-i00-standard
+# ABC Sim · count into a box: exactly 4 (standard)
 
 | | |
 |---|---|
-| Benchmark | ABC Sim |
-| Mode | standard (`eai-standard/2.2`) |
-| Twin | `abc-sim-count-four-i00-privileged` |
-| Simulator / robot | `mujoco` / `i2rt-yam-bimanual` |
-| Family / instance | `count_four` / seed 0 (allowed seeds: [0, 88, 89]; PROTOCOL §2) |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.5.1` |
+| Task ID | `abc-sim-count-four-i00-standard` |
+| Benchmark | [ABC Sim](https://github.com/amazon-far/abc) (Allshire et al., 2026), upstream `amazon-far/abc@d0832d1` |
+| Robot | Two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each), side by side at a table |
+| Mode | standard |
+| Instance | `count_four`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-ABC Sim `count_four_into_opaque_box` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Put exactly four of the objects in the box.
-Twelve small objects in several shapes and colours, some larger than others, lie on the table next to an opaque box. The box's lid has a slot covered by a light spring-hinged flap: objects go in through the slot. The robot is a service; the episode it runs is graded.
+Put exactly four of the objects in the box.
 
-## Difficulty
-First-pass rating: hard. Grounding a counting directive in what the cameras show, and dropping small objects through a narrow slot covered by a flap into a box whose contents can no longer be seen. The action is joint-level (two 6-joint arms and two grippers; no motion primitives), and the goal has to hold, so passing through it does not count.
+## Success criteria
+The box holds exactly four of the twelve objects, of any kind. An object counts as in the box when its origin lies
+between the box's inner wall faces in x and y, no lower than 1 cm below the top of its floor plate and no higher than
+the underside of its lid. This must hold for 30 consecutive control steps (1.02 s).
 
-## Reference solution
-The privileged twin's reference (the commanded actions of one of upstream's validation demonstrations of this task): `solution/oracle.npy`, 671 rows, streamed as `joint_position` chunks through the client (`solution/oracle_stream.py`); the service executes exactly those rows and ends at the same state as the privileged replay.
+Graded: the live episode the simulator service ran; nothing is replayed. There is one episode and no reset. The
+episode ends when the agent sends `/finish` or when its session ends (at the latest after 1 h); the task's own
+failure, where the rule above has one, and a simulator error also end it. Success is never shown and never ends the
+episode. The verdict is on the state the episode ends in. Where the condition must hold for 30 consecutive control
+steps, the service, after the agent is gone, keeps the robot's last command for 30 more control steps (1.02 s), and
+the condition must hold at every one of them. An episode ended by the task's failure or by a simulator error scores 0.
 
-## Verification
-The live episode's verdict (PROTOCOL H.4): the sim sidecar judges the episode it ran by the task's rule (the 1.02 s hold included) and the collect hook (`/opt/abc-tools/standard/finalize.sh`) writes it to `final.json`; the verifier (the shared `v2_1/grade.py`) transcribes it. Nothing is replayed to grade it; the video is rendered from the trajectory afterwards. `nop`: the episode times out, reward 0.
+The scene is checked to start at the frozen instance (its state hash) before the agent is served; a mismatch is an
+infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -36,14 +40,11 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any NVIDIA GPU with EGL (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Upstream | ABC Sim, `abc_sim` of github.com/amazon-far/abc @ d0832d1 (Apache-2.0; assets CC BY 4.0 / MIT), on MuJoCo 3.6.0 |
-| Instance | the scene of one of upstream's validation demonstrations (its assembled scene XML, initial qpos and randomization record); the model-side state its randomizer sets outside the XML written into the scene; state hash `c8a0c7b3eb8622b4`, checked on every load |
-| Actions | 14 joint-position targets per control step (0.034 s, 17 physics substeps of 2 ms) |
-| Success | the upstream evaluator `count_four_into_opaque_box` held 30 control steps |
-
-### Provenance
-The frozen instance (`instance.npz`) and the reference solution (`solution/oracle.npy`) were made at generation time from
-an upstream validation demonstration; see `tasks/abc-sim/README.md`.
+## License
+ABC Sim (`abc_sim` of [amazon-far/abc](https://github.com/amazon-far/abc) @ `d0832d1`) is released under the
+[Apache License 2.0](https://github.com/amazon-far/abc/blob/d0832d12651d1b260a652861a14648dc5f3660c7/LICENSE). Its
+simulator assets are under CC BY 4.0 (RoboCasa's Objaverse, LightWheel and AI-generated packs, Google Scanned Objects,
+individually credited Sketchfab creators), CC0 (freepoly.org), MIT (the I2RT YAM robot model, a LIBERO drawer fixture)
+and Apache-2.0 (everything modelled in-house); no non-commercial terms apply. The licences and credits ship in the image
+at `/opt/abc/ASSET_LICENSES.md` (`images/abc-sim/ASSET_LICENSES.md`). The simulator is MuJoCo 3.6.0 (Apache License
+2.0).

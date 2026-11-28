@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for the LabUtopia tasks (docs/protocol/standard_mode.md): the adapter of the shared layer
+"""eai-standard/3.0 sim service for the LabUtopia tasks (docs/protocol/eai-standard.md): the adapter of the shared layer
 rcb_limited.py; the simulator is rcb_labutopia.Session (LabUtopia on Isaac Sim, PhysX on the CPU, RTX cameras). HTTP
 surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to
 /data/episode.jsonl.
@@ -6,11 +6,11 @@ surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. 
 The episode is the frozen instance's (environment/sim/instance.json, the privileged twin's). A control step is one
 physics step (1/60 s) with a position target and a velocity target for each of the Franka's 9 joints: `joint_position`
 rows give the position targets (velocity targets zero), `joint_position_velocity` rows give both, which is what
-LabUtopia's own controllers send. The episode ends the moment the family's rule is met (success). Nothing about the
+LabUtopia's own controllers send. The episode is agent-ended (below). Nothing about the
 objects or the instruments leaves this process: the proprioception is the robot's own joints, gripper, tool frame and
 commands.
 
-Agent-ended episodes (RCB_AGENT_END, rcb_agent_end.py; PROTOCOL §3): a success never ends the episode (the Session runs
+Agent-ended episodes (rcb_agent_end.py; docs/protocol/tasks.md#modes): a success never ends the episode (the Session runs
 with its stop at success off) and is never shown; POST /finish (finished), the session's end (timeout) or the technical
 cap (step_limit) ends it, and finish() judges it: the families whose goal is a state (pick, open_door, open_drawer,
 open_close, place) on the state it ends in, earlier steps of the rule (a lift, an opening) counted as they happened;
@@ -75,15 +75,17 @@ assert M.N_ACT == NA, (M.N_ACT, NA)
 # in which its last condition is judged on the end state
 AE_EVENT = ("press", "pour", "shake")
 AE_STATE = {"pick": "", "open_door": "", "open_drawer": "", "open_close": "close", "place": "place"}
-if AE.ENABLED:
-    S._stop_at_success = False
-    S.rule_now = False
-    _rule_update = S.rule.update
+S._stop_at_success = False
+S.rule_now = False
+_rule_update = S.rule.update
 
-    def _update_now() -> bool:
-        S.rule_now = bool(_rule_update())
-        return S.rule_now
-    S.rule.update = _update_now
+
+def _update_now() -> bool:
+    S.rule_now = bool(_rule_update())
+    return S.rule_now
+
+
+S.rule.update = _update_now
 for _c in S.cameras():  # the first frame rendered in a container takes minutes (Isaac Sim prepares the stage for its
     S.render_frame(_c)  # renderer once): it is rendered here, before the service answers, not in an agent's call
 DT = S.dt
@@ -138,7 +140,6 @@ CAP = f"{M.MAX_STEPS} control steps ({M.MAX_STEPS * M.CONTROL_DT:g} s of simulat
 PERIOD = "1/60 s"
 SPEC = {
     "protocol": L.PROTOCOL,
-    "protocol_compat": list(L.COMPAT),
     "simulator": "LabUtopia on NVIDIA Isaac Sim (PhysX on the CPU, RTX cameras)",
     "robot": ROBOT_SPEC["name"],
     "task_text": TASK_TEXT,
@@ -198,8 +199,7 @@ SPEC = {
     "budget": {"reset": 0, "steps": None, "wall_clock_s": WALL_CLOCK_S},
     "max_frames_per_call": MAX_FRAMES,
     "episode": (f"one episode, no reset: it ends when you POST /finish (finished), when your time is over (timeout), or after "
-                f"{CAP} (step_limit); reaching the goal does not end it, and the episode is judged as it ends" if AE.ENABLED else
-                f"one episode, no reset: it ends the moment the goal is reached (success), when your time is over, or after {CAP}"),
+                f"{CAP} (step_limit); reaching the goal does not end it, and the episode is judged as it ends"),
     "robot_spec": ROBOT_SPEC,
     "kinematics": {
         "endpoint": "/kinematics",
@@ -225,7 +225,7 @@ SPEC = {
         "noise": L.DEPTH_NOISE,
     },
 }
-L.check_spec(SPEC)  # a spec that misses a 2.2 field or names a forbidden one never starts the episode
+L.check_spec(SPEC)  # a spec that misses a required field or names a forbidden one never starts the episode
 EP.scene_built()
 
 
@@ -276,7 +276,7 @@ def summary() -> dict:
         "n_actions": len(ROWS),
         "instance_ok_live": bool(S.instance_ok),
         "start_exact_live": bool(S.start_exact),
-        **({"end_window_steps": E.get("end_window_steps")} if AE.ENABLED else {}),
+        "end_window_steps": E.get("end_window_steps"),
         **EP.final_fields(),
         **AE.final_fields(E, n),
     }
@@ -310,44 +310,32 @@ def finish(reason: str) -> None:
     """The episode is over: the task's verdict on the steps executed, then the record for the collect hook."""
     if E["done"]:
         return
-    if AE.ENABLED:
-        if reason == "max_control_steps":   # the technical cap: the step limit, judged as it stands
-            reason = "step_limit"
-        E["done"] = True
-        E["reason"] = reason
-        E["t_end"] = time.time()
-        if reason in ("finished", "timeout"):
-            try:
-                hold, n = S.command(), 0
-                while ae_holding() and not ae_success() and not S.done and n < AE_HOLD:
-                    n += 1
-                    a = S._row(hold)
-                    S.step(a)
-                    ROWS.append(a)
-                    EP.journal(a)
-                E["end_window_steps"] = n
-            except Exception as exc:  # noqa: BLE001 -- judged as it stands
-                traceback.print_exc()
-                EP.log({"ev": "end_window_error", "error": repr(exc)[:300]})
-        E["episode_control_steps"] = ctrl_steps()
-        try:
-            E["success"] = reason in AE.END_STATE_REASONS + ("error",) and ae_success()
-        except Exception:  # noqa: BLE001
-            E["success"] = False
-        E["score"] = 1.0 if E["success"] else 0.0
-        EP.log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"]),
-                "end_window_steps": E.get("end_window_steps")})
-        dump()
-        return
+    if reason == "max_control_steps":   # the technical cap: the step limit, judged as it stands
+        reason = "step_limit"
     E["done"] = True
     E["reason"] = reason
     E["t_end"] = time.time()
+    if reason in ("finished", "timeout"):
+        try:
+            hold, n = S.command(), 0
+            while ae_holding() and not ae_success() and not S.done and n < AE_HOLD:
+                n += 1
+                a = S._row(hold)
+                S.step(a)
+                ROWS.append(a)
+                EP.journal(a)
+            E["end_window_steps"] = n
+        except Exception as exc:  # noqa: BLE001 -- judged as it stands
+            traceback.print_exc()
+            EP.log({"ev": "end_window_error", "error": repr(exc)[:300]})
     E["episode_control_steps"] = ctrl_steps()
-    E["success"] = bool(S.success)
-    E["score"] = 1.0 if S.success else 0.0
-    EP.log(
-        {"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"])}
-    )
+    try:
+        E["success"] = reason in AE.END_STATE_REASONS + ("error",) and ae_success()
+    except Exception:  # noqa: BLE001
+        E["success"] = False
+    E["score"] = 1.0 if E["success"] else 0.0
+    EP.log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"]),
+            "end_window_steps": E.get("end_window_steps")})
     dump()
 
 
@@ -372,8 +360,7 @@ def ctrl_step(a, rec) -> bool:
     ROWS.append(a)
     stop = EP.journal(a)
     rec.tick()
-    if AE.ENABLED:  # the state's success, recorded only (never shown); a success never ends the episode
-        AE.hidden_success(E, ae_success(), EP.log, ctrl_steps())
+    AE.hidden_success(E, ae_success(), EP.log, ctrl_steps())
     if not running:
         finish(S.reason or "done")
     return E["done"] or stop
@@ -393,7 +380,7 @@ def recorder(cams, fps: int, meta: dict, video: str) -> L.Recorder:
 
 def checked(parse):
     """A request is checked in full before anything is executed. The layer answers a ValueError with 400 and takes any
-    other exception for a simulator error that ends the episode (PROTOCOL §4), so whatever a malformed field raises
+    other exception for a simulator error that ends the episode (docs/protocol/tasks.md#grading), so whatever a malformed field raises
     while it is being checked (null, a list where a number belongs, a number too large for a float) is a ValueError."""
 
     def run(*args):
@@ -674,8 +661,8 @@ try:
             episode=EP,
             state_sha=S.state_sha,
             proprio=proprio_row,
-            **({"finish": lambda: finish("finished"),
-                "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {}),
+            finish=lambda: finish("finished"),
+            end_step_limit=lambda: finish("step_limit"),
         ),
         port=int(os.environ.get("RCB_PORT", "8000")),
     )

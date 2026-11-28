@@ -13,7 +13,7 @@ robot = "smplx-human"
 family = "nav-tv"
 dynamics = "static"
 oracle = "none"
-oracle_evidence = "none: no reference solution searched for this episode yet (the navmesh oracle ran on 120 of the 1,218 canonical episodes); human review (PROTOCOL §4)"
+oracle_evidence = "none: no reference solution searched for this episode yet (the navmesh oracle ran on 120 of the 1,218 canonical episodes); human review (docs/protocol/tasks.md#grading)"
 instance_seed = 0
 expert_time_estimate_hours = 0.5
 
@@ -22,7 +22,7 @@ timeout_sec = 4200.0              # one fresh-process replay at tests/grade.py's
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

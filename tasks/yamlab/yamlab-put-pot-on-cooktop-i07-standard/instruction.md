@@ -4,8 +4,9 @@
 Lift the pot with both grippers and set it down on the cooktop.
 
 ## Goal
-Success: both grippers hold the pot and lift it off the table, then the pot stands upright on the cooktop with neither
-gripper holding it for about a second. The steps count in this order. Every step except the last counts for good once
+Success: both grippers hold the pot and lift it off the table, then the pot rests level on the cooktop, right side up or
+upside down, with neither gripper holding it for about a second. The steps count in this order. Every step except the
+last counts for good once
 done. An object falling off the table ends the episode as a failure.
 
 When you are done, send `/finish` to end the episode and get it graded. Everything else is judged on the state at that
@@ -24,7 +25,7 @@ robot runs as a service you reach through its client or its MCP tools, as if it 
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)

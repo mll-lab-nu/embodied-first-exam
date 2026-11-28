@@ -1,35 +1,38 @@
-# robotwin_2_0_stack_bowls_two-privileged
+# RoboTwin 2.0 · stack_bowls_two (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboTwin 2.0 |
+| Task ID | `robotwin_2_0_stack_bowls_two-privileged` |
+| Benchmark | [RoboTwin 2.0](https://github.com/RoboTwin-Platform/RoboTwin) (Chen et al., 2025), upstream `RoboTwin-Platform/RoboTwin@6dde571` |
+| Robot | ALOHA-AgileX dual-arm robot (two 6-joint arms with parallel-jaw grippers) |
 | Mode | privileged |
-| Twin | `robotwin_2_0_stack_bowls_two-standard` |
-| Simulator / robot | `robotwin` / `aloha-agilex` |
-| Family / instance | `stack_bowls_two` / seed 60417 |
-| Oracle | `full` |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
+| Instance | `stack_bowls_two`, seed 60417 |
+| Time limit | 30 min |
+| Reference solution | Included |
 
 ## Task
-RoboTwin 2.0 stack_bowls_two (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Stack the two bowls inside one another on the table, then let go. Frozen scene instance (RoboTwin seed 60417).
+Stack the two bowls inside one another on the table, then let go.
 
-## Difficulty
-RoboTwin's scripted expert needs 5 planned motions (53 lines); official data-generation success on ALOHA-AgileX 78% (the expert's own pass rate over random layouts); in our image the expert passed on seed 60417 on attempt 1 of 6 with 3998 physics steps. Tags from the code: dual-arm, rotation. RoboTwin evaluation budget 900 policy actions. The trajectory is the raw per-step drive-target record, so any plan failure or a grasp that slips during replay scores 0.
+## Success criteria
+The higher bowl is within 4 cm of the lower one in both x and y, and the lower and the higher bowl's positions are
+lower than z = 0.76 m and 0.79 m respectively (2 cm above 0.74 and 0.77 m; there is no lower bound); both grippers are
+open.
 
-## Reference solution
-RoboTwin 2.0's expert methods for `stack_bowls_two` (move_bowl, play_once; scrubbed from the image), copied verbatim into
-`solution/oracle_stack_bowls_two.py` and bound onto the env; `solution/solve.sh` records it into a trajectory.
+Positions are in the world frame: the table centre at the origin, +x to the robot's right, +y away from the robot, +z
+up; the table top is at z ≈ 0.74 m. Where a gripper must be open or closed, a gripper counts as open when the position
+targets of both its fingers command an opening above 0.8 (0 = closed, 1 = open) and as closed when both command less
+than 0.2; the two gripper-command columns of a row are not read.
 
-## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, once;
-pass iff RoboTwin's `check_success` holds after the replay (`tests/grade.py`),
-plus `/logs/verifier/replay.mp4`. The trajectory is the per-physics-step drive-target record (T, 34) captured by
-hooking `scene.step()`; the instance is rebuilt from the RoboTwin seed and checked against the stored
-initial-state hash on every reset.
+The graded file is `/app/output/trajectory.npz`: `actions`, a finite (T, 34) array with one row per physics step
+(1/250 s) and at most 200,000 rows, and `task` = `stack_bowls_two`. The verifier replays it once, open-loop, in a fresh process
+from the frozen start (the scene is rebuilt from the instance and its initial-state hash is checked) and checks the
+conditions above once, on the state after the last row; nothing earlier in the replay counts. A missing file, a file
+that is not a readable npz, a wrong `task`, a wrong shape, a non-finite value, more than 200,000 rows or a simulator
+error during the replay scores 0. A host on which the frozen instance does not rebuild is an infrastructure error, not
+a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -39,10 +42,10 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `main`.
 - Recommended GPU: RTX 4090 24GB / L4 24GB.
 
-## Details
-| | |
-|---|---|
-| RoboTwin eval step limit | 900 (policy-eval budget upstream; indicative of task length) |
-
-### Goal
-Stack the two bowls inside one another on the table, then let go.
+## License
+The scenes, task definitions and success checks are RoboTwin 2.0's ([RoboTwin-Platform/RoboTwin](https://github.com/RoboTwin-Platform/RoboTwin),
+MIT License, copyright 2025 Tianxing Chen; paper: Chen et al., 2025, "RoboTwin 2.0: A Scalable Data Generator and
+Benchmark with Strong Domain Randomization for Robust Bimanual Robotic Manipulation", arXiv:2506.18088). The robot and
+object assets come from RoboTwin's asset dataset on Hugging Face
+([TianxingChen/RoboTwin2.0](https://huggingface.co/datasets/TianxingChen/RoboTwin2.0), revision `981c92a`,
+`embodiments.zip` and `objects.zip`), downloaded when the image is built and not redistributed in this repository.

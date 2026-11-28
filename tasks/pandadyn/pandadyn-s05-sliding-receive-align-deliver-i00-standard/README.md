@@ -1,51 +1,77 @@
-# pandadyn-s05-sliding-receive-align-deliver-i00-standard
+# Panda Dynamic Scenes · Sliding receive, inertial staging and moving hand-off (S05) (standard)
 
 | | |
 |---|---|
-| Benchmark | Panda Dynamic Scenes |
-| Mode | standard (`eai-standard/2.1`) |
-| Twin | `pandadyn-s05-sliding-receive-align-deliver-i00-privileged` |
-| Simulator / robot | `maniskill` / `franka-panda` |
-| Family / instance | `s05_sliding_receive_align_deliver` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
+| Task ID | `pandadyn-s05-sliding-receive-align-deliver-i00-standard` |
+| Benchmark | [Panda Dynamic Scenes](https://www.embodied-first-exam.ai/suite/pandadyn/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | Franka Emika Panda (FER), one 7-joint arm with its standard two-finger hand |
+| Mode | standard |
+| Instance | `s05_sliding_receive_align_deliver`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-Standard-mode twin of `pandadyn-s05-sliding-receive-align-deliver-i00-privileged` (same frozen instance and success check): the agent gets only the `eai-standard/2.1`
-client (docs/protocol/standard_mode.md Part 1, with the optional reset capability); the simulator runs in the `sim` sidecar
-(`environment/docker-compose.yaml`, GPU on the sidecar for SAPIEN's renderer), which owns the scene, judges the episode
-live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
-episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
-on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. Receive the cube that slides off the lane in the tray and slide it, keeping the tray level, to the staging point in the tray. Carry it through the two waypoints, bring the tray to the match point beside the sliding platform, moving with it, and put the cube onto the platform.
+Receive the cube that slides off the lane in the tray and slide it, keeping the tray level, to the staging point in the
+tray. Carry it through the two waypoints, bring the tray to the match point beside the sliding platform, moving with it,
+and put the cube onto the platform.
 
-## Difficulty
-That of `pandadyn-s05-sliding-receive-align-deliver-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects
-are seen only through two static cameras (RGB, depth) and the robot's own proprioception; the simulated clock advances
-only with the agent's calls (so the agent can look between control steps, at a cost in calls), and a missed catch costs
-an episode.
+## Success criteria
+The tray is the arm's tool, 0.18 m square inside and open on its -x side; its frame's origin is the centre of its
+floor. The block is a 36 mm cube. The block is on the tray when it touched the tray within the last 25 ms.
 
-## Reference solution
-`solution/oracle_replay.py` spends the reset budget on short scouting episodes (the first second of the rows each, then
-`reset`), then streams the privileged oracle's rows (`solution/oracle_qpos.npy`, one row per control step, `hold`) as
-one-second `joint_position` chunks through the client in the last episode; after a service crash it waits for the
-resumed episode and continues from the control step the service reports. It uses no privileged information at run time.
+Phases, in order:
+1. `source_to_tray`: after the block has touched the source lane, the block is on the tray, does not touch the lane,
+   its centre is at x > 0.12 m and it moves at less than 0.05 m/s relative to the tray, for 0.10 s. Its tray-frame
+   position at that moment is recorded.
+2. `inertial_staging`: at some moment of this phase the hand's TCP accelerates horizontally at more than 0.54 m/s², and
+   the block has slid more than 25 mm (horizontally, tray frame) from its recorded position; then the block is on the
+   tray, its centre within 14 mm of the staging point (0.03, 0) of the tray frame, moving at less than 0.045 m/s
+   relative to the tray, for 0.3 s. The tray tilted more than 2.1° from level during this phase fails the task.
+3. `transport_turn`: with the block on the tray, the tray's origin comes within 22 mm of waypoint A (0.08, 0.13,
+   0.22), and later within 22 mm of waypoint B (0.19, 0.20, 0.22).
+4. `match_receiver`: with the block on the tray, the tray's origin is within 12 mm of the point 0.34 m along +x and 8
+   mm above the sliding platform's origin, and the tray's velocity differs from the platform's by less than 0.05 m/s.
+   The platform slides at up to 0.04 m/s.
+5. `support_transfer`: the block touches the platform, is not on the tray, its centre is within 70 mm of the platform's
+   origin in x and in y, and it moves at less than 0.045 m/s relative to the platform, for 0.5 s.
 
-## Verification
-The sim service (`environment/sim/rcb_service.py`, the shared eai-standard/2.1 layer, with `environment/sim/server.py`,
-this benchmark's adapter on `rcb_pandadyn.Session`) judges the episode live and records every control step it ran
-(`trajectory_live.f64`); after the agent's time the collect hook stops the agent's programs and signals the service, which
-writes the last episode's verdict into `final.json` (`graded_by` = `live`, `replays` = 0; nothing is replayed to grade it)
-and then renders the video from the graded episode's rows; `tests/grade.py` (separate sandbox, no network) passes iff the
-last episode ended in the task's success (every phase in order, no failure: the episode's end, so there is no settle
-window to add). The frozen start is checked when the first episode begins and after every reset (the state hash against
-the instance's `initial_sha`; a mismatch is `instance_mismatch`, an infrastructure failure). Oracle: the last episode ends
-in the privileged oracle's final state (hash `bf9c5cd16d445bfa`). `nop`: no control step is executed; the episode ends at
-the collect hook with no phase complete, reward 0.
+Task failure: during phases 2 to 4, the block's centre more than 15 mm below the tray floor or more than 0.11 m from
+its centre in x or y (tray frame).
+Allowed contacts: the tray may touch the block; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
 
-## Resources
-Caps per container (PROTOCOL §6).
+Phases count only in order: each phase's condition is checked after every 1 ms physics step, and only once the phase
+before it is complete. A condition "for t s" must hold at every physics step over t s; a break restarts it. Positions
+are in the world frame (metres, z up, the table top is the plane z = 0); "horizontally" means in x and y.
+
+Failures shared by every task (each ends the episode at once, in any phase):
+- a forbidden contact: two arms touching each other (tools included); an arm touching itself, except its two fingers
+  touching each other (a finger touching the arm's own tool counts); any robot part, tool included, touching anything
+  the allowed contacts above do not list (the table, the floor and the arm pedestals included); any contact in the
+  scene that penetrates deeper than 4 mm;
+- a violation of the Franka Panda's safety limits by an arm, checked at every physics step: a joint more than 0.002 rad
+  beyond its position limits; measured joint speeds above 101 % of the limits (2.175 rad/s for joints 1-4, 2.61 rad/s
+  for joints 5-7); a finger faster than 0.051 m/s; the hand's TCP faster than 1.01 x 1.7 m/s or 1.01 x 2.5 rad/s,
+  measured or in the servo's reference motion; a motor torque above 87 N m (joints 1-4) or 12 N m (joints 5-7), or one
+  changing faster than 1000 N m/s; reference joint speeds, accelerations or jerks above the Panda's limits; measured
+  joint accelerations or jerks, or measured or reference TCP accelerations (13 m/s², 25 rad/s²), averaged over 20 ms,
+  above 105 % of the limits;
+- an object leaving the workspace (its centre below z = -0.2 m or more than 1.8 m from the world origin horizontally),
+  or a non-finite object position.
+
+Graded: the live episode, judged by the simulator service as it runs; nothing is replayed. Each row the agent sends (8
+values per arm, clipped to the limits) runs as one 10 ms control step; between the agent's calls the world is frozen.
+The task is judged as an event: once the last phase is complete at some control step with no failure recorded by then,
+the episode is a success, even if a failure above ends it afterwards; a failure before that scores 0. Completing the
+task neither ends the episode nor is shown to the agent. Otherwise the episode ends at the agent's `/finish`, at the
+task's horizon (whether or not every phase is done by then), after 4,500 control steps, or when the agent's time
+(1 h) runs out, and it is a success only if the task was completed by then. The agent has 3 resets, each
+starting a new episode from the frozen start; only the last episode (the one after the last reset) is graded. A
+simulator error raised by the agent's own call ends the episode with 0. An episode that does not start from the frozen
+instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -56,12 +82,8 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU with Vulkan (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Episode | it ends at the first control step where the task has succeeded or failed (the task's horizon, 25 s of simulated time, is a failure), when the agent's time is up, or on a simulator error; 3 resets (`POST /reset`: the scene rebuilt from the frozen instance); no step budget, the wall clock is the only budget |
-| Action space | `submit` chunks of `joint_position` (8: per arm 7 joint targets + the aperture, one row per 10 ms control step or `dt` apart, a chunk at most 10 s); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); binary RCB1 responses |
-| Cameras | `overview` and `closeup` (static), 640×480 RGB, z-depth on request |
-| Images | the `sim` sidecar runs efe:pandadyn (`images/pandadyn/`); the agent container and the verifier run the shared client image with its pip pins (`embodied_first_exam/standard/client.env`) |
-| Crash recovery | the shared service layer's: every control step journaled, a checkpoint with the state hash after every call; `restart: on-failure:6`, the service resumes the same episode |
-| Benchmark notes | tasks/pandadyn/README.md |
+## License
+Panda Dynamic Scenes is an original suite of Embodied First Exam. Its environment package (`images/pandadyn/panda_dynamics/`) is released
+with this repository under the repository's MIT License. The simulation stack in the image: ManiSkill 3 and its Franka
+Panda model (Apache License 2.0), SAPIEN (MIT), Ruckig community version (MIT), PyTorch (BSD 3-Clause). No
+non-commercial terms apply.

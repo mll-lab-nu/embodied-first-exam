@@ -4,10 +4,10 @@
 Put the hot dog in the microwave, close the door and press the start button.
 
 ## Goal
-Success: the hot dog is inside the microwave, the door is fully closed and the start button is being pressed, all at
+Success: the hot dog is inside the microwave, the door is fully closed and something touches the start button, all at
 once.
 
-The episode counts the press of the start button as it happens, with the hot dog inside and the door shut at that
+The episode counts the touch on the start button as it happens, with the hot dog inside and the door shut at that
 moment.
 
 When you are done, send `/finish` to end the episode and get it graded.
@@ -26,7 +26,7 @@ through its client or its MCP tools, as if it were real hardware: one live episo
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service starts)

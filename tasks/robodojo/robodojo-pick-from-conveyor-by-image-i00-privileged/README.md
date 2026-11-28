@@ -1,41 +1,39 @@
-# robodojo-pick-from-conveyor-by-image-i00-privileged
+# RoboDojo · pick_from_conveyor_by_image (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboDojo |
+| Task ID | `robodojo-pick-from-conveyor-by-image-i00-privileged` |
+| Benchmark | [RoboDojo](https://github.com/RoboDojo-Benchmark/RoboDojo) (Chen et al., 2026), upstream `RoboDojo-Benchmark/RoboDojo@cb2a37d` |
+| Robot | Two ARX X5 arms (6 joints each, parallel two-finger grippers) at a table |
 | Mode | privileged |
-| Twin | `robodojo-pick-from-conveyor-by-image-i00-standard` |
-| Simulator / robot | `robodojo` / `arx-x5-bimanual` |
-| Family / instance | `pick_from_conveyor_by_image` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); marked unvalidated (PROTOCOL §2 `validated`); human review in PR #142 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
+| Instance | `pick_from_conveyor_by_image`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-Put the object shown in the photo on the board into the basket on the belt, then lift the basket about a hand's length. (RoboDojo's `pick_from_conveyor_by_image`). RoboDojo capability dimension: Open. Instance i00 is RoboDojo's own evaluation layout
-`arx_x5/0/pick_from_conveyor_by_image_0.json` (sha256 `b35518107e88e78d`), frozen in `instance.json`. The deliverable is one replayable trajectory of
-RoboDojo's 14-D joint action at 25 Hz (`/app/output/trajectory.npz`), graded by RoboDojo's own reward check for the task,
-with no step cap (RoboDojo's own evaluation gives a policy 700 actions; PROTOCOL §3).
+Put the object shown in the photo on the board into the basket on the belt, then lift the basket with it at least a
+hand's width.
 
-## Difficulty
-A RoboDojo Open task (mixed: rigid objects on a dynamic conveyor objects), graded by RoboDojo's own success thresholds (its evaluation gives a policy 700 actions; no step cap here, PROTOCOL §3). Privileged mode gives every object's pose and bounding box, the check's code, unlimited resets and
-self-replay; the helpers are only joint moves, gripper commands and RoboDojo's IK. This mode is the control for the
-standard twin.
+## Success criteria
+The objects ride on the moving belt. One check, all at once:
+- The object shown in the photo is on the basket's floor: the bottom of its bounding box is from 0.01 m below to 0.04 m
+  above the bottom of the basket's, its footprint seen from above lies inside the basket's, its top is below the
+  basket's top, and its bottom is above a level 0.03 m below the basket's bottom.
+- That object's centre is more than 0.08 m above its height at the start.
+The basket's own height is not checked.
 
-## Reference solution
-None. RoboDojo releases no expert or planner script, and its training demonstrations (Hugging Face
-`RoboDojo-Benchmark/RoboDojo`, `data/`) record no initial state or layout, so none replays on a frozen layout. The task is
-marked unvalidated (PROTOCOL §2 `validated`).
+Graded file: `/app/output/trajectory.npz` with `task` (this task's name) and `actions`, an array of at most 15,000
+rows of 14 finite numbers, one per 25 Hz action, as `s.save_trajectory(...)` writes it. After the agent's session it
+is replayed open-loop from the frozen start in a fresh process of a separate verifier container without network, up
+to 3 times (each in a new process), stopping at the first replay that succeeds; the task is passed if any
+replay succeeds. A replay runs the rows until every check stage has passed (success), a check fails for good (0), or
+the rows run out (0); rows after the success are not run. Privileged mode applies no step limit beyond the 15,000
+rows. A missing file, a file for another task, or a file that is not such an array scores 0. A replay that gives no
+result or runs over its time limit, or a frozen layout that rebuilds to another state than the instance records, is
+an infrastructure failure, not a score.
 
-## Verification
-`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen layout up to 3 times (`[metadata] replays`), each in a
-fresh process (`rcb_robodojo.py replay`), stopping at the first success; reward 1 iff a replay ends in RoboDojo's success (`replays_succeeded`; a replay that did not start from the frozen layout's recorded state hash is `instance_mismatch`, no verdict). No oracle; human review in
-PR #142 (no positive example yet). `nop` (no
-trajectory) scores 0. The success description in `instruction.md` was written from RoboDojo's code
-(`task/RoboDojo/tasks/pick_from_conveyor_by_image.py`, `env/reward_manager/`); the code is the reference.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -45,10 +43,10 @@ Caps per container (PROTOCOL §6).
 - GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, held by `main`.
 - Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.
 
-## Details
-
-### Notes
-- Source: RoboDojo @ `cb2a37d` (MIT), its Isaac Lab 2.3 fork @ `afca7b0`, its cuRobo fork @ `d17b54c`; assets from the
-  Hugging Face dataset `RoboDojo-Benchmark/RoboDojo` @ `35efbc7` (Apache-2.0). The environment is RoboDojo's own evaluator
-  (`src/eval_client/eval_env.py`) with one env and no policy server.
-- tasks/robodojo/README.md has the benchmark's details (determinism, grading, the step limit, the image).
+## License
+RoboDojo ([RoboDojo-Benchmark/RoboDojo](https://github.com/RoboDojo-Benchmark/RoboDojo) @ `cb2a37d`) is released
+under the MIT License; its assets (Hugging Face `RoboDojo-Benchmark/RoboDojo`) under the Apache License 2.0; its Isaac
+Lab fork under the BSD 3-Clause License. The image also contains NVIDIA Isaac Sim 5.1 and its wheels (NVIDIA
+proprietary, no redistribution) and RoboDojo's cuRobo fork (NVIDIA's cuRobo licence): each user builds the image from
+public sources and accepts those terms (`images/robodojo/BUILD_ONLY`). No non-commercial terms apply to RoboDojo's
+own code and assets.

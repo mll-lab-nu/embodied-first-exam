@@ -1,12 +1,13 @@
 # Embodied Olympics · juggling on the head (standard)
 
 ## Task
-Keep the football in the air with 10 headers in a row, touching it only with your head and never letting it touch the
+Keep the football in the air with 10 counted headers, touching it only with your head and never letting it touch the
 ground.
 
 ## Goal
-Success: you keep the ball the machine lobs to you up with ten headers in a row, touching it only with your head,
-without it touching the ground.
+Success: you keep the ball the machine lobs to you up with ten counted headers, touching it only with your head,
+without it touching the ground; a header counts when it strikes the ball up, and a ball that only bounces off your
+head, leaving slower than it came, is not counted.
 
 The referee in the service judges these stages, in order: **each of the 10 headers**. Once the referee calls success, it
 stays; the attempt continues until you finish. The first foul before a success ends the attempt as a failure. A reset
@@ -41,7 +42,7 @@ MuJoCo). The robot runs as a service you reach through its client or its MCP too
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`) is your whole interface to the robot. Its docstring is the full
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`) is your whole interface to the robot. Its docstring is the full
 reference (`python -c "import rcb_client; help(rcb_client)"`); its examples use another benchmark's names: for this task
 `r.spec()` is authoritative.
 

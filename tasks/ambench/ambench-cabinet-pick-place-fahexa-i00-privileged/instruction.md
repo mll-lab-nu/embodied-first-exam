@@ -4,8 +4,9 @@
 Take the soda can from behind the cabinet's sliding door and put it on top of the cabinet.
 
 ## Goal
-Success: the can is on top of the cabinet and nearly still. The replay stops at the first step where the task is done;
-later rows are not run. It fails if its simulated time (Robot Interface) runs out first.
+Success: the can is at the height of the cabinet's top, just above its top surface, and nearly still. The replay stops
+at the first step where the task is done; later rows are not run. It fails if its simulated time (Robot Interface) runs
+out first.
 
 Deliverable: `/app/output/trajectory.npz`, written with `Session.save_trajectory(...)`. It holds `task` and `actions`, a
 (T, 8) float array of at most 8,000 rows (one per control step). Anything else scores 0: another shape, NaN, more rows,

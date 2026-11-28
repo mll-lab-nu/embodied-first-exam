@@ -38,7 +38,8 @@ The match (BWF Laws, with these changes):
   opponent's singles court (lines are in).
 - You lose the point if your shot goes into the net (below its top), comes down on your own side or lands out, or if a
   shuttle that is yours to hit lands in your court. An opponent's shot that would land out wins you the point, so you
-  may let it go. Touching or reaching over the net is not judged.
+  may let it go. Touching or reaching over the net is not judged. A shuttle that is yours to play and has been neither
+  hit nor landed 6 s after the last serve or hit also loses you the point.
 - The winner of a rally serves the next point (after a let, the same server); `match.first_server` serves the first
   point. Before every serve both robots are put at rest on their serve spots, diagonally opposite: in their right
   service courts when the server's score is even, else in their left ones.
@@ -59,7 +60,7 @@ simulator service. The world runs at 1/S of real speed (S = 20). The robot runs 
 client or its MCP tools, as if it were real hardware, on a clock that does not stop while you think: one live episode.
 
 ### Client
-The service at `http://localhost:8000` speaks eai-standard/2.x with the match extension (`eai-standard/2.3+match/1.0`): the endpoints
+The service at `http://localhost:8000` speaks eai-standard/3.0 with the match extension: the endpoints
 of every standard task, plus `/start` and `/ready`. The shared client is installed (`from rcb_client import Robot`).
 
 | HTTP | |

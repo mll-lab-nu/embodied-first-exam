@@ -19,13 +19,5 @@ old = "arx_x5/0/classify_objects_by_language_0.json"
 new = "arx_x5/2/classify_objects_by_language_0.json"
 
 [[replace]]
-old = "sha256 `eb7bc205a8e5f3ac`"
-new = "sha256 `26efb4b9249e7c88`"
-
-[[replace]]
 old = "\"Put car objects into the left basket, watch objects into the middle basket, and wooden_toy objects into the right basket,"
 new = "\"Put car objects into the left basket, chocolate_bar objects into the middle basket, and pepper objects into the right basket,"
-
-[[replace]]
-old = "Put the cars in the left basket, the watches in the middle basket and the wooden toys in the right basket. Then move both arms back to where they started."
-new = "Put the cars in the left basket, the chocolate bars in the middle basket and the peppers in the right basket. Then move both arms back to where they started."

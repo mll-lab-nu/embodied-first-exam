@@ -1,9 +1,9 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.7.0@sha256:127ba76f98a0ad602b378f1aff38c5defe668e74d46f637e3d0fdf26adf6bbef",
+ "image": "ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.8.0@sha256:478a80323078a4307beab89e355383f89407285a81635e9adb48a154efc7b2b3",
  "source": "embodied_first_exam/benchmarks/embodied-olympics-fun",
  "files": {
-  "grade.py": "711d818b010325b2370958f376137b533e2bf56be119e104f7c15ca4bc0c3e79",
-  "rcb_rfo.py": "e732ede9bd4a08a564d1fa6beea7ab81c22ff2180a034e6e51f477a207bcc491",
+  "grade.py": "e87dd81dbd8447e196b27a8eeb6459e472d21321506742e927b03a095be2261a",
+  "rcb_rfo.py": "68d3ed27147d8d5b5b3e67e339701756ce13eeb0515b849aea03366383985eeb",
   "rfo/__init__.py": "eddb3f4e03968c348b96a32850e51a6d89caf048d0af3d682df5c8a43bbdc26f",
   "rfo/looks.py": "592465637847ae5e386fb6f99d78a63280892fbf8f19408a0f9c5de45b5eae6a",
   "rfo/realhand.py": "23c8a06c04d0f700030a862872937406f55d18e719c3c76815118ff6e12b72f3",
@@ -13,17 +13,17 @@
   "rfo/tasks/catch.py": "619297424ac5f6f9e8912d6ccde1337cfcc16445b4ab5f3957c6cfda2b3d3c38",
   "rfo/tasks/catch_and_shoot.py": "f936ff29fa156eb8d105ea292aa595af6440f168a3b966ea1cc030a4594deca0",
   "rfo/tasks/dodgeball.py": "e14f77da6b26dba49e4e040fac435ebafc325489fe61fed4fc717e15afec7087",
-  "rfo/tasks/double_dutch.py": "71b7a18ffb7a6d9cf6a7f10a455a9aed4be2279e426ed8e6b9249bad37eb6fd1",
+  "rfo/tasks/double_dutch.py": "a58ac4078ae4d97a01ca634832542d46ea407c88e466e9a19c43e0bafc5cd616",
   "rfo/tasks/first_time_shot.py": "5b3e3933f62995f1906f18c3c24dbb956df1daa35c08360c9df6dcb3c4592324",
   "rfo/tasks/goalkeeper_save.py": "4ca9bbc05bf6c2d03cfa1186eee530ae7bca0e7253d781392935740fbf62163b",
   "rfo/tasks/header.py": "1d7e4dd55ab02ed566472ce9978b528c530784379dfb5e44930ddc5ec5fe4e2b",
   "rfo/tasks/juggle_three.py": "5355cbf34561ebc6b24a03f66a7263b62f42be0ed97365bfbece39f069404ddc",
-  "rfo/tasks/juggling_head.py": "0f3b2d63112497952841f3e6c894d3cd97b1a04ace7b6bae381a12d25333dbd2",
+  "rfo/tasks/juggling_head.py": "d7e009eac6d79a0dc7bd7168bad867653e4c3c6c5e871485b546a686a7ce1ea6",
   "rfo/tasks/long_rope.py": "0fc51aab46b6845b603613b1f1d41ae8b2cf40fe3d91a93aa8f8a58fe0cd29cb",
-  "rfo/tasks/paddle_bounce.py": "642ab157c785e2ef742310c01bfe1a935c52ca2c0c4bcc6d705b57c075644ef1",
+  "rfo/tasks/paddle_bounce.py": "344cf9f81fa74edcb69b0485124ea4abfe22bc71744799fb61e78d959253532a",
   "rfo/tasks/penalty_kick.py": "ec663ad5f46acff463515b0caa014d0dc5d56ffe2eb3681bef02dd172dc923e9",
   "rfo/tasks/sumo.py": "b893abb74e7654eb767dbd4d38d94015d2ec53916ed14910a3876ecd0f9042a7",
-  "rfo/tasks/sweeper_jump.py": "a594ed32d6c8cbce7593ff80997215a55c3d6fef098da228ee11cbea103f9a45",
+  "rfo/tasks/sweeper_jump.py": "8eaf2b92ada16449104c5b2e35a032120907d417bd0632ba6b828f491c4fa8f8",
   "rfo/tasks/table_tennis_return.py": "2a809937f35443e5056f865e8e1a49a3a195a91e90013eaf5e450c5b7ffc8b84",
   "rfo/tasks/tennis_return.py": "92544a63cd9feada6498ec44ea4cf937dcf4eb313fd604bc9e43eaff0685763b",
   "rfo/tasks/trap_ball.py": "bc0507e0b69c684067fdfc4ffff2c539a3ca22483710702dcbc1447b18c49751",
@@ -31,8 +31,7 @@
   "rfo/tasks/volleyball_bump.py": "747954b6b70af83db8861e065c659cbe93861668595958dd3f8e726f58c676a3",
   "rfo/tasks/volleyball_set.py": "3fd325545565b1ee299e7b217f83238739f919580e149a8630ee2f2fdb2b6839",
   "rfo/tasks/volleyball_spike.py": "f677e85cbe6d89d0563ba549f7388fead5eeffe1a1397680bd8b3cd6e95a0350",
-  "rfo/world.py": "81b354c7dd396d844623226e2c07d6a910a146d2e88bb8a523af47624fe7f8d9",
-  "standard/rcb_service.py": "e9d528c4a8e703a19ecfca2cd7b5a9e4e782dbc5280dc340e9b2184dffe6bcde",
-  "standard/server.py": "ce24223df662abfbf1ff29b3152f865395e7239667d5463558e4a75d005f9a87"
+  "rfo/world.py": "e02fab1b68db9b8bc185f6e93c50467374f894bdb924f0109094c965270314ad",
+  "standard/server.py": "3a608f0469462e343e75d4ac5c0e10135c0117735e7b7fa706673f2c4564263c"
  }
 }

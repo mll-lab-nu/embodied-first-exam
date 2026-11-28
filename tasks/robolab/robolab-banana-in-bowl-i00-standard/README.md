@@ -1,48 +1,42 @@
-# robolab-banana-in-bowl-i00-standard
+# RoboLab · banana_in_bowl (standard)
 
 | | |
 |---|---|
-| Benchmark | RoboLab |
-| Mode | standard (`eai-standard/2.2`) |
-| Twin | `robolab-banana-in-bowl-i00-privileged` |
-| Simulator / robot | `robolab` / `franka-robotiq-2f85` |
-| Family / instance | `banana_in_bowl` / seed 0 |
-| Oracle | `full` — solution/oracle_replay.py scored 1 under Harbor -a oracle on this version (2026-10-14): trial robolab-banana-in-bowl-i01-stand__BtrYwAj (2026-10-14, on these files under a temporary -i01 name: they differ from it only in that name in the resource-limit files and in one comment line of rcb_robolab.py; live 1, replay 1, deterministic 1, live_matches_replay 1, 177 control steps). Earlier versions: solution/oracle_replay.py scored 1 in 6/6 recorded runs on the pre-crash-recovery service with the same verdict formula (success = live, replay and deterministic), the latest robolab-banana-in-bowl-i00-limit__vABaxSX (job eq-oracle-banana-in-bowl, 2026-09-29, the dev branch 9eb18edf version); not re-run on this version (crash recovery, the collect hook's `end`, one-second chunks): static validation only, 2026-10-01. Human review per family (PROTOCOL §4). |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
+| Task ID | `robolab-banana-in-bowl-i00-standard` |
+| Benchmark | [RoboLab](https://github.com/NVlabs/RoboLab) (Yang et al., 2026), upstream `NVlabs/RoboLab@9db0aaf` |
+| Robot | Franka Emika Panda arm with a Robotiq 2F-85 gripper (RoboLab's DROID setup) |
+| Mode | standard |
+| Instance | `banana_in_bowl`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
 Put the banana in the bowl.
 
-Standard-mode twin of `robolab-banana-in-bowl-i00-privileged` (same frozen instance, the state after RoboLab's canonical seed-0 reset):
-the agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
-(`environment/docker-compose.yaml`, GPU on the sidecar), which owns the scene and records the episode as a (T, 8)
-trajectory and films it (live video). The collect hook (`environment/sim/finalize.sh`) ends the episode, lets the
-service exit, writes `final.json` from the live episode's record (no replay) and encodes the video; the verifier runs in a
-separate sandbox (`tests/Dockerfile`) over those artifacts. Compare against the privileged task to measure the cost of losing resets, privileged state and primitives.
+## Success criteria
+The banana (`banana`) is in the bowl (`bowl`), touches it and is released.
 
-## Difficulty
-That of `robolab-banana-in-bowl-i00-privileged` (its README), without resets, object poses or the success predicate: every step is planned from camera images, depth and the robot's own proprioception, and a failed grasp or a knocked-over object stays that way.
+An object is in a container when the centre of the object's convex hull lies inside the container's convex hull with its
+upward-facing faces removed (faces whose outward normal has a component of at least 0.7 along the container's own up
+axis): the space above the rim counts as inside, to any height, and the test moves with the container when it tips. Two
+bodies touch when a component of the contact force between them is above 0.1 N. Released means that neither inner finger
+of the Robotiq gripper touches the object (no contact-force component above 0.1 N with either finger).
 
-## Reference solution
-`solution/oracle_replay.py` streams the privileged oracle's joint targets (`oracle_qpos.npy`, one row per control step, `hold`) as one-second `joint_position` chunks through the client; after a service crash it waits for the resumed episode and continues from the control step the service reports.
+The condition above is RoboLab's own success term for `banana_in_bowl`, applied to one state: the live simulator's state at
+the last control step of the one episode; nothing is replayed. The episode ends when the agent sends `/finish` or when
+the agent's session ends (at the latest after 1 h). The agent's last command is then held for 30 more control
+steps (2 s), and the condition is judged at the last of them. There is no reset. The service evaluates the condition
+after every control step but never reports it and never ends the episode on it, so meeting the condition earlier in the
+episode does not count.
 
-## Verification
-Graded by the live episode: `success` = the live episode's success, judged by the sim service on the episode the agent
-ran, with no grading replay. The episode is agent-ended: a success never ends it and is never shown. It ends at the
-agent's `POST /finish`, when the agent's time is up, on a simulator error, or at the technical cap. At `/finish` and
-when the time is up, the service holds the last command for 30 more control steps (2 s) on the live simulator and judges
-RoboLab's success term at the end of that hold; at the cap or on a simulator error, the term as it stands. A termination
-of RoboLab's own other than the success term is a failure. Before serving, the service checks the rebuilt scene against
-the frozen instance (`instance.json` `state_sha`, else every object pose and joint within tolerance); a mismatch is an
-infrastructure failure (`instance_mismatch`). `tests/grade.py` reads `final.json` with no network and writes the reward
-fields (`graded_by_live` = 1, `replays` = 0, `infra_error`, the crash-recovery fields), plus `/logs/verifier/live.mp4`:
-the service films the live episode (a frame of the viewport and wrist cameras every 3 control steps, from the renders
-Isaac Lab makes with every step), and the collect hook encodes it after the verdict (a failed encode costs the video
-only). Compute: the collect hook needs no GPU after the service exits.
+The episode also ends at a technical cap of 100,000 control steps; that state is judged as it stands, with no hold. An
+episode ended by a simulator error scores 0, and so does one the service gives up on after repeated crashes inside the
+agent's calls. The scene is checked to start at the frozen instance (its state hash, or else every object pose and robot
+joint within tolerance) before the agent is served; a mismatch, a give-up after crashes between calls or a failed resume
+is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -53,11 +47,13 @@ Caps per container (PROTOCOL §6).
 - GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, RTX PRO 6000 Blackwell, held by `sim`.
 - Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.
 
-## Details
-| | |
-|---|---|
-| Episode | one episode, no reset, no step budget: it ends at the agent's `POST /finish` (a success never ends it), when the agent's time is up, on a simulator error, or at the technical cap of 100,000 control steps (`spec.max_control_steps`, reason `step_guard`; out of reach at 3-15 control steps/s); the wall clock is the only budget |
-| Action space | `submit` chunks of `joint_position` (8, streamed at the 15 Hz control rate with the agent's `dt`, a multiple of 1/15 s) or `ee_pose` (8, differential IK per row); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); `/kinematics` (FK / IK, stateless); binary RCB1 responses |
-| Images | the `sim` sidecar runs efe-private:robolab (BUILD_ONLY, `images/robolab/BUILD_ONLY`); the agent container and the verifier run the shared client image with its pip pins (`embodied_first_exam/standard/client.env`) |
-| Crash recovery | resume class `exact`: every control step journaled, a checkpoint with the state hash after every call; `restart: on-failure:6`, the service resumes the same episode (docs/protocol/standard_mode.md §13) |
-| Benchmark notes | tasks/robolab/README.md |
+## License
+RoboLab ([NVlabs/RoboLab](https://github.com/NVlabs/RoboLab) @ `9db0aaf`, v0.3.1) is released under the
+[Apache License 2.0](https://github.com/NVlabs/RoboLab/blob/9db0aaf09d9fe5d4f37b168320788258c7012463/LICENSE). Its bundled
+assets carry their own licences
+([THIRD_PARTY_NOTICES.md](https://github.com/NVlabs/RoboLab/blob/9db0aaf09d9fe5d4f37b168320788258c7012463/THIRD_PARTY_NOTICES.md)):
+the scenes, fixtures, materials, robots and most object sets are **CC BY-NC-SA 4.0 (non-commercial, share-alike)**; the
+YCB objects are MIT, the HOT3D objects CC BY-SA 4.0 with a non-sale restriction, the VOMP objects CC BY 4.0 and the
+backgrounds CC0 1.0. The simulator is NVIDIA Isaac Sim 5.1 with Isaac Lab 2.3.2 (Isaac Lab's source is BSD-3-Clause;
+Isaac Sim and the Isaac Lab wheels are NVIDIA proprietary software that may not be redistributed, so the simulator image
+is built locally and never published).

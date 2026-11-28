@@ -1,33 +1,38 @@
-# robocasa365-turn-on-toaster-oven-i00-realtime
+# RoboCasa365 · TurnOnToasterOven (realtime)
 
 | | |
 |---|---|
-| Benchmark | RoboCasa365 |
-| Mode | realtime (`eai-standard/2.3`) |
-| Twin | `robocasa365-turn-on-toaster-oven-i00-privileged` |
-| Simulator / robot | `robosuite` / `franka-panda-omron` |
-| Family / instance | `robocasa365/TurnOnToasterOven` / seed 0 |
-| Oracle | `none` — the privileged reference planned from step 0 through this service at S = 2 succeeds live and in the fresh replay, deterministic, no stall (2026-10-14); human review in PR #205 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Real time | slowdown S = 2 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 0 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §3) |
-| Base image | `ghcr.io/mll-lab-nu/efe:robocasa365-0.1.0` |
+| Task ID | `robocasa365-turn-on-toaster-oven-i00-realtime` |
+| Benchmark | [RoboCasa365](https://github.com/robocasa/robocasa) (Nasiriany et al., 2026), upstream `robocasa/robocasa@4f8a298` |
+| Robot | Franka Panda arm on an Omron mobile base with a torso lift (PandaOmron), parallel-jaw gripper |
+| Mode | realtime, slowdown 2 |
+| Instance | `robocasa365/TurnOnToasterOven`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
 Turn on the toaster oven by setting its timer.
 
-Realtime mode (`eai-standard/2.3`, slowdown S = 2) of `robocasa365-turn-on-toaster-oven-i00-privileged`: the same frozen instance and success check, served by the `sim` sidecar on a clock that does not stop (the shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics with `environment/sim/server.py`, this benchmark's adapter on `casa_tool`). The scene is dynamic: the timer knob, once set, turns back by itself (1/3000 of its range per simulated second). The agent sees the robot's cameras (RGB-D; intrinsics, and each camera's pose in every proprioception row), its own joints and end effector, and the instruction; one episode, no reset.
+## Success criteria
+The toaster oven's timer knob is turned at least 10% of its range (its hinge, travel 0 to 4.01 rad, at 0.40 rad or
+more), as the oven's state update reads it after the control step.
 
-## Difficulty
-The agent has to find the fixtures and objects in the robot's camera images, drive a mobile manipulator with its native controller, and act on a clock that does not stop, in one episode without a reset.
+The environment's check runs three times per control step: once inside the environment's step, before the fixtures
+update their state, and twice after it.
 
-## Reference solution
-`solution/`: none for this mode. Solvability: the privileged reference's 271 actions planned from step 0 (`submit(..., at=0)`, then `at=200`) through this service at S = 2 succeed live (at control step 256) and in the fresh replay, deterministic, with no stall (2026-10-14).
+Graded is the one live episode, judged by the simulator service on its own state; nothing is replayed. The clock does
+not stop: the episode starts paused at the frozen start, and from the agent's first `submit` one control step runs
+every 0.05 s × S of wall time (slowdown S = 2), whether or not the agent sends anything; when the planned
+commands run out the last one is held. There is no reset. The episode ends at the agent's `/finish`, after 3,000
+control steps (150 s of robot time), or when the agent's time (1 h) is up, and is judged on the state it ends
+in: the check's result after the last control step must be a success, and the check must not have held at the
+episode's start. A success earlier in the episode neither ends it nor is shown to the agent. After the agent's first
+command, a simulator error or repeated simulator crashes inside control steps are the agent's 0; a failure before the
+first command, a killed service, a failed resume, a start that is not the frozen instance's state or a missing
+verdict is an infrastructure error, not a score.
 
-## Verification
-The sim service judges the episode live (it ends at the agent's `POST /finish`, after the step cap or when the agent's time is up, and is judged on the state it ends in; `graded_by = live`, nothing is replayed), records every control step it ran, and after the agent's time writes `final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded and the scene was not solved at its start (the adapter's `live_verdict`). The first episode's start is checked against the frozen instance (`RCB_START_SHA`; a mismatch is an infrastructure failure, `instance_mismatch`). The video is rendered from the trajectory after the verdict and decides nothing. The clock's record (`stalls`, `max_lag_s`, ...) is copied into `reward.json` and decides nothing. `nop`: the episode never starts (its clock starts at the first submit), reward 0.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -37,11 +42,12 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Slowdown | S = 2 (`RCB_SLOWDOWN`'s default): measured RTF 1.27-1.29 (2026-10-14, an RTX 4090 workstation (32 cores, load 35-45), the service capped at 4 CPUs: 1.29 with the realtime service's clock flat out (RCB_SLOWDOWN = 0.01, 3 episodes of 600 control steps), 1.27 for the bare physics holding still; S = ceil(1.5 / 1.29) = 2) |
-| Episode | at most 3000 control steps (150 s of robot time; the privileged deliverable's cap); ended by the agent (`POST /finish`, PROTOCOL §3 "Agent-ended episodes") and judged on the state it ends in |
-| Reset budget | 0 (`RCB_RESET_BUDGET`; PROTOCOL §2): one episode, as the standard twin |
-| Action type | `joint_position` (13 channels, `control_dt` 0.05 s) |
-| Cameras | `robot0_agentview_center`, `robot0_agentview_left`, `robot0_agentview_right`, `robot0_eye_in_hand` (robot-mounted; poses in the proprioception) |
+## License
+The kitchen tasks, scenes and success checks are RoboCasa365's ([robocasa/robocasa](https://github.com/robocasa/robocasa)
+@ `4f8a298`, robocasa 1.0.1), released under the MIT License (Copyright (c) 2026 the RoboCasa Team); the simulation
+framework is [robosuite](https://github.com/ARISE-Initiative/robosuite) @ `5ce6643` (1.5.2, MIT License) on MuJoCo 3.3.1
+(Apache License 2.0). RoboCasa's assets (fixtures, object meshes, textures, including the Objaverse and AI-generated
+objects) are under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) as RoboCasa states (credit: RoboCasa,
+robocasa.ai); no non-commercial terms apply. They are downloaded, pinned by SHA-256, when the image is built and are not
+redistributed in this repository. Paper: Nasiriany et al., 2026, "RoboCasa365: A Large-Scale Simulation Framework for
+Training and Benchmarking Generalist Robots", ICLR 2026.

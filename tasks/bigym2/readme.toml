@@ -1,0 +1,292 @@
+# README data for tasks/bigym2/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text (upstream swirl-uk/BiGym2 @ 93ad4b3, read-only clone):
+#   held success  bigym/bigym_env.py: `success` L247-257 (the predicate `_success` held for success_hold_steps
+#                 consecutive control steps, counter L700-708), `fail` L287-290, `terminate` = success or fail L297-300,
+#                 base `_fail` L759-772 (pelvis more than MAX_DISTANCE_FROM_ORIGIN = 10 m from the origin, L47);
+#                 bigym/loco/config.py L143 success_hold_seconds = 1.0 (50 control steps at 50 Hz)
+#   fall          bigym/loco/base.py is_failed L160-189: projected gravity z > -0.6 (tilt past ~53 deg) or pelvis below
+#                 height.low (0.4 m) - 0.10 = 0.30 m; bigym/loco/env.py episode_fell L291-293 (latched),
+#                 episode_succeeded L295-302; bigym/loco/eval/protocol.py is_success L37-48 = succeeded and never fell
+#   predicates    bigym/envs/<module>.py `_success` / `_fail` of each task's G1 class (bigym/loco/tasks.py TASKS
+#                 L135-177: class, episode length in 500 Hz env steps = 10 x the control steps, reach_tolerance 0.05)
+#   "held"        robots/robot.py is_gripper_holding_object L153-157: a finger of that gripper touching the object
+#   tooling       embodied_first_exam/benchmarks/bigym2/privileged/environment/rcb_bigym2.py (docstring L1-17;
+#                 Episode.done L131-137 / success_end L139-143 / success_now L145-148; replay L301-338)
+#   privileged    .../bigym2/privileged/tests/grade.py L76-124
+#   standard      .../bigym2/sim/server.py (docstring L1-26: run_on, success_now, end_judgement "state",
+#                 end_window_steps = success_hold_steps L65-66, step cap L135-145) and standard/sidecar/rcb_service.py _end()
+#                 L960-968, end window L1320-1333; RCB_RESET_BUDGET default 0 in environment/docker-compose.yaml
+#   realtime      the realtime layer embodied_first_exam/standard/realtime/rcb_realtime.py (as humanoidbench)
+
+[benchmark]
+name = "BiGym 2.0"
+citation = "Zhang et al., 2026"
+url = "https://github.com/swirl-uk/BiGym2"
+repo = "swirl-uk/BiGym2"
+commit = "93ad4b3"
+
+[license]
+text = """
+BiGym 2.0 ([swirl-uk/BiGym2](https://github.com/swirl-uk/BiGym2) @ `93ad4b3`, `bigym` 1.0.0) is released under the
+Apache License 2.0. Bundled components keep their own licences: the Unitree G1 description (BSD 3-Clause) in AMO's
+MuJoCo packaging (Apache License 2.0); the scene props (CC0 or CC BY 4.0, attributions in upstream's
+`bigym/envs/xmls/3D_MODELS_ATTRIBUTION.md`); NVIDIA's GR00T-WBC weights, redistributed under the NVIDIA Open Model
+License (upstream's `NOTICE` and `THIRD_PARTY_NOTICES.md`). The simulator is MuJoCo 3.8.1 (Apache License 2.0). No
+non-commercial terms apply.
+"""
+
+[robots]
+unitree-g1-dex1 = "Unitree G1 humanoid (29 DoF) with Dex1-1 two-finger grippers; legs and waist driven by NVIDIA's GR00T-WBC walking policy"
+
+[modes.privileged]
+# grade.py L76-104: no file -> missing_trajectory; over 64 MB, not an npz, no `actions` -> bad_trajectory; `task` of
+# another task -> wrong_task; not (T, row width), T > horizon, NaN/inf -> bad_trajectory (all 0, grader_error 0).
+# L106-112: a replay process that fails or times out, instance_ok false (instance_mismatch) -> grader_error 1.
+# rcb_bigym2.replay(): rows until upstream ends the episode (held success, task failure, physics error, horizon) or the
+# rows run out; success = upstream is_success there. Rows are clipped into the action bounds (Episode.step).
+success = """
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory(...)` writes it: this task's name and at most
+{vars[horizon]} rows of finite actions, one row per 50 Hz control step (values outside the action bounds are
+clipped). After the agent's session it is replayed once, open-loop, from the frozen start (`tests/instance.json`) in
+a fresh process of a separate verifier container without network. The replay runs until upstream ends the episode
+(the success held for 1 s, a failure above, or the horizon of {vars[horizon]} control steps, {vars[seconds]} s) or
+the rows run out. The task is passed if, at that point, upstream's success has been held for 1 s and the robot has
+not fallen at any time in the replay. Rows after the end are not run. Only the trajectory is scored (`gen.py` and
+`NOTES.md` are not). A missing file, a file for another task, or one that is not such an array scores 0. A replay
+that crashes or times out, or a frozen start that does not rebuild, is reported as `grader_error` (infrastructure),
+not as a score.
+"""
+
+[modes.standard]
+# server.py: AGENT_END (run_on): the held success never ends the episode; a failure above, a physics error or the
+# pelvis 10 m away end it as a failure; the horizon is the step cap (step_limit), judged as it stands. End-state ends
+# (finished, timeout, step_limit) run end_window_steps = 50 control steps of the hold row (rcb_bigym2 hold_row: the
+# last command, vx = vy = wz = 0) from the end state; the success is success_now at the window's last step (a failure
+# in it -> 0). rcb_service._end(): error, reset -> 0. Reset budget: RCB_RESET_BUDGET default (0).
+success = """
+Graded: the live episode, judged by the simulator service; nothing is replayed. Reaching the goal does not end the
+episode and is not shown to the agent. The episode ends at the agent's `/finish`, at the horizon ({vars[horizon]}
+control steps, {vars[seconds]} s of robot time), when the agent's time ({timeout}) runs out, or at a failure above,
+which scores 0. After it ends, the robot holds its last command, standing still, for 1 s more (50 control steps).
+The task is passed if at the end of that second upstream's success predicate has held for 50 consecutive control
+steps and the robot has not fallen at any time in the episode or the hold; a failure during the hold scores 0.
+Resets granted: {resets}. A reset starts a new episode from the frozen start; only the episode after the last reset
+is graded. A simulator error raised by the agent's own call ends the episode with 0. An episode that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
+"""
+
+[modes.realtime]
+# As [modes.standard] (rcb_realtime.py extends rcb_service.Service; the same adapter and end window), plus the clock
+# (paused until the first /submit, one control step every control_dt x slowdown s; when the plan runs out its last row
+# is held, walking velocity included) and its error rule (after the first command a simulator error or a crash inside a
+# control step is the agent's; before it, a kill, a failed resume, a reset that does not rebuild: infrastructure).
+success = """
+Graded: the live episode, judged by the simulator service; nothing is replayed. The clock does not stop: an episode
+starts paused at the frozen start, and from the agent's first `submit` one control step runs every 20 ms × S of wall
+time (slowdown S = {slowdown}) whether or not the agent sends anything; when the planned rows run out, the last row
+is held, its walking velocity included. Reaching the goal does not end the episode and is not shown to the agent. The
+episode ends at the agent's `/finish`, at the horizon ({vars[horizon]} control steps, {vars[seconds]} s of robot
+time), when the agent's time ({timeout}) runs out, or at a failure above, which scores 0. After it ends, the robot
+holds its last command, standing still, for 1 s more (50 control steps). The task is passed if at the end of that
+second upstream's success predicate has held for 50 consecutive control steps and the robot has not fallen at any
+time in the episode or the hold; a failure during the hold scores 0. Resets granted: {resets}; only the episode after
+the last reset is graded. After the agent's first command, a simulator error or a simulator crash inside a control
+step is the agent's 0; anything before the first command, a killed service, a failed resume or a reset that does not
+rebuild the scene is an infrastructure failure, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families: one upstream G1 task each. `horizon` / `seconds`: bigym/loco/tasks.py episode length / 10 control steps.
+# Every family: success = the predicate held for 1 s with no fall in the episode (fall: tilt past ~53 deg or pelvis
+# below 0.30 m; it does not end the episode); failure (ends the episode at once, 0): the pelvis more than 10 m from the
+# scene's origin, plus the task's own `_fail`.
+
+[families.reach-target-dual]
+# envs/reach_target.py ReachTargetDualG1 (L239-): _success L123-127, Target.is_reached L62-72: the gripper's hand
+# position (get_hand_pos, the *_end_effector site between the finger pads) within reach_tolerance 0.05 m (tasks.py
+# REACH, L133) of the target's centre; the left target for the left gripper, the right for the right. No task _fail.
+vars = { horizon = 700, seconds = 14 }
+success = """
+Success predicate (upstream `ReachTargetDualG1`), both at once: the point between the left gripper's finger pads is
+within 5 cm of the red sphere's centre, and the point between the right gripper's pads within 5 cm of the green
+sphere's centre (5 cm is the spheres' radius). Held for 1 s (50 consecutive control steps), with no fall in the
+episode: the pelvis tilting past about 53° or dropping below 0.30 m makes the episode a failure without ending it.
+
+Failure (ends the episode at once with 0): the pelvis more than 10 m from the scene's origin.
+"""
+
+[families.move-two-plates]
+# envs/move_plates.py MoveTwoPlatesG1: _success L49-72 for each plate: within _SUCCESSFUL_DIST 0.05 m of a slot site of
+# the target rack, its up axis within _SUCCESS_ROT 20 deg of world -y, touching the target rack, not touching the table,
+# held by neither gripper; _fail L74-80: a plate touching the floor.
+vars = { horizon = "2,300", seconds = 46 }
+success = """
+Success predicate (upstream `MoveTwoPlatesG1`), for each of the two plates at once:
+- its centre is within 5 cm of one of the slots of the right dish rack;
+- its face points within 20° of the robot's right as seen from where it starts, the way the plates face at the
+  start (a plate turned around does not count);
+- it touches the right rack and does not touch the table;
+- no finger of either gripper touches it.
+Held for 1 s (50 consecutive control steps), with no fall in the episode: the pelvis tilting past about 53° or
+dropping below 0.30 m makes the episode a failure without ending it.
+
+Failures (each ends the episode at once with 0): a plate touches the floor; the pelvis is more than 10 m from the
+scene's origin.
+"""
+
+[families.flip-cup]
+# envs/manipulation.py FlipCupG1 (FlipCup._success L45-56): the cup's up axis within _TOLERANCE 5 deg of world up, the
+# cup touching the counter, held by neither gripper. No task _fail.
+vars = { horizon = "1,850", seconds = 37 }
+success = """
+Success predicate (upstream `FlipCupG1`), all at once: the cup's axis is within 5° of upright (the right way up), the
+cup touches the counter, and no finger of either gripper touches it. Held for 1 s (50 consecutive control steps),
+with no fall in the episode: the pelvis tilting past about 53° or dropping below 0.30 m makes the episode a failure
+without ending it.
+
+Failure (ends the episode at once with 0): the pelvis more than 10 m from the scene's origin.
+"""
+
+[families.flip-cutlery]
+# envs/manipulation.py FlipCutleryG1 (FlipCutlery._success L93-110): the spoon's forward axis (the end that pointed up
+# at the start) within _TOLERANCE 50 deg of straight down, the spoon touching the mug, no gripper holding the spoon or
+# the mug. It does not ask that the spoon be inside the mug or that the mug be upright. No task _fail.
+vars = { horizon = "1,950", seconds = 39 }
+success = """
+Success predicate (upstream `FlipCutleryG1`), all at once: the spoon's end that pointed up at the start points
+within 50° of straight down, the spoon touches the mug, and no finger of either gripper touches the spoon or the mug.
+Where the spoon touches the mug, and whether the mug is upright, are not checked. Held for 1 s (50 consecutive
+control steps), with no fall in the episode: the pelvis tilting past about 53° or dropping below 0.30 m makes the
+episode a failure without ending it.
+
+Failure (ends the episode at once with 0): the pelvis more than 10 m from the scene's origin.
+"""
+
+[families.stack-blocks]
+# envs/manipulation.py StackBlocksG1 (StackBlocks._success L177-199): blocks sorted by height; the lowest touches the
+# green target pad, the middle the lowest, the top the middle; each block at least _STACK_MIN_RISE 0.03 m above the one
+# below and within _STACK_MAX_XY_OFFSET 0.05 m of it horizontally; no gripper holding any block. _fail L201-207: a block
+# touching the floor.
+vars = { horizon = "8,750", seconds = 175 }
+success = """
+Success predicate (upstream `StackBlocksG1`), all at once, with the blocks taken from lowest to highest:
+- the lowest block touches the green pad on the far table;
+- the middle block touches the lowest, and the top block touches the middle one;
+- each block's centre is at least 3 cm higher than the one below it and within 5 cm of it horizontally;
+- no finger of either gripper touches any block.
+Held for 1 s (50 consecutive control steps), with no fall in the episode: the pelvis tilting past about 53° or
+dropping below 0.30 m makes the episode a failure without ending it.
+
+Failures (each ends the episode at once with 0): a block touches the floor; the pelvis is more than 10 m from the
+scene's origin.
+"""
+
+[families.dishwasher-close]
+# envs/dishwasher.py DishwasherCloseG1 (DishwasherClose._success L37-38): dishwasher.get_state() (door, bottom tray,
+# middle tray, each normalised 0 closed .. 1 open; props/dishwasher.py L92-101) all within _TOLERANCE 0.05 of 0. No
+# task _fail.
+vars = { horizon = "4,650", seconds = 93 }
+success = """
+Success predicate (upstream `DishwasherCloseG1`): the dishwasher's door, its bottom rack and its middle rack are each
+within 5% of their travel from fully closed, at the same time. Held for 1 s (50 consecutive control steps), with no
+fall in the episode: the pelvis tilting past about 53° or dropping below 0.30 m makes the episode a failure without
+ending it.
+
+Failure (ends the episode at once with 0): the pelvis more than 10 m from the scene's origin.
+"""
+
+[families.dishwasher-load-plates]
+# envs/dishwasher_plates.py DishwasherLoadPlatesG1 (DishwasherLoadPlates._success L114-131): for each plate, its up axis
+# within _TOLERANCE 20 deg of world +y or -y, the plate touching the bottom tray's colliders, held by neither gripper;
+# _fail L45-51: a plate touching the floor.
+vars = { horizon = "3,150", seconds = 63 }
+success = """
+Success predicate (upstream `DishwasherLoadPlatesG1`), for each of the two plates at once:
+- its face points within 20° of left or of right, as seen from where the robot starts (the plate stands on edge);
+- it touches the dishwasher's lower rack;
+- no finger of either gripper touches it.
+Held for 1 s (50 consecutive control steps), with no fall in the episode: the pelvis tilting past about 53° or
+dropping below 0.30 m makes the episode a failure without ending it.
+
+Failures (each ends the episode at once with 0): a plate touches the floor; the pelvis is more than 10 m from the
+scene's origin.
+"""
+
+[families.drawer-top-open]
+# envs/cupboards.py DrawerTopOpenG1 (DrawerTopOpen._success L39-40): the top drawer's state (normalised 0 closed .. 1
+# open) within TOLERANCE 0.1 (L13) of 1. No task _fail.
+vars = { horizon = "1,350", seconds = 27 }
+success = """
+Success predicate (upstream `DrawerTopOpenG1`): the top drawer is open to within 10% of its travel from fully open.
+Held for 1 s (50 consecutive control steps), with no fall in the episode: the pelvis tilting past about 53° or
+dropping below 0.30 m makes the episode a failure without ending it.
+
+Failure (ends the episode at once with 0): the pelvis more than 10 m from the scene's origin.
+"""
+
+[families.wall-cupboard-open]
+# envs/cupboards.py WallCupboardOpenG1 (WallCupboardOpen._success L73-74): both doors' states (normalised) within
+# TOLERANCE 0.1 (L13) of 1. No task _fail.
+vars = { horizon = "1,450", seconds = 29 }
+success = """
+Success predicate (upstream `WallCupboardOpenG1`): both doors of the wall cabinet are each open to within 10% of
+their travel from fully open, at the same time. Held for 1 s (50 consecutive control steps), with no fall in the
+episode: the pelvis tilting past about 53° or dropping below 0.30 m makes the episode a failure without ending it.
+
+Failure (ends the episode at once with 0): the pelvis more than 10 m from the scene's origin.
+"""
+
+[families.pick-box]
+# envs/pick_and_place.py PickBoxG1 (PickBox._success L151-158, _box_on_counter_top L143-149): the box touching the
+# counter, held by neither gripper, its centre inside the counter's horizontal extent and the bottom of its bounding box
+# within _ON_COUNTER_Z_TOL 0.03 m of the counter top. No task _fail.
+vars = { horizon = "4,400", seconds = 88 }
+success = """
+Success predicate (upstream `PickBoxG1`), all at once: the box touches the kitchen counter, its centre is above the
+counter top and its lowest point within 3 cm of the counter top's height (it rests on top, not against a side), and
+no finger of either gripper touches it. Held for 1 s (50 consecutive control steps), with no fall in the episode: the
+pelvis tilting past about 53° or dropping below 0.30 m makes the episode a failure without ending it.
+
+Failure (ends the episode at once with 0): the pelvis more than 10 m from the scene's origin.
+"""
+
+[families.put-cups]
+# envs/pick_and_place.py PutCupsG1 (PutCups._success L37-44): every cup touching the wall cabinet's bottom shelf, held
+# by neither gripper. Contact is all it asks (from any side). No task _fail.
+vars = { horizon = "3,000", seconds = 60 }
+success = """
+Success predicate (upstream `PutCupsG1`), for each of the two cups at once: it touches the wall cabinet's bottom
+shelf, and no finger of either gripper touches it. Only contact with the shelf is checked. Held for 1 s (50
+consecutive control steps), with no fall in the episode: the pelvis tilting past about 53° or dropping below 0.30 m
+makes the episode a failure without ending it.
+
+Failure (ends the episode at once with 0): the pelvis more than 10 m from the scene's origin.
+"""
+
+[families.saucepan-to-hob]
+# envs/pick_and_place.py SaucepanToHobG1 (SaucepanToHob._success L184-190): the saucepan touching the hob, held by
+# neither gripper. No task _fail.
+vars = { horizon = "4,650", seconds = 93 }
+success = """
+Success predicate (upstream `SaucepanToHobG1`), both at once: the saucepan touches the hob, and no finger of either
+gripper touches it. Held for 1 s (50 consecutive control steps), with no fall in the episode: the pelvis tilting past
+about 53° or dropping below 0.30 m makes the episode a failure without ending it.
+
+Failure (ends the episode at once with 0): the pelvis more than 10 m from the scene's origin.
+"""
+
+[families.sandwich-remove]
+# envs/pick_and_place.py RemoveSandwichG1 (RemoveSandwich._success L344-353): the sandwich's up axis within _TOLERANCE
+# 10 deg (L251) of up or down, the sandwich touching the board. ToastSandwich._fail L304-310: a gripper holding the
+# sandwich. Neither the spatula nor the pan is checked.
+vars = { horizon = "3,150", seconds = 63 }
+success = """
+Success predicate (upstream `RemoveSandwichG1`), both at once: the sandwich lies within 10° of flat, either side up,
+and it touches the chopping board. Whether the spatula was used, and where the pan is, are not checked. Held for 1 s
+(50 consecutive control steps), with no fall in the episode: the pelvis tilting past about 53° or dropping below
+0.30 m makes the episode a failure without ending it.
+
+Failures (each ends the episode at once with 0): a finger of either gripper touches the sandwich; the pelvis is more
+than 10 m from the scene's origin.
+"""

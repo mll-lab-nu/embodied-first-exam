@@ -9,7 +9,7 @@ passes. A mutation that passes is a blind rule: fix the check, not this list.
     python3 ci_checks/check-ci-selftest.py [--tier invariants|advisory|all]    # default: all. Standard library only.
 
 Two tiers. `--tier invariants` (the required CI job `invariants`, ci_checks/run_invariants.sh): the
-mutations of the rules that enforce docs/protocol/README.md Appendix H; each must FAIL its check. `--tier advisory` (the job
+mutations of the rules that enforce docs/protocol/invariants.md; each must FAIL its check. `--tier advisory` (the job
 `advisories`): the mutations of the advisory rules; each must still be reported (a finding, not blocking).
 """
 from __future__ import annotations
@@ -38,8 +38,10 @@ STDIMG = ["bash", str(ROOT / "ci_checks/check-standard-agent-image.sh")]
 MONITOR = [sys.executable, str(ROOT / "ci_checks/check-monitor.py"), "--tier", "invariants"]
 DIGESTS = ["bash", str(ROOT / "ci_checks/check-dataset-manifest.sh")]
 DOCKERFILE = ["bash", str(ROOT / "ci_checks/check-dockerfile.sh")]
-FIELDS = ["bash", str(ROOT / "ci_checks/check-task-fields.sh")]
+FIELDS = [sys.executable, str(ROOT / "ci_checks/check-task-layout.py")]
 INSTRUCTION = ["bash", str(ROOT / "ci_checks/check-instruction.sh")]
+STRUCTURE = FIELDS   # check-task-layout.py: the README's sections and key table too
+READMES = [sys.executable, str(ROOT / "ci_checks/check-readmes.py")]
 RP_LEAK = ["bash", str(ROOT / "ci_checks/benchmarks/robopaint/invariant-leak.sh")]
 EOM_MI = [sys.executable, str(ROOT / "ci_checks/benchmarks/embodied-olympics-match/invariant-match-instance.py")]
 ARC_BIND = [sys.executable, str(ROOT / "ci_checks/benchmarks/roboarc/invariant-runtime-binding.py")]
@@ -47,9 +49,11 @@ AGENT_END = [sys.executable, str(ROOT / "ci_checks/check-agent-end.py"), "--tier
 MG_LEAK = ["bash", str(ROOT / "ci_checks/benchmarks/maniguard/invariant-leak.sh")]
 RE_BOUND = [sys.executable, str(ROOT / "ci_checks/benchmarks/roboengineer/invariant-boundary.py")]
 EOM_STD = [sys.executable, str(ROOT / "ci_checks/benchmarks/embodied-olympics-match/invariant-eai-std.py")]
-# the checks that enforce Appendix H (run_invariants.sh); every other check here is advisory
+# repo-level: run on a task copy as its --repo (not a git checkout: every file under it is read)
+PROTO_STR = [sys.executable, str(ROOT / "ci_checks/check-protocol-strings.py"), "--repo"]
+# the checks that enforce docs/protocol/invariants.md (run_invariants.sh); every other check here is advisory
 INVARIANT_CMDS = (ISOLATION, POINTERS, TWINS, INSTANCE, STDIMG, MONITOR, DIGESTS, RP_LEAK, EOM_MI, ARC_BIND, AGENT_END,
-                  MG_LEAK, RE_BOUND, EOM_STD)
+                  MG_LEAK, RE_BOUND, EOM_STD, PROTO_STR)
 WITH_NEIGHBOURS = (IDENTITY, TWINS, EOM_MI)   # run on the broken copy among (links to) every other task
 
 STD = "behavior-boxing-books-up-for-storage-i00-standard"      # a sim sidecar with a trusted cache volume
@@ -64,7 +68,7 @@ DTB, DTB_P = "dextoolbench_hammer_claw_hammer_swing_down-standard", "dextoolbenc
 MJ = "mujoco_playground_aloha_hand_over-standard"              # serves DexToolBench's service (server_mj.py)
 MWP, MWP_P = "metaworldplus-coffee-button-i00-standard", "metaworldplus-coffee-button-i00-privileged"
 TWIN_P = "robotwin_2_0_grab_roller-privileged"
-OPEN = "embodied-olympics-fun-sprint-i00-standard"                      # declares open egress, `[agent] network_mode = "public"` (Appendix H.6)
+OPEN = "embodied-olympics-fun-sprint-i00-standard"                      # declares open egress, `[agent] network_mode = "public"` (invariants.md H.6)
 FUN_P = "embodied-olympics-fun-sprint-i00-privileged"                   # its tooling and grader from a files-only image (COPY --from)
 RP = "robopaint-acrylic-applesoranges-i00-privileged"           # a benchmark with its own leak hook (ci_checks/benchmarks/*/invariant-*)
 RE = "roboengineer-anycar-compact-lap-monaco-6-i00-standard"     # roboEngineer's public/private boundary hook
@@ -200,7 +204,7 @@ MUTATIONS = [
     ("... `network_mode: bridge`", HEAVY, COMPOSE, in_service("main", "    network_mode: bridge"), ISOLATION, "service main: `network_mode` is not allowed"),
     ("a sidecar on a network of its own", STD, COMPOSE, in_service("sim", "    networks: [default]"), ISOLATION, "service sim: `networks` is not allowed"),
     ("a top-level networks block", STD, COMPOSE, append("networks:\n  default:\n    driver: bridge\n"), ISOLATION, "top-level `networks` is not allowed"),
-    ("a task drops its allowlist (PROTOCOL Appendix H.6: one host list, in every task)",
+    ("a task drops its allowlist (docs/protocol/invariants.md H.6: one host list, in every task)",
      HEAVY, TOML, sub(r'^network_mode = "allowlist".*\nallowed_hosts = .*\n', ""), ISOLATION, '[agent].network_mode must be "allowlist"'),
     ("... a privileged twin task drops its allowlist",
      TWIN_P, TOML, sub(r'^network_mode = "allowlist".*\nallowed_hosts = .*\n', ""), ISOLATION, '[agent].network_mode must be "allowlist"'),
@@ -210,7 +214,7 @@ MUTATIONS = [
      OPEN, TOML, sub(r'^network_mode = "public".*\n', ""), ISOLATION, '[agent].network_mode must be "allowlist"'),
     ("a copy of the egress in [metadata] (it is [agent] network_mode's alone)",
      OPEN, TOML, sub(r'^(\[metadata\]\n)', r'\1network = "open"\n'), ISOLATION, "[metadata] network = 'open'"),
-    # ---- Appendix H.6, the verifier has no network: without [verifier] network_mode Harbor leaves the
+    # ---- invariants.md H.6, the verifier has no network: without [verifier] network_mode Harbor leaves the
     # separate verifier on its environment's baseline, public
     ("a privileged verifier with the network (no [verifier] network_mode)",
      PRIV, TOML, sub(r'^(\[verifier\]\n(?:(?!\[).*\n)*?)network_mode = "no-network".*\n', r"\1"), ISOLATION,
@@ -218,14 +222,14 @@ MUTATIONS = [
     ("... a standard task's verifier", STD, TOML, sub(r'^(\[verifier\]\n(?:(?!\[).*\n)*?)network_mode = "no-network".*\n', r"\1"),
      ISOLATION, '[verifier].network_mode must be "no-network"'),
     ("... a verifier on the public network", PRIV, TOML, sub(r'^(\[verifier\]\n(?:(?!\[).*\n)*?)network_mode = "no-network"', r'\1network_mode = "public"'),
-     ISOLATION, "[verifier].network_mode must be \"no-network\" (PROTOCOL Appendix H.6: the verifier has no network; scripts/task_conventions.py normalize writes it), not 'public'"),
+     ISOLATION, "[verifier].network_mode must be \"no-network\" (docs/protocol/invariants.md H.6: the verifier has no network; scripts/task_conventions.py normalize writes it), not 'public'"),
     ("... a verifier environment whose baseline is public", PRIV, TOML, sub(r"^\[verifier\.environment\]\n", '[verifier.environment]\nnetwork_mode = "public"\n'),
      ISOLATION, "[verifier.environment] sets network_mode = 'public'"),
     ("a verifier service on a network of its own (Harbor's deny-all skips it)",
      PRIV, TEST_COMPOSE, in_service("main", "    networks: [default]"), ISOLATION, "service main: `networks` is not allowed"),
     ("... `network_mode: host` in the verifier's compose file",
      PRIV, TEST_COMPOSE, in_service("main", "    network_mode: host"), ISOLATION, "service main: `network_mode: host` is not allowed"),
-    ("a standard task's sim service shows the success again (no RCB_AGENT_END: H.3, PROTOCOL §3)",
+    ("a standard task's sim service shows the success again (no RCB_AGENT_END: H.3, docs/protocol/tasks.md#modes)",
      STD, COMPOSE, sub(r"^[ \t]*RCB_AGENT_END:.*\n", ""), AGENT_END, "does not set RCB_AGENT_END"),
     ("... its instruction no longer says how to end the episode (the Finish line)",
      STD, "instruction.md", sub(r"(?ms)^- Finish: .*?(?=^- |\Z)", ""), AGENT_END, "has 0 Finish lines, not one"),
@@ -238,8 +242,10 @@ MUTATIONS = [
     ("... RCB_AGENT_END moved from the sim service to main (only the service's own setting counts)",
      STD, COMPOSE, lambda s: in_service("main", "    environment:\n      RCB_AGENT_END: \"1\"")(
          sub(r"^[ \t]*RCB_AGENT_END:.*\n", "")(s)), AGENT_END, "does not set RCB_AGENT_END"),
+    ("a standard task's instruction names a 2.x protocol id again (one protocol, eai-standard/3.0: H.3)",
+     STD, "instruction.md", sub(r"eai-standard/3\.0", "eai-standard/" + "2.4"), PROTO_STR, "a 2.x protocol id"),
     ("... a protocol that only looks like its mode's (a trailing space) with RCB_AGENT_END removed (H.3 bypass)",
-     STD, TOML, {TOML: sub(r'^(protocol = "eai-standard/2\.2)"', r'\1 "'),
+     STD, TOML, {TOML: sub(r'^(protocol = "eai-standard/3\.0)"', r'\1 "'),
            COMPOSE: sub(r"^[ \t]*RCB_AGENT_END:.*\n", "")}, AGENT_END, "is neither one of standard mode's"),
     ("the instruction no longer states the network rule (what the network reaches)",
      STD, "instruction.md", sub(r"(?ms)^- Network: .*?(?=^- )", ""), RESOURCES, "does not state the Network line"),
@@ -263,7 +269,7 @@ MUTATIONS = [
     ("environment/Dockerfile copies itself into the image, with an upstream URL in it",
      STD, "environment/Dockerfile", append("# https://github.com/StanfordVL/BEHAVIOR-1K\nCOPY . /opt/ctx/\n"), POINTERS,
      "environment/Dockerfile:"),
-    # ---- PROTOCOL §5: a standard-mode success condition in terms the agent can observe (advisory)
+    # ---- docs/protocol/tasks.md#instructionmd: a standard-mode success condition in terms the agent can observe (advisory)
     ("the standard instruction states a condition in the checker's terms (an object-local axis, a predicate, an indexed label)",
      STD, "instruction.md", append("\nAlso required: mug_0 local +y within 45 deg of world +x (is_axis_aligned).\n"), INSTRUCTION,
      "an object-local axis 'local y'"),
@@ -278,7 +284,7 @@ MUTATIONS = [
     ("... a privileged \"Only the actions count\" line",
      PRIV, "instruction.md", sub(r"trials are reviewed\.", "trials are reviewed. Only the actions count: changing the simulator's "
                                  "state while you develop changes nothing in the replay."), RESOURCES, "still has retired rule wording"),
-    # ---- the agent's time cutoff (PROTOCOL §2): the task's own number; task.toml, the instruction and the sim service agree
+    # ---- the agent's time cutoff (docs/protocol/tasks.md): the task's own number; task.toml, the instruction and the sim service agree
     ("task.toml's cutoff changed without normalizing (the instruction still states the old number)",
      STD, TOML, sub(r"(^\[agent\]\n(?:(?!\[).*\n)*?timeout_sec = )[0-9.]+", r"\g<1>1234.0"), CUTOFFS,
      "does not end with the `## Limits` section rendered for its 1234 s"),
@@ -324,8 +330,8 @@ MUTATIONS = [
      PRIV, "instruction.md", sub(r"^(## Limits)$", r"The limit is 3600 seconds.\n\n\1"), CUTOFFS, "states the agent's limit a second time"),
     ("... 'Finish within 60 minutes.'",
      STD, "instruction.md", sub(r"^(## Limits)$", r"Finish within 60 minutes.\n\n\1"), CUTOFFS, "states the agent's limit a second time"),
-    ("the README's `Agent time budget` row with another number than the task's cutoff",
-     STD, "README.md", sub(r"^(\| Agent time budget \| )\d+ s;", r"\g<1>28800 s;"), CUTOFFS, "README.md's `Agent time budget` row does not say"),
+    ("the README's `Time limit` row with another duration than the task's cutoff",
+     STD, "README.md", sub(r"^(\| Time limit \| )[^|\n]+\|", r"\g<1>8 h |"), CUTOFFS, "README.md's `Time limit` row does not say"),
     ("the sim service is told another wall clock than the task's cutoff",
      STD, COMPOSE, sub(r'(RCB_WALL_CLOCK_S: ")\d+', r"\g<1>3600"), CUTOFFS, "RCB_WALL_CLOCK_S = 3600, the task's cutoff is"),
     ("the sim service is not told the wall clock (it would report its code's default)",
@@ -373,6 +379,8 @@ MUTATIONS = [
     ("the kernel's OOM killer switched off for a container", STD, COMPOSE, in_service("sim", "    oom_kill_disable: true"), ISOLATION, "`oom_kill_disable` is not allowed"),
     # ---- pinned images in every stage and file; the verifier's log directory emptied, not a look-alike of it
     ("a second, unpinned stage in the verifier's Dockerfile", STD, TEST_DF, append("FROM python:latest\nCOPY --from=0 /tests /tests\n"), DOCKERFILE, "must be a pinned registry image"),
+    ("an ENV line with a trailing comment (BuildKit: `can't find = in \"#\"`)", STD, TEST_DF,
+     append("ENV RCB_ACTION_DTYPE=float32   # the client sends float32 action rows\n"), DOCKERFILE, "has a trailing `#` comment"),
     ("a sidecar image whose tag is a variable", STD, COMPOSE, sub(r"^(    image: ghcr\.io/mll-lab-nu/efe:monitor)-\S+", r"\1-${TAG:-latest}"), DOCKERFILE, "must be pinned"),
     ("tests/test.sh removes only a look-alike of the verifier's logs",
      STD, TEST_SH, sub(r"^rm -rf /logs/verifier/\*", "rm -rf /logs/verifier/*.bak"), ISOLATION, "must empty /logs/verifier"),
@@ -404,7 +412,7 @@ MUTATIONS = [
      sidecar_drift(OPEN, "rcb_rfo.py"), IDENTITY, "embodied-olympics: 2 versions of rcb_rfo.py"),
     ("... a sidecar takes its shared files from an image other than the pinned files image", OPEN, "environment/sim/Dockerfile",
      sub(r"(efe:embodied-olympics-fun-files-\S+@sha256:)[0-9a-f]{64}", r"\g<1>" + "0" * 64), IDENTITY, "not the pinned"),
-    # ---- caps (PROTOCOL §6): every container's, where Harbor and docker read them, and only those
+    # ---- caps (docs/protocol/resources.md): every container's, where Harbor and docker read them, and only those
     ("a GPU service without its GPU-memory cap", HEAVY, COMPOSE, sub(r"^    x-gpu-memory-gb: .*\n", ""), RESOURCES,
      "reserves a GPU but sets no `x-gpu-memory-gb`"),
     ("a separate verifier's GPU service without its GPU-memory cap", PRIV, TEST_COMPOSE, sub(r"^    x-gpu-memory-gb: .*\n", ""),
@@ -417,7 +425,7 @@ MUTATIONS = [
      RESOURCES, "service sim: no `mem_limit`"),
     ("a declared cap that docker does not apply",
      STD, COMPOSE, sub(r"^    mem_limit: \d+m(   # rcb-monitor)$", r"    mem_limit: 1024m\1"), RESOURCES, "declare the cap that is applied"),
-    # ---- seeds (PROTOCOL §2): the runner draws the seed; no other seed's instance where the agent's image is built
+    # ---- seeds (docs/protocol/tasks.md): the runner draws the seed; no other seed's instance where the agent's image is built
     ("the default seed is not among the allowed ones",
      TWIN_P, TOML, seeds_block("12345"), SEEDS, "is not in seeds.allowed"),
     ("an allowed seed without its frozen instance",
@@ -428,7 +436,7 @@ MUTATIONS = [
      TWIN_P, TOML, sub(r"^instance_seed = .*\n", ""), SEEDS, "no `instance_seed`"),
     ("another seed's instance in the agent's build context",
      TWIN_P, "+environment/seeds/7/instance.json", append("{}"), SEEDS, "a `seeds` directory where the agent's image"),
-    # PROTOCOL §2: scene dynamics, the task's own declaration (no table)
+    # docs/protocol/tasks.md: scene dynamics, the task's own declaration (no table)
     ("a task.toml without dynamics",
      TWIN_P, TOML, sub(r'^dynamics = .*\n', ""), FIELDS, "[metadata].dynamics must be declared"),
     # copies of what another source says (the mode: the directory's suffix; the reset budget: the sim service's default)
@@ -436,7 +444,7 @@ MUTATIONS = [
      TWIN_P, TOML, sub(r'^(dynamics = .*\n)', r'\1mode = "privileged"\n'), FIELDS, "[metadata].mode"),
     ("a copy of the reset budget in [metadata]",
      STD, TOML, sub(r'^(dynamics = .*\n)', r'\1reset_budget = 0\n'), FIELDS, "[metadata].reset_budget"),
-    # ---- Appendix H.7: twins share cutoff, seeds and frozen instance; H.3: no simulator in the agent's image; H.1: the
+    # ---- invariants.md H.7: twins share cutoff, seeds and frozen instance; H.3: no simulator in the agent's image; H.1: the
     # monitor's own isolation and the sanitize step; H.8: DIGEST; H.2: a benchmark's own leak hook
     ("a standard task whose cutoff is not its privileged twin's", STD, TOML,
      sub(r"(^\[agent\]\n(?:(?!\[).*\n)*?timeout_sec = )[0-9.]+", r"\g<1>1234.0"), TWINS, "the twins have the same cutoff"),
@@ -497,7 +505,7 @@ MUTATIONS = [
      append("COPY sim/ /opt/sim/\n"), RE_BOUND, "copies sim/ from the build context"),
     ("a match's eai_std copy drifts from its source", EOM_X, "environment/sim/eai_std/serve.py", append("# drift\n"),
      EOM_STD, "environment/sim/eai_std/serve.py differs from"),
-    # PROTOCOL §2: a realtime task declares its slowdown S and its reset budget once, in its sim service
+    # docs/protocol/tasks.md: a realtime task declares its slowdown S and its reset budget once, in its sim service
     ("a copy of the slowdown S in [metadata]",
      "humanoidbench-loco-walk-i00-realtime", TOML, sub(r'^(dynamics = .*\n)', r'\1slowdown = 1\n'), REALTIME,
      "[metadata] slowdown copies its service's default"),
@@ -507,7 +515,7 @@ MUTATIONS = [
     ("a realtime service that declares no reset budget",
      "humanoidbench-loco-walk-i00-realtime", COMPOSE, sub(r"^\s*RCB_RESET_BUDGET:.*\n", ""), REALTIME,
      "must declare its reset budget"),
-    # PROTOCOL §4: every graded trial leaves a replay video
+    # docs/protocol/tasks.md#grading: every graded trial leaves a replay video
     ("a privileged verifier that renders no video", TWIN_P, None,
      {"tests/grade.py": sub(r"\.mp4\b", ".bin", count=0), "tests/rcb_traj.py": sub(r"\.mp4\b", ".bin", count=0)}, VIDEO,
      "its verifier renders no replay video"),
@@ -515,6 +523,21 @@ MUTATIONS = [
      sub(r'^\s*\{ source = "/data/replay\.mp4", service = "sim" \},\n', ""), VIDEO, "the sim's video is never collected"),
     ("a video time bound shorter than the verdict replay's", MWP_P, "+tests/grading.json",
      append('{"replay_timeout_s": 1400, "video_timeout_s": 300}'), VIDEO, "shorter than the verdict replay's 1400 s"),
+    # docs/protocol/tasks.md: the per-task README format
+    ("a per-task README with a Difficulty section back", MWP_P, "README.md",
+     sub(r"^(## Success criteria)$", r"## Difficulty\nHard.\n\n\1"), STRUCTURE, "sections must be"),
+    ("... with `## Others` after License", MWP_P, "README.md", append("\n## Others\nMore.\n"), STRUCTURE,
+     "sections must be"),
+    ("... with a Twin row back", MWP_P, "README.md", sub(r"^(\| Robot \|.*\n)", r"\1| Twin | the other mode |\n"),
+     STRUCTURE, "key table rows must be"),
+    ("... with a protocol version", MWP_P, "README.md", sub(r"^(## License)$", r"Served over eai-standard/" + "2" + r".1.\n\n\1"),
+     STRUCTURE, "retired wording 'eai-standard/2.'"),
+    ("... naming its other mode's task", MWP_P, "README.md", sub(r"^(## License)$", f"See `{MWP}`.\n\n\\1"),
+     READMES, f"names another task: `{MWP}`"),
+    ("... with another Time limit than the task's cutoff", MWP_P, "README.md",
+     sub(r"^(\| Time limit \| ).*( \|)$", r"\g<1>8 h\2"), CUTOFFS, "README.md's `Time limit` row does not say"),
+    ("a Dockerfile that copies the README into the image", MWP_P, "environment/Dockerfile",
+     append("COPY README.md /app/README.md\n"), DOCKERFILE, "copies a README into an image"),
 ]
 
 
@@ -524,7 +547,7 @@ def run(cmd: list[str], task: Path) -> tuple[int, str]:
 
 
 def twin_cutoffs(tmp: Path) -> int:
-    """The cutoff is each task's own (PROTOCOL §2): normalize renders a changed `[agent] timeout_sec` into the
+    """The cutoff is each task's own (docs/protocol/tasks.md): normalize renders a changed `[agent] timeout_sec` into the
     instruction's closing section, the README row and the sim service's wall clock, check-cutoffs.py accepts the task on
     its own, and check-twins.py refuses it next to its privileged twin, whose number differs (`same_cutoff_as`, H.7). Returns the
     number of failures."""
@@ -547,7 +570,8 @@ def twin_cutoffs(tmp: Path) -> int:
     expect(r.returncode == 0, "normalize a task whose cutoff changed", r.stdout + r.stderr)
     expect(f"\n- Time: {sec} s of wall-clock time" in (t / "instruction.md").read_text(),
            f"the instruction does not say {sec} seconds after normalize")
-    expect(f"| Agent time budget | {sec} s;" in (t / "README.md").read_text(), f"the README row does not say {sec} s")
+    expect(f"| Time limit | {tc.duration_text(sec)} |" in (t / "README.md").read_text(),
+           f"the README's Time limit row does not say {sec} s")
     expect(f'RCB_WALL_CLOCK_S: "{sec}"' in (t / "environment/docker-compose.yaml").read_text(),
            f"the sim service's wall clock is not {sec}")
     rc, out = run(CUTOFFS, t)
@@ -563,7 +587,7 @@ def twin_cutoffs(tmp: Path) -> int:
 
 
 def gpu_rule_change(tmp: Path) -> int:
-    """A rule's GPU-memory cap changes (PROTOCOL §6): normalize replaces the generated `x-gpu-memory-gb` line with the new
+    """A rule's GPU-memory cap changes (docs/protocol/resources.md): normalize replaces the generated `x-gpu-memory-gb` line with the new
     value (never keeps the old one), check-resources.py then refuses the copy against the repository's rule with a
     message that names the fix, and normalize with the repository's rule brings the old value back and passes; inject.py
     run alone on a task whose compose file it generated keeps main's processes cap. Returns the number of failures."""

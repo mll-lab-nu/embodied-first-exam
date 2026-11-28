@@ -4,7 +4,8 @@
 Get the red block onto the green target area.
 
 ## Goal
-Success: the red block lies on the green target area; the robot does not touch the red block and it is at rest. Make
+Success: at least half of the red block lies on the green target area; the robot does not touch the red block and it is at rest.
+Make
 sure everything is at rest when you send `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
@@ -22,7 +23,7 @@ as a service you reach through its client or its MCP tools, as if it were real h
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service builds the scene, ~1 min)

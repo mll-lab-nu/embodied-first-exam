@@ -1,20 +1,21 @@
 # Embodied Olympics · paddle bounce (privileged)
 
 ## Task
-Bounce the table-tennis ball on the paddle in your right hand 20 times in a row, each time back up to the height it was
-dropped from, without letting go of the paddle.
+Bounce the table-tennis ball on the paddle in your right hand 20 times, each a hit that sends it back up to the height
+it was dropped from, without letting go of the paddle.
 
 ## Goal
-Success: you hit the dropped ball up 20 times in a row on the blade, each time to at least the height it was dropped
-from, and never let go of the paddle.
+Success: you hit the dropped ball up 20 times on the blade, each time to at least the height it was dropped from, and
+never let go of the paddle; a hit counts only when the blade drives the ball up, and a ball that only rebounds off the
+blade, leaving slower than it came, is not counted.
 
 The referee judges these stages, in order: **each of the 20 bounces**. An attempt ends at the success, at the first foul
 or after 20 s (2000 control steps) of robot time.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`. It holds `actions`: one sim row of 151
 floats per control step. It is replayed open-loop from the fixed start, one row per control step, until the referee ends
-the attempt. It scores 1 if the replay succeeds, else 0. If the rows run out first, the attempt is judged on its state
-at that point. At most 2000 rows are used. Every row must be finite, including rows after the attempt's end; a NaN or an
+the attempt. It scores 1 if the replay succeeds, else 0. If the rows run out before the referee calls a success, it
+scores 0. At most 2000 rows are used. Every row must be finite, including rows after the attempt's end; a NaN or an
 infinite value scores 0.
 
 Put two files beside it. `gen.py` is the script that produced it: it must run and reproduce `trajectory.npz`, reading

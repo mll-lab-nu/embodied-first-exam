@@ -8,14 +8,14 @@ Replays up to `--repeat` N times (default 1; tests/test.sh passes the task's `[m
 process (`rcb_behavior.py replay`; on Isaac only the first replay in a process is bit-exact: an in-process reset leaves
 PhysX solver / contact state behind), and stops at the first replay that succeeds. OmniGibson does not replay bit-wise
 (fresh replays of one file can end in different states), so the attempt succeeds if ANY of the N replays completes the
-task (PROTOCOL §4). The frozen scene rebuilt in each replay must match the recorded one (`instance_ok`: exact state
+task (docs/protocol/tasks.md#grading). The frozen scene rebuilt in each replay must match the recorded one (`instance_ok`: exact state
 hash, or every object / joint pose within tolerance on another host). reward.json: `replays` (run), `replays_succeeded`,
 `success_replay` (1-based, 0 none), `all_success` (every replay run succeeded), `deterministic` (the replays run ended
 in one state: evidence only, 1 with one replay) and `determinism_checked` (more than one replay ran); the goal / q_score
 fields are the deciding replay's (the successful one, else the last).
 The graded replays run exactly alike (tiny cameras, no video); the hashes are set-order independent since 2026-10-14
 (rcb_behavior._stable_hashes). The video is one more replay, run after reward.txt / reward.json hold the verdict
-(PROTOCOL §4: the verdict never waits for or depends on the video), bounded like a graded replay (replay_timeout()) and
+(docs/protocol/tasks.md#grading: the verdict never waits for or depends on the video), bounded like a graded replay (replay_timeout()) and
 by the verifier's remaining time (VERIFIER_TIMEOUT_S); it only adds `video_rendered` / `video_replay_matches` (whether it
 ended on the deciding replay's state) to reward.json, and its record is video.json. "Success" is the tooling's rule (REST_* in rcb_behavior.py: the BDDL goal
 held for 1 s with no goal object in a gripper and every goal object at rest, after the trajectory plus a settle window of
@@ -51,7 +51,7 @@ MAX_ROWS = 40_000
 REPLAY_FLOOR_S, REPLAY_STARTUP_S, REPLAY_MIN_RATE = 3600.0, 1200.0, 1.5
 REPLAY_CAP_S = 28000.0                               # >= REPLAY_STARTUP_S + MAX_ROWS / REPLAY_MIN_RATE = 27,867 s
 # The video replay (after the verdict) replays the whole episode again, so it gets a graded replay's own limit
-# (replay_timeout(); PROTOCOL §4: the video's time bound covers the longest episode), within the verifier's time left:
+# (replay_timeout(); docs/protocol/tasks.md#grading: the video's time bound covers the longest episode), within the verifier's time left:
 # task.toml's [verifier] timeout_sec is VERIFIER_TIMEOUT_S = the task's N graded replays + the video replay, each capped,
 # + 30 min (N = 3: 4 x 28000 + 1800 s); VIDEO_MARGIN_S is kept for the resource-limits step (test.sh's trap) and Harbor's
 # copy of /logs/verifier.

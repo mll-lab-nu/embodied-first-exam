@@ -3,7 +3,7 @@
  "kind": "rcb",
  "suite": "robotwin-2",
  "task": "robotwin_2_0_dump_bin_bigbin-standard",
- "protocol": "eai-standard/2.1",
+ "protocol": "eai-standard/3.0",
  "realtime": false,
  "tools": [
   "spec",

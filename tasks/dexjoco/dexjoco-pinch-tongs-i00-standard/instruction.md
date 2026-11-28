@@ -7,6 +7,8 @@ table.
 ## Goal
 Success: the tongs have been opened wide and squeezed shut three times, and they are then held a hand's width or more
 above the table for about half a second.
+If the hold is not yet complete when you send `/finish`, the robot keeps your last command for about one more
+second, and the hold must complete within that time.
 
 The three squeezes count as they happen.
 
@@ -27,7 +29,7 @@ client or its MCP tools, as if it were real hardware: one live episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service starts)

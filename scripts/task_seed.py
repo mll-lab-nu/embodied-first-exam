@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run a task from one of its allowed seeds (docs/protocol/README.md §2). The runner chooses the seed, never the agent:
+"""Run a task from one of its allowed seeds (docs/protocol/tasks.md). The runner chooses the seed, never the agent:
 
     python3 scripts/task_seed.py list tasks/<benchmark>/<task>                      # default, allowed, oracle
     python3 scripts/task_seed.py pick tasks/<benchmark>/<task> [--rng N]            # a seed drawn uniformly from `allowed`
@@ -45,7 +45,7 @@ def seeds(task: Path) -> dict:
 
 
 def holder(task: Path) -> Path:
-    twin = tc.twin_of(task)          # the mode registry's twin mode (PROTOCOL §3)
+    twin = tc.twin_of(task)          # the mode registry's twin mode (docs/protocol/tasks.md#modes)
     return twin if twin is not None and twin.is_dir() else task
 
 

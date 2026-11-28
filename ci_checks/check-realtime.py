@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Realtime tasks (docs/protocol/README.md §2): each task declares its slowdown S and its reset budget, and the
-declarations agree. The values are the task's own choice (PROTOCOL §2 gives the defaults); this check holds no
+"""Realtime tasks (docs/protocol/tasks.md): each task declares its slowdown S and its reset budget, and the
+declarations agree. The values are the task's own choice (docs/protocol/tasks.md gives the defaults); this check holds no
 per-benchmark list. For every task whose directory ends in `-realtime`:
   - slowdown: its sim service sets `RCB_SLOWDOWN` with a default (`"${RCB_SLOWDOWN:-S}"`, S > 0) in
-    environment/docker-compose.yaml (a task a benchmark exports with its own service, PROTOCOL §3, may set its own
+    environment/docker-compose.yaml (a task a benchmark exports with its own service, docs/protocol/tasks.md#modes, may set its own
     variable instead: `RO_SLOWDOWN`); task.toml keeps no copy of it (`[metadata] slowdown`); the instruction states it,
     as `S = <S>` (or, for S = 1, says the robot runs "in real time");
-  - reset budget: an `eai-standard/2.3` service declares it, `RCB_RESET_BUDGET` with a whole-number default
+  - reset budget: a service on the realtime layer declares it, `RCB_RESET_BUDGET` with a whole-number default
     (`"${RCB_RESET_BUDGET:-N}"`, or a fixed `"N"`); a benchmark's own service may declare none (then it has no reset: N = 0);
     task.toml keeps no copy of it (`[metadata] reset_budget`); every "K resets" the instruction states is N; with
     N > 0 the instruction states N or points to `spec()["budget"]["reset"]`; with a declared N = 0 it says "no reset".
@@ -38,7 +38,7 @@ def check(task: Path) -> list[str]:
     compose = tc.read_text(task / "environment/docker-compose.yaml") or ""
     md = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
     text = tc.read_text(task / "instruction.md") or ""
-    own = md.get("protocol") != "eai-standard/2.3"     # PROTOCOL §3: a benchmark's own service and protocol
+    own = tc.service_layer(task) != "realtime"     # docs/protocol/tasks.md#modes: a benchmark's own service
     # slowdown S
     m = tc.SLOWDOWN_RE.search(compose) or (tc.OWN_SLOWDOWN_RE.search(compose) if own else None)
     if not m:
@@ -48,7 +48,7 @@ def check(task: Path) -> list[str]:
         if not S > 0:
             errs.append(f"{task.name}: RCB_SLOWDOWN's default must be > 0 (got {m.group(1)})")
         if "slowdown" in md:
-            errs.append(f"{task.name}: [metadata] slowdown copies its service's default ({S:g}): drop it (scripts/task_conventions.py normalize)")
+            errs.append(f"{task.name}: [metadata] slowdown copies its service's default ({S:g}): delete the `slowdown = ...` line from task.toml's [metadata] by hand")
         if not re.search(rf"\bS = {re.escape(tc.slowdown_text(S))}\b", text) and not (S == 1 and REAL_TIME.search(text)):
             errs.append(f"{task.name}: instruction.md must state the slowdown as `S = {tc.slowdown_text(S)}`"
                         + (" (or say the robot runs `in real time`)" if S == 1 else ""))
@@ -61,7 +61,7 @@ def check(task: Path) -> list[str]:
     declared = r is not None
     n = int(r.group(1) or r.group(2)) if declared else 0
     if "reset_budget" in md:
-        errs.append(f"{task.name}: [metadata] reset_budget copies its service's default ({n}): drop it (scripts/task_conventions.py normalize)")
+        errs.append(f"{task.name}: [metadata] reset_budget copies its service's default ({n}): delete the `reset_budget = ...` line from task.toml's [metadata] by hand")
     stated = {int(k) for k in STATED.findall(text)}
     if stated - {n}:
         errs.append(f"{task.name}: instruction.md states {', '.join(f'{k} resets' for k in sorted(stated - {n}))}, "
@@ -79,7 +79,7 @@ def main(argv: list[str]) -> int:
     tasks = [d for d in dirs if d.name.endswith("-realtime")]
     errs = [e for t in tasks for e in check(t)]
     if errs:
-        print("FAIL realtime tasks (PROTOCOL §2: the slowdown S and the reset budget declared and consistent):")
+        print("FAIL realtime tasks (docs/protocol/tasks.md: the slowdown S and the reset budget declared and consistent):")
         for e in errs[:60]:
             print("  -", e)
         if len(errs) > 60:

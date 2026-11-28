@@ -1,42 +1,36 @@
-# vlabench-take-out-cool-drink-i00-standard
+# VLABench · take_out_cool_drink (standard)
 
 | | |
 |---|---|
-| Benchmark | VLABench |
-| Mode | standard (`eai-standard/2.1`) |
-| Twin | `vlabench-take-out-cool-drink-i00-privileged` |
-| Simulator / robot | `vlabench` / `franka-panda` |
-| Family / instance | `vlabench/take_out_cool_drink` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
+| Task ID | `vlabench-take-out-cool-drink-i00-standard` |
+| Benchmark | [VLABench](https://github.com/OpenMOSS/VLABench) (Zhang et al., 2024), upstream `OpenMOSS/VLABench@cf588fe` |
+| Robot | Franka Emika Panda arm (7 joints) with its two-finger gripper, VLABench's model on a fixed base |
+| Mode | standard |
+| Instance | `vlabench/take_out_cool_drink`, seed 0 |
+| Time limit | 30 min |
+| Reference solution | Included |
 
 ## Task
-VLABench's `take_out_cool_drink` as a robot service: a Franka Panda arm at a table, instructed **"I'm thirsty after sport and want a cool, healthy drink: take it out of the small fridge and close the fridge door."**
-(a direct command), on the same frozen instance as `vlabench-take-out-cool-drink-i00-privileged`. The simulator runs in the
-`sim` sidecar (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: four cameras
-(RGB 320×320, depth on request, calibrated), the robot's own state, and joint-position chunks. One episode, no reset,
-no object poses; nothing to hand in.
+I'm thirsty after sport and want a cool, healthy drink: take it out of the small fridge and close the fridge door.
 
-## Difficulty
-The agent has to find the objects in the images, close the loop through the cameras with joint-position targets, and
-finish in one episode without a reset, on top of the task's own reasoning (a direct command).
+## Success criteria
+Condition (both at once): the origin of the juice that starts in the small fridge (`juice`) is outside the axis-aligned
+box spanned by the fridge's (`small_fridge`) keypoint sites; and the fridge door is closed: its hinge is less than
+π/10 rad (18°) from its closed position. The drinks that start outside the fridge do not count.
 
-## Reference solution
-`solution/`: the privileged oracle's 500 control steps (recorded offline; see the twin's README) submitted
-through the client; the episode ends with `reason = "success"` at the last of them.
+Positions are object origins in the world frame of the instruction (metres, z up). A control step is 0.1 s (100 physics
+steps of 1 ms), and the service checks the condition after every control step. It never reports it, and a success does
+not end the episode.
 
-## Verification
-The sim service ends the episode at the task's success (or at the 9000-step technical cap, when the agent's
-time is up, or on a simulator error) and writes that live verdict to `/data/final.json` (`graded_by = "live"`);
-nothing is replayed to grade it. The scene is checked against the frozen instance (its
-initial state and compiled model hashes) when it is built, and its start state when the episode begins (a mismatch is
-`instance_mismatch`, infrastructure). `tests/grade.py` (separate sandbox, no network) grades `final.json`:
-`success = live_success`. The video (`replay.mp4`) is rendered from `trajectory.npz` in one pass after the verdict and
-never changes it.
+Graded is the one live episode (no reset). It ends at the agent's `POST /finish`, after 9,000 control steps, when the
+agent's session ends, or on a simulator error. Unless stated otherwise above, it passes when the condition holds after
+the last control step of the episode. A simulator error raised by the agent's calls, or simulator crashes during its
+calls that the service cannot resume from, end the episode with 0. A frozen scene that does not rebuild with the
+recorded model and initial-state hashes, or service crashes outside the agent's calls, are infrastructure errors, not a
+score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -46,10 +40,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Actions | `joint_position` (9, float64): absolute targets for the 7 arm joints (rad) and the 2 fingers (m), 0.1 s per control step |
-| Episode cap | 9000 control steps (900 s of robot time; `spec.max_control_steps`, docs/protocol/standard_mode.md) |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
-| Instruction | restated; VLABench's own: "I am so thirsty after sport, I want to drink something healthy cool" (graded (CoolDrinkTask): the juice that starts inside small_fridge is no longer inside it and the fridge door is closed; upstream does not say either) |
+## License
+VLABench ([OpenMOSS/VLABench](https://github.com/OpenMOSS/VLABench) @ `cf588fe`; Zhang et al., 2024, arXiv:2412.18194)
+code: MIT License (its `LICENSE.txt`). The scene and object assets come from the Hugging Face dataset
+[lerobot/vlabench-assets](https://huggingface.co/datasets/lerobot/vlabench-assets) @ `08d7a44`, which states no licence:
+they are downloaded when the image is built and are never redistributed by this repository or in a published image.
+MuJoCo 3.2.2 and dm_control 1.0.22: Apache-2.0. No non-commercial terms apply.

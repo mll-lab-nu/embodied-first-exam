@@ -8,7 +8,7 @@ success = the live episode's success AND no infrastructure failure. The live suc
 simulator (server.py: rcb_ikea.Session.status(), then final_check() with the last executed row held 1.0 s more, the
 privileged grader's terminal rules), so it already includes the settle window. reward.txt = success (1/0); reward.json
 = numbers only.
-Failure classes (PROTOCOL H.5: infra_error / grader_error give a free retry): a simulator error the agent's rows caused
+Failure classes (docs/protocol/invariants.md H.5: infra_error / grader_error give a free retry): a simulator error the agent's rows caused
 (final.json sim_error: the scene's code or MuJoCo raised in a call) is the agent's 0 (sim_error 1), and so are a
 breakdown, a timeout, an episode without actions and a crash give-up whose crashes were all inside the agent's calls
 (`sim_crashed_on_call`); no / unreadable / unfinalized final.json, a scene, image or runtime that differs from the
@@ -16,6 +16,25 @@ binding at the episode's start (`instance_mismatch`, server.py), a give-up after
 `resume_failed`, `call_watchdog`: final.json infra_error), a service-side error and a live success whose trajectory was
 not dumped are infra_error. The live video (/data/live.mp4) is evidence only: its absence never changes the verdict."""
 import json, os, shutil, sys
+
+def agent_end_fields(d):
+    """An agent-ended episode's record (docs/protocol/tasks.md#modes: final.json success_signal / ended_by, step_limit / steps_used):
+    evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
+    if not isinstance(d, dict) or d.get("success_signal") != "hidden":
+        return {}
+    by = d.get("ended_by")
+    out = {"ended_finish": int(by == "finish"), "ended_step_limit": int(by == "step_limit"),
+           "ended_session_end": int(by == "session_end"), "hidden_success_seen": int(bool(d.get("hidden_success_seen")))}
+    if d.get("step_limit"):
+        def n(k):
+            try:
+                v = float(d.get(k) or 0)
+            except (TypeError, ValueError):
+                return 0
+            return int(v) if abs(v) < 1e18 else 0      # NaN and inf too
+        out.update(step_limit=n("step_limit"), steps_used=n("steps_used"))
+    return out
+
 
 LOG = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier"); os.makedirs(LOG, exist_ok=True)
 DATA = os.environ.get("RCB_VERIFIER_DATA") or os.environ.get("RCB_DATA") or "/data"   # tests only: the sandbox sets neither
@@ -77,7 +96,7 @@ def grade() -> None:
                "calls": num("calls"), "settle_failed": num("settle_failed"), "gave_up": int(bool(d.get("gave_up"))),
                "sim_startups": num("sim_startups"), "resumes": num("resumes"), "resume_state_mismatch": num("resume_state_mismatch"),
                "instance_mismatch": int(mismatch), "video_rendered": int(bool(videos)), "video_segments": len(videos),
-               "sim_error": int(sim_error), "dump_lost": int(dump_lost), "infra_error": int(infra), "grader_error": 0})
+               "sim_error": int(sim_error), "dump_lost": int(dump_lost), "infra_error": int(infra), "grader_error": 0, **agent_end_fields(d)})
 
 
 if __name__ == "__main__":

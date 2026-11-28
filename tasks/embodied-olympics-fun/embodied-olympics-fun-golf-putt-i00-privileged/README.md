@@ -1,31 +1,55 @@
-# embodied-olympics-fun-golf-putt-i00-privileged
+# Embodied Olympics · golf putt (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
+| Task ID | `embodied-olympics-fun-golf-putt-i00-privileged` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree G1 humanoid (1.32 m, 33 kg, 29 joints), with Unitree's walking and running policies |
 | Mode | privileged |
-| Twin | `embodied-olympics-fun-golf-putt-i00-standard` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `golf_putt` / seed 0 |
-| Oracle | `full` — Reference for the G1's own Dex3-1 right hand at the device's torques (the putter's grip across the palm, held by the closed fingers and thumb; no weld): a one-armed pendulum putt by the wrist's roll joint with the wrist's yaw held at zero, the arm's kinematics reading where the club is in the hand; holed at 18.0 s of the 30 s limit (one hand: with the club soled behind the ball, inverse kinematics from 40 starts finds no collision-free posture with both hands on the grip, the misses 5 cm and more or the arms through the trunk), one 12 ms contact of the head; the same state hash twice; holed again with the swing 2 % faster and with the ball 2 mm towards the heel or the toe (3 of 5 perturbations; a face closed 0.5 degree more or a take-back 0.02 rad longer stops 6-10 cm short). At the start the hanging club turns 0.7 degree in the hand in 3 s. Negatives: nop (time), the hand opened (the putter left the hand), injected rolls too soft, too hard, over the edge, past the hole, at rest on the lip, off the green, a push, a double hit then a second stroke, a ball thrown at the shaft, a kick, astride the line, a fall; stimp 10 measured. Stress: random arm targets with the club in the hand end on the anchoring rule at 0.34 s, the club at most 7.4 mm into anything. Measured: success after 17.99 s of the 30 s limit, live and in a fresh replay, ending in the same state. |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Instance | `golf_putt`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | Included |
 
 ## Task
-Hole the putt: with one stroke of the putter in your right hand, roll the ball into the hole without letting go of the putter. (Embodied Olympics `golf-putt`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
+Hole the putt: with one stroke of the putter in your right hand, roll the ball into the hole without letting go of the
+putter.
 
-## Difficulty
-The hole is two and a half ball widths across and three metres away: the ball must start within about one degree of the line and at a speed between the one that just reaches the hole and the one that jumps it, and there is no second stroke. The club is an adult's, long and heavy for this robot's wrist, and it has to be brought from where it starts to an address beside the ball first. It is held across the palm of a three-finger hand by friction: levered it turns in the fingers, so it has to be carried with the shaft near the vertical, and the swing rocks it in the hand, so the face at impact is not quite where the arm put it.
+## Success criteria
+The ball lies on a flat green of stimp 10; the hole (0.108 m across, 0.1016 m deep, no flagstick) is 3 m away. A
+putter (0.86 m, 0.50 kg) starts in the robot's right hand, held by contact and friction only. The referee's stages, in
+order: stroke, holed.
+- Stroke: the putter's head (any side of it) touches the ball. Every further contact of the head must come within
+  0.2 s of the first, and all the head's contacts together last at most 0.03 s. At the first contact the feet must
+  not touch the green on both sides of the line of play (the line through the ball's spot and the hole's centre) or
+  on it.
+- Holed: after the stroke the ball comes to rest (its centre moves less than 1 mm in 1 s) inside the hole, with the
+  whole ball below the surface of the green.
 
-## Reference solution
-`solution/oracle.py` drives the robot through the task's own tooling, closed loop on the privileged state, and writes the trajectory (`solution/solve.sh`). Reference for the G1's own Dex3-1 right hand at the device's torques (the putter's grip across the palm, held by the closed fingers and thumb; no weld): a one-armed pendulum putt by the wrist's roll joint with the wrist's yaw held at zero, the arm's kinematics reading where the club is in the hand; holed at 18.0 s of the 30 s limit (one hand: with the club soled behind the ball, inverse kinematics from 40 starts finds no collision-free posture with both hands on the grip, the misses 5 cm and more or the arms through the trunk), one 12 ms contact of the head; the same state hash twice; holed again with the swing 2 % faster and with the ball 2 mm towards the heel or the toe (3 of 5 perturbations; a face closed 0.5 degree more or a take-back 0.02 rad longer stops 6-10 cm short). At the start the hanging club turns 0.7 degree in the hand in 3 s. Negatives: nop (time), the hand opened (the putter left the hand), injected rolls too soft, too hard, over the edge, past the hole, at rest on the lip, off the green, a push, a double hit then a second stroke, a ball thrown at the shaft, a kick, astride the line, a fall; stimp 10 measured. Stress: random arm targets with the club in the hand end on the anchoring rule at 0.34 s, the club at most 7.4 mm into anything. Measured: success after 17.99 s of the 30 s limit, live and in a fresh replay, ending in the same state.
+Fouls (each fails the attempt): the putter is out of the right hand (its grip not touched by the hand's fingers and
+by its thumb or palm) for more than 0.05 s, at any time; the putter touches any part of the robot other than the
+hands; anything other than the putter's head touches the ball (the shaft, the grip, any part of the robot); the stance
+is astride or on the line of play at the stroke; the head's contacts last longer than 0.03 s, or the head touches the
+ball more than 0.2 s after the first contact; the ball comes to rest anywhere but in the hole (the lip and the green
+beyond the hole included); the ball leaves the green. Fall (a failure at any time): the pelvis below 0.35 m, or any
+part other than the feet on the ground (the putter may touch the green). Time limit: 30 s (3,000 control steps).
 
-## Verification
-`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in one fresh process (`rcb_rfo.py replay`:
-one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success. The rules: The ball (42.67 mm, 45.9 g) lies at rest on a flat green of stimp 10 (a ball that starts rolling at 1.83 m/s stops after 3.05 m). The hole is cut into the green 3.0 m from the ball: 0.108 m across and 0.1016 m deep, with no flagstick in it. A putter (0.86 m long, 0.5 kg, 3.0 degrees of loft, a round grip 0.024 m thick and 0.26 m long) is a separate body; at the start its grip lies across the palm of your right hand (a three-finger hand: a thumb, an index and a middle finger), the fingers closed round it, which holds it by contact and friction only: it can slip, turn in the hand and fall. The putter is in your hand while its grip touches the hand's index or middle finger and its thumb or palm; it has left your hand when for more than 0.05 s it has not. Your left hand may hold the grip too; the putter may touch nothing of you but your two hands. You succeed when the ball is holed with one stroke: after the stroke it comes to rest (its centre moves less than 0.001 m in 1.0 s) inside the hole with the whole ball below the surface of the green. A stroke is a fair strike of the ball with the putter's head (any side of the head): the first contact of the head with the ball starts it, every further contact must come within 0.2 s of the first (an accidental double hit is still one stroke), and all the contacts together may last at most 0.03 s. You fail if the putter leaves your right hand at any time (dropped, thrown or slipped out of the hand); if the putter touches any part of you other than your hands; if the contacts last longer (the ball was pushed, scraped or scooped), if the head touches the ball again later (a second stroke), if anything else of you ever touches the ball (the putter's shaft or grip, a foot, a leg, a hand), if at the moment of the stroke your feet touch the green on both sides of the line of play (the straight line through the ball's spot and the hole's centre, extended behind the ball) or on that line, if the ball comes to rest anywhere but in the hole (on the lip and on the green beyond the hole included), if the ball leaves the green, if you fall (your pelvis lower than 0.35 m above the green, or any part of you other than your feet touching the ground; the putter may touch the green as long as it stays in your hand), or after 30 s.
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory()` writes it: an `actions` array of sim rows, one per
+10 ms control step, and the task's family name. After the agent's session it is replayed once, open-loop, from the
+frozen start, in a fresh process of a separate verifier container without network. Rows run one per control step
+until the referee calls the attempt; rows after the call, and rows past the attempt's time limit, are not run. The
+task is passed if the referee has called a success when the replay stops. If the rows run out before the referee's
+call, the task is not passed. A row the robot cannot run (its first value, the mode, is not one of the robot's modes)
+ends the replay at that row without a pass.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The physics diverging (a non-finite state, a bad acceleration, or the robot or a prop faster than 150 m/s) ends the
+attempt as a failure, unless a success was called in an earlier control step. Only the trajectory is scored (`gen.py`
+and `NOTES.md` are not). A missing file, a file that is not such an array (a link, over 64 MB, more than 40,000 rows,
+the wrong row width), a file for another task, or a non-finite value in the rows that are used scores 0. An image that
+no longer rebuilds the frozen start, or a replay that crashes or runs over 600 s, is an infrastructure failure, not a
+score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,14 +58,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | basketball-and-rackets |
-| Rule book | The Rules of Golf (R&A / USGA, 2023): Definitions "Hole", "Holed", "Stroke", "Line of Play"; Rules 8.1b, 9.4, 10.1a, 10.1b, 10.1c, 11.1, 13.2, 13.3a; the Equipment Rules (2023), Part 2 (clubs) and Part 4 (the ball); the USGA Stimpmeter instructions for the green's speed; deviations: Definition "Hole": the opening is a regular 24-sided polygon inscribed in the 0.108 m circle (flats 0.5 mm inside it, never wider than the official hole) with rigid vertical walls (the liner is only drawn), because the simulator has no cylindrical cavity · Rule 13.2: there is no flagstick (as when the player has it removed) · Rule 10.1 and the Equipment Rules on the grip: the right hand is the G1's own Dex3-1 three-finger hand (thumb, index and middle finger; 1.37 N m back-driven per finger joint, at the device's torques); the grip lies across its palm, at right angles to the forearm (as a fist holds a hammer), and the putter is held by the closed fingers' contact and friction alone; "in the hand" is defined by contact: the grip touches the hand's index or middle finger and its thumb or palm, and a break of up to 0.05 s is not a release. The stroke is made with that hand (a one-handed stroke is legal); the left hand may hold the grip too. The club itself is not scaled to the 1.32 m robot · Rule 10.1b (anchoring): the club may touch nothing of the player but the hands (stricter than the Rule, which allows the club against a forearm) · the start: the club is not level at your right side but hangs from your right hand held out ahead (a level club levers about 0.6 N m against three small finger motors); one hand, not two: on this model the robot cannot put both hands on the grip at the address · Rule 10.1a (a fair strike; an accidental double hit is one stroke): the referee needs numbers: every contact of the head with the ball must fall within 0.2 s of the first, and the contacts together may last at most 0.03 s (the simulated impact of a clean putt lasts 0.012 s, a real one 0.0005 s: the ball's contact is softer than a real ball's so that the simulator's 1 ms step resolves it) · Rules 9.4, 11.1 and 3.3 (penalty strokes, replaying, counting strokes): a single attempt: anything that would cost a penalty or need a second stroke ends it as a failure · Rule 13.3a (waiting for a ball that overhangs the hole): a ball that has been at rest for 1.0 s is final · the green: perfectly flat and uniform, no grain, no wind; its speed (stimp 10) is the ball's rolling resistance, calibrated so that a ball rolling at 1.83 m/s stops after 3.05 m |
-| Stages | stroke → holed |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `b8517b4ca379ce3d36d4266c4d28ba8db2bc1e7cae3d63910515aeff8da77731` |
-| Episode | 3000 control steps (30 s at 100 Hz) |
-| Action | sim rows of 151 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/embodied-olympics-fun-files/, built from embodied_first_exam/benchmarks/embodied-olympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

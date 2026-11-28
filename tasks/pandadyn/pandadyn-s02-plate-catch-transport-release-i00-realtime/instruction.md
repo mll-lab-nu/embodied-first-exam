@@ -6,8 +6,8 @@ off, settle it again, and tip it into the sliding basin while the basin is movin
 
 ## Goal
 Success: the ball, after flying free, lands on the plate and settles near the plate's centre; carried on the plate, the
-plate's centre passes waypoint A and then waypoint B; the ball settles near the centre again; finally it is tipped into
-the moving basin and rests there, off the plate, while the basin moves.
+plate's centre passes waypoint A and then waypoint B; the ball settles near the centre again; finally it goes from the
+plate into the moving basin and rests there, off the plate, while the basin moves.
 
 The steps count only in this order. Once a step is done, it stays done. The task is done when its last step is done, and
 it stays done even if a failure ends the episode afterwards. The task fails, and the episode ends at once, when:
@@ -38,7 +38,7 @@ real speed, one control step (10 ms of robot time) every 20 ms of wall-clock tim
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.3`, realtime mode). Its docstring (`help(rcb_client)`) is the full
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`, realtime mode). Its docstring (`help(rcb_client)`) is the full
 reference.
 
 | call | what it does |

@@ -1,15 +1,15 @@
-"""Sim service adapter of Panda Dynamic Scenes' standard (eai-standard/2.1) and realtime (eai-standard/2.3) tasks: one
+"""Sim service adapter of Panda Dynamic Scenes' standard and realtime tasks (eai-standard/3.0): one
 file for both modes. A standard task runs it behind the shared standard service layer (`python /srv/server.py`:
-rcb_service.main(build); docs/protocol/standard_mode.md Part 1); a realtime task runs the shared realtime layer
-(`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/standard_mode.md Part 3,
-tasks/pandadyn/README.md "Realtime (eai-standard/2.3)").
+rcb_service.main(build); docs/protocol/eai-standard.md); a realtime task runs the shared realtime layer
+(`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/eai-standard.md#realtime,
+tasks/pandadyn/README.md "Interface").
 
 The simulator-specific half only: `PandaDyn` implements rcb_service.Sim (the contract documented in rcb_service.py) for
 one frozen instance, on the benchmark's own tooling rcb_pandadyn.Session (ManiSkill 3.0.1 / SAPIEN 3.0.3, CPU PhysX at
 1000 Hz, one or two Franka Pandas behind their Ruckig + torque servos). The two modes share the scene, the action, the
 cameras, the proprioception, the success rule, the reset and the trajectory, and differ only in the clock: in standard
 mode the world is frozen between the agent's calls; in realtime mode rcb_realtime.py's clock runs on top of the same
-service layer, which does not serve the 2.2 additions (`/kinematics`, per-frame camera poses, depth modes). The
+service layer, which does not serve the shared layer's additions (`/kinematics`, per-frame camera poses, depth modes). The
 protocol, the clock, the episode, the resets, crash recovery and the finalize are rcb_service.py's and rcb_realtime.py's,
 unchanged copies of the shared sources (ci_checks/check-tooling-identity.sh).
 
@@ -26,11 +26,11 @@ begins and after every reset: `start_sha` is the instance's recorded `initial_sh
 starts elsewhere: instance_mismatch, an infrastructure failure). The video is rendered after the verdict from the graded
 episode's rows by this process's Session (render_video: the scene rebuilt, the rows filmed).
 
-Agent-ended episodes (RCB_AGENT_END, PROTOCOL §3; every Panda Dynamic Scenes standard and realtime task): the task's
+Agent-ended episodes (docs/protocol/tasks.md#modes): the task's
 check is an event ledger (every phase completed in order, as it happens in a moving scene), so the episode is judged
 on it as it happened (end_judgement "events"): the ledger completed at some step (a failure that ends the episode after
 that does not take it back; before it, it is 0).
-Completing it no longer ends the episode (rcb_pandadyn Session.run_on): the scene runs on until the agent's end; a
+Completing it never ends the episode (rcb_pandadyn Session.run_on): the scene runs on until the agent's end; a
 failure event, a forbidden contact, a safety-limit violation or an object out of bounds still ends it (reason "failed":
 0 before the ledger completed, a success after it). The task's horizon ends the episode whether or not the ledger completed (a completed
 task would otherwise run on past it, and an episode outliving its horizon would show the success), as the step cap
@@ -54,7 +54,7 @@ os.environ["RCB_SESSION_LOG"] = ""
 import rcb_pandadyn as M  # noqa: E402
 
 M.SESSION_LOG = ""           # the sidecar's Session is not the agent's interaction log
-from rcb_service import AGENT_END, main  # noqa: E402
+from rcb_service import main  # noqa: E402
 
 JOINTS = [f"joint{i}" for i in range(1, 8)]
 MOUNT = {"overview": "static, looking at the whole workspace from the front right, above the table",
@@ -90,7 +90,7 @@ class PandaDyn:
         self.hw = {c: list(self.s.render_frame(c).shape[:2]) for c in self.cameras}   # warms up the renderer
         self.rs = self.s.robot_spec()
         self.cmd = np.asarray(self.s.hold_action(), dtype=np.float64)
-        self.s.run_on = AGENT_END           # agent-ended episodes: completing the ledger does not end the episode
+        self.s.run_on = True                # agent-ended episodes: completing the ledger does not end the episode
         self.end_judgement = "events"       # the ledger as it happened (see the module docstring)
 
     # ------------------------------------------------------------------ the rcb_service.Sim contract
@@ -105,12 +105,7 @@ class PandaDyn:
                          f"task's horizon of {self.horizon_s:g} s of robot time, {int(round(self.horizon_s * M.CONTROL_HZ))} "
                          "control steps (a failure unless every phase is done by then), after "
                          f"{self.max_control_steps} control steps, when your time is up, or on a simulator error; every "
-                         "phase done in order counts as it happens, and a success does not end it")
-                        if AGENT_END else
-                        ("an episode ends at the first control step where the task has succeeded (every phase in order) or "
-                        "failed (a failure event, a forbidden contact, a safety-limit violation, an object out of bounds, or "
-                        f"the task's horizon of {self.horizon_s:g} s of robot time, {int(round(self.horizon_s * M.CONTROL_HZ))} "
-                        "control steps), when your time is up, or on a simulator error")),
+                         "phase done in order counts as it happens, and a success does not end it")),
             "action_types": {"joint_position": {
                 "dim": self.raw_dim, "layout": self.layout,
                 "lower": self.lim[:, 0].round(4).tolist(), "upper": self.lim[:, 1].round(4).tolist(),
@@ -183,7 +178,7 @@ class PandaDyn:
     def step(self, row: np.ndarray) -> tuple[bool, bool, dict]:
         over = self.s.step(row)
         self.cmd = np.asarray(row, dtype=np.float64).copy()
-        if AGENT_END and over:
+        if over:
             # a failure (its reason); or the task's horizon or the environment's step cap: one step cap, judged on the
             # ledger, whether or not every phase was done by then (horizon's own "timeout" failure included), so the
             # end's reason never tells the agent whether it succeeded
@@ -191,7 +186,7 @@ class PandaDyn:
             if why and not (why == "timeout" and self.s.horizon_end):
                 return True, False, {"why": str(why)}
             return True, bool(self.s.success()), {"step_cap": True, "why": "step_cap"}
-        return bool(over), bool(self.s.success()), ({"why": self.s.end_reason()} if over else {})
+        return False, bool(self.s.success()), {}
 
     def reset(self) -> None:
         self.s.reset()                                            # the scene rebuilt and reset with the instance's seed

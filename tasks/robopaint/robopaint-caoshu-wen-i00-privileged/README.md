@@ -1,80 +1,56 @@
-# robopaint-caoshu-wen-i00-privileged
+# RoboPaint · 草书 臨帖 · 文 (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboPaint |
+| Task ID | `robopaint-caoshu-wen-i00-privileged` |
+| Benchmark | [RoboPaint](https://www.embodied-first-exam.ai/suite/robopaint/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | Franka Emika Panda arm (ManiSkill PandaStick) holding a brush or pen |
 | Mode | privileged |
-| Twin | `robopaint-caoshu-wen-i00-standard` |
-| Simulator / robot | `maniskill` / `franka-panda` |
-| Family / instance | `robopaint_caoshu_wen` / seed 0 |
-| Oracle | `partial` — Reference solution in solution/ (generated with the current tooling): the generator's self-test replayed it on the graders' copy and through the scoring service (equal metrics, success); under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 269 and mark_width_mm 4.57, against the colouring-in limits 810 mm and 1.37 mm. Harbor oracle and nop runs: tasks/robopaint/README.md (Caoshu). |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:robopaint-0.2.0` |
+| Instance | `robopaint_caoshu_wen`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Pipeline check only |
 
 ## Task
-Copy the character 文 (cursive script, 草书) in `/app/target.png` onto the main sheet with brush and ink, in at most 2 strokes.
+Copy the character 文 (cursive script, 草书) in `/app/target.png` onto the main sheet with brush and ink, in at most 2
+strokes.
 
-**Process rules** (tasks/robopaint/README.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
-than coloured in: colouring in fails: a brush-tip path on the main sheet (`path_mm`) longer than 810 mm (3 × the reference
-solution's 269 mm) made of marks narrower than 1.37 mm on average (`mark_width_mm`: each stroke's own
-inked area / `path_mm`; 0.3 × the reference's 4.57 mm). The cap counts strokes as written: a contact is cut where the brush moves more than 5 mm without a mark
-0.1 mm wide, and a stroke longer than 720 mm (5 × the reference's
-longest, 142 mm) counts once per started 720 mm; at most 10 % of the
-path in strokes longer than 12 × their bounding box's diagonal (sweeps). They are part of the frozen instance (the rules added to its `target.success`); the graders'
-`rcb_brush_strict.py` applies them (the verifier and the scoring service).
+## Success criteria
+Graded on the main sheet's ink (pixels with ink coverage ≥ 0.5 on the sheet's 1024 × 1024 raster, 0.222 mm per
+pixel) against the exemplar's ink. The sheet is first moved by the whole-pixel shift, at most 5 mm along each
+axis, that gives the largest overlap of its ink with the exemplar's (a best shift on the edge of that window counts as
+no shift); every measure is taken at that shift. Success needs all of these:
 
-Copy the exemplar character 文 in cursive script shown in `/app/target.png` onto the 227 mm main sheet in at most 2 strokes, with ink from an ink stone and a practice sheet beside it; the brush starts dry; start pose = PandaStick's rest keyframe; the scene frozen in `environment/instance.json` (the agent's copy: scene constants, the rule, the picture).
+- IoU of the inked areas ≥ 0.80;
+- boundary F-score ≥ 0.75: the harmonic mean of the share of the sheet's ink-edge pixels within 1 mm of the
+  exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
+- each of the exemplar's 9 regions is at least 0.80 covered by ink;
+- stray ink (ink more than 1 mm from the exemplar's ink) at most 0.04 of the exemplar's ink area;
+- no colouring in: the task fails when `path_mm` > 810 mm and also `mark_width_mm` < 1.37 mm.
+  `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
+  `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
+  own), summed over the contacts and divided by `path_mm`;
+- at most 2 counted strokes: each inked contact is cut into marked pieces wherever the tip moves more
+  than 5 mm along the sheet while its mark is narrower than 0.1 mm (the touch-down before the first and
+  the lift after the last marking sample belong to no piece); a piece counts as one stroke, or as ⌈length /
+  720 mm⌉ strokes when it is longer than 720 mm;
+- sweeps: pieces longer than 12 × the diagonal of their bounding box (the diagonal taken as at least
+  10 mm) hold at most 10 % of the pieces' total length.
 
-Copy the exemplar (臨帖), scored against the picture after the best single shift of the sheet, at most 5 mm along each axis (translation only): IoU of the inked areas ≥ 0.80, boundary F (edge precision / recall within
-1 mm) ≥ 0.75, region coverage ≥ 0.80 (the exemplar's ink is divided into 9 regions; the fraction of each region covered by
-your ink; the worst one counts), stray ink (> 1 mm away from the exemplar's ink) ≤ 0.04 of its inked area and at most 2 strokes
-(continuous brush contacts) on the main sheet. `final_reward` = IoU (× 2 / strokes above 2). Ink precision / recall, missing
-ink and the mean region coverage are reported too.
+The practice sheet is never scored.
 
-## Difficulty
-The mark is not a disc under the tip: the brush model's width and drag tail grow with the press depth, the part of the tuft on the
-paper stays put until the handle is up to ~11 mm away and is then dragged behind it (the mark trails the handle and cuts inside
-turns), lifting releases the bend; the hairs' state carries over. Writing each stroke with the handle on the stroke's middle and
-the press set by the local width (the naive plan) writes every stroke about one offset behind, loses hooks and tapers and fails the
-rule by a wide margin (measured on the kaishu family). Solving it needs stroke planning against the brush dynamics and accurate tracking by a
-position-controlled arm (PD lag ~0.1 s). The tooling gives only thin primitives; `s.score()`, the exact sheets and
-`s.brush_state()` are privileged feedback. The stroke cap rules out filling the exemplar with many thin strokes.
+What is graded is the main sheet after one open-loop replay of the delivered trajectory. The verifier, in a separate
+sandbox without network, replays `/app/output/trajectory.npz` (array `actions`, shape (T, 7): absolute joint targets,
+one row per 20 Hz control step, T at most 72,000) once, in a fresh process, from its own copy of the frozen instance; a
+contact still on the paper after the last row is ended there, and the sheet is then scored as above. Meeting the
+conditions earlier in the replay does not count.
 
-Cursive (草书) adds what the regular and running families do not ask for: the cap (2) is the number of continuous brush contacts
-the exemplar's ink itself shows, so wherever the ink is connected the brush has to stay on the paper, through sharp turns, loops,
-crossings of the stroke over itself and the thin ligatures between strokes (and between the characters of a work), changing the
-press continuously from full strokes to hairlines on the way. A contact is long (several strokes of a regular hand in one), so the
-trailing of the tuft has to be planned around every turn, and an error early in a contact cannot be fixed by lifting.
-The exemplar's ink is divided along each contact into 9 regions of at most about 30 mm, so every part of a long stroke has
-to be covered, not only most of it.
+A missing file scores 0, and so does an invalid one: not a readable `.npz` (pickled or object arrays included), no
+`actions` array, a shape other than (T, 7), a NaN or infinite value, more than 72,000 rows, or a `task` entry that names
+another task. A replay that gives no result within 1650 s, or a verifier that cannot rebuild the frozen instance, is an
+infrastructure failure, not a score.
 
-## Reference solution
-Generated once (the kaishu planner, one plan per contact), on the graders' copy: per continuous brush contact of the
-exemplar (its connected ink, written without a lift), a robot-free trajectory optimisation against the brush model (handle control
-points (x, y, press) every 7 mm of path, initialised by inverting the trailing dynamics along the contact, scipy least_squares on
-the rendered contact against all of its regions), then executed on the robot with lag feed-forward and iterative learning control,
-a dip before every contact, the arm parked at the end. The plan is frozen at generation time (`solution/oracle_qpos.npy`); `solution/solve.sh` replays it:
-696 control steps, 2 strokes, IoU 0.913, boundary F 0.958, min stroke coverage 0.921, stray 0.0054.
-
-## Verification
-"The rule" below is the picture rule and the process rules (Task); the replays run
-`/tests/rcb_brush_strict.py` (`rcb_brush.py` with the rules), and `reward.json` adds the rules' quantities (`path_mm`,
-`max_path_mm`; paintings: `scribble_share`), `image_success` (the picture rule alone) and `strict_ok` (the process rules).
-Oracle label `partial`: the reference solution, scored under the process rules (task.toml `oracle_evidence`).
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in one fresh process (`/tests/grade.py`); pass iff
-the replayed main sheet meets the rule and the
-rebuilt frozen instance matches the recorded one (target picture and scoring data included). Physics is PhysX on the CPU and the
-brush runs in float64 on the CPU: a live run, in-process replays and fresh-process replays end in the same state bit for bit
-(`rcb_brush.py selftest`); camera rendering does not change it. `/logs/verifier/replay.mp4` and `canvas.png` never affect the
-verdict.
-A file that is not a readable trajectory (not an npz, no `actions`, a wrong shape, NaN, more than 72,000 rows) scores 0 as
-`bad_trajectory`; `grader_error` (with `infra_error`) is left for the verifier's own failures (a replay process without a result
-or past its 1650 s, a frozen instance that does not rebuild in the verifier: `instance_ok` 0).
-The verifier has 3600 s: a replay of the 72,000 control steps a trajectory may have takes up to 18 min at the measured
-67-102 steps/s (tasks/robopaint/README.md).
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -85,24 +61,8 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `main` and `scorer`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Simulator, tool and robot | ManiSkill 3.0.1 (SAPIEN 3.0.3, PhysX on the CPU) + the dynamic virtual brush of Wang et al. (IROS 2020, arXiv 1911.08002), re-implemented in `rcb_brush.py` (CPU) / franka-panda holding a Chinese writing brush (PandaStick's rigid stick as the handle + a 30 mm collision-free tuft; TCP = the tuft's tip) |
-| Privileged access | exact sheets, brush state, reset / replay, `s.score()` from the scoring service |
-| Containers | `main` (the agent: the tooling, the scene, the picture), `scorer` (`environment/scorer/`: the scoring service with the graders' copy of the instance; the agent reaches it only through `POST /score`, which returns metrics), the verifier's own sandbox (`tests/`) |
-| Base image and GPU | 2.5 GB. Physics and the brush run on the CPU; SAPIEN still needs the NVIDIA GPU (Vulkan) to build the scene and render: `environment/docker-compose.yaml` |
-
-### Scoring service (privileged mode)
-`environment/scorer/` holds `rcb_scorer.py`, the tooling and the graders' copy of the instance; compose runs it as the `scorer`
-service (GPU for SAPIEN, no ports published). `Session.score()` in the agent's container posts the actions executed since the last
-reset; the service replays them on its copy (the same deterministic simulation) and returns the metrics of the tooling's
-`agent_metrics()` (the rule's quantities and the continuous scores) — never images or target data. The agent's container holds
-nothing derived from the target except `target.png` (`ci_checks/benchmarks/robopaint/invariant-leak.sh`).
-
-### Sources
-Wikimedia Commons, File:張旭 古詩四帖.jpg (https://commons.wikimedia.org/wiki/File:%E5%BC%B5%E6%97%AD_%E5%8F%A4%E8%A9%A9%E5%9B%9B%E5%B8%96.jpg): 張旭《古詩四帖》 (attributed to Zhang Xu, Tang, 8th century, cursive script, ink on coloured paper, Liaoning Provincial Museum; the text is two poems of Yu Xin's 步虛詞 and two eulogies by Xie Lingyun). Licence on the file page: {{PD-old-70}} (public domain; a faithful reproduction of a two-dimensional work more than 1200 years old). The characters were cropped from this scan (downloaded unmodified on 2026-10-08, 11787 x 1600 px, SHA-1 b2e19768317f8234c3308a91013934240bf1074f), binarised and placed on the sheet; a work keeps its column as written.
-
-### Licences
-The exemplar is a scan of a public-domain historical work of cursive-script calligraphy (Wikimedia Commons, public domain;
-Sources above); licence notices: `environment/NOTICE-exemplar.md` (the agent's), `tests/NOTICE-exemplar.md` (the graders').
+## License
+RoboPaint (its scenes, tooling and graders) is part of this repository, MIT License. It runs on ManiSkill 3.0.1
+([haosulab/ManiSkill](https://github.com/haosulab/ManiSkill) @ `a4a4f92`) and SAPIEN 3.0.3, both Apache License 2.0.
+The brush model is this repository's re-implementation of the dynamic virtual brush of Wang et al. (IROS 2020). The base image also carries Spline-FRIDA (GPL-3.0), which this task does not use.
+The exemplar: cropped from a public-domain scan of 張旭《古詩四帖》 (Wikimedia Commons `File:張旭 古詩四帖.jpg`, PD-old-70); notice in `NOTICE-exemplar.md`. No non-commercial terms apply.

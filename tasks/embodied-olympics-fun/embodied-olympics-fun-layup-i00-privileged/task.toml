@@ -12,12 +12,12 @@ simulator = "mujoco"               # the Embodied Olympics simulator: MuJoCo 3.3
 robot = "unitree-h1-2"
 family = "layup"
 category = "basketball-and-rackets"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 # scene = environment/instance.json (the family's parameters + its t = 0 state hash); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 12.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested: No reference solution; the referee is tested with the H1-2's own Inspire hands at the core's default forces (20 N per fingertip, 30 N the thumb; no extra factor; nothing welded). Start: the ball resting on the upturned right hand, the left hand on its side; nop: time, no step counted. Positive by a declared injection: the robot really takes two steps on its walking gait with the ball in its hands (two real touchdowns), is teleported with the ball so that the ball is 0.9 m from the ring's axis and given a 2.6 m/s take-off (a ghost jump); at the apex both hands really open and move off the ball (the release in the air judged by contact, 0.22 s after the take-off), then the ball's velocity is set to a toss (6.8 m/s up, aimed down through the ring); its flight through the real ring is physics: success at 2.46 s, the ball at most 2.1 mm into the hands; the same state hash twice. Negatives: a third step, repeated hops (travelling), let go on the floor, let go in the air without a take-off, a jump shot from the start (too far), a toss wide of the ring (the floor), the ball back on the hand after the release, the ball up through the ring from below, a fall, a shuffle of the feet.; human review in the pull request that adds the benchmark (PROTOCOL §4)"
+oracle_evidence = "no reference solution; the referee is tested: No reference solution; the referee is tested with the H1-2's own Inspire hands at the core's default forces (20 N per fingertip, 30 N the thumb; no extra factor; nothing welded). Start: the ball resting on the upturned right hand, the left hand on its side; nop: time, no step counted. Positive by a declared injection: the robot really takes two steps on its walking gait with the ball in its hands (two real touchdowns), is teleported with the ball so that the ball is 0.9 m from the ring's axis and given a 2.6 m/s take-off (a ghost jump); at the apex both hands really open and move off the ball (the release in the air judged by contact, 0.22 s after the take-off), then the ball's velocity is set to a toss (6.8 m/s up, aimed down through the ring); its flight through the real ring is physics: success at 2.46 s, the ball at most 2.1 mm into the hands; the same state hash twice. Negatives: a third step, repeated hops (travelling), let go on the floor, let go in the air without a take-off, a jump shot from the start (too far), a toss wide of the ring (the floor), the ball back on the hand after the release, the ball up through the ring from below, a fall, a shuffle of the feet.; human review in the pull request that adds the benchmark (docs/protocol/tasks.md#grading)"
 
 [verifier]
 timeout_sec = 900.0
@@ -26,7 +26,7 @@ timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -41,7 +41,7 @@ memory_mb = 8192
 timeout_sec = 7200.0
 # Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md).
-network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/invariants.md H.6)
 
 [environment]
 build_timeout_sec = 1800.0

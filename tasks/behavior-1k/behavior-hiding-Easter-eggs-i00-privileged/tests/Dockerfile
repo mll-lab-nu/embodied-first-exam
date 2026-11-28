@@ -25,20 +25,20 @@ RUN apt-get -o Acquire::Retries=10 update --snapshot 20260920T090000Z && \
     rm -rf /var/lib/apt/lists/* /tmp/dpkg.state && mkdir -p /app/output /cache/appdata /data
 WORKDIR /app
 # <<< images/behavior/Dockerfile
-# Separate verifier sandbox (PROTOCOL §4): the same simulator image with the verifier's own copies of the
+# Separate verifier sandbox (docs/protocol/tasks.md#grading): the same simulator image with the verifier's own copies of the
 # tooling, the robot config and the frozen instance baked in (the grader, the tooling and the robot config from the
 # files-only image eai-behavior-files, pinned by digest). Nothing the agent did in its container reaches this
 # one — Harbor uploads only the declared artifacts (/app/output/), so a patched success check or a swapped
 # interpreter in the agent container cannot influence the verdict.
 FROM behavior-base
 COPY instance.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.7.0@sha256:520f055c171edb22272d1f565ed2fe2a8fba309f9c4f29ddba6d6fc4afed492c /privileged/grade.py /tests/grade.py
-COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.7.0@sha256:520f055c171edb22272d1f565ed2fe2a8fba309f9c4f29ddba6d6fc4afed492c /rcb_behavior.py /tests/rcb_behavior.py
-COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.7.0@sha256:520f055c171edb22272d1f565ed2fe2a8fba309f9c4f29ddba6d6fc4afed492c /r1pro_primitives_eval.yaml /tests/r1pro_primitives_eval.yaml
+COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.9.0@sha256:c326074304ddc536b59fe06bac187e9cda2f3c9e4ff1bfe057ae60d80d1f49da /privileged/grade.py /tests/grade.py
+COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.9.0@sha256:c326074304ddc536b59fe06bac187e9cda2f3c9e4ff1bfe057ae60d80d1f49da /rcb_behavior.py /tests/rcb_behavior.py
+COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.9.0@sha256:c326074304ddc536b59fe06bac187e9cda2f3c9e4ff1bfe057ae60d80d1f49da /r1pro_primitives_eval.yaml /tests/r1pro_primitives_eval.yaml
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 ENV PYTHONHASHSEED=0
 WORKDIR /tests
-# resources (PROTOCOL §6) # rcb-monitor
+# resources (docs/protocol/resources.md) # rcb-monitor
 COPY --from=ghcr.io/mll-lab-nu/efe:monitor-0.5.0@sha256:ecc5f24f1516ca11711d7c2d3ac07c89f79cd9220812c1244498ec71e352402a /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
 COPY rcb_limits.json /tests/rcb_limits.json

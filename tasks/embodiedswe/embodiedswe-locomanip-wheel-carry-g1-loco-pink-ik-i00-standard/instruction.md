@@ -5,8 +5,8 @@ Carry the steering wheel from the table in front of you to the basket on the oth
 it in the basket.
 
 ## Goal
-Success: the steering wheel was lifted off the near table and carried over, and it now rests inside the basket, let go
-of and still (not held, not on the rim).
+Success: the steering wheel was lifted off the near table and carried over, and it now rests still inside the basket
+(not on the rim).
 
 Lifting the wheel off the near table and carrying it over count as they happen.
 

@@ -5,8 +5,8 @@ Pick up the small bin, pour all five balls into the big bin on the floor at the 
 bin up high, about a forearm's length above the table.
 
 ## Goal
-Success: all five balls are in the big bin on the floor, and the small bin is still held up about a forearm's length or
-more above the table.
+Success: all five balls are at the height of the inside of the big bin on the floor, and the small bin is still up about
+a forearm's length or more above the table.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -23,7 +23,7 @@ its client or its MCP tools, as if it were real hardware: one live episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`):
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`):
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service warms up, ~1 min)

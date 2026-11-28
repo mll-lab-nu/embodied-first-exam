@@ -10,7 +10,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/embodied-olympics-match-tabletennisg1-matchgpu-i01-standard"
-description = "STANDARD (Embodied Olympics, its own service inside the task; eai-standard-lockstep/1.0: the world advances only while the player waits or a command takes effect and stands still between its calls, the opponent held to the same rule): table tennis between two Unitree G1 humanoids (29 joints within Unitree's URDF limits and motor torque-speed curves, self-collision, falls), each holding a real racket, in a continuous world advanced in lockstep. Task: Win a game of table tennis to 5 points against the other robot. Engineer track: the agent's program drives every joint of its G1 (joint position targets at 100 Hz with its own PD gains, on the joint sensors' noisy reading; no walking service: the legs are the program's too) and sees the ball only through two cameras (a frame every 10 ms control step, 20 ms old); one game to 5 points (lead by 2 from 4:4, at 6:6 the next point wins); the robots serve by the ITTF service laws with a toss device. One match against the platform's G1 at level 4 of 4, frozen development seed 4; a practice service with full copies of the match world; one NVIDIA GPU with a GPU training kit. Ported from Embodied Olympics tabletennis_g1 (revision g1tt-10+core-0.5)."
+description = "STANDARD (Embodied Olympics, its own service inside the task; eai-standard/3.0: the world advances only while the player waits or a command takes effect and stands still between its calls, the opponent held to the same rule): table tennis between two Unitree G1 humanoids (29 joints within Unitree's URDF limits and motor torque-speed curves, self-collision, falls), each holding a real racket, in a continuous world advanced in lockstep. Task: Win a game of table tennis to 5 points against the other robot. Engineer track: the agent's program drives every joint of its G1 (joint position targets at 100 Hz with its own PD gains, on the joint sensors' noisy reading; no walking service: the legs are the program's too) and sees the ball only through two cameras (a frame every 10 ms control step, 20 ms old); one game to 5 points (lead by 2 from 4:4, at 6:6 the next point wins); the robots serve by the ITTF service laws with a toss device. One match against the platform's G1 at level 4 of 4, frozen development seed 4; a practice service with full copies of the match world; one NVIDIA GPU with a GPU training kit. Ported from Embodied Olympics tabletennis_g1 (revision g1tt-10+core-0.5)."
 keywords = ["robotics", "embodied-olympics", "sports", "tabletennis", "humanoid", "unitree-g1", "mujoco", "standard-mode", "vision", "lockstep", "joint-level", "gpu-training"]
 
 [metadata]
@@ -20,8 +20,8 @@ robot = "unitree-g1"
 family = "tabletennisg1_match"
 resource_tier = "gpu"
 tier_twin = "embodied-olympics-match-tabletennisg1-matchcpu-i01-standard"
-dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard-lockstep/1.0"
+dynamics = "dynamic"              # scene dynamics (docs/protocol/tasks.md): the task's own declaration
+protocol = "eai-standard/3.0"
 instance_seed = 4
 opponent_level = 4
 revision = "g1tt-10+core-0.5"
@@ -37,7 +37,7 @@ oracle_evidence = "the sport's reference player (solution/: builtin_players:Open
 
 [metadata.seeds]
 # the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
-# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+# under solution/ is for, where they are not the default seed alone (docs/protocol/tasks.md)
 allowed = [4, 1, 2]
 
 [verifier]
@@ -45,7 +45,7 @@ timeout_sec = 1800.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

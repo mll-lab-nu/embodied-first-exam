@@ -4,8 +4,8 @@
 Unscrew the cap of the 50 mL tube and lift it off, holding the cap with `arm1`.
 
 ## Goal
-Success: `arm1`'s gripper holds the cap, unscrewed and lifted a few centimetres off the tube. The episode ends the
-moment that is reached. A physics warning (an unstable simulation, for instance after the robot was driven hard into
+Success: the cap, unscrewed and lifted a few centimetres off the tube, is touched by `arm1`'s gripper. The episode ends
+the moment that is reached. A physics warning (an unstable simulation, for instance after the robot was driven hard into
 something) ends the episode at once, as a failure.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`. It is replayed open-loop

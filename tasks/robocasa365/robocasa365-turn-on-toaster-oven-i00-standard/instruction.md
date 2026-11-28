@@ -22,7 +22,7 @@ episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service starts: about a minute)
@@ -63,9 +63,6 @@ and mode are kept. Those control steps are part of the episode. One call returns
 
 ### Observations
 - The cameras are mounted on the robot and move with it: use the calibration that comes with each response.
-
-## Others
-- A set timer slowly runs back down by itself.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.

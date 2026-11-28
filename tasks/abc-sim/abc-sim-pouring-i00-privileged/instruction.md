@@ -4,8 +4,8 @@
 Pour the beads from the mug into the cup.
 
 ## Goal
-Success: at least nine of the ten beads are in the cup, and the cup stands upright. The replay ends as soon as the task
-is done.
+Success: at least nine of the ten beads are in the cup, and the cup stands upright. The task counts as done once this
+has held for about a second without a break before your rows run out; the replay ends at that moment.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: `(T, 14)` rows, one per
 control step, at most 20,000 rows. It is replayed open-loop from the same initial state and scores 1 if its episode ends

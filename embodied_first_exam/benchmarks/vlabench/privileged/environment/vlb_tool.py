@@ -187,7 +187,7 @@ class Session:
         self.instance_sha = digest(self.spec)
         self.instruction = self.spec["instruction"]
         self.env = None
-        # agent-ended episodes (the standard sim service with RCB_AGENT_END, PROTOCOL §3; its video replay inherits the
+        # agent-ended episodes (the standard sim service with RCB_AGENT_END, docs/protocol/tasks.md#modes; its video replay inherits the
         # setting): the task's termination condition (its success) does not end the episode; success() is the
         # condition as things stand
         self.run_on = os.environ.get("RCB_AGENT_END") == "1"

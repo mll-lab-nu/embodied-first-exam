@@ -1,32 +1,35 @@
-# mujoco_playground_panda_open_cabinet-privileged
+# MuJoCo Playground · Panda open cabinet (privileged)
 
 | | |
 |---|---|
-| Benchmark | MuJoCo Playground |
+| Task ID | `mujoco_playground_panda_open_cabinet-privileged` |
+| Benchmark | [MuJoCo Playground](https://playground.mujoco.org/) (Zakka et al., 2025), upstream `google-deepmind/mujoco_playground@4057c14` |
+| Robot | Franka Emika Panda arm with its two-finger gripper (7 joint and 1 finger position actuators) |
 | Mode | privileged |
-| Twin | `mujoco_playground_panda_open_cabinet-standard` |
-| Simulator / robot | `mujoco` / `franka-panda` |
-| Family / instance | `mujoco_playground/PandaOpenCabinet` / seed 60417 (allowed seeds: [60417, 60418, 60419]; PROTOCOL §2) |
-| Oracle | `full` |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
+| Instance | `mujoco_playground/PandaOpenCabinet`, seed 60417 |
+| Time limit | 30 min |
+| Reference solution | Included |
 
 ## Task
 Pull the green handle along its slide until it is at the red ball.
 
-MuJoCo Playground's `PandaOpenCabinet` ported to plain MuJoCo (CPU, deterministic) for this benchmark.
+## Success criteria
+Pass condition, defined by this benchmark (MuJoCo Playground's `PandaOpenCabinet` has only a shaped training reward and no success
+test), checked on one state, the one after the episode's last control step: the handle's centre is less than 1.5 cm
+from the red target ball along x, the direction of the handle's slide; only x is compared. Meeting the condition at an
+earlier step does not count.
 
-## Difficulty
-MuJoCo Playground defines only a shaped RL reward; this task scores a binary success defined from it (handle within 1.5 cm of the target along x at the end), so a trajectory has to actually finish the manipulation rather than collect partial reward.
+Graded file: `/app/output/trajectory.npz`, array `actions` of shape (T, 8) with T at most 3,000: one row
+of actuator targets per control step, all finite (values outside the actuator ranges are clipped). After the agent's
+session the verifier, in a separate sandbox without network, replays it once, open-loop, from its own copy of the
+frozen start (`tests/instance.json`), and checks the condition on that replay. Only the trajectory is scored (`gen.py`
+is not). A missing file, a file that is not an `.npz` with a numeric `actions` array, or an array of another width, with
+more rows or with a NaN or infinite value scores 0. A replay that does not rebuild the frozen start (its state hash
+differs) and any other error inside the grader, such as a replay that dies or times out, are reported as a grader
+error, not as the agent's score.
 
-## Reference solution
-`solution/oracle_ik.py`: to Playground's `home` posture, horizontal approach, pull with correction (3.7 mm, 457 control steps). The recorded solution moves the handle mostly by contact rather than a clean grasp; it still proves the target reachable
-
-## Verification
-Playground has only a shaped RL reward; defined here: handle within 1.5 cm of the target along x at the end
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -36,11 +39,11 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `main`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| source | [MuJoCo Playground](https://github.com/google-deepmind/mujoco_playground) @ 4057c14 (Apache-2.0): `manipulation/franka_emika_panda/xmls/mjx_cabinet.xml`; Panda from MuJoCo Menagerie @ 1b86ece |
-| physics | MuJoCo 3.3.7, 200 Hz (Playground's sim_dt), implicitfast; control 50 Hz (4 substeps) |
-| instance | Playground's reset randomization (target x = 0.3 ± 0.1 m; arm start = `upright` + up to 30° per joint) drawn with seed 60417; initial-state hash in instance.json |
-| success | Playground has only a shaped RL reward; defined here: handle within 1.5 cm of the target along x at the end |
-| deliverable | `(T, 8)` actuator targets per control step, T ≤ 3000; bit-exact replay |
+## License
+MuJoCo Playground ([google-deepmind/mujoco_playground](https://github.com/google-deepmind/mujoco_playground) @
+`4057c14`) is released under the Apache License 2.0. The robot models come from MuJoCo Menagerie
+([google-deepmind/mujoco_menagerie](https://github.com/google-deepmind/mujoco_menagerie) @ `1b86ece`, the commit
+Playground pins), each under its own license: Unitree Go1 (BSD 3-Clause, Unitree Robotics), Boston Dynamics Spot
+(BSD 3-Clause, Clearpath Robotics), Google Barkour vB (Apache License 2.0, DeepMind), ALOHA 2 (BSD 3-Clause, Trossen
+Robotics), Franka Emika Panda (Apache License 2.0). The rough-terrain texture is from Poly Haven (CC0). No
+non-commercial terms apply. The simulator is MuJoCo 3.3.7 (Apache License 2.0).

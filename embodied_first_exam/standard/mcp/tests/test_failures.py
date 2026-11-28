@@ -1,9 +1,9 @@
-"""The efe-robot tools when the service fails (CPU, ~5 s), against a scripted stand-in for a 2.4 service:
+"""The efe-robot tools when the service fails (CPU, ~5 s), against a scripted stand-in for a service with the operations capability:
 
 1. a 5xx is the service's answer, not a lost reply: the tool returns the status and the error at once (failure category
    "service") and never polls GET /operations/<id>;
 2. a reply that never comes (the connection closed): the tool re-queries /operations/<id> and says the reply was lost;
-   through the oracle shim (oracle/rcb_client_mcp.py) the 2.4 client sees the ConnectionError the request would have
+   through the oracle shim (oracle/rcb_client_mcp.py) its client sees the ConnectionError the request would have
    raised (no fabricated empty reply), and its GET /operations/<id> answers with the record the tool server fetched;
 3. GET /spec answered 409 (the service gave up): the tools say the episode is over (episode_over), not an internal error.
 
@@ -17,7 +17,7 @@ STD = MCP.parent
 sys.path.insert(0, str(MCP))
 from mcp_client import McpClient, McpToolError  # noqa: E402
 
-SPEC = {"protocol": "eai-standard/2.4", "standard": "eai-standard/3.0", "max_call_wall_s": 30,
+SPEC = {"protocol": "eai-standard/3.0", "operations": True, "max_call_wall_s": 30,
         "action_types": {"joint_position": {"dim": 3}}, "cameras": {}, "budget": {}}
 
 
@@ -76,10 +76,10 @@ SHIM_ORACLE = textwrap.dedent('''
 def main():
     tmp = pathlib.Path(tempfile.mkdtemp(prefix="efe_mcp_fail_"))
     tools = tmp / "tools"; tools.mkdir()
-    shutil.copy(STD / "rcb1.py", tools / "rcb1.py"); shutil.copy(STD / "v2_4/rcb_client.py", tools / "rcb_client.py")
+    shutil.copy(STD / "rcb1.py", tools / "rcb1.py"); shutil.copy(STD / "operations/rcb_client.py", tools / "rcb_client.py")
     man = tmp / "manifest.json"
-    man.write_text(json.dumps({"manifest": "efe-mcp-manifest/1", "kind": "rcb", "suite": "toy", "task": "toy-2.4",
-                               "protocol": "eai-standard/2.4", "realtime": False,
+    man.write_text(json.dumps({"manifest": "efe-mcp-manifest/1", "kind": "rcb", "suite": "toy", "task": "toy-operations",
+                               "protocol": "eai-standard/3.0", "realtime": False,
                                "tools": ["spec", "observe", "submit", "finish"]}))
     httpd = ThreadingHTTPServer(("127.0.0.1", 0), Fake)
     threading.Thread(target=httpd.serve_forever, daemon=True).start()

@@ -3,9 +3,5 @@ old = "> Pour the white bottle into Ben's juice."
 new = "> Pour the white bottle into Max's juice."
 
 [[replace]]
-old = "/ seed 0 ("
-new = "/ seed 1 ("
-
-[[replace]]
-old = "), seed 0. "
-new = "), seed 1. "
+old = "`, seed 0 |"
+new = "`, seed 1 |"

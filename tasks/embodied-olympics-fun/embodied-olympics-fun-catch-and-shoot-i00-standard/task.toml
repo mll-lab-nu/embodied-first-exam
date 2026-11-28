@@ -18,7 +18,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-catch-and-shoot-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): Embodied Olympics catch-and-shoot on the same frozen instance as embodied-olympics-fun-catch-and-shoot-i00-privileged. Catch the pass with both hands, then shoot it into the basket from where you stand, without travelling. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 5 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): Embodied Olympics catch-and-shoot on the same frozen instance as embodied-olympics-fun-catch-and-shoot-i00-privileged. Catch the pass with both hands, then shoot it into the basket from where you stand, without travelling. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 5 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-h1-2", "humanoid", "standard-mode", "trajectory", "catch-and-shoot"]
 
 [metadata]
@@ -27,19 +27,19 @@ simulator = "mujoco"
 robot = "unitree-h1-2"
 family = "catch_and_shoot"
 category = "basketball-and-rackets"
-dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+dynamics = "dynamic"              # scene dynamics (docs/protocol/tasks.md): the task's own declaration
+protocol = "eai-standard/3.0"
 instance_seed = 0
 expert_time_estimate_hours = 12.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested: The chest pass is thrown by a physical two-wheel passing machine on the left wing, where a passer would stand, 4.0 m from the aim point: the shared ball machine block, copied byte for byte. It uses the football preset's 0.40 m pneumatic wheels on 15 N m speed-controlled motors with a size-7 ball: contact stiffness 42 kN/m from K = 2 pi r p at 0.56 bar, the pressure printed on match balls; restitution 0.85. A force-limited gate and ram feed the ball into the wheels. Nothing is pinned and no velocity is written after reset; the test checks the Task source and that the world has no pins or mocap bodies. The machine is trimmed in this world: the ball leaves the wheels at 2.00 s at 9.00 m/s, 12.7 degrees up, and passes 2 mm from the aim point 0.44 s later at 8.4 m/s. The test's positive is a declared magic action: real: the open two-hand catch pose before the pass; injected: the passed ball put at rest between the palms within 0.6 m; real: the arms squeeze and both hands close (the catch); injected at the shot: the ball's 52-degree shot velocity; the flight, the ring and the referee are real; the same state hash twice. Nop: not caught (deterministic). The real pass at the open hands is not caught. Negatives: hands opened, a shot 1 m wide, held to time, walking with the ball, a dragged pivot foot, a third step, a touch before the pass, the pass at the thigh, retouched after the release, up through the ring, a fall. In the ball-held arm stress the hands are penetrated by at most 0.9 mm. Collision stress scan: the machine raises no flags in the nop, torque, sweep and walk episodes. Flags appear only when the robot is placed in the machine's throat and drives its shoulder into it. The ram is pushed 5 cm past its stop, and the pinched ball gains 50 J. Header shows the same issue in the shared block. RTF (physics only, start command held, 4 x 10 s): 0.91 on a slower host, about 2.0-2.5 on the workstation (free-throw 0.84 in the same run).; human review in the pull request that adds the benchmark (PROTOCOL §4)"
+oracle_evidence = "no reference solution; the referee is tested: The chest pass is thrown by a physical two-wheel passing machine on the left wing, where a passer would stand, 4.0 m from the aim point: the shared ball machine block, copied byte for byte. It uses the football preset's 0.40 m pneumatic wheels on 15 N m speed-controlled motors with a size-7 ball: contact stiffness 42 kN/m from K = 2 pi r p at 0.56 bar, the pressure printed on match balls; restitution 0.85. A force-limited gate and ram feed the ball into the wheels. Nothing is pinned and no velocity is written after reset; the test checks the Task source and that the world has no pins or mocap bodies. The machine is trimmed in this world: the ball leaves the wheels at 2.00 s at 9.00 m/s, 12.7 degrees up, and passes 2 mm from the aim point 0.44 s later at 8.4 m/s. The test's positive is a declared magic action: real: the open two-hand catch pose before the pass; injected: the passed ball put at rest between the palms within 0.6 m; real: the arms squeeze and both hands close (the catch); injected at the shot: the ball's 52-degree shot velocity; the flight, the ring and the referee are real; the same state hash twice. Nop: not caught (deterministic). The real pass at the open hands is not caught. Negatives: hands opened, a shot 1 m wide, held to time, walking with the ball, a dragged pivot foot, a third step, a touch before the pass, the pass at the thigh, retouched after the release, up through the ring, a fall. In the ball-held arm stress the hands are penetrated by at most 0.9 mm. Collision stress scan: the machine raises no flags in the nop, torque, sweep and walk episodes. Flags appear only when the robot is placed in the machine's throat and drives its shoulder into it. The ram is pushed 5 cm past its stop, and the pinched ball gains 50 J. Header shows the same issue in the shared block. RTF (physics only, start command held, 4 x 10 s): 0.91 on a slower host, about 2.0-2.5 on the workstation (free-throw 0.84 in the same run).; human review in the pull request that adds the benchmark (docs/protocol/tasks.md#grading)"
 
 [verifier]
 timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -67,7 +67,7 @@ timeout_sec = 7200.0
 # Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md). The agent's
 # container holds no simulator, no referee and no instance.
-network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/invariants.md H.6)
 
 [environment]
 build_timeout_sec = 1800.0
@@ -75,7 +75,7 @@ cpus = 4
 memory_mb = 10240
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

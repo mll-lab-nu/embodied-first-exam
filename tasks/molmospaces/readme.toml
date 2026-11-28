@@ -1,0 +1,169 @@
+# README data for tasks/molmospaces/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text (upstream molmo-spaces 0.2.9 = allenai/molmospaces tag v0.2.9 @ 7351388, the
+# wheel from PyPI, read-only):
+#   success      molmo_spaces/tasks/<task>.py `judge_success` (lines below); thresholds from each instance's
+#                `episode.task` (environment/instance.json; defaults in molmo_spaces/configs/task_configs.py L64-92)
+#   tooling      embodied_first_exam/benchmarks/molmospaces/privileged/environment/rcb_molmospaces.py: one control step =
+#                one upstream Task.step; the episode ends at upstream is_done() (the horizon) or when the agent ends it;
+#                success = judge_success() on the final state (docstring L7-11, Episode.success L256-257, replay()
+#                L550-596: rows in order until the episode ends, then the verdict)
+#   privileged   embodied_first_exam/benchmarks/molmospaces/privileged/tests/grade.py (docstring L1-17, checks L108-175)
+#   standard     embodied_first_exam/benchmarks/molmospaces/sim/server.py (docstring L1-16: `done` = finish, horizon =
+#                RCB_STEP_LIMIT, judged on the final state) and .../standard/tests/grade.py; no reset (no RCB_RESET_BUDGET
+#                in environment/docker-compose.yaml)
+# No world coordinates in the standard tasks' texts (ci_checks/check-world-frame-texts.sh).
+
+[benchmark]
+name = "MolmoSpaces"
+citation = "Kim et al., 2026"
+url = "https://github.com/allenai/molmospaces"
+repo = "allenai/molmospaces"
+commit = "7351388"
+
+[license]
+text = """
+MolmoSpaces ([allenai/molmospaces](https://github.com/allenai/molmospaces), molmo-spaces 0.2.9, tag `v0.2.9` @
+`7351388`) is released under the Apache License 2.0 (Allen Institute for Artificial Intelligence). Assets: the scenes
+and AI2-THOR objects are CC BY 4.0; Objaverse objects are ODC-BY 1.0, each also under its creator's CC BY, CC BY-SA or
+CC0 licence, listed with its attribution in the image's `/opt/molmospaces/ATTRIBUTION.md`. The image build refuses
+any asset with non-commercial terms, so no non-commercial terms apply. The simulator is MuJoCo 3.5.0 (Apache License
+2.0).
+"""
+
+[robots]
+franka-robotiq-2f85 = "Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup)"
+rainbow-rby1 = "Rainbow Robotics RB-Y1 mobile manipulator: holonomic base, 6-joint torso, two 7-joint arms with grippers"
+
+[modes.privileged]
+# grade.py L108-147: no file -> missing_trajectory; not an npz, no `actions`, an entry too large to unpack (too_large),
+# pickled or non-numeric, wrong width, more than MAX_ROWS (100,000) rows, NaN/inf -> bad_trajectory; another family's
+# file -> wrong_family (all 0, grader_error 0). L148-155: a replay that dies or times out, or a start state that is not
+# the instance's t = 0 hash (instance_mismatch) -> grader_error 1 + infra_error 1. rcb_molmospaces.replay(): rows until
+# upstream ends the episode, then judge_success() on the final state.
+success = """
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory(...)` writes it: at most 100,000 rows of finite
+joint targets, one row per control step. After the agent's session it is replayed once, open-loop, from the frozen
+episode (`tests/instance.json`) in a fresh process of a separate verifier container without network. The replay
+runs the rows in order and ends at the last row or at the episode's horizon ({vars[horizon]} control steps,
+{vars[seconds]} s), whichever comes first; rows after the horizon never run. The task is passed if upstream's success check holds on the state the replay ends in; a success
+reached earlier and then undone does not count. A missing file, a file for another task, or one that is not such an
+array scores 0. A replay that crashes or times out, or a frozen start that does not rebuild, is reported as
+`grader_error` (infrastructure), not as a score.
+"""
+
+[modes.standard]
+# server.py docstring L5-16; RCB_STEP_LIMIT = the horizon in environment/docker-compose.yaml; RCB_AGENT_END: success never
+# shown and never ends the episode; the `done` action = /finish; a simulator error from the agent's actions -> reason
+# error, 0; instance_mismatch at scene build -> infra_error.
+success = """
+Graded: the live episode, judged by the simulator service; nothing is replayed. Meeting the goal does not end the
+episode and is not shown to the agent. The episode ends at the agent's `/finish` (or the `done` action, which is the
+same), at the horizon ({vars[horizon]} control steps, {vars[seconds]} s of robot time), or when the agent's time
+({timeout}) runs out. It is passed if upstream's success check holds on the state the episode ends in; a success
+reached earlier and then undone does not count. No reset: the one episode is graded. A simulator error raised by the
+agent's actions ends the episode with 0. A frozen start that does not rebuild, or a service crash between the
+agent's calls, is an infrastructure failure, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families: one upstream benchmark episode each (i00). `horizon` / `seconds`: instance.json facts.horizon_steps /
+# horizon_s (upstream's task_horizon_sec at the control rate).
+
+[families.pick]
+# pick_task.py judge_success L77-82 -> get_info L113-180: only_robot_collision (the object touches the robot and nothing
+# else, L152-166), lift_height L135, success L168-171 and lift_height = z - start z >= succ_pos_threshold (0.01 m in instance.json); rotation not checked.
+vars = { horizon = 303, seconds = 20 }
+success = """
+Success check (upstream `PickTask`): the pie slice touches the robot and nothing else (no table, no other object),
+and its centre is at least 1 cm higher than where it lay at the start. Its orientation is not checked.
+"""
+
+[families.pick-and-place]
+# pick_and_place_task.py judge_success L74-76 -> get_info L95-235. supported (L121-135): the receptacle's upward contact force on
+# the object >= 0.5 x its weight (receptacle_supported_weight_frac; utils/mujoco_scene_utils.py is_object_supported_by_body
+# L310-) or upstream's on-receptacle test (object_manager.objects_on_receptacle), or (carry-forward, L140-178) the
+# object within 5 mm and 10 deg, in the receptacle's frame, of a pose at which support was detected earlier in the
+# episode; no robot contact with the object (L197-207); receptacle moved <= 0.15 m and tilted <= 60 deg from its start
+# (max_place_receptacle_pos/rot_displacement in instance.json; tilt = rotation of the up axis, yaw excluded, L180-195);
+# success L213-219.
+vars = { horizon = 606, seconds = 40 }
+success = """
+Success check (upstream `PickAndPlaceTask`), all at once:
+- the purple bottle rests in or on the clear ashtray: the ashtray carries at least half of the bottle's weight through
+  their contacts, or upstream's geometric on-top test finds the bottle on it, or the bottle has stayed within 5 mm and
+  10° (in the ashtray's frame) of a pose at which one of these held earlier in the episode;
+- the robot does not touch the bottle;
+- the ashtray is at most 15 cm from where it started and tilted by at most 60° (turning it about the vertical does not
+  count).
+"""
+
+[families.pick-and-place-color]
+# pick_and_place_color_task.py PickAndPlaceColorTask(PickAndPlaceTask): judge_success inherited (pick_and_place_task.py
+# L74-230, as [families.pick-and-place]); the target receptacle is place_receptacle/2_0 (the red bowl), the second bowl is
+# another colour. Thresholds in instance.json: 0.5 weight fraction, 0.15 m, 60 deg.
+vars = { horizon = 606, seconds = 40 }
+success = """
+Success check (upstream `PickAndPlaceColorTask`), all at once:
+- the small dark bird figurine rests in or on the red bowl (the bowl of the other colour does not count): the red bowl
+  carries at least half of the figurine's weight through their contacts, or upstream's geometric on-top test finds the
+  figurine on it, or the figurine has stayed within 5 mm and 10° (in the bowl's frame) of a pose at which one of these
+  held earlier in the episode;
+- the robot does not touch the figurine;
+- the red bowl is at most 15 cm from where it started and tilted by at most 60° (turning it about the vertical does
+  not count).
+"""
+
+[families.pick-and-place-next-to]
+# pick_and_place_next_to_task.py judge_success L55-57 -> get_info L59-160: xy gap between the two axis-aligned bounding
+# boxes in [min_surface_gap 0, max_surface_gap 0.05 + 0.01] m (L80-116); on_same_surface: the root bodies of the geoms
+# supporting the two are the same (or upstream's approximate supporting geoms share one, L118-141); the reference object
+# moved <= 0.15 m and rotated <= 60 deg in total (L143-160). No check of robot contact.
+vars = { horizon = 455, seconds = 30 }
+success = """
+Success check (upstream `PickAndPlaceNextToTask`), all at once:
+- the gap between the black rail mount and the bread, measured in the horizontal plane between their axis-aligned
+  bounding boxes, is at most 6 cm (overlapping boxes count as no gap);
+- the rail mount and the bread rest on the same supporting body;
+- the bread is at most 15 cm from where it started and rotated by at most 60° in total.
+Whether the robot still touches the rail mount is not checked.
+"""
+
+[families.open]
+# opening_tasks.py OpeningTask.judge_success L67-69: get_reward() >= task_success_threshold (0.15 in instance.json);
+# get_reward L71-104 (task_type "open"): the largest |q| / |joint range| over every non-free joint of every candidate
+# articulated object (every dishwasher in the room: facts.scope).
+vars = { horizon = 455, seconds = 30 }
+success = """
+Success check (upstream `OpeningTask`, open): some joint of a dishwasher in the room (its door or another moving
+part) is at least 15% of its range away from its closed position.
+"""
+
+[families.close]
+# opening_tasks.py OpeningTask.judge_success L67-69 with task_type "close" (L106-122): 1 - |q| / |range| of the named
+# joint (joint_index 0 of the cabinet) >= task_success_threshold (0.85 in instance.json).
+vars = { horizon = 455, seconds = 30 }
+success = """
+Success check (upstream `OpeningTask`, close): the cabinet door's hinge is at most 15% of its range away from its
+closed position.
+"""
+
+[families.navigate-to]
+# nav_task.py judge_success L271-283 -> get_reward L245-269: the nearest candidate object (by horizontal distance to the
+# base) is visible in head_camera (check_visibility > 0, L237-243) and its horizontal distance to the base is below
+# succ_pos_threshold (1.5 m in instance.json; reward 1 - d / 1.5 > 0).
+vars = { horizon = 500, seconds = 100 }
+success = """
+Success check (upstream `NavToObjTask`): of the two table lamps, take the one nearest the robot's base (horizontal
+distance). It is less than 1.5 m from the base, measured horizontally, and some of it is visible in the head camera.
+"""
+
+[families.open-door]
+# opening_tasks.py DoorOpeningTask.judge_success L345-358: get_door_open_percentage() (hinge position over the door's
+# articulated_joint_range, clipped to [0, 1], L321-343) >= door_openness_threshold (0.67 in instance.json) on the current
+# state (the docstring's "maximum reached" is not what the code does).
+vars = { horizon = 400, seconds = 40 }
+success = """
+Success check (upstream `DoorOpeningTask`): the door's hinge is open at least 67% of its 90° range, in the state
+judged.
+"""

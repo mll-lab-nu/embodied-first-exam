@@ -5,7 +5,8 @@ Take the egg out of the sink and put it on the plate on the counter, and move yo
 
 ## Goal
 Success: the egg is on the plate, the plate is on the counter next to the sink, and the hand has let go of the egg and
-moved well away. Your trajectory is replayed from the fixed start. What counts is the state after its last action.
+moved well away (what counts is how far away the hand is). Your trajectory is replayed from the fixed start. What counts
+is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 13)`
 with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave

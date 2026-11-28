@@ -1,34 +1,50 @@
-# embodied-olympics-fun-catch-and-shoot-i00-standard
+# Embodied Olympics · catch and shoot (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
-| Twin | `embodied-olympics-fun-catch-and-shoot-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-h1-2` |
-| Family / instance | `catch_and_shoot` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: The chest pass is thrown by a physical two-wheel passing machine on the left wing, where a passer would stand, 4.0 m from the aim point: the shared ball machine block, copied byte for byte. It uses the football preset's 0.40 m pneumatic wheels on 15 N m speed-controlled motors with a size-7 ball: contact stiffness 42 kN/m from K = 2 pi r p at 0.56 bar, the pressure printed on match balls; restitution 0.85. A force-limited gate and ram feed the ball into the wheels. Nothing is pinned and no velocity is written after reset; the test checks the Task source and that the world has no pins or mocap bodies. The machine is trimmed in this world: the ball leaves the wheels at 2.00 s at 9.00 m/s, 12.7 degrees up, and passes 2 mm from the aim point 0.44 s later at 8.4 m/s. The test's positive is a declared magic action: real: the open two-hand catch pose before the pass; injected: the passed ball put at rest between the palms within 0.6 m; real: the arms squeeze and both hands close (the catch); injected at the shot: the ball's 52-degree shot velocity; the flight, the ring and the referee are real; the same state hash twice. Nop: not caught (deterministic). The real pass at the open hands is not caught. Negatives: hands opened, a shot 1 m wide, held to time, walking with the ball, a dragged pivot foot, a third step, a touch before the pass, the pass at the thigh, retouched after the release, up through the ring, a fall. In the ball-held arm stress the hands are penetrated by at most 0.9 mm. Collision stress scan: the machine raises no flags in the nop, torque, sweep and walk episodes. Flags appear only when the robot is placed in the machine's throat and drives its shoulder into it. The ram is pushed 5 cm past its stop, and the pinched ball gains 50 J. Header shows the same issue in the shared block. RTF (physics only, start command held, 4 x 10 s): 0.91 on a slower host, about 2.0-2.5 on the workstation (free-throw 0.84 in the same run).; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-catch-and-shoot-i00-standard` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree H1-2 humanoid (1.78 m, 67 kg, 27 joints), with Unitree's walking policy |
+| Mode | standard |
+| Instance | `catch_and_shoot`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Catch the pass with both hands, then shoot it into the basket from where you stand, without travelling. (Embodied Olympics `catch-and-shoot`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Catch the pass with both hands, then shoot it into the basket from where you stand, without travelling.
 
-## Difficulty
-The pass arrives at 8.4 m/s and hands smaller than the ball cannot close around it: the two palms have to meet the ball from opposite sides as it arrives, squeeze it to a stop and close the fingers over it, before it bounces out or touches the body. Then a 0.62 kg ball must leave the two palms at about 9 m/s on a steep arc towards a ring 5.8 m away, from a body that may not take a step. The built-in walking gait steps on the spot even at a zero command, so while the ball is in your hands its steps are counted like any others. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
+## Success criteria
+The official basket (ring top 3.05 m above the floor); about 2.0 s after the start a passing machine 4.0 m away sends
+the robot a chest pass of about 9 m/s. A hand is on the ball while it touches it (gaps shorter than 0.03 s included).
+The referee's stages, in order: catch, release, through the ring.
+- Catch: before the ball touches the floor, both hands are on it together for 0.1 s without a break. Earlier touches
+  of one hand or both are allowed.
+- Release: from the catch the ball stays in the hands until no hand is on it (a slip or drop is a release too). From
+  the catch to the release no travelling: with both feet on the floor at the catch, the first foot lifted makes the
+  other the pivot foot, the pivot foot (before any lift, either foot) may not slide more than 0.2 m, and once it has
+  left the floor no foot may touch the floor again before the release; with a foot off the floor at the catch, at most
+  2 steps (never the same foot twice in a row), and no foot down again after them before the release.
+- Through the ring: the ball's centre goes down through the ring's plane inside the ring and on down to one ball
+  diameter below it. The success is called then.
 
-## Reference solution
-None (as `embodied-olympics-fun-catch-and-shoot-i00-privileged`).
+Fouls (each fails the attempt at once): the robot touches the ball before the pass; from the pass to the release, the
+ball touches a part other than the hands; the ball touches the floor before the catch, or at any time before it is
+through the ring; travelling; the robot touches the ball more than 0.05 s after the release; the ball's centre comes
+up through the ring from below. Fall (a failure at any time): the pelvis below 0.35 m, or any part other than the feet
+on the floor. Time limit: 15 s (1,500 control steps).
 
-## Verification
-The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
-infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
-`/data/final.json`: pass iff the live attempt succeeded. The
-rules: The official basket: a rigid ring of 0.45 m inner diameter (0.018 m metal), its top edge 3.05 m above the floor, its centre 0.375 m in front of a backboard 1.8 m wide and 1.05 m high whose lower edge is 2.9 m above the floor. The ball is a size-7 basketball (0.239 m across, 0.62 kg, it keeps 0.85 of its speed in a bounce on the floor); it flies in air (drag and spin lift). It is passed to you about 2.0 s after the start by a passing machine 4.0 m away: a chest pass of about 9.0 m/s (the pass: the ball has left the machine's wheels). Your hands are five-finger hands that hold things only by contact and friction: one alone cannot hold the ball, two can (pressing it between the palms, open or with the fingers closed over it); it can slip out. A hand is its fingers, thumb, palm and wrist; a hand is on the ball while it touches the ball, gaps shorter than 0.03 s included; the ball is in your hands while at least one hand is on it. In order: you catch the ball before it has touched the floor (the catch: both your hands have been on the ball together for 0.1 s without a break; touches before that, of one hand or both, are allowed); from the catch the ball stays in your hands until you let go of it (the shot's release: the moment no hand is on it; a ball that slips or drops out of your hands is released too); its centre goes down through the ring's plane inside the ring and on down to one ball diameter below it, which is the success. Travelling, from the catch to the shot's release: if both your feet are on the floor at the catch, the first foot you lift makes the other your pivot foot; the pivot foot, and before a foot is lifted either foot, may not slide more than 0.2 m along the floor (in the steps case below: any foot that is on the floor, from where it stood or was put down), and once it has left the floor no foot may touch the floor again before the ball has left your hands. If a foot is off the floor at the catch, you may take at most 2 steps (a step: a foot touching the floor after it has been off it for at least 0.03 s; both feet landing within 0.03 s of each other are one step; not the same foot twice in a row), and after them no foot may touch the floor again before the release. You fail if anything of you touches the ball before it is passed; if, from the pass until the release, the ball touches any part of you other than your hands; if the passed ball touches the floor before you have caught it; if you travel; if any part of you touches the ball more than 0.05 s after the shot's release (it cannot be taken again); if the ball touches the floor before it is through the ring; if the ball's centre comes up through the ring from below; if you fall before the ball is through (a fall: your pelvis lower than 0.35 m above the floor, or any part of you other than your feet on the floor); or after 15 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The referee's
+success call is an event: once it is made at some control step, the attempt is a success. It is never shown to the
+agent and does not end the attempt: the physics goes on until the agent's `/finish`, the attempt's time limit, or the
+end of the agent's time (2 h), and nothing after the call undoes it. A failure the referee calls before any
+success (a foul, a fall, the physics diverging) ends the attempt at once with 0. Reaching the time limit or the end of
+the session without a success call scores 0. The agent has 5 resets, each starting a new attempt from the
+frozen start; only the last attempt (the one after the last reset) is graded, and a success in an earlier attempt does
+not count. A simulator error raised by the agent's own call ends the attempt with 0. An attempt that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,13 +54,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | basketball-and-rackets |
-| Rule book | FIBA Official Basketball Rules 2024: Art. 2 (court), Art. 3 and the Basketball Equipment appendix (backboard, ring, size-7 ball), Art. 13 (how the ball is played: with the hands), Art. 14 (control: a player holds a live ball), Art. 16 (goal; a ball that passes through the basket from below is a violation), Art. 25 (travelling); deviations: the player's hands: the H1-2's own Inspire hands (five fingers, six drives: four fingers, the thumb's flexion and rotation; the core's fingertip forces, 20 N, the thumb 30 N: twice the device's), closed by one command per hand; they hold the ball by contact and friction only (nothing is welded), a hand smaller than a player's (its span about 0.2 m against the ball's 0.24 m): one hand alone cannot hold the ball, two hold it pressed between the palms. Any shooting style is allowed; the ball is released when no hand touches it any more. · Art. 14 (control) has no duration: here the ball is caught when both your hands have been on it together for 0.1 s without a break (a two-hand hold that lasts, not a tap that passes it on). · Art. 13.1.2 (the ball is played with the hands only) is read strictly: from the pass until the shot is through, the ball may touch no part of you but your hands (fingers, thumb, palm and wrist); trapping it against the trunk, the arms or a leg is not a catch of this task, and a touch by a leg or a foot (always taken as deliberate: intent cannot be judged) is a violation. · Basketball Equipment (basket): the ring is rigid (no pressure release) and the net is only drawn: it does not slow the ball. A goal is judged at the ring: the ball's centre down through the ring's plane and on to one ball diameter below it. · The pass is thrown by a two-wheel passing machine standing where the passer would stand (on the left wing), not by a team-mate: 0.40 m pneumatic wheels on speed-controlled 15 N m motors, the ball pushed into them from the machine's throat by a force-limited ram; always the same chest pass, at a fixed time, chest high on a flat arc at about 9.0 m/s (a chest pass: about 7-10 m/s), but without the backspin a player's thumbs give it (the wheels turn at the same speed: no spin). · Art. 25.2.1: a ball caught with a foot off the floor is judged by the two-step rule without the pivoting it allows after a stop: after two steps no foot may touch the floor again while the ball is held. · One attempt, no opponent, no rebound: a pass that is not caught on the fly, and touching the ball after the shot's release, end the attempt. |
-| Stages | catch → release → through the ring |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 1500 control steps (15 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

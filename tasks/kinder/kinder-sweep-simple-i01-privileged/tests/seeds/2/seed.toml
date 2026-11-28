@@ -1,7 +1,0 @@
-[[replace]]
-old = "`kinder/SweepSimple3D-o50-sweep_the_blocks_to_the_right_side_of_the_kitchen_island-v0` (Dynamic3D, TidyBot++), seed 0, privileged mode"
-new = "`kinder/SweepSimple3D-o50-sweep_the_blocks_to_the_right_side_of_the_kitchen_island-v0` (Dynamic3D, TidyBot++), seed 2, privileged mode"
-
-[[replace]]
-old = "(`kinder/SweepSimple3D-o50-sweep_the_blocks_to_the_right_side_of_the_kitchen_island-v0`, seed\n0)"
-new = "(`kinder/SweepSimple3D-o50-sweep_the_blocks_to_the_right_side_of_the_kitchen_island-v0`, seed\n2)"

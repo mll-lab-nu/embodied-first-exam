@@ -137,8 +137,7 @@ def main(argv):
     spec = wait_for(base, seat)
     player = factory(spec, seat, int(os.environ.get("RO_PLAYER_SEED", "0")))
     c = Seat(base, seat)
-    proto = spec.get("protocol", "")
-    end = play_turn(c, player) if proto.startswith("eai-standard-turn") else play_realtime(c, player)
+    end = play_turn(c, player) if spec.get("turn_based") else play_realtime(c, player)
     print(json.dumps({"final_state": {k: end.get(k) for k in ("reason", "won", "winner", "scores") if k in end},
                       "replies_with_images": REPLY_IMAGES[0]}))
 

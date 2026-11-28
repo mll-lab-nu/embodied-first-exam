@@ -1,43 +1,51 @@
-# behavior-freeze-pies-i00-privileged
+# BEHAVIOR-1K · freeze_pies (privileged)
 
 | | |
 |---|---|
-| Benchmark | BEHAVIOR-1K |
+| Task ID | `behavior-freeze-pies-i00-privileged` |
+| Benchmark | [BEHAVIOR-1K](https://behavior.stanford.edu/) (Li et al., 2024), upstream `StanfordVL/BEHAVIOR-1K@b197991` |
+| Robot | Galaxea R1 Pro mobile bimanual manipulator (holonomic wheeled base, 4-joint trunk, two 7-joint arms with parallel-jaw grippers) |
 | Mode | privileged |
-| Twin | `behavior-freeze-pies-i00-standard` |
-| Simulator / robot | `behavior` / `r1pro` |
-| Family / instance | `freeze_pies` / seed 301 |
-| Oracle | `none` — No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (415 s on average); demonstration video (415 s): https://player.vimeo.com/video/1114061625 (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-04); human review per family (protocol §4). |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
+| Instance | `freeze_pies`, seed 301 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
 Put each pie into its own tupperware, put both into the fridge, close it, and wait until both pies are frozen.
 
-**Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest:
-- each apple pie (`apple_pie.n.01_1`, `_2`) is inside a different tupperware (`tupperware.n.01_1`, `_2`)
-- both tupperwares are inside the refrigerator (`electric_refrigerator.n.01_1`)
-- both pies are frozen
-- the refrigerator is closed
+## Success criteria
+Each of the two apple pies is inside one of the two tupperwares and each tupperware holds one of the pies; both
+tupperwares are inside the refrigerator; both pies are frozen (each one's current temperature is at or below its
+freezing temperature); and the refrigerator is closed.
 
-## Difficulty
-First-pass rating on the task-list site: hard. The 2026 challenge's 200 teleoperated demonstrations took 415 s on average (12,455 control steps at 30 Hz) and drove 35.44 m; the scene loads 7 rooms, and the goal uses `inside`, `open`, `frozen`.
+The relations above are OmniGibson's object states, evaluated on the simulator after every control step (30 Hz). An
+object is *on* another (`ontop`) when the two touch and the other is directly below it; *inside* when the centre of its
+bounding box lies in one of the other's container volumes; *next to* (`nextto`) when their bounding boxes are no farther
+apart than a sixth of their mean side length and one is a horizontal neighbour of the other; *under* when the other is
+directly above it; *touching* when the two are in contact. An object is *closed* when none of its openable joints is
+more than 5 % of its range away from closed, and *switched on* when its toggle state is on.
 
-## Reference solution
-None (`oracle = "none"`): no reference solution was written (the challenge ships teleop demos, not scripts), and no positive example has been graded by this verifier yet. Evidence that the task is solvable: the 2026 BEHAVIOR Challenge's 200 human teleoperation demonstrations of this activity on the R1Pro (415 s on average; video https://player.vimeo.com/video/1114061625); `task.toml` `oracle_evidence`.
+Success needs more than these conditions: they hold for 30 consecutive control steps (1 s of simulated time), and on
+each of those steps no object they name (furniture and floors included; a substance has no pose and is not checked) is
+held by a gripper's assisted grasp, and each of those objects moves slower than 0.05 m/s. The replay ends at the end of
+that window. There is no partial credit.
 
-## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json`, up to 3 times (`[metadata] replays`), each in
-a fresh process, stopping at the first success; pass iff the BDDL goal holds after a replay and the rebuilt frozen instance matches the recorded one
-(`tests/grade.py`), plus `/logs/verifier/replay.mp4`. A fresh process starts from the loaded state (no reset;
-an in-process reset is only approximate, hence a fresh process); fresh replays are not always bit-identical, hence up to 3. A file the
-grader cannot read or with the wrong shape is `bad_trajectory`; a replay that dies or runs out of time, and a frozen
-instance that does not rebuild in the verifier (`instance_ok` 0), are `grader_error` + `infra_error` (no verdict on the agent).
+The graded file is `/app/output/trajectory.npz`: `actions`, a finite (T, 25) array with one row per control step and
+at most 40,000 rows, and `task` = `freeze_pies`. The verifier replays it open-loop, in a fresh process, from the frozen
+start (the scene is rebuilt and checked against the recorded state hash, or every object pose within tolerance). After
+the last row the robot holds its last command with the base still for up to 150 control steps (5 s), and a success
+within that window counts. It runs up to 3 such replays and the task passes if any one of them succeeds. A replay ends
+as a failure when the robot has fallen over (its base more than 3 cm below the floor, or its up axis tilted more than
+41.4° from vertical, for 300 consecutive control steps) or on a simulator breakdown (a non-finite robot state, the robot
+or a named object more than 10 km from the origin, or the base faster than 100 m/s).
 
-No oracle and no verified positive example: the family is reviewed by a maintainer (PROTOCOL §4) in the pull request that adds it, on the official human demonstrations and a `nop` run per mode; the task is marked unvalidated (PROTOCOL §2 `validated`).
+A missing file scores 0, and so does a file that is not a plain npz, lacks `task` or `actions`, names another task, has
+another shape, a non-finite value or more than 40,000 rows. A frozen scene that does not rebuild in the verifier, or a
+replay process that dies or exceeds its time limit (1200 s plus T / 1.5 s, at least 3600 s and at most 28000 s), is an
+infrastructure error, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -47,12 +55,12 @@ Caps per container (PROTOCOL §6).
 - GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, held by `main`.
 - Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.
 
-## Details
-| | |
-|---|---|
-| Instance | 2026 BEHAVIOR Challenge public_test instance 301 (scene `house_single_floor`), state hash in `environment/instance.json` |
-| Image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` = `stanfordvl/behavior:3.9.2` + ffmpeg (`images/behavior/`): the task builds it from public sources, or reuses our prebuilt copy when you can pull it |
-| Dataset | the licensed BEHAVIOR dataset, mounted read-only from `$RCB_BEHAVIOR_DATA` (a precondition), never baked in |
-| GPU | an RTX-class NVIDIA GPU (`environment/docker-compose.yaml`, `count: 1`) |
-| Budget | the agent's time (the `Agent time budget` row; the number is this task's `[agent] timeout_sec`): every Python process pays ~3 min of Isaac Sim + scene load out of it; ~7-11 control steps/s (tasks/behavior-1k/README.md) |
-| Verifier time | at most 40,000 rows accepted; each graded replay min(28000 s, max(3600 s, 1200 s + steps / 1.5)), and the video replay after the verdict the same; `[verifier] timeout_sec` 113800 s (four capped replays + 30 min) |
+## License
+The task definitions (BDDL activity definitions) and the simulator are BEHAVIOR-1K's
+([StanfordVL/BEHAVIOR-1K](https://github.com/StanfordVL/BEHAVIOR-1K) v3.9.2: OmniGibson and bddl, MIT License; paper: Li
+et al., 2024, "BEHAVIOR-1K: A Human-Centered, Embodied AI Benchmark with 1,000 Everyday Activities and Realistic
+Simulation", arXiv:2403.09227). The scenes, objects, robot assets and task instances are the BEHAVIOR Data Bundle, under
+the BEHAVIOR Data Bundle End User License Agreement: **non-commercial academic research use only (NC)**, no
+redistribution, use only within OmniGibson. It is never in an image or in this repository; each user downloads it after
+accepting that licence and mounts it read-only. The simulator image contains NVIDIA Isaac Sim 5.1 and Omniverse Kit
+(NVIDIA proprietary licence terms, accepted when the image is built).

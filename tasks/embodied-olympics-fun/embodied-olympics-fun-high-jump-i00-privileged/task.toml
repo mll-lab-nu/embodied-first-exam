@@ -12,12 +12,12 @@ simulator = "mujoco"               # the Embodied Olympics simulator: MuJoCo 3.3
 robot = "unitree-h1-2"
 family = "high_jump"
 category = "track-and-jumps"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 # scene = environment/instance.json (the family's parameters + its t = 0 state hash); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 8.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested: positive by injection (one foot lifted by its motors, 1.5 m/s forward and 5.0 m/s up: over 1.00 m with 0.28 m to spare, every part beyond the bar's plane before the first contact, onto the mat); negatives: walking under or round, a two-foot take-off, the bar off its supports, onto the mat without a flight. The clearance is judged in one flight (TR 27.2(b)): crossings made on the ground or after a landing never count, and any contact with the mat or ground beyond the plane before the clearance fails; the pelvis must rise at least 0.08 m (kept within the H1-2's reach: its two-foot squat jump leaves the ground at about 1.8 m/s). A fall head-first onto the mat that rolls over the bar afterwards (0.06 m of rise) fails. The landing mat is fitted to soft PU foam (about 5 kPa at 25 % compression, plateau): the H1-2 landing at 3.7 m/s sinks 0.46 m without rebound. The take-off from one foot (TR 27.1) is judged every 1 ms on the ground's forces: in the last 0.15 s before lift-off the free foot's ground normal force stays below 5 % of the robot's weight, or the free foot is off the ground for the whole take-off contact; nothing else touches the ground then. A model run's attempt with a crouch, both legs pushing and the right alone for the last 0.11 s fails ('not from one foot': the free foot loaded 0.108 s before lift-off); an injected staggered push fails too. Reachable with the H1-2's own motors: the same rows with only the left leg's commands played 0.06 s earlier (no injection) make a valid one-foot take-off (free foot unloaded 0.165 s before lift-off), the pelvis over the bar's plane in flight, 0.55 s of air and 0.50 m of pelvis rise (the rule asks 0.08 m); that edit lands on the mat before the feet clear, so there is no full reference clearance. Every rule above is judged in the family's own 1 ms substep hook.; human review in the pull request that adds the benchmark (PROTOCOL §4)"
+oracle_evidence = "no reference solution; the referee is tested: positive by injection (one foot lifted by its motors, 1.5 m/s forward and 5.0 m/s up: over 1.00 m with 0.28 m to spare, every part beyond the bar's plane before the first contact, onto the mat); negatives: walking under or round, a two-foot take-off, the bar off its supports, onto the mat without a flight. The clearance is judged in one flight (TR 27.2(b)): crossings made on the ground or after a landing never count, and any contact with the mat or ground beyond the plane before the clearance fails; the pelvis must rise at least 0.08 m (kept within the H1-2's reach: its two-foot squat jump leaves the ground at about 1.8 m/s). A fall head-first onto the mat that rolls over the bar afterwards (0.06 m of rise) fails. The landing mat is fitted to soft PU foam (about 5 kPa at 25 % compression, plateau): the H1-2 landing at 3.7 m/s sinks 0.46 m without rebound. The take-off from one foot (TR 27.1) is judged every 1 ms on the ground's forces: in the last 0.15 s before lift-off the free foot's ground normal force stays below 5 % of the robot's weight, or the free foot is off the ground for the whole take-off contact; nothing else touches the ground then. A model run's attempt with a crouch, both legs pushing and the right alone for the last 0.11 s fails ('not from one foot': the free foot loaded 0.108 s before lift-off); an injected staggered push fails too. Reachable with the H1-2's own motors: the same rows with only the left leg's commands played 0.06 s earlier (no injection) make a valid one-foot take-off (free foot unloaded 0.165 s before lift-off), the pelvis over the bar's plane in flight, 0.55 s of air and 0.50 m of pelvis rise (the rule asks 0.08 m); that edit lands on the mat before the feet clear, so there is no full reference clearance. Every rule above is judged in the family's own 1 ms substep hook.; human review in the pull request that adds the benchmark (docs/protocol/tasks.md#grading)"
 
 [verifier]
 timeout_sec = 900.0
@@ -26,7 +26,7 @@ timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -41,7 +41,7 @@ memory_mb = 8192
 timeout_sec = 7200.0
 # Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md).
-network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/invariants.md H.6)
 
 [environment]
 build_timeout_sec = 1800.0

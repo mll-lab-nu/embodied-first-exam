@@ -4,8 +4,8 @@
 Stack the three bowls one inside another, all upright. Then move both arms back to where they started.
 
 ## Goal
-Success: the three bowls are nested in one stack, all upright, the bottom one flat on the table, and both arms are back
-where they started.
+Success: the three bowls form one stack, each centred over the one below it and higher than it, all upright, the bottom
+one sitting level, and both arms are back where they started.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -34,7 +34,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)

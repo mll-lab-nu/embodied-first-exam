@@ -14,7 +14,7 @@ family = "roboengineer/neuralfly-general"
 dynamics = "dynamic"
 protocol = "eai-policy/1.1"
 oracle = "partial"
-oracle_evidence = "Harbor 0.23.0 oracle agent on a cloud CPU host, 2026-10-18, image efe-private:control-transfer-0.2.0: the reference controller (solution/, three feedback rounds) succeeded on 8/10 held-out cases, mean engineering score 71.61; nop 0. No full oracle: human review (PROTOCOL §4)."
+oracle_evidence = "Harbor 0.23.0 oracle agent on a cloud CPU host, 2026-10-18, image efe-private:control-transfer-0.2.0: the reference controller (solution/, three feedback rounds) succeeded on 8/10 held-out cases, mean engineering score 71.61; nop 0. No full oracle: human review (docs/protocol/tasks.md#grading)."
 instance_seed = 1
 expert_time_estimate_hours = 4.0
 
@@ -22,7 +22,7 @@ expert_time_estimate_hours = 4.0
 timeout_sec = 600.0
 environment_mode = "separate"
 network_mode = "no-network"
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -30,7 +30,7 @@ timeout_sec = 120
 
 [[verifier.collect]]
 service = "main"
-command = "kill -9 -1 2>/dev/null; exit 0"   # PROTOCOL H.4: nothing the agent started runs on when the sidecar finalizes
+command = "kill -9 -1 2>/dev/null; exit 0"   # docs/protocol/invariants.md H.4: nothing the agent started runs on when the sidecar finalizes
 timeout_sec = 30
 [[verifier.collect]]
 service = "sim"

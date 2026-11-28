@@ -12,12 +12,12 @@ simulator = "mujoco"               # the Embodied Olympics simulator: MuJoCo 3.3
 robot = "unitree-g1"
 family = "alpine_slalom"
 category = "track-and-jumps"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 # scene = environment/instance.json (the family's parameters + its t = 0 state hash); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 16.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested: A slalom at ICR's gentlest gradient (33 %, ICR 802.1.1) with the U16-U14 minimum vertical drop (100 m: 320 m of course, 32 open gates), a level start platform and a self-start. Positive by injection: pushed off the platform, the robot holds a slight crouch and slides straight between waypoints just outside each turning pole, re-aimed by hand at each gate; the sliding, the gate crossings and the finish are physics; deterministic. The reference skier (a carving controller after its own drop-in) passes 2 of 32 gates and falls. Negatives: nothing done (did not start), a straddle (missed gate), a stop on a flat course, a fall, a finish outside the posts.; human review in the pull request that adds the benchmark (PROTOCOL §4)"
+oracle_evidence = "no reference solution; the referee is tested: A slalom at ICR's gentlest gradient (33 %, ICR 802.1.1) with the U16-U14 minimum vertical drop (100 m: 320 m of course, 32 open gates), a level start platform and a self-start. Positive by injection: pushed off the platform, the robot holds a slight crouch and slides straight between waypoints just outside each turning pole, re-aimed by hand at each gate; the sliding, the gate crossings and the finish are physics; deterministic. The reference skier (a carving controller after its own drop-in) passes 2 of 32 gates and falls. Negatives: nothing done (did not start), a straddle (missed gate), a stop on a flat course, a fall, a finish outside the posts.; human review in the pull request that adds the benchmark (docs/protocol/tasks.md#grading)"
 
 [verifier]
 timeout_sec = 900.0
@@ -26,7 +26,7 @@ timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -41,7 +41,7 @@ memory_mb = 8192
 timeout_sec = 7200.0
 # Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md).
-network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/invariants.md H.6)
 
 [environment]
 build_timeout_sec = 1800.0

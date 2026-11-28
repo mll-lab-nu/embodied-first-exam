@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Seeds (PROTOCOL §2): ci_checks/check-seeds.py and scripts/task_seed.py on a real task pair given a second
+"""Seeds (docs/protocol/tasks.md): ci_checks/check-seeds.py and scripts/task_seed.py on a real task pair given a second
 allowed seed (in a temporary copy of the repository's task directories). Standard library only."""
 import re
 import shutil
@@ -126,13 +126,13 @@ def main() -> int:
         d.mkdir(parents=True)
         inst = (priv / "tests" / "instance.json").read_text()
         (d / "instance.json").write_text(inst.replace('"seed": 0', '"seed": 7', 1))
-        for t in (priv, std):                          # fewer than three seeds: a note, not a failure (PROTOCOL §2)
+        for t in (priv, std):                          # fewer than three seeds: a note, not a failure (docs/protocol/tasks.md)
             with_seeds(t / "task.toml", "[0, 7]")
         rc, out = run(CHECK + [str(priv), str(std)])
         assert rc == 0 and "NOTE 2 task(s) allow fewer than three distinct seeds" in out, out
         rc, out = run(SEED + ["pick", str(std), "--rng", "1"])
         assert rc == 0 and out.strip() in ("0", "7"), out
-        more = [8, 9, 10]                              # as many seeds as a task has: no upper limit (PROTOCOL §2)
+        more = [8, 9, 10]                              # as many seeds as a task has: no upper limit (docs/protocol/tasks.md)
         for s in more:
             (priv / "tests" / "seeds" / str(s)).mkdir(parents=True)
             (priv / "tests" / "seeds" / str(s) / "instance.json").write_text(inst.replace('"seed": 0', f'"seed": {s}', 1))

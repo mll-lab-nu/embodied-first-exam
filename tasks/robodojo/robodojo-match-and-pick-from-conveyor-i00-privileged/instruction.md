@@ -1,12 +1,12 @@
 # RoboDojo · match_and_pick_from_conveyor (privileged)
 
 ## Task
-Remember the first object on the belt, then pick up its identical copy when it comes by later and lift it about a hand's
-length.
+Remember the first object on the belt, then pick up its identical copy when it comes by later and lift it more than a
+hand's width.
 
 ## Goal
-Success: the identical copy of the first object on the belt is lifted about a hand's length above the belt. A replay
-ends as soon as the task is done; later rows are not run.
+Success: the identical copy of the first object on the belt is lifted more than a hand's width above where it rode on
+the belt. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave

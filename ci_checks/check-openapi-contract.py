@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
-"""Contract check of docs/protocol/eai-standard-3.0.openapi.yaml against the running reference services.
+"""Contract check of docs/protocol/eai-standard.openapi.yaml against the running reference services.
 
 1. The document: openapi-spec-validator when it is installed (it is not a client pin; without it a structural check
    runs: openapi 3.1.0, info.version 3.0, the required paths, every $ref resolves, every operation has responses and
    an x-eai-mcp entry, every x-eai-rcb1-meta names a schema).
 2. The services, each started as a plain process on a free localhost port (no docker), on the toy simulators the
    repository's own selftests use:
-     2.1  rcb_service.py (the shared 2.1 sidecar, standard mode)  embodied_first_exam/standard/mcp/tests/toy_realtime.py --standard
-     2.3  rcb_realtime.py over rcb_service.py (realtime mode)      embodied_first_exam/standard/mcp/tests/toy_realtime.py
-     2.2  rcb_limited.py (the shared 2.2 layer)                    embodied_first_exam/standard/toy_server.py
-     2.4  v2_4/rcb_limited.py (toy_server.py staged next to it in the work directory)
-   2.1 and 2.3 run with RCB_AGENT_END=1 and a reset budget of 1; 2.2 and 2.4 without the feature, and again as
-   agent-ended adapters (2.2-ae, 2.4-ae: toy_server.py is one, with rcb_agent_end.py staged next to it, run with
-   RCB_AGENT_END=1): /finish validated against FinishResponse, then the 409s after it. With a step
-   limit (2.1-limit, 2.2-limit, 2.4-limit: RCB_STEP_LIMIT): steps_left, the chunk cut at the limit (reason
-   step_limit), then /submit and /finish 409 while /observe answers. A service that gave up (2.2-gaveup:
+     sidecar     rcb_service.py (the sidecar layer, standard mode)  embodied_first_exam/standard/mcp/tests/toy_realtime.py --standard
+     realtime    rcb_realtime.py over rcb_service.py (realtime mode)  embodied_first_exam/standard/mcp/tests/toy_realtime.py
+     shared      rcb_limited.py (the shared layer)                    embodied_first_exam/standard/toy_server.py
+     operations  operations/rcb_limited.py (toy_server.py staged next to it in the work directory)
+   Every service is agent-ended (toy_server.py with rcb_agent_end.py staged next to it); sidecar and realtime run with a
+   reset budget of 1. shared and operations check the layer's answers; shared-finish and operations-finish /finish,
+   validated against FinishResponse, then the 409s after it. With a step
+   limit (sidecar-limit, shared-limit, operations-limit: RCB_STEP_LIMIT): steps_left, the chunk cut at the limit (reason
+   step_limit), then /submit and /finish 409 while /observe answers. A service that gave up (shared-gaveup:
    RCB_TOY_REFUSE): every endpoint 409 with gave_up. Every request is sent, and every answer is checked:
    its status code must be documented for that operation, its content type must be one the response lists, a JSON
    body must validate against the response's schema, and an RCB1 body is decoded and its header, part names and
@@ -25,7 +25,7 @@
    number goes, interpolate cubic, a chunk over max_chunk_s, video_fps 0 / 0.5 / 99). Semantic assertions (a hold chunk's duration, observe never moving time, the
    realtime clock starting at the first /submit, /finish then 409) are checked on top.
 
-    python3 ci_checks/check-openapi-contract.py [--repo DIR] [--spec FILE] [--targets 2.1,2.3,2.2,...] [--work DIR]
+    python3 ci_checks/check-openapi-contract.py [--repo DIR] [--spec FILE] [--targets sidecar,realtime,shared,...] [--work DIR]
 
 Needs numpy, requests, PyYAML and jsonschema (>= 4.18). Exit 0: all passed; 1: a failure; 2: a missing dependency.
 """
@@ -145,7 +145,7 @@ def check_document(doc: dict, spec_path: pathlib.Path) -> None:
             n_ops += 1
             check(bool(op.get("responses")), f"{m.upper()} {p}: no responses")
             check("x-eai-mcp" in op, f"{m.upper()} {p}: no x-eai-mcp entry")
-            check("x-eai-layer" in op, f"{m.upper()} {p}: no x-eai-layer")
+            check("x-eai-capability" in op, f"{m.upper()} {p}: no x-eai-capability")
             tool = MCP_TOOLS.get(op.get("operationId"))
             if tool:
                 check((op.get("x-eai-mcp") or {}).get("tool") == tool, f"{op.get('operationId')}: x-eai-mcp tool != {tool}")
@@ -359,42 +359,43 @@ class Target:
 
 
 # ---------------------------------------------------------------------------------------------- scenarios
-def standard_21(t: Target) -> None:
-    """eai-standard/2.1, the shared sidecar (rcb_service.py), standard mode, agent-ended, reset budget 1."""
+def sidecar_layer(t: Target) -> None:
+    """The sidecar layer (rcb_service.py), standard mode, agent-ended, reset budget 1."""
     J = "joint_position"
     _, spec, _ = t.get("/spec", label="spec")
-    check(spec["protocol"] == "eai-standard/2.1" and spec["standard"] == "eai-standard/3.0", f"2.1 spec ids {spec.get('protocol')}")
-    check(str(spec.get("success_signal", "")).startswith("hidden"), "2.1 spec success_signal hidden")
+    check(spec["protocol"] == "eai-standard/3.0" and not spec.get("timing", {}).get("realtime") and not spec.get("operations"),
+          f"sidecar spec ids {spec.get('protocol')}")
+    check(str(spec.get("success_signal", "")).startswith("hidden"), "sidecar spec success_signal hidden")
     rec = spec["timing"]["recorder"]
     check({"cameras", "fps", "buffer_s", "records", "depth"} <= set(rec) and rec["depth"] == [] and rec["fps"] == 10.0,
-          f"2.1 spec timing.recorder {rec}")
-    check("max_watch_s" not in spec, "2.1 spec still has max_watch_s (one cap: max_chunk_s)")
+          f"sidecar spec timing.recorder {rec}")
+    check("max_watch_s" not in spec, "sidecar spec still has max_watch_s (one cap: max_chunk_s)")
     t.get("/status", label="status")
     _, m, p = t.post_json("/observe", {}, label="observe now")
-    check(m["last_s"] == 0 and m["frame_step"] == 0 and m["control_steps"] == 0, f"2.1 observe now meta {m}")
-    check({"last/top", "frames/top", "proprio"} <= set(p), f"2.1 observe parts {sorted(p)}")
+    check(m["last_s"] == 0 and m["frame_step"] == 0 and m["control_steps"] == 0, f"sidecar observe now meta {m}")
+    check({"last/top", "frames/top", "proprio"} <= set(p), f"sidecar observe parts {sorted(p)}")
     _, e, _ = t.post_json("/observe", {"seconds": 1.0}, expect=(400,), label="observe seconds>0", valid=False)
-    check("hold" in e.get("error", ""), "2.1 observe seconds>0 names the hold chunk")
+    check("hold" in e.get("error", ""), "sidecar observe seconds>0 names the hold chunk")
     t.post_json("/observe", {"last_s": -1}, expect=(400,), label="observe last_s<0", valid=False)
     t.post_json("/observe", {"video_fps": 99}, expect=(400,), label="observe video_fps 99", valid=None)
     common_400s(t, J, 2)
     t.post_json("/observe", {"seconds": None, "last_s": None}, label="observe seconds null, last_s null")
     _, m, _ = t.get("/status", label="status after observes")
-    check(m["control_steps"] == 0, "2.1 observe moved time")
+    check(m["control_steps"] == 0, "sidecar observe moved time")
     _, m, p = t.post_rcb1("/submit", {"type": J, "dt": 0.02, "video": "frames", "cameras": ["top"]},
                           np.tile([[0.01, 0.0]], (10, 1)), label="submit rcb1 10 rows")
     check(m["executed_rows"] == 10 and abs(m["duration_s"] - 0.2) < 1e-9 and abs(m["planned_duration_s"] - 0.2) < 1e-9,
-          f"2.1 submit durations {m.get('duration_s')} {m.get('planned_duration_s')}")
-    check("done" in m and not m["done"] and m["control_steps"] == 10, "2.1 submit counters")
-    check(m.get("frame_step") == 10, f"2.1 submit with images has frame_step: {m.get('frame_step')}")
-    check(p["frames/top"]["data"].shape[0] == p["proprio"]["data"].shape[0], "2.1 submit frames and proprio share the frame axis")
+          f"sidecar submit durations {m.get('duration_s')} {m.get('planned_duration_s')}")
+    check("done" in m and not m["done"] and m["control_steps"] == 10, "sidecar submit counters")
+    check(m.get("frame_step") == 10, f"sidecar submit with images has frame_step: {m.get('frame_step')}")
+    check(p["frames/top"]["data"].shape[0] == p["proprio"]["data"].shape[0], "sidecar submit frames and proprio share the frame axis")
     _, m, _ = t.post_json("/submit", {"type": J, "dt": 0.04, "actions": [[0.0, 0.0]] * 5, "video": "none",
                                       "seconds": None}, label="submit json dt=2 steps (seconds null)")
-    check(abs(m["duration_s"] - 0.2) < 1e-9 and m["control_steps_chunk"] == 10, f"2.1 submit dt 0.04 {m.get('duration_s')}")
+    check(abs(m["duration_s"] - 0.2) < 1e-9 and m["control_steps_chunk"] == 10, f"sidecar submit dt 0.04 {m.get('duration_s')}")
     _, m, _ = t.post_json("/submit", {"type": J, "interpolate": "hold", "seconds": 0.5, "video": "frames"},
                           label="hold chunk")
     check(m.get("hold") is True and m["executed_rows"] == 0 and abs(m["duration_s"] - 0.5) < 1e-9
-          and abs(m["planned_duration_s"] - 0.5) < 1e-9, f"2.1 hold chunk meta {m}")
+          and abs(m["planned_duration_s"] - 0.5) < 1e-9, f"sidecar hold chunk meta {m}")
     t.post_json("/submit", {"type": J, "interpolate": "hold", "seconds": 0.5, "actions": [[0, 0]]}, expect=(400,),
                 label="rows + seconds", valid=False)
     t.post_json("/submit", {"type": J, "seconds": 0, "actions": [[0, 0]]}, expect=(400,), label="rows + seconds 0",
@@ -410,64 +411,64 @@ def standard_21(t: Target) -> None:
     t.post_json("/submit", {"type": J, "actions": [[0, 0, 0]]}, expect=(400,), label="wrong dim")
     _, m, p = t.post_json("/observe", {"last_s": 0.6, "video": "frames"}, label="observe last_s 0.6")
     check(0 < m["last_s"] <= 0.6 + 1e-9 and "frame_step" in p and m["frame_step"] == int(p["frame_step"]["data"][-1]),
-          f"2.1 observe last_s window {m.get('last_s')} {sorted(p)}")
-    check(m["control_steps"] == 45, f"2.1 control steps after 10 + 10 + 25: {m['control_steps']}")
+          f"sidecar observe last_s window {m.get('last_s')} {sorted(p)}")
+    check(m["control_steps"] == 45, f"sidecar control steps after 10 + 10 + 25: {m['control_steps']}")
     t.post_json("/observe", {"last_s": 0.6, "include_depth": True}, expect=(400,), label="observe depth with last_s")
-    t.post_json("/kinematics", {"op": "fk", "q": [0, 0]}, expect=(404,), label="kinematics (not 2.1)")
-    t.get("/operations/abc", expect=(404,), label="operations (not 2.1)")
+    t.post_json("/kinematics", {"op": "fk", "q": [0, 0]}, expect=(404,), label="kinematics (not sidecar)")
+    t.get("/operations/abc", expect=(404,), label="operations (not sidecar)")
     t.post_raw_length("/submit", str(65 * 1024 * 1024), (413,), "body over 64 MiB")
     t.post_raw_length("/submit", "-1", (400,), "negative Content-Length")
     t.post_raw_length("/finish", str(65 * 1024 * 1024), (413,), "finish body over 64 MiB")
     _, s, _ = t.get("/status", label="status after a refused finish")
-    check(not s["done"] and s["resets_left"] == 1, f"2.1 a refused /finish ended the episode: {s}")
+    check(not s["done"] and s["resets_left"] == 1, f"sidecar a refused /finish ended the episode: {s}")
     _, m, p = t.post_json("/reset", {}, label="reset")
-    check(m["episode"] == 2 and m["resets_left"] == 0 and m["control_steps"] == 0, f"2.1 reset meta {m}")
+    check(m["episode"] == 2 and m["resets_left"] == 0 and m["control_steps"] == 0, f"sidecar reset meta {m}")
     check(any(k.startswith("last/") for k in p) and isinstance(m.get("frame_step"), int),
-          f"2.1 reset answers with the current frame and frame_step: {m.get('frame_step')} {sorted(p)}")
+          f"sidecar reset answers with the current frame and frame_step: {m.get('frame_step')} {sorted(p)}")
     t.post_json("/reset", {}, expect=(409,), label="reset over budget")
     t.post_json("/submit", {"type": J, "actions": [[0.01, 0.0]] * 3, "video": "none"}, label="submit after reset")
     _, f, _ = t.post_bytes("/finish", b"not json at all", label="finish with a body it ignores")
-    check(f["ok"] is True and f["reason"] == "finished" and f["done"] is True, f"2.1 finish {f}")
+    check(f["ok"] is True and f["reason"] == "finished" and f["done"] is True, f"sidecar finish {f}")
     _, c, _ = t.post_json("/submit", {"type": J, "actions": [[0, 0]], "video": "none"}, expect=(409,),
                           label="submit after finish")
-    check(c.get("resets_left", 0) == 0, f"2.1 409 after finish reports resets_left {c.get('resets_left')}")
+    check(c.get("resets_left", 0) == 0, f"sidecar 409 after finish reports resets_left {c.get('resets_left')}")
     t.post_json("/observe", {}, expect=(409,), label="observe after finish")
     t.post_json("/finish", {}, expect=(409,), label="finish after finish")
     t.post_json("/reset", {}, expect=(409,), label="reset after finish")
     t.get("/spec", label="spec after finish")
     _, s, _ = t.get("/status", label="status after finish")
-    check(s["done"] and s["reason"] == "finished" and s["resets_left"] == 0, f"2.1 status after finish {s}")
+    check(s["done"] and s["reason"] == "finished" and s["resets_left"] == 0, f"sidecar status after finish {s}")
 
 
-def realtime_23(t: Target) -> None:
-    """eai-standard/2.3: rcb_realtime.py over rcb_service.py (the thread recorder), agent-ended, reset budget 1."""
+def realtime_layer(t: Target) -> None:
+    """The realtime layer: rcb_realtime.py over rcb_service.py (the thread recorder), agent-ended, reset budget 1."""
     J = "joint_position"
     _, spec, _ = t.get("/spec", label="spec")
     tm = spec["timing"]
-    check(spec["protocol"] == "eai-standard/2.3" and tm.get("realtime") is True and "max_ahead_steps" in tm,
-          f"2.3 spec timing {sorted(tm)}")
+    check(spec["protocol"] == "eai-standard/3.0" and tm.get("realtime") is True and "max_ahead_steps" in tm,
+          f"realtime spec timing {sorted(tm)}")
     rec = tm.get("recorder", {})
     check({"cameras", "fps", "buffer_s", "records", "depth"} <= set(rec) and rec["fps"] == 10.0,
-          f"2.3 spec timing.recorder (thread recorder: 10 fps) {rec}")
+          f"realtime spec timing.recorder (thread recorder: 10 fps) {rec}")
     _, m, p = t.post_json("/observe", {}, label="observe before the clock")
-    check(m["running"] is False, "2.3 observe started the clock")
+    check(m["running"] is False, "realtime observe started the clock")
     _, m, p = t.post_json("/observe", {"cameras": []}, label="observe no images")
-    check(not any(k.startswith(("last/", "frames/")) for k in p), f"2.3 cameras [] parts {sorted(p)}")
+    check(not any(k.startswith(("last/", "frames/")) for k in p), f"realtime cameras [] parts {sorted(p)}")
     time.sleep(0.3)
     _, s, _ = t.get("/status", label="status before the first submit")
-    check(s["running"] is False and s["control_steps"] == 0, f"2.3 the clock ran before the first submit: {s}")
+    check(s["running"] is False and s["control_steps"] == 0, f"realtime the clock ran before the first submit: {s}")
     _, e, _ = t.post_json("/observe", {"seconds": 1.0}, expect=(400,), label="observe seconds>0", valid=False)
-    check("hold" in e.get("error", ""), "2.3 observe seconds>0 names the hold chunk")
+    check("hold" in e.get("error", ""), "realtime observe seconds>0 names the hold chunk")
     t0 = time.time()
     _, m, p2 = t.post_rcb1("/submit", {"type": J, "dt": 0.02}, np.tile([[0.002, 0.0]], (10, 1)), label="submit rcb1")
-    check(time.time() - t0 < 1.0, "2.3 submit answers at once")
+    check(time.time() - t0 < 1.0, "realtime submit answers at once")
     check(m["running"] is True and m["end_step"] == m["plan_end_step"] and abs(m["duration_s"] - 0.2) < 1e-9
-          and "start_step" in m and "late_steps" in m, f"2.3 submit meta {m}")
-    check(("last/top" not in p2) or isinstance(m.get("frame_step"), int), f"2.3 submit with images has frame_step: {sorted(p2)}")
+          and "start_step" in m and "late_steps" in m, f"realtime submit meta {m}")
+    check(("last/top" not in p2) or isinstance(m.get("frame_step"), int), f"realtime submit with images has frame_step: {sorted(p2)}")
     time.sleep(0.6)
     _, m, p = t.post_json("/observe", {"last_s": 0.4, "video": "frames"}, label="observe last_s 0.4")
     check(m["control_steps"] > 10 and m.get("frame_step") is not None and 0 < m["last_s"] <= 0.4 + 1e-9,
-          f"2.3 observe window: steps {m['control_steps']} frame_step {m.get('frame_step')} last_s {m.get('last_s')}")
+          f"realtime observe window: steps {m['control_steps']} frame_step {m.get('frame_step')} last_s {m.get('last_s')}")
     no_depth = [c for c in rec.get("cameras", []) if c not in rec.get("depth", [])]
     if no_depth:                                             # per-frame depth only for the recorder's depth cameras
         t.post_json("/observe", {"last_s": 0.4, "include_depth": True, "cameras": no_depth[:1]}, expect=(400,),
@@ -477,7 +478,7 @@ def realtime_23(t: Target) -> None:
                     label="observe depth with last_s, recorder depth camera")
     _, m, _ = t.post_json("/submit", {"type": J, "interpolate": "hold", "seconds": 0.3}, label="hold chunk")
     check(m.get("hold") is True and abs(m["duration_s"] - 0.3) < 1e-9 and "end_step" in m and m.get("executed_rows") == 0,
-          f"2.3 hold meta {m}")
+          f"realtime hold meta {m}")
     common_400s(t, J, 2, status=False)
     t.post_json("/submit", {"type": J, "actions": [[0, 0]], "at": 10 ** 6}, expect=(400,), label="at too far ahead")
     t.post_json("/submit", {"type": J, "interpolate": "hold", "seconds": 0.5, "actions": [[0, 0]]}, expect=(400,),
@@ -486,27 +487,27 @@ def realtime_23(t: Target) -> None:
                 valid=False)
     t.post_json("/submit", {"type": J, "interpolate": "hold", "seconds": spec["max_chunk_s"] + 0.5}, expect=(400,),
                 label="hold over max_chunk_s")
-    t.post_json("/kinematics", {"op": "fk", "q": [0, 0]}, expect=(404,), label="kinematics (not 2.3)")
+    t.post_json("/kinematics", {"op": "fk", "q": [0, 0]}, expect=(404,), label="kinematics (not realtime)")
     t.post_raw_length("/submit", str(65 * 1024 * 1024), (413,), "body over 64 MiB")
     t.post_raw_length("/finish", str(65 * 1024 * 1024), (413,), "finish body over 64 MiB")
     t.post_raw_length("/finish", "-1", (400,), "finish negative Content-Length")
     _, s, _ = t.get("/status", label="status after refused finishes")
-    check(not s["done"], f"2.3 a refused /finish ended the episode: {s}")
+    check(not s["done"], f"realtime a refused /finish ended the episode: {s}")
     _, m, p = t.post_json("/reset", {}, label="reset")
-    check(m["episode"] == 2 and m["running"] is False, f"2.3 reset meta {m}")
+    check(m["episode"] == 2 and m["running"] is False, f"realtime reset meta {m}")
     check(any(k.startswith("last/") for k in p) and isinstance(m.get("frame_step"), int),
-          f"2.3 reset answers with the current frame and frame_step: {m.get('frame_step')} {sorted(p)}")
+          f"realtime reset answers with the current frame and frame_step: {m.get('frame_step')} {sorted(p)}")
     time.sleep(0.2)
     _, s, _ = t.get("/status", label="status after reset")
-    check(s["running"] is False and s["control_steps"] == 0, "2.3 a reset leaves the episode paused")
+    check(s["running"] is False and s["control_steps"] == 0, "realtime a reset leaves the episode paused")
     t.post_json("/submit", {"type": J, "actions": [[0.001, 0.0]] * 5}, label="submit after reset")
     _, f, _ = t.post_bytes("/finish", b"", label="finish with an empty body")
-    check(f["ok"] is True and f["reason"] == "finished" and f["running"] is False, f"2.3 finish {f}")
+    check(f["ok"] is True and f["reason"] == "finished" and f["running"] is False, f"realtime finish {f}")
     t.post_json("/submit", {"type": J, "actions": [[0, 0]]}, expect=(409,), label="submit after finish")
     t.post_json("/observe", {}, expect=(409,), label="observe after finish")
     t.post_json("/finish", {}, expect=(409,), label="finish after finish")
     _, s, _ = t.get("/status", label="status after finish")
-    check(s["done"] and s["reason"] == "finished" and s.get("resets_left") == 0, f"2.3 status after finish {s}")
+    check(s["done"] and s["reason"] == "finished" and s.get("resets_left") == 0, f"realtime status after finish {s}")
 
 
 def common_400s(t: Target, J: str, dim: int, status: bool = True) -> None:
@@ -527,11 +528,11 @@ def common_400s(t: Target, J: str, dim: int, status: bool = True) -> None:
     send("/observe", {"seconds": True}, "observe seconds true")
 
 
-def layer_22(t: Target, protocol: str = "eai-standard/2.2") -> None:
-    """eai-standard/2.2 (rcb_limited.py) on toy_server.py: no agent-ended feature, no reset budget; /kinematics."""
+def shared_layer(t: Target, operations: bool = False) -> None:
+    """The shared layer (rcb_limited.py) on toy_server.py: no reset budget; /kinematics."""
     J = "joint_position"
     _, spec, _ = t.get("/spec", label="spec")
-    check(spec["protocol"] == protocol and spec["standard"] == "eai-standard/3.0" and "kinematics" in spec,
+    check(spec["protocol"] == "eai-standard/3.0" and bool(spec.get("operations")) == operations and "kinematics" in spec,
           f"{t.name} spec ids {spec.get('protocol')}")
     t.get("/status", label="status")
     _, m, p = t.post_json("/observe", {"last_s": 0}, label="observe now")
@@ -567,11 +568,10 @@ def layer_22(t: Target, protocol: str = "eai-standard/2.2") -> None:
     _, k, _ = t.post_json("/kinematics", {"op": "fk", "q": [0, 0, 0]}, label="kinematics fk")
     check(k.get("ok") is True and k.get("op") == "fk", f"{t.name} kinematics {k}")
     t.post_json("/kinematics", {"op": "xx"}, expect=(400,), label="kinematics bad op", valid=False)
-    t.post_json("/finish", {}, expect=(404,), label="finish without the feature")
     t.post_json("/reset", {}, expect=(404,), label="reset without a budget")
     t.post_raw_length("/submit", str(65 * 1024 * 1024), (413,), "body over 64 MiB")
     t.post_raw_length("/observe", "-1", (400,), "negative Content-Length")
-    if protocol == "eai-standard/2.2":
+    if not operations:
         simulator_error(t)
 
 
@@ -583,18 +583,18 @@ def simulator_error(t: Target) -> None:
     t.post_json("/submit", {"type": "joint_position", "actions": [[0, 0, 0]]}, expect=(409,), label="submit after the error")
 
 
-def layer_24(t: Target) -> None:
-    layer_22(t, "eai-standard/2.4")
+def operations_layer(t: Target) -> None:
+    shared_layer(t, operations=True)
     J = "joint_position"
     deadline = time.time() + 600
     _, m, _ = t.post_json("/submit", {"type": J, "actions": [[0, 0, 0]], "operation_id": "op-1",
                                       "request_deadline_unix_s": deadline}, label="submit with an operation id")
-    check(m.get("operation_id") == "op-1", f"2.4 operation_id echoed: {m.get('operation_id')}")
+    check(m.get("operation_id") == "op-1", f"operations operation_id echoed: {m.get('operation_id')}")
     _, rec, _ = t.get("/operations/op-1", label="operation record")
-    check(rec.get("status") == "completed" and rec.get("committed_rows", -1) >= rec.get("rows_before", 0), f"2.4 record {rec}")
+    check(rec.get("status") == "completed" and rec.get("committed_rows", -1) >= rec.get("rows_before", 0), f"operations record {rec}")
     _, c, _ = t.post_json("/submit", {"type": J, "actions": [[0, 0, 0]], "operation_id": "op-1"}, expect=(409,),
                           label="operation id again")
-    check(c.get("operation_id") == "op-1" and isinstance(c.get("operation"), dict), f"2.4 409 body {c}")
+    check(c.get("operation_id") == "op-1" and isinstance(c.get("operation"), dict), f"operations 409 body {c}")
     t.post_json("/submit", {"type": J, "actions": [[0, 0, 0]], "request_deadline_unix_s": time.time() - 5}, expect=(408,),
                 label="deadline passed")
     t.post_json("/submit", {"type": J, "actions": [[0, 0, 0]], "operation_id": "bad id!"}, expect=(400,),
@@ -604,16 +604,17 @@ def layer_24(t: Target) -> None:
     simulator_error(t)
 
 
-def agent_ended_22(t: Target, protocol: str = "eai-standard/2.2") -> None:
-    """2.2 / 2.4 with the agent-ended feature (rcb_agent_end.py on the toy): /finish (FinishResponse), the 409s after it."""
+def agent_ended(t: Target, operations: bool = False) -> None:
+    """The shared and the operations layers' /finish (rcb_agent_end.py on the toy; FinishResponse), the 409s after it."""
     J = "joint_position"
     _, spec, _ = t.get("/spec", label="spec")
-    check(spec["protocol"] == protocol and str(spec.get("success_signal", "")).startswith("hidden"),
+    check(spec["protocol"] == "eai-standard/3.0" and bool(spec.get("operations")) == operations
+          and str(spec.get("success_signal", "")).startswith("hidden"),
           f"{t.name} spec {spec.get('protocol')} {spec.get('success_signal')}")
     _, m, _ = t.post_json("/submit", {"type": J, "actions": [[0.5, 0, 0]] * 12, "video": "none"}, label="submit")
     check(not m["done"] and m["reason"] is None and "success" not in m, f"{t.name} a submit shows nothing of the success: {m}")
     common_400s(t, J, 3)
-    if protocol == "eai-standard/2.4":
+    if operations:
         _, m, _ = t.post_json("/submit", {"type": J, "actions": [[0.5, 0, 0]], "operation_id": "op-ae",
                                           "video": "none"}, label="submit with an operation id")
         t.get("/operations/op-ae", label="operation record before finish")
@@ -629,19 +630,19 @@ def agent_ended_22(t: Target, protocol: str = "eai-standard/2.2") -> None:
     t.post_json("/observe", {"last_s": 0.5}, expect=(409,), label="observe last_s after finish")
     t.post_json("/kinematics", {"op": "fk", "q": [0, 0, 0]}, expect=(409,), label="kinematics after finish")
     t.post_json("/finish", {}, expect=(409,), label="finish after finish")
-    if protocol == "eai-standard/2.4":
+    if operations:
         t.get("/operations/op-ae", expect=(409,), label="operation record after finish")
     t.get("/spec", label="spec after finish")
     _, s, _ = t.get("/status", label="status after finish")
     check(s["done"] and s["reason"] == "finished", f"{t.name} status after finish {s}")
 
 
-def agent_ended_24(t: Target) -> None:
-    agent_ended_22(t, "eai-standard/2.4")
+def agent_ended_operations(t: Target) -> None:
+    agent_ended(t, operations=True)
 
 
 def step_limit(t: Target) -> None:
-    """RCB_STEP_LIMIT=30 (agent-ended): steps_left in every meta and /status, the hold chunk cut at the limit (reason
+    """RCB_STEP_LIMIT=30: steps_left in every meta and /status, the hold chunk cut at the limit (reason
     step_limit), then /submit and /finish 409 while /observe answers."""
     J = "joint_position"
     _, spec, _ = t.get("/spec", label="spec")
@@ -677,20 +678,20 @@ def gave_up(t: Target) -> None:
         check(b.get("gave_up") is True and b.get("reason"), f"{t.name} {path}: {b}")
 
 
-def stage(work: pathlib.Path, std: pathlib.Path, name: str, layer: str, agent_end: bool) -> pathlib.Path:
-    """toy_server.py staged with a layer (2.2: rcb_limited.py; 2.4: v2_4/rcb_limited.py), rcb1.py and rcb_agent_end.py
-    (the toy is an agent-ended adapter; agent_end: the target runs it with RCB_AGENT_END=1). Returns the directory."""
+def stage(work: pathlib.Path, std: pathlib.Path, name: str, layer: str) -> pathlib.Path:
+    """toy_server.py staged with a layer (shared: rcb_limited.py; operations: operations/rcb_limited.py), rcb1.py and
+    rcb_agent_end.py (the toy is an agent-ended adapter). Returns the directory."""
     d = work / f"stage_{name}"
     d.mkdir(exist_ok=True)
     shutil.copy2(std / "toy_server.py", d / "toy_server.py")
     shutil.copy2(std / "agent_end/rcb_agent_end.py", d / "rcb_agent_end.py")
     shutil.copy2(std / layer, d / "rcb_limited.py")
     shutil.copy2(std / "rcb1.py", d / "rcb1.py")
-    (d / "launch_toy.py").write_text(LAUNCH_24)
+    (d / "launch_toy.py").write_text(LAUNCH_TOY)
     return d
 
 
-LAUNCH_24 = """import os, runpy, sys, time
+LAUNCH_TOY = """import os, runpy, sys, time
 sys.dont_write_bytecode = True
 here = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, here)
@@ -702,27 +703,28 @@ runpy.run_path(os.path.join(here, "toy_server.py"), run_name="__main__")
 
 
 # ---------------------------------------------------------------------------------------------- main
-# the toy_server.py targets: (layer file, agent-ended, extra environment, scenario)
-TOYS = {"2.2": ("rcb_limited.py", False, {}, layer_22),
-        "2.2-ae": ("rcb_limited.py", True, {}, agent_ended_22),
-        "2.2-limit": ("rcb_limited.py", True, {"RCB_STEP_LIMIT": "30"}, step_limit),
-        "2.2-gaveup": ("rcb_limited.py", False, {"RCB_TOY_REFUSE": "the contract check's refusal"}, gave_up),   # (+ RCB_PORT)
-        "2.4": ("v2_4/rcb_limited.py", False, {}, layer_24),
-        "2.4-ae": ("v2_4/rcb_limited.py", True, {}, agent_ended_24),
-        "2.4-limit": ("v2_4/rcb_limited.py", True, {"RCB_STEP_LIMIT": "30"}, step_limit)}
-TARGETS = ("2.1", "2.1-limit", "2.3", "2.2", "2.2-ae", "2.2-limit", "2.2-gaveup", "2.4", "2.4-ae", "2.4-limit")
+# the toy_server.py targets: (layer file, extra environment, scenario)
+TOYS = {"shared": ("rcb_limited.py", {}, shared_layer),
+        "shared-finish": ("rcb_limited.py", {}, agent_ended),
+        "shared-limit": ("rcb_limited.py", {"RCB_STEP_LIMIT": "30"}, step_limit),
+        "shared-gaveup": ("rcb_limited.py", {"RCB_TOY_REFUSE": "the contract check's refusal"}, gave_up),   # (+ RCB_PORT)
+        "operations": ("operations/rcb_limited.py", {}, operations_layer),
+        "operations-finish": ("operations/rcb_limited.py", {}, agent_ended_operations),
+        "operations-limit": ("operations/rcb_limited.py", {"RCB_STEP_LIMIT": "30"}, step_limit)}
+TARGETS = ("sidecar", "sidecar-limit", "realtime", "shared", "shared-finish", "shared-limit", "shared-gaveup", "operations",
+           "operations-finish", "operations-limit")
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--repo", default=str(HERE.parent), help="repository root (default: this script's parent's parent)")
-    ap.add_argument("--spec", default=None, help="the OpenAPI file (default: <repo>/docs/protocol/eai-standard-3.0.openapi.yaml)")
+    ap.add_argument("--spec", default=None, help="the OpenAPI file (default: <repo>/docs/protocol/eai-standard.openapi.yaml)")
     ap.add_argument("--targets", default=",".join(TARGETS))
     ap.add_argument("--work", default=None, help="scratch directory (default: a new temporary one, removed at the end)")
     ap.add_argument("--keep", action="store_true", help="keep the scratch directory")
     a = ap.parse_args()
     repo = pathlib.Path(a.repo).resolve()
-    spec_path = pathlib.Path(a.spec) if a.spec else repo / "docs/protocol/eai-standard-3.0.openapi.yaml"
+    spec_path = pathlib.Path(a.spec) if a.spec else repo / "docs/protocol/eai-standard.openapi.yaml"
     doc = yaml.safe_load(spec_path.read_text())
     check_document(doc, spec_path)
 
@@ -734,7 +736,7 @@ def main() -> int:
     work = pathlib.Path(a.work) if a.work else pathlib.Path(tempfile.mkdtemp(prefix="openapi_contract_"))
     work.mkdir(parents=True, exist_ok=True)
     base_env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "RCB_WALL_CLOCK_S": "600", "RCB_STARTUP_TIMEOUT_S": "120"}
-    for k in ("RCB_AGENT_END", "RCB_STEP_LIMIT", "RCB_RESET_BUDGET", "RCB_SLOWDOWN", "RCB_CAMERA_FPS", "RCB_LOOKBACK_S"):
+    for k in ("RCB_STEP_LIMIT", "RCB_RESET_BUDGET", "RCB_SLOWDOWN", "RCB_CAMERA_FPS", "RCB_LOOKBACK_S"):
         base_env.pop(k, None)
     toy = std / "mcp/tests/toy_realtime.py"
     py = sys.executable
@@ -747,21 +749,19 @@ def main() -> int:
             data = work / f"data_{name}"
             shutil.rmtree(data, ignore_errors=True)            # a fresh trial: never an episode a previous run ended
             env = {**base_env, "RCB_DATA": str(data)}
-            if name in ("2.1", "2.3", "2.1-limit"):
-                env.update(RCB_AGENT_END="1", RCB_RESET_BUDGET="1")
-                if name == "2.1-limit":
+            if name in ("sidecar", "realtime", "sidecar-limit"):
+                env.update(RCB_RESET_BUDGET="1")
+                if name == "sidecar-limit":
                     env.update(RCB_STEP_LIMIT="30")
-                argv = [py, str(toy), str(port)] + (["--standard"] if name != "2.3" else [])
-                run = {"2.1": standard_21, "2.3": realtime_23, "2.1-limit": step_limit}[name]
+                argv = [py, str(toy), str(port)] + (["--standard"] if name != "realtime" else [])
+                run = {"sidecar": sidecar_layer, "realtime": realtime_layer, "sidecar-limit": step_limit}[name]
             elif name in TOYS:
-                # toy_server.py (the 2.2 toy) staged next to the layer (v2_4/rcb_limited.py for 2.4: the repository
-                # has no runnable 2.4 toy service), the agent-ended targets with rcb_agent_end.py; a launcher gives the
-                # 2.4 module the one helper the toy needs that it lacks (agent_time, the 2.2 layer's first-request clock)
-                layer, agent_end, extra, run = TOYS[name]
-                d = stage(work, std, name, layer, agent_end)
+                # toy_server.py (the shared-layer toy) staged next to the layer (operations/rcb_limited.py for operations: the
+                # repository has no runnable operations toy service), with rcb_agent_end.py; a launcher gives the operations module the one helper the toy needs that it lacks (agent_time, the shared
+                # layer's first-request clock)
+                layer, extra, run = TOYS[name]
+                d = stage(work, std, name, layer)
                 env.update(RCB_TOY_PORT=str(port), RCB_PORT=str(port), **extra)   # RCB_PORT: the give-up's refusal
-                if agent_end:
-                    env.update(RCB_AGENT_END="1")
                 argv = [py, str(d / "launch_toy.py")]
             else:
                 check(False, f"unknown target {name}")

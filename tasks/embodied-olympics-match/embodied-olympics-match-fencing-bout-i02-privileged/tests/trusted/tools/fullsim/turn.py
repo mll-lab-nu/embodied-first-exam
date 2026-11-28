@@ -1,5 +1,5 @@
 """The turn-based twins' layer over the generic full-simulator setting (tools/fullsim): the twin is a turn sport on the
-core's TurnService (protocol eai-standard-turn/1.0: one action per turn, a review after each action that does not end
+core's TurnService (the turn service: one action per turn, a review after each action that does not end
 the match, a chess clock per seat). tools/fullsim/formal.py plays a realtime service; this task's own file plays the
 twin's own TurnService instead and keeps everything else of formal.evaluate (the sanitized submission, the program as
 nobody in its own process, the public development copy, the one fresh-process replay, the verdict). Nothing of

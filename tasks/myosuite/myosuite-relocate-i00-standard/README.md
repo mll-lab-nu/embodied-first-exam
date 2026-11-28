@@ -1,31 +1,40 @@
-# myosuite-relocate-i00-standard
+# MyoSuite · relocate (standard)
 
 | | |
 |---|---|
-| Benchmark | MyoSuite |
-| Mode | standard (`eai-standard/2.2`) |
-| Twin | `myosuite-relocate-i00-privileged` |
-| Simulator / robot | `myosuite` / `myoarm` |
-| Family / instance | `relocate` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `none` — the privileged twin's positive example (Codex + GPT-6 Luna (run `codex-gpt6_luna-high`, via an OpenRouter adapter before protocol v1.0, 2026-09-29), trial `myosuite-relocate-i00__PjqTvZ2`, 231 rows) rounded to float32, as the client sends it, and streamed through the client: the service scores it 1 live and in both replays, in two fresh trials (tasks/myosuite/README.md); human review in PR #65 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
+| Task ID | `myosuite-relocate-i00-standard` |
+| Benchmark | [MyoSuite](https://github.com/MyoHub/myosuite) (Caggiano et al., 2022), upstream `MyoHub/myosuite@5635e1a` |
+| Robot | MyoArm: musculoskeletal model of the human shoulder, arm and hand |
+| Mode | standard |
+| Instance | `relocate`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-MyoSuite `myoChallengeRelocateP1-v0` (MyoArm, 63 muscles) on the same frozen instance as `myosuite-relocate-i00-privileged`: Pick up the object on the table and put it in the receptacle.
-An object stands on the table in front of the arm; a receptacle marks the target position. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
+Pick up the object on the table and put it in the receptacle.
 
-## Difficulty
-Same instance and success rule as `myosuite-relocate-i00-privileged` (first-pass rating: hard). In standard mode the agent loses free resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in actuator-command chunks, and gets 10 resets, so it has to close the loop on what it sees and learn the body from a few real attempts.
+## Success criteria
+Success rule (MyoChallenge 2023 `myoChallengeRelocateP1-v0`, its `solved` held): the object is less than 0.1 m from
+the target point in the receptacle (its orientation is not checked), held for 100 consecutive control steps (1 s at 10
+ms per step).
 
-## Reference solution
-None. Solvability evidence: the privileged twin's positive example (Codex + GPT-6 Luna (run `codex-gpt6_luna-high`, via an OpenRouter adapter before protocol v1.0, 2026-09-29), trial `myosuite-relocate-i00__PjqTvZ2`, 231 rows) rounded to float32, as the client sends it, and streamed through the client: the service scores it 1 live and in both replays, in two fresh trials (tasks/myosuite/README.md); human review in PR #65.
+Failure (MyoSuite's `done`, ends the episode with 0): the palm is more than 0.5 m from the object.
 
-## Verification
-The sim service judges the episode live (the task's rule on the steps it ran: the goal held 100 control steps) and records every executed control step; it checks at the episode's start that the scene is the frozen instance (its recorded state hash; else `instance_mismatch`, an infrastructure failure). The collect hook (`environment/sim/finalize.sh`) ends the service and writes that live verdict to `final.json` (`graded_by` = `live`; nothing is replayed to grade it), then renders `replay.mp4` in one pass over the recorded trajectory, which decides nothing; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded. A missing or unreadable `final.json`, one without a verdict, or a give-up after crashes not all inside the agent's calls is an infrastructure failure (`infra_error = 1`), not the agent's 0. No oracle; human review in PR #65. `nop`: the episode times out, reward 0.
+Reaching the goal does not end the episode. When the agent sends `/finish` or its time runs out while the goal is
+being held but not yet for the full 100 steps, the service keeps stepping from that state with the last command held
+until the hold is complete, the goal is lost or a failure happens (at most 100 more steps). The task is passed if the
+goal has then held for at least 100 consecutive control steps up to the end. A failure ends the episode with 0, also
+after a held goal.
 
-## Resources
-Caps per container (PROTOCOL §6).
+Graded: the live episode, judged by the simulator service; nothing is replayed. No success signal is shown to the
+agent. The episode ends at the agent's `/finish`, at a failure above, at the episode's own end where the rule above
+has one, or when the agent's time (1 h) runs out. Resets granted: 10. A reset starts a new episode from
+the frozen start; only the episode running at the end is graded. A simulator error raised by the agent's own call
+ends the episode with 0. An episode that does not start from the frozen instance, or a service crash outside the
+agent's calls, is an infrastructure failure, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -35,13 +44,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
-| Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`embodied_first_exam/standard/`); cameras `side_view`, `front_view`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat` (640 x 480); forward kinematics of the body's links |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering); after the agent's phase the collect hook only renders the video (one pass over the graded episode), it replays nothing to grade |
-| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance; only the last episode is graded, when the agent sends `POST /finish` or its session ends (a success ends nothing); results under another budget are reported separately |
-
-### Provenance
-The frozen instance (`environment/sim/instance.npz`) and its scene facts were made at generation time; see `tasks/myosuite/README.md`.
+## License
+MyoSuite ([MyoHub/myosuite](https://github.com/MyoHub/myosuite), version 2.12.2, tag `v2.12.2` = `5635e1a`) is
+released under the Apache License 2.0, as are the models it bundles (MyoSim, the MPL prosthetic arm, the object,
+furniture and YCB models). The MyoDex reference motions (the `dex_*` families) derive from the GRAB motion-capture
+dataset; MyoSuite asks their users to comply with GRAB's licence, which allows non-commercial scientific research
+only. The simulator is MuJoCo (Apache License 2.0).

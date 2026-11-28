@@ -1,10 +1,10 @@
-"""eai-standard/2.4 sim service for TopoGym (Genesis 1.2.1 on CUDA, Nyx RGB; docs/protocol/standard_mode.md): the TopoGym
+"""eai-standard/3.0 sim service for TopoGym (Genesis 1.2.1 on CUDA, Nyx RGB; docs/protocol/eai-standard.md): the TopoGym
 adapter of the shared layer rcb_limited.py (scripts/eai_standard/, copied unchanged into every standard task). Adapted from
 Embodied First Exam's RoboWits service. HTTP surface (rcb_limited.py): GET /spec, GET /status, POST /observe, POST /submit
 (RCB1 bodies, RCB1 responses), POST /kinematics (stateless FK / IK on the robot's own model). Logs every call to
 /data/episode.jsonl and keeps /data/final.json current. Nothing about objects ever leaves this process.
 
-Crash recovery (rcb_limited.Episode, docs/protocol/standard_mode.md section 13, resume class `approx`: Genesis' GPU contact solver is
+Crash recovery (rcb_limited.Episode, embodied_first_exam/standard/README.md#crash-recovery section 13, resume class `approx`: Genesis' GPU contact solver is
 not bit-deterministic): every executed control step is journaled (/data/journal.f64, the exact float32 row given to
 Session.step), every completed call checkpointed (rows, state hash, proprio row). After a crash run.sh exits non-zero,
 compose restarts the container (`restart: on-failure:6`) and this service rebuilds the frozen scene, replays the journal
@@ -28,8 +28,7 @@ assistance (the gripper `command` text of /spec says the rule). Genesis' CUDA co
 scene, so every simulator call runs on the main thread: the HTTP layer serves from a thread and hands submit / observe /
 kinematics, the per-call checkpoint's state hash and proprio row, and the episode end to the main thread's job queue.
 
-Agent-ended episodes (PROTOCOL §3; RCB_AGENT_END "1" in the task's sim service, rcb_agent_end.py; the service refuses to
-start without it): a success never ends the episode and is never shown; POST /finish ends it (reason "finished"), and so
+Agent-ended episodes (docs/protocol/tasks.md#modes; rcb_agent_end.py): a success never ends the episode and is never shown; POST /finish ends it (reason "finished"), and so
 does the end of the agent's session ("timeout"). Those two ends, and the step cap ("step_limit": the runaway guard,
 rcb_topogym.MAX_STEPS, or RCB_STEP_LIMIT when smaller), are judged on the end state: the task's success
 predicate must be true when the episode ends and stay true for the family's confirmation window (stable_duration_s:
@@ -55,9 +54,6 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb_limited as L  # noqa: E402
 import rcb_agent_end as AE  # noqa: E402
-
-if not AE.ENABLED:   # every RoboARC TopoGym standard task is agent-ended (v3.0): no first-success service is kept
-    raise RuntimeError("RoboARC TopoGym standard service: RCB_AGENT_END=1 is required (agent-ended episodes)")
 
 PROTOCOL = L.PROTOCOL
 DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
@@ -101,7 +97,7 @@ def ctrl_steps() -> int:
 
 # Episode ends that are infrastructure failures, never the agent's: a numerically unstable simulation
 # (rcb_topogym.SIMULATOR_INSTABILITY: a cloth particle faster than PARTICLE_SPEED_LIMIT_M_S, before the task's own failure
-# predicates). A simulator error the agent's call raised (reason "error") is the agent's 0 (PROTOCOL §4).
+# predicates). A simulator error the agent's call raised (reason "error") is the agent's 0 (docs/protocol/tasks.md#grading).
 # A service-side fault in a call (SERVICE_ERROR: on_error) is infrastructure too.
 SERVICE_ERROR = "service_error"
 INFRA_REASONS = ("simulator_instability", SERVICE_ERROR)
@@ -288,7 +284,7 @@ E["ready"] = True                       # S exists: ctrl_steps() counts its cont
 CTRL_HZ = float(S.control_hz); SUBSTEPS = int(S.physics_substeps)
 CAMS = list(S.VIDEO_CAMERAS)
 CAM_INFO = S.camera_info(CAMS)
-# The images one call may hold (PROTOCOL §3 "Images per call"): every frame a call records stays in memory until its
+# The images one call may hold (docs/protocol/tasks.md#modes "Images per call"): every frame a call records stays in memory until its
 # response is sent, so a call without a bound could exhaust the sidecar's memory, and a service killed for memory is never
 # the agent's failure, so one large request could void a failed trial. Cameras x frames as the recorder takes them (one
 # every 1/fps of sim time, its first and last frames included); a frame with per-frame depth counts once more
@@ -391,7 +387,7 @@ WORLD_FRAME = (f"RoboARC's world frame: origin at the robot's root link ({BASE_L
 SPEC = {
     "gripper_space": S.gripper_space,
     "instance_binding_id": (S.runtime_binding or {}).get("binding_id"),
-    "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": f"topogym ({S.engine_name(True)}, Nyx RGB)", "robot": R_SPEC["name"],
+    "protocol": PROTOCOL, "simulator": f"topogym ({S.engine_name(True)}, Nyx RGB)", "robot": R_SPEC["name"],
     "task_text": S.spec["text"], "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S,
     "max_frames_per_call": MAX_FRAMES, "max_video_fps": CTRL_HZ,   # request_fields: video_fps an integer in [1, control_hz]
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT[c], "resolution": list(CAM_INFO[c]["image_size"]), "calibration_in_obs": OBS_CALIBRATION,
@@ -426,13 +422,13 @@ SPEC = {
     "world": {"frame": WORLD_FRAME, "up": "+z", "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "wxyz",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes "
                              "(x right, y up, z backward)"},
-    # no step budget (budget.steps stays null: the wall clock is the budget), but a technical episode cap (PROTOCOL §4.5,
+    # no step budget (budget.steps stays null: the wall clock is the budget), but a technical episode cap (docs/protocol/eai-standard.md#post-reset-reset-capability,
     # max_control_steps): the tooling's runaway guard (rcb_topogym.MAX_STEPS, or RCB_STEP_LIMIT when smaller: S.max_steps)
     # ends the episode (reason step_limit) at
     # that many control steps, /observe watches included
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "10800")),
                "clock": "time_s and elapsed_s count from your first request to the service; time_left_s is wall_clock_s minus "
-                        "that, so it never runs out before the harness's limit does"},   # docs/protocol/standard_mode.md §5 (the 2.2 layer's key)
+                        "that, so it never runs out before the harness's limit does"},   # docs/protocol/eai-standard.md#get-spec (the shared layer's key)
     "max_control_steps": int(S.max_steps),
     "episode": ("one episode, no reset. It ends when you call POST /finish (reason finished), when the wall-clock budget is used "
                  "up (budget.wall_clock_s, counted from your first request to this service, any endpoint; meta time_s / time_left_s; "
@@ -492,7 +488,7 @@ def frames_ok(cams: list, steps: int, fps: int, meta: dict) -> None:
 
 
 def recorded_frames(steps: int, fps: int) -> int:
-    """The frames per camera the 2.4 recorder takes over a call of `steps` control steps (the count of real captures):
+    """The frames per camera the operations layer's recorder takes over a call of `steps` control steps (the count of real captures):
     one at the start, one at the first control step at or after each k/fps of sim time (k = 1 .. floor(steps x fps /
     control_hz)), and the last unless the last of those is taken at the call's last step."""
     m = int(steps * fps / CTRL_HZ + 1e-9)
@@ -529,7 +525,7 @@ def recorder(cams: list[str], fps: int, meta: dict) -> L.Recorder:
     return Rec(cams, int(round(CTRL_HZ / max(1, fps))), grab, proprio_row, extrinsics, ctrl_steps, depth=L.depth_mode(meta), clock_hz=CTRL_HZ, time_clock=lambda: S.sim_time_s, fps=fps)
 
 
-# RoboARC's declared safety telemetry (PROTOCOL §4.5; main's docs/benchmarks/roboarc.md, "Safety readings in
+# RoboARC's declared safety telemetry (docs/protocol/eai-standard.md#post-reset-reset-capability; main's docs/benchmarks/roboarc.md, "Safety readings in
 # standard mode"): meta["safety"] carries exactly the fields rcb_topogym._SafetyMonitor.read returns, as on main, with
 # the names of the parts involved (user decision 2026-10-13: names are allowed in standard mode; only positions / poses
 # in the simulator's world frame, the table height and physics parameters are withheld). The fields are forces, depths
@@ -693,7 +689,7 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list, clipped: list) -> No
 
 def number(meta: dict, key: str, default: float) -> float:
     """A request field that must be a finite number. A malformed request is a 400 (ValueError) and moves nothing
-    (PROTOCOL §4.6): null, a string, a non-finite value or a JSON integer beyond the float range (math.isfinite and
+    (docs/protocol/eai-standard.md#errors): null, a string, a non-finite value or a JSON integer beyond the float range (math.isfinite and
     float() raise OverflowError on it) must never reach float() / int() as a 500, which would end the one episode as an
     infrastructure error."""
     v = meta.get(key)
@@ -850,7 +846,7 @@ def on_error(exc: BaseException) -> None:
     """The layer's on_submit_error (main thread): an exception in /submit or /observe, or the execution checkpoint after
     it, ends the episode. The service's own faults (a checkpoint or journal row not committed, the host's OSError /
     MemoryError) as SERVICE_ERROR (infrastructure); anything else the agent's rows raised in the simulator as "error"
-    (the agent's 0, PROTOCOL §4). A /submit that found the episode over (EpisodeFinished) changes nothing."""
+    (the agent's 0, docs/protocol/tasks.md#grading). A /submit that found the episode over (EpisodeFinished) changes nothing."""
     if isinstance(exc, EpisodeFinished):
         return
     service = getattr(exc, "efe_service_fault", False) or isinstance(exc, (OSError, MemoryError))

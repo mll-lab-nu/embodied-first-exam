@@ -12,7 +12,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robocasa-gr1-placemat-to-bowl-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboCasa-GR1 (PosttrainPnPNovelFromPlacematToBowlSplitA, a Fourier GR1 humanoid (arms, waist and two dexterous six-command Fourier hands; fixed base)): Put the can from the placemat in the bowl, and move both hands away. The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades it live."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): RoboCasa-GR1 (PosttrainPnPNovelFromPlacematToBowlSplitA, a Fourier GR1 humanoid (arms, waist and two dexterous six-command Fourier hands; fixed base)): Put the can from the placemat in the bowl, and move both hands away. The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades it live."
 keywords = ["robotics", "robosuite", "robocasa-gr1", "humanoid", "dexterous-hands", "code-as-policy", "trajectory", "standard-mode"]
 
 [metadata]
@@ -20,8 +20,8 @@ task_type = "trajectory"
 simulator = "robosuite"
 robot = "fourier-gr1"
 family = "robocasa-gr1/PosttrainPnPNovelFromPlacematToBowlSplitA"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
+protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 4.0
@@ -31,7 +31,7 @@ timeout_sec = 1800.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -59,7 +59,7 @@ timeout_sec = 3600
 [agent]
 timeout_sec = 3600.0
 # The benchmark's demonstrations solve these tasks and are publicly downloadable, so egress is closed to everything but the model APIs and the package registries.
-network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL Appendix H.6
+network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); docs/protocol/invariants.md H.6
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 
 [environment]
@@ -68,7 +68,7 @@ cpus = 3
 memory_mb = 16384
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

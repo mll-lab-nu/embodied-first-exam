@@ -13,8 +13,8 @@ robot = "sharpa-wave-floating"
 hands = ["sharpa", "wuji"]
 default_hand = "sharpa"
 family = "binder_page_load"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.2"
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
+protocol = "eai-standard/3.0"
 oracle = "full"
 oracle_evidence = "solution/ replays the validated Sharpa Wave authoring trajectory (2,192 controls, success after 2,042; standard mode submits the same float64 rows through the public client). Two fresh-process replays succeed with identical state hashes; float32-rounded rows also succeed."
 instance_seed = 0
@@ -27,7 +27,7 @@ timeout_sec = 600.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -56,7 +56,7 @@ cpus = 2
 memory_mb = 10240
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

@@ -1,50 +1,55 @@
-# dexhand-sweep-dustpan-i00-standard
+# DexHand · Sweep debris into a held dustpan (standard)
 
 | | |
 |---|---|
-| Benchmark | DexHand |
-| Mode | standard (`eai-standard/2.2`) |
-| Twin | `dexhand-sweep-dustpan-i00-privileged` |
-| Simulator / robot | `mujoco` / `marvin-bimanual-sharpa-wave` |
-| Family / instance | `sweep_dustpan` / seed 0 |
-| Oracle | `full` — solution/ (trajectory.json + parts) holds the accepted authoring episode's 132,521 Sharpa Wave control rows (2000 Hz, float64) plus 16,000 copies of the last row (8 s hold); replayed in the frozen scene the accepted rows reproduce the accepted run bit for bit and succeed after 132,392 steps in two fresh processes with identical state hashes. |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
+| Task ID | `dexhand-sweep-dustpan-i00-standard` |
+| Benchmark | [DexHand](https://www.embodied-first-exam.ai/suite/dexhand/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | Tianji Marvin fixed stand with two 7-joint arms and a dexterous hand on each wrist: Sharpa Wave (22 finger actuators each) by default, or Wuji Hand 2.2 (20 each) |
+| Mode | standard |
+| Instance | `sweep_dustpan`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-Sweep all six pieces of debris on the floor into the dustpan and lift the loaded pan. A fixed two-arm robot starts with a broom held in its right hand and a dustpan held in its left hand; the pan's entrance ramp rests on the floor next to six small rigid debris pieces (packaging pieces, bottle caps, a wood chip and a crumpled-paper ball). Push the debris over the ramp with the broom's bristles, then raise the dustpan. Success requires 2000 consecutive physics steps (1.0 s) in which all of these hold: in the dustpan's own frame every collision shape of all six pieces lies over the pan floor (at least 1 mm inside its 460 mm side-to-side width, inside its 262 mm depth, no lower than 1 mm below the top of the floor plate and no higher than 110 mm above the pan origin); all six pieces touch the pan (contact force at least 1 mN); the pan origin is at least 50 mm above the floor; every piece moves slower than 0.03 m/s and rotates slower than 0.8 rad/s; and every piece has been touched by the bristles at some point. The episode ends with that success, or fails immediately and permanently when: a piece leaves the floor work area (world x outside [0.45, 1.00] m, y outside [-0.50, 0.40] m, or its center more than 0.25 m above or 0.01 m below the floor at z = -0.10 m); any part of the robot touches a piece of debris with at least 1 mN (sweep with the broom only); from 1.2 s on, fewer than two collision parts of a tool's own hand press on its handle with at least 0.01 N each, or the handle's grip point has moved more than 25 mm or turned more than 0.25 rad relative to that palm since 1.2 s (dropped or slipping tool); a tool is pressed (more than 0.01 N) by any robot part other than its own hand; the arms, torso or the two hands collide with each other; or the simulation becomes unstable. Five of six pieces, an unlifted pan or a hold shorter than 1 s is not a success. Only the robot's motor targets act; the tools and the debris are free bodies without welds, scripted motion or applied forces. One control row sets every motor target for one 0.5 ms physics step (2000 Hz); an episode has at most 160000 rows (80 s).
+Sweep all six pieces of debris on the floor into the dustpan and lift the loaded pan.
 
-## Difficulty
-Two arms must cooperate for about a minute of simulated time at a 2000 Hz control: the broom must stay in the right
-hand while its passive bristles push six small rigid pieces of different shapes over the pan's entrance ramp, the pan
-must stay in the left hand and seated on the floor while debris rolls in, and the loaded pan must then be lifted
-without spilling. The predicate is strict: all six pieces, a lifted pan, a one-second stable hold, no robot contact
-with the debris, no dropped or slipping tool and no debris outside the work area at any time.
+## Success criteria
+Here a control step is one 0.5 ms physics step (2,000 Hz), and every check below runs after each one. The right hand
+starts holding the broom and the left hand the dustpan. A contact counts only when it carries at least 0.001 N. A
+piece is brushed once any of the broom's bristles has touched it. A piece is in the pan when its whole collision shape
+lies inside the pan floor's volume, in the pan's frame (within 1 mm of the floor's side edges, at most 131 mm forward
+or back of its centre, and no higher than 0.11 m), and it touches the pan's floor, lip, back or a side. Success needs
+one condition, held for 2,000 consecutive physics steps (1 s):
+- all six pieces have been brushed;
+- all six pieces are in the pan;
+- the pan's origin is at least 0.05 m above the floor;
+- every piece moves slower than 0.03 m/s and turns slower than 0.8 rad/s;
+- the first 1.2 s of the episode (the settling period) are over.
 
-## Reference solution
-`solution/` (`trajectory.json` + five `trajectory.partNN.npz` parts below 2 MB, checked by sha256) holds the accepted authoring episode's 132,521 recorded Sharpa Wave motor-target rows
-(2000 Hz, float64) produced by an authoring-only inverse-kinematics sweeping controller with dustpan-level feedback
-(the controller is not part of the task), followed by 16,000 copies of its last row (an 8 s lifted-pan hold that only
-adds margin). The oracle hands these rows in unchanged; the standard oracle submits them as float64 (rows rounded to
-float32 already break the grip-rotation bound, so they do not succeed). Replayed in this task's frozen scene
-they reproduce the accepted run bit for bit and succeed after 132,392 steps (66.2 s): all six pieces in the lifted pan
-(81.8 mm), maximum grip drift 5.7 mm and rotation 0.229 rad, a 1.0 s terminal hold. Both hands are offered.
-With Wuji Hand 2.2 the start differs only in the finger joints (`assets/reset_wuji.npz`, formed by closing the Wuji
-fingers onto the frozen shafts); holding its targets keeps both tools for the whole 80 s horizon (at least 5
-force-bearing contacts per handle, grip drift <= 4.4 mm, rotation <= 0.022 rad). No Wuji success is claimed.
+The episode fails at once when: a piece's centre leaves the floor work area (x 0.45 to 1.0 m, y -0.5 to 0.4 m, from
+10 mm below to 0.25 m above the floor); any part of the robot touches a piece; two parts of the robot touch each other,
+other than two parts of the same hand; a part of the robot other than a tool's own hand presses that tool with more
+than 0.01 N; after the settling period, fewer than two parts of a tool's hand touch its shaft with at least 0.01 N
+each (the tool dropped), or a tool slips in its hand by 25 mm or more, or turns in it by 0.25 rad or more, from where it
+sat at the end of the settling period; or the physics becomes unstable. The step budget is 160,000 physics steps
+(80 s).
 
-## Verification
-The trusted simulator service journals every executed row with the hand it runs (`DEXHAND_HAND`, default `sharpa`) and
-evaluates the predicate after every 0.5 ms physics step. A failure ends the episode at once; a success never ends it and
-is never shown. The episode ends at the agent's `POST /finish`, at a failure, at the episode budget, on a simulator
-error or when the session ends, and is judged on the state it ends in (the stages before the last count when they
-happen). That live episode is the verdict (`final.json`, `graded_by = "live"`): nothing is replayed to grade it (owner,
-2026-10-17) The separate verifier reads only the service's `final.json`: reward 1 requires live success. The collect
-hook then renders `replay.mp4` from the recorded rows in one video-only pass, which never changes the verdict. Missing
-service evidence is an infrastructure error. Release status: provisional (human review).
+Graded is the live episode on the simulator service; nothing is replayed. The service runs the hand the runner
+selects (Sharpa Wave unless the Wuji Hand 2.2 is selected; `spec()["hand"]` names it). The agent may reset up to
+20 times, each reset starting a new episode from the same frozen start; only the last episode is graded. An
+episode ends at the agent's `POST /finish`, when the agent's session ends (at the latest after 1 h), at the first
+failure above (a score of 0), at the step budget where the task has one, or on a simulator error (a score of 0). A
+success neither ends the episode nor is shown to the agent.
 
-## Resources
-Caps per container (PROTOCOL §6).
+Each stage before the last counts at the moment it is completed. The last stage, with its full hold, must be met on
+the state the episode ends in: every check goes on after it is first met, and a failure after it still scores 0. If
+it is not met at `/finish` or at the session's end, the robot holds its current targets for up to 3 s of simulated
+time, and the episode passes if the last stage completes within that time without a failure. At the step budget it
+must be met at that step. Targets outside an actuator's range are clipped. Each episode's start is checked against
+the frozen instance; a mismatch is an infrastructure error, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -54,16 +59,14 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-
-### Notes
-Source: the DexHand family of this task.
-Scene: the frozen MuJoCo model of the accepted sweeping episode, unchanged except for
-tokenized mesh paths and four fixed task cameras (`assets/sweep_sharpa.xml`; every file and mesh is checked against
-`assets/manifest.json` and `assets/external_assets.json` at load). Robot: fixed Tianji Marvin dual seven-joint arms
-(DexForce embodichain geometry, Apache-2.0; Genesis estimated inertias, MIT; prototype position gains) with two Sharpa
-Wave hands (MuJoCo Menagerie `sharpa_wave` at `0059d4335f8156206f63a35662313385f7ad6d74`, Apache-2.0; the left hand is
-a documented mirror of the manufacturer right hand). The broom has 54 passive hinged
-bristle-bundle capsules; the dustpan has a collision entrance ramp; the debris are rigid shape proxies of packaging
-pieces, caps, a wood chip and crumpled paper. Tools start pre-held: no pickup, fine dust, paper deformation or
-hardware identification is claimed. The arm and hand meshes are baked into the `efe:dexhand` image.
+## License
+DexHand's scenes, checkers and graders are original to this repository (MIT License). Robot models: the Sharpa Wave
+hand from [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie/tree/0059d4335f8156206f63a35662313385f7ad6d74/sharpa_wave)
+@ `0059d43` (Apache License 2.0); the Wuji Hand 2.2 from
+[wuji-technology/wuji-description](https://github.com/wuji-technology/wuji-description/tree/829c9aa27cb12c3a49d5b8d63c9869dd8f656702)
+@ `829c9aa` (MIT License); the Tianji Marvin arm meshes from DexForce `embodichain_data` (Apache License 2.0) with
+inertias from Genesis' `dual_arms_primitives.urdf` (MIT License), see `images/dexhand/tianji/NOTICE.md`. Object
+assets are original geometry of this repository, CC0 (the Poly Haven rubber boot, the Innerscene stockpot, Monet's
+public-domain Water Lilies, original page and letter artwork) or CC BY 4.0 (the Joy-Con, pen, rotary-knob and walnut
+meshes; credits in each task's `object_assets/*/CREDITS.txt`); printed text uses the DejaVu fonts (Bitstream Vera
+license). No non-commercial terms apply.

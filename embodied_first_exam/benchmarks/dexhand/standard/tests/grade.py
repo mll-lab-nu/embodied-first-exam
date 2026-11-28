@@ -16,6 +16,25 @@ import os
 from pathlib import Path
 import shutil
 
+def agent_end_fields(d):
+    """An agent-ended episode's record (docs/protocol/tasks.md#modes: final.json success_signal / ended_by, step_limit / steps_used):
+    evidence only, never the verdict (numbers only: a bad value is 0); the runner reads ended_session_end."""
+    if not isinstance(d, dict) or d.get("success_signal") != "hidden":
+        return {}
+    by = d.get("ended_by")
+    out = {"ended_finish": int(by == "finish"), "ended_step_limit": int(by == "step_limit"),
+           "ended_session_end": int(by == "session_end"), "hidden_success_seen": int(bool(d.get("hidden_success_seen")))}
+    if d.get("step_limit"):
+        def n(k):
+            try:
+                v = float(d.get(k) or 0)
+            except (TypeError, ValueError):
+                return 0
+            return int(v) if abs(v) < 1e18 else 0      # NaN and inf too
+        out.update(step_limit=n("step_limit"), steps_used=n("steps_used"))
+    return out
+
+
 BASE = {"success": 0, "live_success": 0, "graded_by_live": 1, "replays": 0, "infra_error": 0, "sim_error": 0,
         "grader_error": 0, "finalized": 0, "missing_log": 0}
 
@@ -67,7 +86,7 @@ def main() -> None:
             data = json.loads(path.read_text())
             if not isinstance(data, dict):
                 raise ValueError("final.json must be an object")
-            result = verdict(data)
+            result = {**verdict(data), **agent_end_fields(data)}
         except (OSError, ValueError, TypeError):
             result = {**BASE, "infra_error": 1, "grader_error": 1, "corrupt_log": 1}
     for name in ("trajectory.npz", "episode.jsonl", "replay.mp4"):   # evidence for people; never the verdict

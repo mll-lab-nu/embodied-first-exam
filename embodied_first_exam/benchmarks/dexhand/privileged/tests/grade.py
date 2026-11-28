@@ -86,7 +86,7 @@ def main() -> None:
             result["bad_trajectory"] = 1
             (log / "error.txt").write_text("trajectory archive exceeds the size limit")
         else:
-            # One fresh replay decides (task protocol v2.4: determinism is checked when the task is built).
+            # One fresh replay decides (determinism is checked when the task is built).
             output = log / "replay1.json"
             output.unlink(missing_ok=True)
             with (log / "replay1.log").open("w") as stream:
@@ -106,7 +106,7 @@ def main() -> None:
                 raise ValueError("replay verdict must be a JSON object")
             mismatch = a if a.get("instance_mismatch") else None
             if mismatch is not None:
-                # the frozen instance did not build to its recorded start: no verdict on the agent (PROTOCOL H.4)
+                # the frozen instance did not build to its recorded start: no verdict on the agent (docs/protocol/invariants.md H.4)
                 result.update(success=0, infra_error=1, instance_mismatch=1, hand_wuji=int(mismatch.get("hand") == "wuji"))
                 details.update(hand=str(mismatch.get("hand", "sharpa")), reason=str(mismatch.get("error") or ""),
                                start_sha=str(mismatch.get("start_sha") or ""),

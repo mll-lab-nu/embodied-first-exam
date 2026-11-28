@@ -7,9 +7,9 @@ grippers.
 
 ## Goal
 Success: the three tiles in your row that match the discarded tile are face up and the other nine tiles of your four
-sets of three still stand; then the tile from the front stack stands on its short end at the right end of your row, its
-right end up; and both grippers are open. Leave the front stack untouched until all three matching tiles are face up.
-Moving one of your arms far from where it started while the opponent's arm is out ends the episode as a failure. A
+sets of three still stand, while the top tile of the front stack at the far left still lies as it started; then that
+tile stands on its short end in the next place at the right end of your row, its right end up; and both grippers are
+open. Moving one of your arms far from where it started while the opponent's arm is out ends the episode as a failure. A
 replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one

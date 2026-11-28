@@ -6,8 +6,8 @@ on, then move your hand away.
 
 ## Goal
 Success: the pan is on the stove's rear right burner, that burner is on, the drumstick is in the pan (not just on the
-stove), and the hand has let go of the drumstick and moved well away. Your trajectory is replayed from the fixed start.
-What counts is the state after its last action.
+stove), and the hand has let go of the drumstick and moved well away (what counts is how far away the hand is). Your
+trajectory is replayed from the fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 13)`
 with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave

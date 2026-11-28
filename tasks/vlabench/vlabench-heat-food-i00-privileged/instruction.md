@@ -4,9 +4,9 @@
 Heat the cooked food from the tray in the microwave: put it inside, close the door and press the start button.
 
 ## Goal
-Success: the cooked food is inside the microwave, the door is closed and the start button is pressed. Your trajectory is
-replayed from the fixed start. The episode ends as soon as the task is done, and the trajectory must end on that step:
-any action after it makes the trajectory invalid.
+Success: the cooked food is inside the microwave, the door is closed and something is touching the start button. Your
+trajectory is replayed from the fixed start. The episode ends as soon as the task is done, and the trajectory must end
+on that step: any action after it makes the trajectory invalid.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`: key `actions`, shape `(T, 9)`, 1 ≤ T ≤
 4000; only this file is graded. Also leave two files for the people who read your work. `/app/output/gen.py`: the script

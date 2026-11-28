@@ -7,7 +7,7 @@ and no state, and a render that fails, is stopped or runs out of time loses only
 
 The frames are the `top`, `left` and `right` cameras side by side, 320 x 240 each, at most ~1500 of them plus the last;
 the pass stops by itself `--deadline-s` seconds after it started and keeps the frames written so far (a playable file).
-`--agent-end` (an agent-ended episode, PROTOCOL §3: finalize.sh passes it when the service's record says so) runs the
+`--agent-end` (an agent-ended episode, docs/protocol/tasks.md#modes: finalize.sh passes it when the service's record says so) runs the
 Session as the service did (rcb_abc.Session.agent_end: a success never ends it), so the film runs to the graded end
 state, not to the first success."""
 import argparse

@@ -4,8 +4,9 @@
 Take the mug from the cabinet, put it under the coffee machine's spout, press the start button, and move your hand away.
 
 ## Goal
-Success: the mug stands right under the coffee machine's spout, the machine is on, and your hand has let go of the mug
-and moved away from the mug and the start button.
+Success: the mug is right under the coffee machine's spout, its middle close below it (upright or not), the machine is
+on, and your hand has let go of the mug and moved well away from the mug and the start button (what counts is how far
+the hand is from them).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -22,7 +23,7 @@ robot runs as a service you reach through its client or its MCP tools, as if it 
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service starts: about a minute)

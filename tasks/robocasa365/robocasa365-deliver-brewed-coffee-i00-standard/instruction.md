@@ -5,8 +5,8 @@ Take the coffee from the coffee machine and put it on the dining counter next to
 away.
 
 ## Goal
-Success: the coffee and the breakfast plate both stand on the dining counter right next to each other, and the hand has
-let go of the coffee and moved well away.
+Success: the coffee and the breakfast plate are both on the dining counter, touching it, right next to each other, and
+the hand has let go of the coffee and moved well away (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -24,7 +24,7 @@ episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service starts: about a minute)

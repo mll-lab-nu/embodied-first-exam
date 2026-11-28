@@ -1,43 +1,38 @@
-# mujoco_playground_go1_handstand-standard
+# MuJoCo Playground · Go1Handstand (standard)
 
 | | |
 |---|---|
-| Benchmark | MuJoCo Playground |
-| Mode | standard (`eai-standard/2.2`) |
-| Twin | `mujoco_playground_go1_handstand-privileged` |
-| Simulator / robot | `mujoco` / `unitree-go1` |
-| Family / instance | `mujoco_playground/Go1Handstand` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` |
+| Task ID | `mujoco_playground_go1_handstand-standard` |
+| Benchmark | [MuJoCo Playground](https://playground.mujoco.org/) (Zakka et al., 2025), upstream `google-deepmind/mujoco_playground@4057c14` |
+| Robot | Unitree Go1 quadruped, 12 joint position actuators |
+| Mode | standard |
+| Instance | `mujoco_playground/Go1Handstand`, seed 0 |
+| Time limit | 30 min |
+| Reference solution | Included |
 
 ## Task
-MuJoCo Playground `Go1Handstand` (Unitree Go1) on the same frozen instance as `mujoco_playground_go1_handstand-privileged`: Make the robot do a handstand: balance on its front legs, nose down and hind legs in the air, for 2 s.
-From standing, it has 10 s to get into a handstand on its front legs and hold it for 2 s (Playground's handstand reward aims at the IMU 0.55 m high). Standard mode (eai-standard/2.2): the agent drives the robot through a client, with 10 resets (only
-the last episode is graded), the robot's own sensors and the cameras that follow it.
+Make the robot do a handstand: balance on its front legs, nose down and hind legs in the air, for 2 s.
 
-## Difficulty
-Same instance and success check as `mujoco_playground_go1_handstand-privileged`. In standard mode the agent loses free resets, the simulator and
-the world state: it sees camera images and proprioception (joints, IMU, foot contacts), acts in joint position chunks,
-and gets 10 resets (`RCB_RESET_BUDGET`, the compose file's default; PROTOCOL §2), so it has to close the loop
-on the robot's own sensors; only the last episode is graded.
+## Success criteria
+Pass condition, defined by this benchmark (MuJoCo Playground's `Go1Handstand` has only a shaped training reward and no success
+test): no termination at any step, and the last 100 control steps (2 s) of the episode all have the trunk's forward
+axis (the IMU frame's x axis) within 30° of straight down, the IMU at least 0.40 m above the floor, and neither hind
+foot touching the floor. An episode is at most 500 control steps (10 s at 50 Hz).
 
-## Reference solution
-`solution/oracle_replay.py` streams the privileged reference's rows (`solution/oracle.npy`, 115 rows, float32-exact)
-through the client in `hold` chunks; it uses no privileged information at run time. The service's recorded trajectory
-is then exactly the privileged reference (115 control steps), whose end state is a success.
+Termination (a failure at any step; a live episode ends there): Playground's rule for this environment, either the
+trunk tipped over, its up axis more than about 15° below the horizon (the IMU frame's z axis has a world z component
+below −0.25), or a thigh, calf or hip of a front leg touching the floor.
 
-## Verification
-The verdict is the live episode's (`graded_by = "live"`, `replays = 0`): the sim service runs the task's check on the
-episode it ran and records every executed control step. The collect hook (`environment/sim/finalize.sh`) ends the
-service, writes that verdict into `final.json` (nothing is replayed to grade it), then renders `replay.mp4` from the
-recorded trajectory in one video-only pass (`environment/sim/video.py`), which never changes the verdict;
-`tests/grade.py` (separate sandbox, no network) passes iff the live check succeeded. The service checks the frozen
-instance when it builds the scene: a start state that does not hash to the instance's `state_sha` gets no episode
-(`instance_mismatch`, `infra_error = 1`). Oracle: success after 115 control steps.
+Graded: the live episode, judged by the simulator service when it ends; nothing is replayed. The condition is checked
+on the episode's control steps as the service executed them. The service never reports success while the episode
+runs, and meeting the condition does not end the episode. The episode ends at the agent's `/finish`, at the `done` action (the same end), after its last control step, at a termination, or
+when the agent's session ends (at the latest after 30 min). The agent has 10 resets (`POST /reset`), each starting a new episode from the frozen start; only the last episode (the one after the last reset) is graded, and no reset is possible after `/finish`. An episode ended by a simulator error
+(a call that makes the simulation fail) scores 0. Before the agent is served, the service checks that the scene starts
+at the frozen instance (its state hash); a mismatch, or a service that cannot record its verdict, is an
+infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -47,9 +42,11 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | MuJoCo Playground @ 4057c14 (Apache-2.0): `locomotion/go1/xmls/scene_mjx_flat_terrain.xml`; MuJoCo Menagerie @ 1b86ece (`unitree_go1`); MuJoCo 3.3.7 on the CPU |
-| Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`embodied_first_exam/standard/`); cameras `track`, `side`, `back`, `top` (they follow the robot) (320 x 240), the feet's kinematics in the trunk frame |
-| Resources | 4 CPUs, no GPU (CPU physics, EGL or OSMesa rendering); the collect hook replays nothing, its video pass takes well under a minute (at most the horizon, ~150 frames) |
+## License
+MuJoCo Playground ([google-deepmind/mujoco_playground](https://github.com/google-deepmind/mujoco_playground) @
+`4057c14`) is released under the Apache License 2.0. The robot models come from MuJoCo Menagerie
+([google-deepmind/mujoco_menagerie](https://github.com/google-deepmind/mujoco_menagerie) @ `1b86ece`, the commit
+Playground pins), each under its own license: Unitree Go1 (BSD 3-Clause, Unitree Robotics), Boston Dynamics Spot
+(BSD 3-Clause, Clearpath Robotics), Google Barkour vB (Apache License 2.0, DeepMind), ALOHA 2 (BSD 3-Clause, Trossen
+Robotics), Franka Emika Panda (Apache License 2.0). The rough-terrain texture is from Poly Haven (CC0). No
+non-commercial terms apply. The simulator is MuJoCo 3.3.7 (Apache License 2.0).

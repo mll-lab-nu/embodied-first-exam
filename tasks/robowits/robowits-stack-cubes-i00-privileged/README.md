@@ -1,49 +1,44 @@
-# robowits-stack-cubes-i00-privileged
+# RoboWits · stack_cubes (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboWits |
+| Task ID | `robowits-stack-cubes-i00-privileged` |
+| Benchmark | [RoboWits](https://github.com/UMass-Embodied-AGI/RoboWits) (Lin et al., 2026), upstream `UMass-Embodied-AGI/RoboWits@9cc30ae` |
+| Robot | Bimanual Marvin: two 7-DoF arms with Pika parallel grippers |
 | Mode | privileged |
-| Twin | `robowits-stack-cubes-i00-standard` |
-| Simulator / robot | `robowits` / `marvin-bimanual` |
-| Family / instance | `stack_cubes` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `partial` — Reference solution solution/oracle_stack_cubes.py with its skills in solution/ref_primitives.py (written for this instance; RoboWits ships no expert). It scored 1 under Harbor -a oracle on an earlier version of this task: job robowits-stack-cubes-i00-oracle-thin-0925-000706, trial robowits-stack-cubes-i00__2rVdsVe, 2026-09-25 (laptop, Intel; success=1, deterministic=1, instance_exact=1; an uncommitted tree just before dev branch f15dbdb7). Same since then: the frozen instance (state hash 41c4d7e7d7193b0d) and the oracle script (byte-identical to that run's /app/output/gen.py; ref_primitives.py unchanged since f15dbdb7). Changed since then, so the label is partial: the grader tests/grade.py (dev branch 82d76c61 added the GPU-backend exception; this PR writes the verdict before the video) and the tooling rcb_robowits.py (dev branch 5aa848bd, bddfc520, adce3fef, 8f0ebd55, 82d76c61, 6c0b439e, fe5fb9e6, 1515ea4e). Not re-run on this version (static validation only, 2026-10-01). 2026-10-14 (an AMD workstation): Harbor -a oracle scored 1 on a pre-final tree of this change (under a temporary -i01 task name) (trial robowits-stack-cubes-i01-privileged__3ppSJuL; the tooling changed after it only in the BlenderKit service code, which this family does not use), nop 0; the oracle trajectory passes the current grader in a batch re-grade. |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
+| Instance | `stack_cubes`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Pipeline check only |
 
 ## Task
-Set the two grey cubes side by side, touching, and put the red cube on top of them, right above the green dot. One replayable trajectory from
-the frozen instance (evaluation scene 0 of RoboWits task 14), with the privileged tooling (`rcb_robowits.py`: the
-scene's state, resets, thin primitives, replay); the success criterion as graded is in `instruction.md`.
+Set the two grey cubes side by side, touching, and put the red cube on top of them, right above the green dot.
 
-## Difficulty
-Tabletop bimanual manipulation with a 16-DoF joint-target action space: three 5 cm cubes must be rearranged into a
-two-layer stack whose apex sits within 2.5 cm of a marker, and the two base cubes must end up touching. The tooling
-gives only thin primitives (IK moves on RoboWits' own pink/pinocchio IK, joint moves, gripper, hold): grasping and
-placing are the agent's to build. The wrist joints have ±60° limits (a vertical approach is only reachable for
-finger-closing directions within roughly ±60° of world y), the placement tolerances are tight, and the assembled stack
-must survive the release and retreat of the gripper. The physics runs at ~700 control steps/s, so iteration is cheap.
+## Success criteria
+The goal: the bounding-box bottoms of both grey base cubes are within 1.5 cm of the table top, and their bounding
+boxes are within 1 cm of each other along every axis. The red cube's bounding-box bottom is no more than 1 cm below
+the top of the first base cube's bounding box. The red cube's centre is within 2.5 cm, seen from above, of the green
+dot's centre. Neither gripper's end-effector point is inside the red cube's bounding box grown by 3 cm on every side.
+No part of the robot touches any of the three cubes. Graded objects: the three cubes.
 
-## Reference solution
-`solution/oracle_stack_cubes.py`: with the left arm, grasp base cube 1 and place it axis-aligned on the marker, grasp
-base cube 2 and place it flush against it, grasp the apex cube and place it centred over the marker, then retreat. Its
-grasp / place skills live in `solution/ref_primitives.py` (never in the agent image). `solution/solve.sh` records it
-into a trajectory.
+The verifier, in a separate sandbox without network, replays `/app/output/trajectory.npz` once in a fresh process
+from its own copy of the frozen instance: a reset, then the rows open-loop, one per 1/30 s control step. A settle
+window follows the last row. The robot holds the last row's joint targets for 30 control steps (1 s), and nothing is
+checked. For 60 more control steps (2 s) the goal must then hold at every 6th step and at the last one. Through those
+60 steps the set of graded objects must not change, and no graded object may move more than 2 mm from where it was
+when they began. The task scores 1 only if the window passes.
 
-## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, once; pass iff
-RoboWits' `_check_success` holds after the replay and the rebuilt frozen scene matches
-the recorded one (`tests/grade.py`; a scene that does not match is the host's failure, `infra_error = 1`, never the
-agent's 0), plus `/logs/verifier/replay.mp4`. What the predicate checks, in words:
-`instruction.md`, "Success criterion (as graded)". The trajectory is the per-control-step JOINT_ABS record (T, 16);
-Genesis' CPU backend restores the frozen snapshot exactly, so in-process repeats and fresh processes agree bit for bit
-on one CPU vendor (tasks/robowits/README.md).
+Where the goal names the table area, it is the world-frame rectangle 0.21 ≤ x ≤ 1.00 m, −0.69 ≤ y ≤ 0.69 m;
+the table top is at z = 0.76 m.
 
-Oracle partial: the reference solution scored 1 on an earlier version of this task and was not re-run on this one
-(`oracle_evidence` in `task.toml`); human review in PR #3 (PROTOCOL §4).
+A missing file scores 0, and so does an invalid one. Invalid means: not a readable `.npz`, no `task` or `actions`
+entry, an entry over 256 MB, a `task` other than this family, `actions` that are not finite numbers of shape (T, 16),
+or T over 200,000. The window runs past the cap of 200,000 control steps, so a trajectory of up to 200,000 rows gets
+its full window. The rebuilt scene must match the frozen instance: the same state hash, or every object within 2 mm
+and 0.02 (quaternion components) and every joint within 0.002 rad of the recorded pose. A scene that does not match,
+or does not build, is an infrastructure error, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -53,10 +48,14 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `main`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| RoboWits task | `14-stack-cubes-v0` (RoboWits @ 9cc30ae, Genesis 0.4.7: CPU physics backend, EGL rendering on the GPU) |
-| Instance | entry 0 of RoboWits' `eval_dataset_50/14.json`; object poses and the expected state hash in `environment/instance.json` (the verifier's copy in `tests/`) |
-| Robot | Marvin bimanual: 2 × 7-DoF arms with Pika parallel grippers; JOINT_ABS actions (T, 16) at 30 Hz |
-| GPU | EGL camera rendering only (`environment/docker-compose.yaml`, `tests/docker-compose.yaml`) |
+## Others
+The frozen scene is entry 0 of RoboWits' `eval_dataset_50/14.json` (RoboWits task
+`robowits/14-stack-cubes-v0`).
+
+## License
+RoboWits ([UMass-Embodied-AGI/RoboWits](https://github.com/UMass-Embodied-AGI/RoboWits) @ `9cc30ae`) is MIT-licensed,
+as declared in its `pyproject.toml`. Genesis 0.4.7 is under the Apache License 2.0, and RoboWits' asset bundle
+(`XHRlyb2001/RoboWits_assets`) also under Apache-2.0. Most families also load BlenderKit models. BlenderKit licenses
+each model to the account that downloads it, and these models may not be redistributed, so they are not in the image
+or the repository. Users fetch them with their own BlenderKit key, or use the encrypted research bundle, whose terms
+allow **non-commercial academic research only** (`images/robowits/NOTICE`).

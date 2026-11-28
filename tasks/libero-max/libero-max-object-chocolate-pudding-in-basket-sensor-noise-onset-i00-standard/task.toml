@@ -19,7 +19,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/libero-max-object-chocolate-pudding-in-basket-sensor-noise-onset-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): LIBERO-MAX (libero_object; Franka Panda) on the frozen instance of its privileged twin: Put the chocolate pudding in the basket. Mid-task the scene changes once. The agent only gets a client: two cameras (RGB, optional depth, calibrated) and the robot's own state; LIBERO's OSC control steps in chunks; one episode, no reset, no object poses; the sim service records the episode and grades it as it ran (no replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): LIBERO-MAX (libero_object; Franka Panda) on the frozen instance of its privileged twin: Put the chocolate pudding in the basket. Mid-task the scene changes once. The agent only gets a client: two cameras (RGB, optional depth, calibrated) and the robot's own state; LIBERO's OSC control steps in chunks; one episode, no reset, no object poses; the sim service records the episode and grades it as it ran (no replay)."
 keywords = ["robotics", "libero", "libero-max", "robosuite", "franka-panda", "online-event", "code-as-policy", "trajectory", "standard-mode"]
 
 [metadata]
@@ -27,15 +27,15 @@ task_type = "trajectory"
 simulator = "robosuite"
 robot = "franka-panda"
 family = "libero-max/libero_object/sensor_noise_onset"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
+protocol = "eai-standard/3.0"
 oracle = "full"
 instance_seed = 195
 expert_time_estimate_hours = 2.0
 
 [metadata.seeds]
 # the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
-# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+# under solution/ is for, where they are not the default seed alone (docs/protocol/tasks.md)
 allowed = [195, 0, 1]
 oracle = [195, 0, 1]
 
@@ -44,7 +44,7 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -80,7 +80,7 @@ cpus = 3
 memory_mb = 10240
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

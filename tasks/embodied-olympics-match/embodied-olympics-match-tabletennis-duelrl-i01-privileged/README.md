@@ -1,36 +1,41 @@
-# embodied-olympics-match-tabletennis-duelrl-i01-privileged
+# Embodied Olympics · robot table tennis, duel against the built-in RL player (privileged)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Match |
+| Task ID | `embodied-olympics-match-tabletennis-duelrl-i01-privileged` |
+| Benchmark | [Embodied Olympics - Match](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@0d7f680` |
+| Robot | Franka Emika Panda arm on a moving base (an x-y rail in table tennis, a gantry in badminton), holding a paddle or racket |
 | Mode | privileged |
-| Twin | `embodied-olympics-match-tabletennis-duelrl-i01-standard` |
-| Simulator / robot | `mujoco` / `franka-panda` |
-| Family / instance | `tabletennis_duel` / seed 8 (allowed seeds: [8, 1, 2]; PROTOCOL §2) |
-| Oracle | `partial` — full-state reference program (solution/): the truth-fed serve and stroke planner of the table-tennis privileged twins; the built-in learned opponent (RLOpponentV2) plays seat B inside the formal match as in the twin; a local Harbor oracle run lost 3:5 (valid, replay identical); the nop (no program) scores 0 |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |
+| Opponent | Built-in player (seat B): the same robot, limits and rules as the agent's; it reads the true ball state and picks its shots with a learned policy |
+| Instance | `tabletennis_duel`, seed 8 |
+| Time limit | 2 h |
+| Reference solution | Pipeline check only |
 
 ## Task
 Win a game of table tennis to 5 points against the other robot.
 
-The privileged twin of `embodied-olympics-match-tabletennis-duelrl-i01-realtime`: table tennis (ITTF, one game to 5): a Franka Panda with a paddle on an x-y rail base against the built-in RL opponent (seat B, the same robot; learned shot choices and its own joint-level swing); seed 8, S = 10.
+## Success criteria
+The instance: a duel on seed 8, the agent's seat A against the built-in player in seat B. One game of table tennis: the first to 5 points wins, with a lead of 2 from 4:4, or the first to 7 (at 6:6 the next point wins). At 40 points played (lets included) the player ahead wins; at a level score, the player who won the last point. A player's third undue-delay fault (no toss within 5 s of the serve opening) loses it the match. There are no draws.
 
-## Difficulty
-Same frozen sport and instance as the twin; full-simulator development and the full state instead of camera images.
+Deliverable: `/app/output/policy/program.py`, with any helper files in the same folder (at most 512 regular files and
+32 MiB; no links or special files, else 0). It defines `make_policy(config)`; the object it returns gets `act(view)`
+with the full state every 5 control steps. Call rules: each call must answer within 5 s, with one command or none; a
+slower call or another answer ends the match with 0. The world runs at 1/10 of real speed while the program computes.
+After every point the program must answer `{"type": "ready"}` within 300 s, or its side loses the match
+(`ready_timeout`). The formal match is cut off after 7200 s of wall time; an unfinished match scores 0.
 
-## Reference solution
-`solution/solve.sh` submits the full-state reference program (the table-tennis reference player's serves and strokes with the ball's true state in place of the cameras).
+Success: seat A wins a match that ends by the rules (`match_over`). A forfeit scores 0. A simulator error in a control
+step, after the program's first applied command, also scores 0.
 
-## Verification
-Separate verifier without network; root-owned trusted source, the program as nobody (a process limit; every process
-of nobody is ended with kill(-1) before the verdict, and a survivor is the program's 0, never a retry), the original
-realtime service on the wall clock at S = 10 (the verdict depends on the host's speed, as in the
-realtime twin: the verifier runs on 4 pinned CPUs, part of the configuration key), one
-fresh journal replay, then the replay video (replay.mp4) from the record.
+Graded: one formal match, played after the agent's session in a separate verifier container without network by the
+agent's final program, from a fresh, unmodified start against the same opponent; nothing the agent played during its
+session counts. The task is passed only if that match ends by the rules above with the program's side as the winner.
+A program that fails to load, raises, breaks the call rules above, or leaves a process behind scores 0. A failure of
+the verifier or of the trusted match service, or a replay of the match record that disagrees with the match, is an
+infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -39,9 +44,12 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
+## Others
+Exported by the Embodied Olympics full-simulator exporter from its task `roboolympics/tabletennis-duel-wallclock-program-standard` (upstream commit
+`13f5e0981a99`). The files changed here after the export are listed for this task in
+`ci_checks/benchmarks/embodied-olympics-match/exported.toml`.
 
-### Development copy
-The privileged setting: the full simulator during development (`/opt/fullsim`, read and change any state, reset the
-whole match). In the verifier the program may read the same public copy read-only (`/opt/dev`); the trusted copy that
-runs the formal match is root-only. The public copies hold no reference player (H.2).
+## License
+Embodied Olympics ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics), a private repository) is released
+under the MIT License; its exported match services, referees, scripted opponents and graders inside this task are MIT
+too. The simulator is MuJoCo (Apache License 2.0). No non-commercial terms apply.

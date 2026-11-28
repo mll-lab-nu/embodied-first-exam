@@ -1,34 +1,50 @@
-# embodied-olympics-fun-steeplechase-i00-standard
+# Embodied Olympics · steeplechase (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
-| Twin | `embodied-olympics-fun-steeplechase-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-h1-2` |
-| Family / instance | `steeplechase` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: positive by injection (a flight over the 0.914 m hurdle and the pit; a landing in the pit with a second hop out; from standing on the bar); negatives: under, round, a trailing foot, to the side of the water jump. The H1-2's open-loop squat jump raises its centre of mass 0.16 m; the walking policy does not climb the pit's slope; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-steeplechase-i00-standard` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree H1-2 humanoid (1.78 m, 67 kg, 27 joints), with Unitree's walking policy |
+| Mode | standard |
+| Instance | `steeplechase`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Go over the steeplechase barrier and across the water pit behind it, then stand beyond the pit. (Embodied Olympics `steeplechase`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Go over the steeplechase barrier and across the water pit behind it, then stand beyond the pit.
 
-## Difficulty
-The bar is at hip height and the walking policy lifts its feet a few centimetres: the hurdle has to be jumped or climbed with whole-body joint control by a 67 kg robot whose best standing jump raises it far less than 0.914 m. Behind the bar the ground is 0.5 m lower than the track, so the landing is a drop of up to 1.4 m, and the way out is a slope. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
+## Success criteria
+The hurdle is fixed: a bar 0.127 m square and 3.66 m wide, its top 0.914 m above the track, its near face 10 m ahead
+of the robot's start. Behind it lies a dry water pit 3.66 m long (from the hurdle's near face) and 3.66 m wide, 0.50 m
+deep for its first 1.20 m, then sloping up to track level at the far edge. The referee's stages, in order: hurdle,
+out of the water jump, stand.
+- Hurdle: each time the pelvis or the centre of either foot crosses, going forward, the vertical plane through the
+  middle of the bar, that point is higher than 0.914 m, and the pelvis is between the two ends of the bar; otherwise
+  the attempt fails. The stage latches when all three points have crossed this way and the whole robot is past the
+  bar. Hands and feet may touch or stand on the hurdle.
+- Out of the water jump: the whole robot is beyond the pit's far edge.
+- Stand: after that, still beyond the far edge, the robot stands for 1 s without a break: only the feet on the ground,
+  the torso within 20 degrees of vertical, the pelvis slower than 0.35 m/s. The success is called when the 1 s is
+  complete.
 
-## Reference solution
-None (as `embodied-olympics-fun-steeplechase-i00-privileged`).
+Fouls (each fails the attempt at once), from the moment the pelvis passes the bar until the robot is out of the water
+jump: the pelvis outside the pit's width (more than 1.83 m to either side of the centre line); any part of the robot
+touches the track's surface beside the pit (a contact less than 0.05 m below track level; the pit's side walls lower
+down may be touched). The generic fall rule is off: any part may touch the pit's floor and walls and the track before
+and beyond the pit. Time limit: 60 s (6,000 control steps).
 
-## Verification
-The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
-infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
-`/data/final.json`: pass iff the live attempt succeeded. The
-rules: The hurdle is fixed (it does not move or topple): its top bar is 0.127 m square, 3.66 m wide, with its top 0.914 m above the track, on a post at each end. Its near face is 10.0 m ahead of where your pelvis starts. The water jump is 3.66 m long measured from the hurdle's near face, and 3.66 m wide, centred on your line: the pit is 0.5 m deep for the first 1.2 m and then slopes up evenly to the track's level at its far edge. There is no water in it. You must go over the hurdle: every time your pelvis or the centre of either foot crosses, going forward, the vertical plane through the middle of the top bar, that point must be higher than the bar's top (0.914 m), and your pelvis must also be between the two ends of the bar; otherwise you fail. You may go over the hurdle in any manner: your hands and feet may touch it or stand on it. Once your pelvis is beyond that plane and until your whole body is beyond the pit's far edge, you fail if your pelvis is outside the pit's width or if any part of you touches the track's surface beside the pit (a contact less than 0.05 m below the track's level; the pit's side walls below that may be touched). You may land in the pit or beyond it, and any part of you may touch the pit's floor and walls and the track before and beyond the pit: there is no fall rule. You succeed when your whole body is beyond the pit's far edge and you then stand for 1.0 s without a break: only your feet on the ground, your torso within 20.0 degrees of vertical, your pelvis moving no faster than 0.35 m/s. The attempt ends after 60 s of robot time. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The referee's
+success call is an event: once it is made at some control step, the attempt is a success. It is never shown to the
+agent and does not end the attempt: the physics goes on until the agent's `/finish`, the attempt's time limit, or the
+end of the agent's time (2 h), and nothing after the call undoes it. A failure the referee calls before any
+success (a foul, a fall, the physics diverging) ends the attempt at once with 0. Reaching the time limit or the end of
+the session without a success call scores 0. The agent has 5 resets, each starting a new attempt from the
+frozen start; only the last attempt (the one after the last reset) is graded, and a success in an earlier attempt does
+not count. A simulator error raised by the agent's own call ends the attempt with 0. An attempt that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,13 +54,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | parkour-apparatus-balance |
-| Rule book | World Athletics Competition and Technical Rules 2024, Technical Rule 23 (steeplechase races): the men's hurdle 0.914 m high with a top bar 0.127 m square; the hurdle at the water jump 3.66 m wide and fixed; the water jump 3.66 m long including the hurdle, the pit 3.66 m wide, 0.50 m deep at the hurdle for about 1.20 m, then a uniform slope up to the level of the track at the far end; each athlete shall go over each hurdle (in any manner) and over or through the water, and is disqualified for stepping to one side of the water jump or trailing a foot or leg below the horizontal plane of the top of the hurdle at the instant of clearance; deviations: TR 23 (the race): one water jump from a 10.0 m approach instead of a 3000 m race with 28 hurdle and 7 water jumps (a single action; the family is the water jump) · TR 23 (the water jump): the water itself is not simulated; the pit is dry and its floor is the hard, sloping bottom (the simulator has no free-surface water; what remains is the pit's real geometry) · TR 23 (clearance): "foot or leg below the top of the hurdle" is judged on the centres of the two feet and the pelvis where each crosses the vertical plane through the middle of the hurdle's top bar (three points a referee can measure on a robot) · the finish: with no race to run on to, the attempt ends when the whole body is beyond the pit's far edge and the robot has stood on its feet for 1.0 s |
-| Stages | hurdle → out of the water jump → stand |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 6000 control steps (60 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

@@ -1,11 +1,11 @@
-"""A toy eai-standard/2.2 sim service: the smallest complete adapter of the shared layer (rcb_limited.py), on a numpy
+"""A toy sim service: the smallest complete adapter of the shared layer (rcb_limited.py), on a numpy
 "simulator" (a 3-joint point robot pushing a block on a plane), CPU only. selftest.py drives it to test the layer's crash
-recovery; it is also the reference for how a benchmark's environment/sim/server.py uses Episode (docs/protocol/standard_mode.md)
-and agent-ended episodes (agent_end/rcb_agent_end.py, PROTOCOL §3): with RCB_AGENT_END=1 a success is only recorded
-(never shown, never the end), POST /finish ends the episode (finish("finished")) and the end state is judged; the layer
-enforces RCB_STEP_LIMIT (finish("step_limit")). Without RCB_AGENT_END a success ends the episode (reason "success").
+recovery; it is also the reference for how a benchmark's environment/sim/server.py uses Episode (docs/protocol/eai-standard.md)
+and agent-ended episodes (agent_end/rcb_agent_end.py, docs/protocol/tasks.md#modes): a success is only recorded (never shown, never the
+end), POST /finish ends the episode (finish("finished")) and the end state is judged; the layer enforces RCB_STEP_LIMIT
+(finish("step_limit")).
 
-Env: RCB_DATA (record dir), RCB_AGENT_END / RCB_STEP_LIMIT (rcb_agent_end.py), RCB_TOY_RESUME (exact | approx), RCB_TOY_MODE (inprocess: the live episode's verdict, written in-process, as
+Env: RCB_DATA (record dir), RCB_STEP_LIMIT (rcb_agent_end.py), RCB_TOY_RESUME (exact | approx), RCB_TOY_MODE (inprocess: the live episode's verdict, written in-process, as
 RoboWits | dump: dump the episode and exit on SIGUSR1, as RoboLab / BEHAVIOR / RoboPaint), test knobs RCB_TOY_STEP_S (wall
 time per control step), RCB_TOY_PERTURB (added to the joints at every step after a restart: a nondeterministic simulator),
 RCB_TOY_HANG_S (the scene build hangs that long on the first start), RCB_TOY_REFUSE (a reason: the service refuses the
@@ -65,7 +65,7 @@ S = Toy()
 EP.scene_built()
 LAYOUT = [f"j{i}" for i in range(N)]
 SPEC = {
-    "protocol": L.PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "toy (numpy)", "robot": "toy-3dof", "task_text": "push the block to x > 0.9",
+    "protocol": L.PROTOCOL, "simulator": "toy (numpy)", "robot": "toy-3dof", "task_text": "push the block to x > 0.9",
     "control_hz": CTRL_HZ, "physics_substeps": 1, "max_chunk_s": 10.0,
     "cameras": {"top": {"rgb": True, "depth": True, "mounted": "static", "resolution": [8, 8], "intrinsic_cv": [[8, 0, 4], [0, 8, 4], [0, 0, 1]],
                         "mount": {"type": "static", "extrinsic_cv": np.eye(4)[:3].tolist(), "cam2world_gl": np.eye(4).tolist()}}},
@@ -111,18 +111,14 @@ def finish(reason: str) -> None:
     if E["done"]:
         return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
-    if AE.ENABLED:                                      # the end state is judged (no settle window in this toy)
-        E["success"] = reason in AE.END_STATE_REASONS and S.success()
+    E["success"] = reason in AE.END_STATE_REASONS and S.success()   # the end state is judged (no settle window here)
     EP.log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"])})
     write_final()
 
 
 def ctrl_step(a, rec) -> bool:
     S.step(a); stop = EP.journal(a); rec.tick()
-    if AE.ENABLED:                                      # agent-ended: the success is only recorded
-        AE.hidden_success(E, S.success(), EP.log, ctrl_steps())
-    elif S.success() and not E["success"]:
-        E["success"] = True; finish("success")
+    AE.hidden_success(E, S.success(), EP.log, ctrl_steps())   # the success is only recorded
     return E["done"] or stop
 
 
@@ -171,7 +167,7 @@ def status() -> dict:
 
 def end_episode() -> None:
     """The collect hook's SIGUSR1: end the episode, then grade in-process (inprocess: the live episode's verdict, nothing
-    replayed; PROTOCOL H.4) or dump and exit (dump)."""
+    replayed; docs/protocol/invariants.md H.4) or dump and exit (dump)."""
     with LOCK:
         if not E["done"]:
             finish("timeout")
@@ -196,5 +192,5 @@ open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{L.PROTOCOL} toy sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
 AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=lambda req: {"ok": True, "op": req["op"]},
                   status=status, on_submit_error=lambda exc: finish("error"), log=EP.log, episode=EP, state_sha=S.state_sha,
-                  proprio=proprio_row, **({"finish": lambda: finish("finished"),
-                                           "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})), port=int(os.environ.get("RCB_TOY_PORT", "8000")))
+                  proprio=proprio_row, finish=lambda: finish("finished"),
+                  end_step_limit=lambda: finish("step_limit")), port=int(os.environ.get("RCB_TOY_PORT", "8000")))

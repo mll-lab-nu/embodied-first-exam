@@ -1,65 +1,40 @@
-# humanoidbench-manip-powerlift-i00-realtime
+# HumanoidBench · powerlift (realtime)
 
 | | |
 |---|---|
-| Benchmark | HumanoidBench |
-| Mode | realtime (`eai-standard/2.3`) |
-| Twin | `humanoidbench-manip-powerlift-i00-privileged` |
-| Simulator / robot | `humanoidbench` / `unitree-h1hand` |
-| Family / instance | `powerlift` / seed 0 |
-| Oracle | `none` — none known: no run has passed it, and published RL reaches 41% of the bar (paper 286, FastTD3 325, bar 800) with upstream's 104 kg dumbbell (53.7 kg since image 0.2.0); human review in PR #83 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 50 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §3) |
-| Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
+| Task ID | `humanoidbench-manip-powerlift-i00-realtime` |
+| Benchmark | [HumanoidBench](https://humanoid-bench.github.io/) (Sferrazza et al., 2024), upstream `carlosferrazza/humanoid-bench@cb11890` |
+| Robot | Unitree H1 humanoid with two Shadow dexterous hands, 61 position-controlled actuators (HumanoidBench `h1hand`) |
+| Mode | realtime, slowdown 1 |
+| Instance | `powerlift`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
 Lift the dumbbell off the floor to overhead and hold it there.
 
-Realtime mode (robot as a service on a clock that does not stop, `eai-standard/2.3`, PROTOCOL §3) of
-`humanoidbench-manip-powerlift-i00-privileged`: the same frozen instance and the same success rule as it and
-as `humanoidbench-manip-powerlift-i00-standard`, but time does not stop. Once an episode's clock starts (its
-first `submit`), the robot runs at 50 Hz in real time and holds its last servo targets while the agent thinks,
-so the agent drives it with a controller program of its own that streams targets through the client.
-HumanoidBench runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the sidecar for rendering;
-`environment/sim/rcb_realtime.py` runs the clock), which holds the reward, judges the episode, records every
-control step it ran, judges the episode as it runs and, after the verdict, renders its video from the recorded
-trajectory; the verifier grades the sidecar's record in a container of its own (`tests/Dockerfile`, no
-network).
+## Success criteria
+Pass mark: an episode return of at least 800, upstream's success bar, where the return is the sum of
+HumanoidBench's per-step `powerlift` reward over the episode. Each control step earns between 0 and 1, mostly from how
+close the dumbbell (53.7 kg) is to overhead height, about 2 m above the floor, and the rest from the robot standing
+upright with little actuator effort. An episode is at most 1,000 control steps (20 s at 50 Hz).
 
-Note: the head cameras see floor and horizon only; the dumbbell at the feet is out of their view.
-`room_camera` (the recording camera frozen at its starting pose) sees the robot and the dumbbell.
+Termination (the episode ends at once as a failure): the robot falls, its pelvis below 0.2 m.
 
-## Difficulty
-See `humanoidbench-manip-powerlift-i00-privileged`'s README; here the agent also has no state, no reward and
-no simulator of its own, and 50 resets instead of unlimited ones, as in
-`humanoidbench-manip-powerlift-i00-standard`. On top of that the robot does not wait: a model's turn takes
-seconds and the H1 falls within a few seconds of robot time without active balance, so the agent cannot steer
-it turn by turn. It has to write a controller that closes the loop at the control rate from proprioception,
-run it in the background, and improve it between episodes from what it observed.
+Graded: the live episode, judged by the simulator service as it runs; nothing is replayed. The clock does not stop:
+an episode starts paused at the frozen start, and from the agent's first `submit` one control step runs every 20 ms
+× S of wall time (slowdown S = 1) whether or not the agent sends anything; when the planned targets run out
+the last ones are held. The pass mark is judged as an event: once the episode's return reaches it at some control step, the episode
+is a success, even if a fall or another termination above ends it afterwards; a termination before the mark is
+reached scores 0. Reaching the mark neither ends the episode nor is shown to the agent. Otherwise the episode ends at
+the agent's `/finish`, at the end of its control steps, or when the agent's time (1 h) runs out, and is judged on
+the return reached by then. The agent has 50 resets, each starting a new, paused episode from the frozen start;
+only the last episode (the one after the last reset) is graded. After the agent's first command, a simulator error or
+a simulator crash inside a control step is the agent's 0; anything before the first command, a killed service, a
+failed resume or a reset that does not rebuild the scene is an infrastructure failure, not a score.
 
-## Reference solution
-None. Requiring one would cap the benchmark at what we can already solve, which systematically removes the
-interesting tasks. What replaces it (docs/protocol/README.md §4): the floor above (doing nothing cannot
-pass), the evidence that the task has a solution (`oracle_evidence` in task.toml), and a human reviewer.
-
-## Verification
-`success` = live success: the episode the sim service ran reached the pass mark at some step (HumanoidBench's own rule,
-judged on the live simulator as the episode ran: reaching it does not end the episode, and it still counts when a fall
-or another failure rule ends the episode afterwards), for the last episode; nothing is replayed to grade it (owner,
-2026-10-17, board 0151). The scene's start is checked against the frozen instance's recorded state when an episode
-begins (`instance_mismatch`, infrastructure). The trajectory records the servo targets the simulator applied at each
-control step (`trajectory_live.f64`, `trajectory.npz`), not the ones the agent submitted, so it reproduces the live run
-whatever the timing was (the video is rendered from it after the verdict); `ticks.f64` records each step's wall time and
-the call that planned it, `calls.jsonl` and `submitted.f64` every call and every row as sent, and `final.json` the
-clock's lag (`max_lag_s`, `stalls`) and the held and late steps. `tests/grade.py` reads `/data/final.json` and copies
-the evidence to `/logs/verifier/` (`replay.mp4`). After the agent's first command, a simulator error raised by a control
-step and a simulator crash inside a control step (a fatal signal) are the agent's 0; a kill, a crash outside a control
-step, anything before the first command, a failed resume and a reset that does not rebuild the scene are infrastructure
-(`infra_error = 1`; owner, 2026-10-17, docs/protocol/standard_mode.md). No oracle; human review in PR #83. `nop` scores
-0.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -70,12 +45,9 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| mode / sensors | realtime: head-camera RGB + joint angles and velocities (HumanoidBench's own `image` and `proprio` sensors), a pelvis IMU and a camera fixed in the room; no root pose, no dumbbell pose, no reward; 50 resets (a new episode from the frozen start each, paused until its first `submit`; only the last episode is graded) |
-| time | the episode's clock starts at its first `submit` and runs one control step every 0.02 s of wall time until the episode ends; `submit` writes a plan of future targets (from step `at`) and answers at once; the last target is held when the plan runs out |
-| action space | HumanoidBench's own: 61 normalised position targets, 50 Hz, streamed one row at a time or in chunks of up to 10 s |
-| knobs (compose env) | `RCB_SLOWDOWN` (1: real time, the official configuration; S: one control step every S x 0.02 s, results reported apart from S = 1), `RCB_RESET_BUDGET` (50: HumanoidBench's configuration, an exception to the mode's default of 0, PROTOCOL §2), `RCB_OBS_PROPRIO` (1), `RCB_OBS_IMU` (1), `RCB_OBS_ROOM_CAMERA` (1), `RCB_OBS_DEPTH` (0): the defaults are this task's configuration; a run that changes one is reported separately, and `episode.jsonl` records the `/spec` it ran under |
-| agent API | `environment/rcb_client.py` (the realtime client; its docstring is the reference); `instruction.md` lists the endpoints |
-| physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (tasks/humanoidbench/README.md, Physics). Also fixed here: **dumbbell mass**: upstream's plates have density="500" on geoms whose class sets mass="0", so it never applied and the dumbbell weighed 104 kg; it is 53.7 kg (`images/humanoidbench/upstream-fixes.patch`). |
+## License
+HumanoidBench (Sferrazza et al., 2024; <https://github.com/carlosferrazza/humanoid-bench>) is released under the MIT
+License, copyright (c) 2024 Robot Learning Lab, UC Berkeley. The image's notice is
+`images/humanoidbench/LICENSE.humanoid-bench`; this task's `rewards.json` carries upstream's code under that license.
+Robot models shipped with upstream: the Unitree H1 model (BSD 3-Clause, copyright Unitree Robotics) and, on the
+two-handed H1, the Shadow Hand model from MuJoCo Menagerie (Apache License 2.0). No non-commercial terms apply.

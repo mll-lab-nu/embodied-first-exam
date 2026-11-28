@@ -1,51 +1,42 @@
-# humanoidbench-loco-balance-hard-i00-standard
+# HumanoidBench · balance_hard (standard)
 
 | | |
 |---|---|
-| Benchmark | HumanoidBench |
-| Mode | standard (`eai-standard/2.1`) |
-| Twin | `humanoidbench-loco-balance-hard-i00-privileged` |
-| Simulator / robot | `humanoidbench` / `unitree-h1` |
-| Family / instance | `balance_hard` / seed 0 |
-| Oracle | `none` — none known: no run has passed it, and published RL reaches 31% of the bar (paper 57, FastTD3 244, bar 800) with upstream's mesh feet on MuJoCo 3.1.6 (box feet since image 0.2.0); human review in PR #9 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
+| Task ID | `humanoidbench-loco-balance-hard-i00-standard` |
+| Benchmark | [HumanoidBench](https://humanoid-bench.github.io/) (Sferrazza et al., 2024), upstream `carlosferrazza/humanoid-bench@cb11890` |
+| Robot | Unitree H1 humanoid, 19 position-controlled actuators (HumanoidBench `h1`) |
+| Mode | standard |
+| Instance | `balance_hard`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
 Stand on the balance board and keep your balance on it, upright and still.
 
-Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-loco-balance-hard-i00-privileged`:
-the same frozen instance and the same success rule. HumanoidBench runs in the `sim` sidecar
-(`environment/docker-compose.yaml`, GPU on the sidecar for rendering), which holds the reward, judges the
-episode as it runs, records it and, after the verdict, renders its video from the recorded trajectory; the
-verifier grades the sidecar's record in a container of its own (`tests/Dockerfile`, no network).
+## Success criteria
+Pass mark: an episode return of at least 800, upstream's success bar, where the return is the sum of
+HumanoidBench's per-step `balance_hard` reward over the episode. Each control step earns between 0 and 1, more the
+closer the robot is to standing tall on the board, which rests on a free-rolling sphere: head at full standing height
+above the board, torso upright, no horizontal motion and little actuator effort. An episode is at most 1,000
+control steps (20 s at 50 Hz).
 
-Note: the head cameras see floor and horizon only; the board and the roller under the feet never enter their
-view. `room_camera` (the recording camera frozen at its starting pose) sees the robot on the board from
-outside.
+Terminations (each ends the episode at once as a failure):
+- the robot falls, its pelvis below 0.8 m;
+- anything other than the sphere touches the floor (a foot or the board included);
+- the sphere touches anything other than the floor and the board.
 
-## Difficulty
-See `humanoidbench-loco-balance-hard-i00-privileged`'s README; here the agent also has no state, no reward and
-no simulator of its own, and 50 resets instead of unlimited ones: every try is a real episode on the one
-robot.
+Graded: the live episode, judged by the simulator service as it runs; nothing is replayed. The pass mark is judged as
+an event: once the episode's return reaches it at some control step, the episode is a success, even if a fall or
+another termination above ends it afterwards; a termination before the mark is reached scores 0. Reaching the mark
+neither ends the episode nor is shown to the agent. Otherwise the episode ends at the agent's `/finish`, at the end of
+its control steps, or when the agent's time (1 h) runs out, and is judged on the return reached by then. The
+agent has 50 resets, each starting a new episode from the frozen start; only the last episode (the one after the
+last reset) is graded. A simulator error raised by the agent's own call ends the episode with 0. An episode that does
+not start from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a
+score.
 
-## Reference solution
-None. Requiring one would cap the benchmark at what we can already solve, which systematically removes the
-interesting tasks. What replaces it (docs/protocol/README.md §4): the floor above (doing nothing cannot
-pass), the evidence that the task has a solution (`oracle_evidence` in task.toml), and a human reviewer.
-
-## Verification
-`success` = live success: the episode the sim service ran reached the pass mark at some step (HumanoidBench's own rule,
-judged on the live simulator as the episode ran: reaching it does not end the episode, and it still counts when a fall
-or another failure rule ends the episode afterwards), for the last episode (the one after the last reset; earlier
-episodes are in `trajectory_live.f64` and `episode.jsonl`, not graded). Nothing is replayed to grade it (owner,
-2026-10-17). The scene's start is checked against the frozen instance's recorded state when an episode begins (a
-mismatch is `instance_mismatch`, infrastructure). `tests/grade.py` reads `/data/final.json` and copies the evidence to
-`/logs/verifier/`: `trajectory.npz` (the deliverable, replayable) and `replay.mp4`, rendered from it in one pass after
-the verdict (a lost video never changes the verdict). No oracle; human review in PR #9. `nop` scores 0.
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -56,11 +47,9 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| mode / sensors | standard: head-camera RGB + joint angles and velocities (HumanoidBench's own `image` and `proprio` sensors), a pelvis IMU and a camera fixed in the room; no root pose, no board or roller pose, no reward; 50 resets (a new episode from the frozen start each; only the last episode is graded) |
-| action space | HumanoidBench's own: 19 normalised position targets, 50 Hz, sent in chunks |
-| knobs (compose env) | `RCB_RESET_BUDGET` (50: HumanoidBench's standard configuration, tasks/humanoidbench/README.md), `RCB_OBS_PROPRIO` (1), `RCB_OBS_IMU` (1), `RCB_OBS_ROOM_CAMERA` (1), `RCB_OBS_DEPTH` (0): the defaults are the standard configuration; a run that changes one (`RCB_RESET_BUDGET=0 harbor run ...`: one episode, no reset) is reported separately, and `episode.jsonl` records the `/spec` it ran under |
-| agent API | `environment/rcb_client.py` (its docstring is the reference); `instruction.md` lists the endpoints |
-| physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (tasks/humanoidbench/README.md, Physics). Also fixed here: **box feet**: a mesh foot on a box gets one contact point, which on 3.1.6 reported wrong depths (a robot with every joint locked slid off a stair tread) and on 3.3.7 never comes to rest; each foot is four boxes that follow the mesh's hull, the sole exactly (`images/humanoidbench/box_feet.py`). |
+## License
+HumanoidBench (Sferrazza et al., 2024; <https://github.com/carlosferrazza/humanoid-bench>) is released under the MIT
+License, copyright (c) 2024 Robot Learning Lab, UC Berkeley. The image's notice is
+`images/humanoidbench/LICENSE.humanoid-bench`; this task's `rewards.json` carries upstream's code under that license.
+Robot models shipped with upstream: the Unitree H1 model (BSD 3-Clause, copyright Unitree Robotics) and, on the
+two-handed H1, the Shadow Hand model from MuJoCo Menagerie (Apache License 2.0). No non-commercial terms apply.

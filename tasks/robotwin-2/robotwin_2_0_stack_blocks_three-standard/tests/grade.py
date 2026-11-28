@@ -1,7 +1,7 @@
 """Standard-mode verifier: reads what the sim service (which the agent could not touch) wrote:
 /data/final.json (the live episode's verdict), /data/trajectory.npz, /data/replay.mp4. success = the live episode's
 success: RoboTwin's check_success on the episode the service ran, judged by the service after the agent's container
-was stopped (final.json "graded_by": "live"); nothing is replayed (docs/protocol/README.md H.4). Numeric-only reward.json.
+was stopped (final.json "graded_by": "live"); nothing is replayed (docs/protocol/invariants.md H.4). Numeric-only reward.json.
 
 infra_error = 1 means there is no verdict on the agent: final.json is missing or unreadable, the service never wrote
 the live verdict (the collect hook gave up first, or the service could not record the episode's end: finalize_error),
@@ -18,7 +18,7 @@ def _startups():
     try: return sum(1 for _ in open(f"{DATA}/startups.jsonl"))
     except OSError: return 0
 def agent_end_fields(d):
-    """An agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used):
+    """An agent-ended episode's record (docs/protocol/tasks.md#modes: final.json success_signal / ended_by, step_limit / steps_used):
     evidence only, never the verdict; the runner reads ended_session_end."""
     if d.get("success_signal") != "hidden": return {}
     by = d.get("ended_by")
@@ -39,7 +39,7 @@ def main():
         infra = (bool(d.get("infra_error")) or bool(d.get("finalize_error")) or mismatch or reason == "sim_crashed"
                  or reason.startswith("resume_failed") or (not verdict and reason != "sim_crashed_on_call"))
         live = bool(d.get("success"))   # the verdict: final.json `success` decides (live_success is reported beside it)
-        ok = live and verdict and not infra and reason != "error"   # PROTOCOL §4: a simulator error is the agent's 0
+        ok = live and verdict and not infra and reason != "error"   # docs/protocol/tasks.md#grading: a simulator error is the agent's 0
         out = {"success": int(ok), "live_success": int(bool(d.get("live_success", d.get("success")))), "graded_by_live": int(verdict), "replays": 0,
                "finalized": int(bool(d.get("finalized"))), "missing_log": 0,
                "n_actions": int(d.get("n_actions") or 0), "sim_steps": int(d.get("physics_steps") or 0), "steps": int(d.get("steps") or 0),

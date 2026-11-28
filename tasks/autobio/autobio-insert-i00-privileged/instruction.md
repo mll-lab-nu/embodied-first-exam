@@ -4,9 +4,9 @@
 Move the 50 mL tube to the other rack, into the row farther from the robot, at the end next to the first rack.
 
 ## Goal
-Success: the tube stands upright in that slot, all the way down. The episode ends the moment that is reached. A physics
-warning (an unstable simulation, for instance after the robot was driven hard into something) ends the episode at once,
-as a failure.
+Success: the tube is in that slot, all the way down. The episode ends the moment that is reached. A physics warning (an
+unstable simulation, for instance after the robot was driven hard into something) ends the episode at once, as a
+failure.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`. It is replayed open-loop
 from the same initial state and scores 1 if its episode ends in success. Leave the script that produced it at

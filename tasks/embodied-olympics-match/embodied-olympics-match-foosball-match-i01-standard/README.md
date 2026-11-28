@@ -1,39 +1,40 @@
-# embodied-olympics-match-foosball-match-i01-standard
+# Embodied Olympics · foosball, game against level 3 (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Match |
-| Mode | standard (`eai-standard/2.1+match/1.0`) |
-| Twin | `embodied-olympics-match-foosball-match-i01-privileged` |
-| Simulator / robot | `mujoco` / `foosball-rods` |
-| Family / instance | `foosball_match` / seed 7 (allowed seeds: [7, 303, 313]; PROTOCOL §2) |
-| Oracle | `partial` — the hardest level our reference player wins (the rule: each sport at the hardest level the oracle beats): at level 4 (80 ms reactions) it lost 0:5 on this seed on vanilla Harbor and wins 10 of 100 in the screening; at level 3 (90 ms, 21 of 100 in the screening, docs/screening/foosball.md) it won this seed 5:4 on vanilla Harbor 0.23.0 (2026-10-16, an RTX 4090 workstation; seeds 7-9 tried: 1 won). Realtime play varies run to run, hence partial |
-| Agent time budget | 14400 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0` |
+| Task ID | `embodied-olympics-match-foosball-match-i01-standard` |
+| Benchmark | [Embodied Olympics - Match](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@0d7f680` |
+| Robot | The four rods of one side of a foosball table |
+| Mode | standard |
+| Opponent | Scripted computer team at level 3 of 4, playing on the true ball position a short reaction delay ago, with the same rods |
+| Instance | `foosball_match`, seed 7 |
+| Time limit | 4 h |
+| Reference solution | Pipeline check only |
 
 ## Task
 Win a game of foosball to 5 goals against the computer team.
 
-Foosball against the scripted opponent (level 3), program play: table football on a physical table: you drive the four motorised rods of one team (goalkeeper rod with 3 figures, 2-rod 2, 5-rod 5, 3-rod 3) by slide and angle targets that the motors follow along a speed- and acceleration-limited path, and see the table only through an overhead camera; one game to 5 goals under the ITSF rules (opening sequence, possession time limits per rod, no spinning); in the `match` format the other team is a scripted computer team, in the `duel` format another player.
+## Success criteria
+The instance: the agent's four rods (seat A) against the computer team at level 3, seed 7.
+One game of foosball: the first to 5 goals wins. The game also ends after 240 s of play (frozen time does not count) or 40 rallies; then the player with more goals wins; at equal goals, the player who scored the last goal; if nobody scored, the player with the ball less time in its own half; as a last resort, the player who did not have the first kick-off. There are no draws. The world runs in lockstep: it advances only during the agent's waits and up to the step at which its
+action takes effect.
 
-## Difficulty
-Frozen development instance: seed 7, level 3, in lockstep (its realtime twin: S = 20). Not one of
-the sport's official (hidden) seeds, so results here are previews, not official Embodied Olympics results.
+Success: the game ends by the rules (`match_over`) with the agent's side as the winner. The agent's side loses the
+game, a valid 0, by any of these forfeits:
+- `no_show`: no `game start` within 1800 s of real time after the match service starts, or the session ends before
+  the start;
+- `ready_timeout`: no `game ready` review within 300 s of real time after a rally, even when ahead;
+- `abandoned`: the agent's session ends while the game is in play.
 
-## Reference solution
-`solution/`: our camera-only reference player through the same HTTP interface. the hardest level our reference player wins (the rule: each sport at the hardest level the oracle beats): at level 4 (80 ms reactions) it lost 0:5 on this seed on vanilla Harbor and wins 10 of 100 in the screening; at level 3 (90 ms, 21 of 100 in the screening, docs/screening/foosball.md) it won this seed 5:4 on vanilla Harbor 0.23.0 (2026-10-16, an RTX 4090 workstation; seeds 7-9 tried: 1 won). Realtime play varies run to run, hence partial.
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
 
-## Verification
-Separate sandbox, no network. The match is graded live (owner, 2026-10-17): the sim service records the
-match's scores, winner and reason as it plays it and nothing replays it to grade it (`final.json` `graded_by` live,
-`replays` 0; the replay video is drawn after the verdict). The verifier (`tests/grade.py`, our core's grader) applies
-the validity rule
-(technical failures void the trial, a player's own problems are a valid loss), and writes reward.json; success = a
-valid, finished match that the agent won. `tests/fexam_reward.py` adds the hub's fields (`infra_error`, `realtime`,
-`slowdown`, `opponent_level`).
+Graded: the live match, as the trusted match service recorded it while it was played; nothing is replayed. There is
+one match and no reset, and the agent cannot end it with `/finish`: the match's rules end it. A technical failure of
+the match service (a crash, an error in its bookkeeping, rendering or metering) voids the trial as an infrastructure
+failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -43,11 +44,12 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
+## Others
+Exported by the Embodied Olympics task exporter from its task `roboolympics/foosball-match-wallclock-program-standard` (upstream commit
+`d71e9f642ead`). The files changed here after the export are listed for this task in
+`ci_checks/benchmarks/embodied-olympics-match/exported.toml`.
 
-### Notes
-Source: Embodied Olympics task `foosball-match-wallclock-program-standard`, revision `foosball-program-v2+core-0.2`. The rules, the referee, the scripted
-opponent, the observation, the review between points and the grader are ours, unchanged; only the seat is
-unmetered (Harbor records the model's usage) and the instance is frozen.
-
-Standard twin of `embodied-olympics-match-foosball-match-i01-realtime`: the same export, the world in lockstep (`environment/sim/core/lockstep.py`; `eai-standard/2.1+match/1.0` in tasks/embodied-olympics-match/README.md).
+## License
+Embodied Olympics ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics), a private repository) is released
+under the MIT License; its exported match services, referees, scripted opponents and graders inside this task are MIT
+too. The simulator is MuJoCo (Apache License 2.0). No non-commercial terms apply.

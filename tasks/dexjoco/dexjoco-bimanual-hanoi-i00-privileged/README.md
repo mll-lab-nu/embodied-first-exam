@@ -1,46 +1,47 @@
-# dexjoco-bimanual-hanoi-i00-privileged
+# DexJoCo · bimanual_hanoi (privileged)
 
 | | |
 |---|---|
-| Benchmark | DexJoCo |
+| Task ID | `dexjoco-bimanual-hanoi-i00-privileged` |
+| Benchmark | [DexJoCo](https://dexjoco.github.io/) (Wang et al., 2026), upstream `brave-eai/dexjoco@8d23b0f` |
+| Robot | Two Franka Emika Panda arms side by side, each with a 16-DoF Wonik Allegro hand |
 | Mode | privileged |
-| Twin | `dexjoco-bimanual-hanoi-i00-standard` |
-| Simulator / robot | `dexjoco` / `franka-allegro-bimanual` |
-| Family / instance | `bimanual_hanoi` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
+| Instance | `bimanual_hanoi`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-DexJoCo `bimanual_hanoi` (two Franka Panda arms, each with a 16-DoF Allegro hand): Stack all three disks on the post on the right arm's side, as in a Tower of Hanoi: the large disk at the bottom, then the medium one, then the small one on top.
-Privileged mode: the agent works in the simulator's container with live object poses, unlimited resets and thin motion
-primitives, and hands in one trajectory replayed open-loop from the frozen instance.
+Stack all three disks on the post on the right arm's side, as in a Tower of Hanoi: the large disk at the bottom, then
+the medium one, then the small one on top.
 
-## Difficulty
-First-pass rating: medium. Dexterous manipulation with two 16-DoF hands on two arms (46 action values per control step);
-the primitives only move tcp and hand-joint targets, so grasping, pressing and every other skill is the agent's. The
-reference (the human teleoperator's demonstration) takes 1085 control steps (21.7 s at 50 Hz).
+## Success criteria
+Each disk belongs to the post (A, B or C; C is on the right arm's side) whose axis its centre is nearest horizontally,
+if it is within 0.04 m of it. A disk farther from every post is on the table when its centre is at most 0.06 m above
+the top of the base, else in the air. A disk is at rest when the norm of its six free-joint velocities is at most 0.35.
+A disk is seated when its centre is within 0.04 m of its post's axis horizontally and within 0.012 m of the height it
+has in a stack resting on the base.
 
-## Reference solution
-`solution/oracle_trajectory.npz` = the human demonstration's own actions, rounded to float32 (the standard client's
-precision; the rounded rows still succeed) and replayed from the frozen instance until the episode ends in success
-(1085 rows). The demonstration is public (DexJoCo-Datasets-Raw on Hugging Face), so agent egress is
-limited to the model APIs.
+Success: for 20 consecutive control steps (0.4 s), at the end of each step, post C holds the large, the medium and the
+small disk in that order from the bottom up, posts A and B are empty, and all three disks are seated and at rest.
 
-## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.npz`, once in a fresh process in the verifier's own
-sandbox (no network); pass iff the episode ends in success (`tests/grade.py`); plus
-`/logs/verifier/replay.mp4`, rendered after the verdict is written. A rebuilt instance that does not match its recorded
-hash (the image no longer rebuilds the scene) replays nothing and gives no verdict: `instance_mismatch`, `grader_error`
-and `infra_error` = 1, not the agent's 0.
-A file that is not a readable trajectory (not an npz, no `task` / `actions`, a wrong shape, NaN) or has more than
-50,000 rows scores 0 as `bad_trajectory`: the cap keeps a replay of the slowest family well inside the verifier's
-3600 s. A verifier that runs fewer than 4 OpenBLAS threads (fewer than 4 CPUs visible to it) replays
-nothing and gives no verdict: `too_few_cpus`, `grader_error` and `infra_error` = 1, not the agent's 0.
-Oracle: success after 1085 control steps.
+Task failure (ends the episode, scoring 0), once the same one has lasted 10 consecutive control steps: a larger disk
+above a smaller one on a post whose disks are all seated and at rest; or, with all three disks at rest, a disk on the
+table.
 
-## Resources
-Caps per container (PROTOCOL §6).
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory(...)` writes it: this task's name (`bimanual_hanoi`) and at
+most 50,000 action rows of 46 finite values, one row per control step (50 Hz). After the agent's session the
+verifier replays it once, open-loop, from its own copy of the frozen start (`tests/instance.npz`), in a fresh process
+of a separate container without network. As in DexJoCo's own evaluation, the replay ends at the first control step on
+which the success check above passes or a task failure above happens; rows after that step are not run. The task is
+passed if the replay ends in success; a replay whose rows run out before that scores 0. A missing file scores 0, and so
+does a file for another task or one that is not such an array (not an npz, pickled or object arrays, no `task` or
+`actions` entry, a wrong number of columns, NaN or infinite values, more than 50,000 rows, a row with a zero tcp
+quaternion). Only the trajectory is scored (`gen.py` is not). A start that does not rebuild to the instance's recorded
+state hash, a verifier that runs fewer than 4 OpenBLAS threads, or an error inside the grader is an infrastructure
+failure, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -49,18 +50,16 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | DexJoCo @ 8d23b0f (brave-eai/dexjoco, MIT) on MuJoCo 3.4.0; CPU physics, OSMesa rendering, no GPU |
-| Instance | the initial state of the human demonstration `hanoi_demo_10_2026-03-13_15-45-06_925668` (DexJoCo-Datasets-Raw), restored with DexJoCo's own state restorer; instance sha `93165d7fd0c8813c` |
-| Resources | 4 CPUs, 8 GB, no GPU; `OPENBLAS_NUM_THREADS=4` in the agent's container and the verifier's (the simulation's result depends on the thread count below 4: tasks/dexjoco/README.md). The 4 CPUs must be visible to the container (its cpuset / affinity; a `cpus:` quota does not matter): OpenBLAS runs no more threads than that |
+## Others
+The simulation repeats exactly only for one OpenBLAS thread count (DexJoCo's controller does its linear algebra in
+numpy): every container that runs it sets `OPENBLAS_NUM_THREADS=4` and needs at least 4 CPUs in its CPU affinity (a
+cpuset or `taskset` narrows it; a CPU quota does not). A grading process that runs fewer than 4 OpenBLAS threads gives
+no verdict (`too_few_cpus`, an infrastructure failure).
 
-### Tooling notes
-DexJoCo's reset samples object poses from the global RNG and its state restorer edits the MuJoCo model (table height,
-fixed bodies), so `instance.npz` stores the full physics state (`mjSTATE_INTEGRATION`), the mocap targets, the controls,
-every numeric model array a task can change, and the env's Python-side task state. Its per-step camera rendering,
-real-time sleep, episode cap and hanoi's wall-clock auto-reset are disabled in the tooling (`rcb_dexjoco.py`).
-
-### Provenance
-Generated from the frozen instance (`environment/instance.npz`), restored from DexJoCo's demonstration of the task.
+## License
+DexJoCo ([brave-eai/dexjoco](https://github.com/brave-eai/dexjoco) @ `8d23b0f`; Wang et al., 2026, "DexJoCo: A
+Benchmark and Toolkit for Task-Oriented Dexterous Manipulation on MuJoCo", arXiv:2605.16257) is released under the MIT
+License (copyright 2026 Dexjoco contributors). Bundled robot models keep their own terms: the Franka Emika Panda model
+(Apache License 2.0) and the Wonik Allegro hand model (BSD 2-Clause). Upstream's teleoperation stack includes GeoRT
+under a **non-commercial** license (CC BY-NC); it is removed from the task image and not used. The simulator is MuJoCo
+3.4.0 (Apache License 2.0).

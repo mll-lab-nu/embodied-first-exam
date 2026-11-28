@@ -1,32 +1,47 @@
-# myosuite-table-tennis-i00-realtime
+# MyoSuite · table_tennis (realtime)
 
 | | |
 |---|---|
-| Benchmark | MyoSuite |
-| Mode | realtime (`eai-standard/2.3`) |
-| Twin | `myosuite-table-tennis-i00-privileged` |
-| Simulator / robot | `myosuite` / `myoarm-torso` |
-| Family / instance | `table_tennis` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `none` — a successful episode of the privileged twin (GPT-6 Luna xhigh, trial `myosuite-table-tennis-i00-privil__SMNgbHk`, 82 rows) planned from step 0 in one `submit(..., at=0)` at S = 1 succeeds live and in the fresh replay, with no stall (2026-10-14); the standard twin's evidence holds for the same instance and rule; human review in PR #201 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 10 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §3) |
-| Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
+| Task ID | `myosuite-table-tennis-i00-realtime` |
+| Benchmark | [MyoSuite](https://github.com/MyoHub/myosuite) (Caggiano et al., 2022), upstream `MyoHub/myosuite@5635e1a` |
+| Robot | MyoArm with torso: MyoSuite's table tennis player, 273 muscles and two pelvis slides, holding a paddle |
+| Mode | realtime, slowdown 1 |
+| Instance | `table_tennis`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-MyoSuite `myoChallengeTableTennisP1-v0` (MyoArm with torso, 273 muscles) on the same frozen instance as `myosuite-table-tennis-i00-privileged`: Return the served ball: after it bounces once on your half, hit it once with the paddle so that it lands on the opponent's half, with no second paddle touch and no second bounce on your half.
-You stand at a table-tennis table holding a paddle in the right hand; a ball is served toward you from the far side. Realtime mode (eai-standard/2.3, slowdown S = 1): once an episode's clock starts the body and the ball move whatever the agent does; it drives the body through the realtime client from a program of its own, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
+Return the served ball: hit it once with the paddle so that it lands on the opponent's half, with no second paddle
+touch and at most one bounce on your half before that.
 
-## Difficulty
-Same instance and success rule as the standard twin (first-pass rating: hard, harder here). The scene is dynamic (the ball is served with an initial velocity): the serve reaches you and the rally is decided within about 1.2 s of robot time after the clock starts (an episode that does nothing ends after 121 control steps), so nothing can be steered call by call; the agent has to plan or stream the muscle commands from a program, and learn the body and the serve from 11 real attempts.
+## Success criteria
+Success event (MyoChallenge 2025 `myoChallengeTableTennisP1-v0`, its contact test on the ball): the ball touches the
+opponent's half of the table after it has touched the paddle, and before that:
+- the ball did not touch the paddle again after it had left the paddle;
+- the ball touched the robot's own half only in one bounce, at most two control steps long.
 
-## Reference solution
-None in the repository. Solvability evidence: a successful episode of the privileged twin (82 rows, GPT-6 Luna xhigh) planned from step 0 through this service at S = 1 succeeded live and in the fresh replay, with no stall (2026-10-14).
+A bounce on the robot's own half before the hit is not required. Contacts with the net or anything else are not
+checked.
 
-## Verification
-The sim service (`environment/sim/rcb_realtime.py` + `rcb_service.py`, the shared eai-standard/2.3 layer, with `environment/sim/server.py`, MyoSuite's adapter) judges the episode live and records every control step it ran (`trajectory_live.f64`), after checking at the episode's start that the scene is the frozen instance (its recorded state hash; else `instance_mismatch`, an infrastructure failure); after the agent's time the collect hook stops the agent's programs and signals the service, which writes the live episode's verdict to `final.json` (`graded_by` = `live`; nothing is replayed to grade it) and then renders `replay.mp4` from the trajectory, which decides nothing; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded. The clock's record (`stalls`, `max_lag_s`, ...) is copied into `reward.json` and decides nothing. `nop`: the episode never starts (its clock starts at the first submit), reward 0.
+Failure (ends the episode with 0): 3 s of simulated time pass without the event, the ball is below 0.3 m, or the same
+contact test finds the rally lost: a second paddle touch, a second bounce on the robot's half (or a first one longer
+than two control steps), or the ball on the opponent's half without a paddle touch. The episode ends at the control
+step this happens.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The success event does not end the episode. Once it has happened the task is passed, even if a failure above ends the
+episode later. Before it, a failure ends the episode with 0.
+
+Graded: the live episode, judged by the simulator service; nothing is replayed. The clock does not stop: an episode
+starts paused at the frozen start, and from the agent's first `submit` one control step runs every 10 ms × S of wall
+time (slowdown S = 1) whether or not the agent sends anything; when the planned rows run out, the last row is
+held. No success signal is shown to the agent. The episode ends at the agent's `/finish`, at a failure above, or when
+the agent's time (1 h) runs out. Resets granted: 10. A reset starts a new episode from the frozen start;
+only the episode running at the end is graded. After the agent's first command, a simulator error or a simulator crash
+inside a control step is the agent's 0; anything before the first command, a killed service, a failed resume or a
+reset that does not rebuild the scene is an infrastructure failure, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -37,15 +52,9 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any NVIDIA GPU with EGL (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
-| Slowdown | S = 1 (`RCB_SLOWDOWN`'s default): measured RTF 2.1-2.7 (2026-10-14, an RTX 4090 workstation (32 cores, load 30-60), the service capped at 4 CPUs: 2.08 with the realtime service's clock flat out (RCB_SLOWDOWN = 0.01, 11 episodes, 13.3 s of robot time), 2.6-2.7 for the bare physics; S = ceil(1.5 / 2.08) = 1. At S = 1 a controller at the control rate with a camera image every 0.25 s ran 11 episodes with no stall (largest lag 0.23 s), and an EGL frame takes 5 ms (an OSMesa one 1.3 s)) |
-| Service | the realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics (`rcb_realtime.py`, `rcb_service.py`, unchanged) with `server.py`, which implements `rcb_service.Sim` on `rcb_myosuite.Session` (the standard twin's scene, action and success rule); cameras `topview`, `default`, `close_up`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat` (640 x 480, EGL on the GPU) |
-| Resources | 4 CPUs and a GPU for rendering (the physics is on the CPU) |
-| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance, paused; only the last episode is graded, when the agent sends `POST /finish` or its session ends (a success ends nothing); results under another budget or slowdown are reported separately |
-
-### Provenance
-The frozen instance (`environment/sim/instance.npz`) and its scene facts were made at generation time; the realtime
-service layer is the shared one (`embodied_first_exam/standard/realtime/`); see `tasks/myosuite/README.md`, "Realtime".
+## License
+MyoSuite ([MyoHub/myosuite](https://github.com/MyoHub/myosuite), version 2.12.2, tag `v2.12.2` = `5635e1a`) is
+released under the Apache License 2.0, as are the models it bundles (MyoSim, the MPL prosthetic arm, the object,
+furniture and YCB models). The MyoDex reference motions (the `dex_*` families) derive from the GRAB motion-capture
+dataset; MyoSuite asks their users to comply with GRAB's licence, which allows non-commercial scientific research
+only. The simulator is MuJoCo (Apache License 2.0).

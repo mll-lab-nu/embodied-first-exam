@@ -4,9 +4,9 @@
 Pick up the 50 mL tube from the rack by its cap and lift it more than a hand's width.
 
 ## Goal
-Success: the gripper holds the tube by its cap and has lifted it more than a hand's width. The episode ends the moment
-that is reached. A physics warning (an unstable simulation, for instance after the robot was driven hard into something)
-ends the episode at once, as a failure.
+Success: the tube, touched at its cap by the gripper, has been lifted more than a hand's width. The episode ends the
+moment that is reached. A physics warning (an unstable simulation, for instance after the robot was driven hard into
+something) ends the episode at once, as a failure.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`. It is replayed open-loop
 from the same initial state and scores 1 if its episode ends in success. Leave the script that produced it at

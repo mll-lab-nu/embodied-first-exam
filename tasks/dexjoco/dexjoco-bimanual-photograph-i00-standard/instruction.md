@@ -5,10 +5,10 @@ Take a picture of the logo: hold the camera a short way in front of the logo and
 at it, and press its shutter button.
 
 ## Goal
-Success: the camera is held a short way in front of the logo and well above the table, pointed straight at it, while its
-shutter button is being pressed.
+Success: the camera is held a short way in front of the logo and well above the table, pointed straight at it, while
+something touches its shutter button.
 
-The episode counts the press of the shutter as it happens, with the camera placed and aimed so at that moment.
+The episode counts the touch on the shutter as it happens, with the camera placed and aimed so at that moment.
 
 When you are done, send `/finish` to end the episode and get it graded.
 
@@ -26,7 +26,7 @@ through its client or its MCP tools, as if it were real hardware: one live episo
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service starts)

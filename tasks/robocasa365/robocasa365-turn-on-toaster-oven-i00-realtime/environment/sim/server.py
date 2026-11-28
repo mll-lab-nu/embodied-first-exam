@@ -1,12 +1,12 @@
-"""eai-standard/2.3 sim service for RoboCasa365's realtime tasks -- the adapter behind the shared realtime layer
-(`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/README.md §3,
+"""eai-standard/3.0 sim service for RoboCasa365's realtime tasks -- the adapter behind the shared realtime layer
+(`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/tasks.md#modes,
 tasks/robocasa365/README.md "Realtime").
 
 The simulator-specific half only: `RoboCasa` implements rcb_service.Sim (the contract documented in rcb_service.py) for
 one frozen instance on the benchmark's own tooling module, casa_tool.Session -- the same scene, native controller
 command and success check (`_check_success`, twice per control step) as the standard twin's service
 (environment/sim/server_casa.py of `-standard`) and the privileged verifier. The verdict is the live episode's
-(docs/protocol/README.md H.4): live_verdict() adds the standard twin's rule that the scene was
+(docs/protocol/invariants.md H.4): live_verdict() adds the standard twin's rule that the scene was
 not solved at the episode's start, and start_sha (RCB_START_SHA, the frozen instance's starting state) is checked when
 the first episode begins; nothing is replayed to grade it, and the video is rendered from the trajectory afterwards. The protocol, the clock, the plan, the
 episode, crash recovery and the finalize are rcb_realtime.py's and rcb_service.py's, unchanged copies of the
@@ -21,18 +21,16 @@ object's pose, the scene layout or the success check.
 The episode (agent-ended, as every realtime task from eai-standard/3.0; below): it runs until the agent's POST /finish,
 max_control_steps (the privileged deliverable's cap, 3000 steps = 150 s of robot time; reason "step_limit"), the end of
 the agent's time, or a simulator error, and the state it ends in is graded, as the standard twin grades it; resets as
-RCB_RESET_BUDGET grants (0: one episode; rcb_service). Without RCB_AGENT_END (before 3.0) an episode ended at the first
-control step after which the success check held.
+RCB_RESET_BUDGET grants (0: one episode; rcb_service).
 
 Settings (environment/docker-compose.yaml): RCB_INSTANCE (the frozen instance), RCB_START_SHA (the state hash a fresh
 episode of it starts in, recorded when the task was built), RCB_MAX_CONTROL_STEPS (3000), RCB_DATA,
-RCB_RESET_BUDGET, RCB_WALL_CLOCK_S, RCB_SLOWDOWN (rcb_realtime / rcb_service), RCB_AGENT_END.
+RCB_RESET_BUDGET, RCB_WALL_CLOCK_S, RCB_SLOWDOWN (rcb_realtime / rcb_service).
 
-Agent-ended episodes (RCB_AGENT_END=1, rcb_service.py's AGENT_END): step() reports the success check after every control
-step as before; rcb_service only records it, and the episode ends at the agent's POST /finish, after max_control_steps
-(reason "step_limit") or when the agent's time is up, each judged on the state it ends in (end_judgement "state": the
-environment's own check, whose timers and event memory are the environment's; no settle window), and live_verdict()'s
-start rule still applies. This adapter only words /spec's episode for it.
+Agent-ended episodes (docs/protocol/tasks.md#modes): step() reports the success check after every control step; rcb_service only
+records it, and the episode ends at the agent's POST /finish, after max_control_steps (reason "step_limit") or when the
+agent's time is up, each judged on the state it ends in (end_judgement "state": the environment's own check, whose
+timers and event memory are the environment's; no settle window), and live_verdict()'s start rule still applies. This adapter only words /spec's episode for it.
 """
 from __future__ import annotations
 
@@ -47,8 +45,6 @@ sys.path.insert(0, HERE)
 import casa_tool  # noqa: E402  (imports mujoco with the image's backend: OSMesa, as the standard twin)
 import mujoco  # noqa: E402
 from rcb_service import main  # noqa: E402
-
-AGENT_END = os.environ.get("RCB_AGENT_END") == "1"     # rcb_service.py's: here only for /spec's wording
 
 ACTION_NAME = {12: "ee_delta", 13: "joint_position", 24: "ee_pose"}
 W, H = 320, 240
@@ -107,11 +103,7 @@ class RoboCasa:
             "robot": "franka-panda-omron: a Franka Panda arm on an Omron mobile base with a torso lift",
             "task_text": self.s.inst.get("text", ""),
             "episode": (f"an episode ends at your POST /finish, after {self.max_control_steps} control steps (reason "
-                        "step_limit), when your time is up, or on a simulator error; the state it ends in is graded"
-                        if AGENT_END else
-                        f"an episode ends at the first control step after which the task's success check holds "
-                        f"(success), after {self.max_control_steps} control steps (failed), when your time is up, or "
-                        "on a simulator error"),
+                        "step_limit), when your time is up, or on a simulator error; the state it ends in is graded"),
             "action_types": {self.atype: {
                 "dim": self.raw_dim, "layout": list(a["names"]), "lower": list(a["lower"]), "upper": list(a["upper"]),
                 "units": [c["unit"] for c in a["channels"]], "kinds": [c["kind"] for c in a["channels"]],

@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for DexJoCo (docs/protocol/standard_mode.md): the adapter of the shared layer rcb_limited.py;
+"""eai-standard/3.0 sim service for DexJoCo (docs/protocol/eai-standard.md): the adapter of the shared layer rcb_limited.py;
 the simulator is rcb_dexjoco.Session (DexJoCo on MuJoCo 3.4, CPU physics, OSMesa rendering).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to
 /data/episode.jsonl.
@@ -10,9 +10,8 @@ The robot is a Franka Panda with a 16-DoF Allegro hand, or two of them side by s
   joint_position  per arm: 7 arm joint targets + 16 Allegro joint targets; the arm's targets are turned into a tcp target
                   by forward kinematics (the controller tracks the tcp pose, not the joints).
 Either way, the executed (journaled, recorded) row is DexJoCo's own row, so the recorded trajectory replays in the
-privileged tooling unchanged. As in DexJoCo's evaluation the episode ends at the first success or task failure;
-otherwise when the agent's time is over (the collect hook's SIGUSR1). With agent-ended episodes (RCB_AGENT_END=1,
-PROTOCOL §3) a success never ends the episode and is never shown: it ends at the agent's POST /finish, at a task failure
+privileged tooling unchanged. Agent-ended episodes (docs/protocol/tasks.md#modes): a success never ends the episode and is never shown:
+it ends at the agent's POST /finish, at a task failure
 (a failure, even after a success; on an event task the event seen before it stands), at the runaway guard (reason step_limit) or when the agent's time
 is over, and is judged on the state it ends in (END_JUDGEMENT / END_WINDOW below). Nothing about the objects leaves this process: a
 camera that rides on a body of the scene (bimanual_photograph's `cam_pos_z`, on the camera the hands pick up) gives
@@ -49,7 +48,7 @@ MAX_FPS = 50
 # Images one call may return (cameras x frames, per-frame depth counted again), checked before anything is executed:
 # every frame is held until the response is sent. Measured on the layer's Recorder with 640x480 frames: 2.7 GB per
 # 1000 RGB frames and 5.1 GB per 1000 images of one camera with per-frame depth, on top of the simulator's 1.9 GB,
-# under the sidecar's 8 GiB cap (tasks/dexjoco/README.md, "frames per call"). The 2.1 services' 3000 would need more than the cap.
+# under the sidecar's 8 GiB cap (tasks/dexjoco/README.md, "Interface": at most 1000 images per call). The sidecar services' 3000 would need more than the cap.
 MAX_FRAMES = 1000
 CAM_W, CAM_H = 640, 480
 CTRL_HZ = 50.0
@@ -79,7 +78,7 @@ if not THREADS["threads_ok"]:
         L._write_json(os.path.join(DATA, "final.json"), {**L._read_json(os.path.join(DATA, "final.json")), "too_few_cpus": 1, **THREADS})
     EP.give_up("too_few_cpus", infra=True)   # writes the verdict (never overwrites one) and idles until the container ends
 # agent-ended: a success never ends it; the step cap is the runaway guard (rcb_dexjoco.MAX_STEPS) or RCB_STEP_LIMIT
-S = M.Session(TASK, instance=INSTANCE, image_size=(CAM_H, CAM_W), hide_success=AE.ENABLED,
+S = M.Session(TASK, instance=INSTANCE, image_size=(CAM_H, CAM_W), hide_success=True,
               max_steps=min(M.MAX_STEPS, AE.STEP_LIMIT) if AE.STEP_LIMIT else M.MAX_STEPS)
 if not S.instance_exact and not any(e.get("ev") == "start" for e in EP.events()):
     # The frozen initial state is checked when the episode begins (the verdict is the live episode's, so no later replay
@@ -162,7 +161,7 @@ OWN_JOINTS = {MD.joint(j).id for j in JOINTS}        # the arms' and the hands' 
 def own_body(b: int) -> bool:
     """Whether the MuJoCo body `b` is fixed in the world or moved by the robot's own joints alone. A mocap body or a
     body behind any other joint (the objects: free joints, hinges, slides) is scene state: where it is must never leave
-    this process (PROTOCOL §4.5). Decided from the model, never from a name (the rule of MyoSuite's service)."""
+    this process (docs/protocol/eai-standard.md#post-reset-reset-capability). Decided from the model, never from a name (the rule of MyoSuite's service)."""
     while b > 0:
         if int(MD.body_mocapid[b]) >= 0:
             return False
@@ -350,7 +349,6 @@ except OSError:
     TASK_TEXT = f"DexJoCo {TASK}"
 SPEC = {
     "protocol": L.PROTOCOL,
-    "protocol_compat": list(L.COMPAT),
     "simulator": "DexJoCo @ 8d23b0f on MuJoCo 3.4.0 (CPU physics, OSMesa rendering)",
     "robot": ROBOT_NAME,
     "task_text": TASK_TEXT,
@@ -399,9 +397,7 @@ SPEC = {
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes"},
     "budget": {"reset": 0, "steps": None, "wall_clock_s": WALL_CLOCK_S},
     "episode": ("one episode, no reset: a success never ends it and is never shown; it ends at your POST /finish, at a "
-                "task failure (see task_text), or when your time is over, and is judged on the state it ends in"
-                if AE.ENABLED else
-                "one episode, no reset: it ends at the first success, at a task failure (see task_text), or when your time is over"),
+                "task failure (see task_text), or when your time is over, and is judged on the state it ends in"),
     "robot_spec": {
         "name": ROBOT_NAME,
         "description": ("two Franka Panda arms side by side, each with a 16-DoF Allegro hand (right arm first)" if BIM
@@ -426,7 +422,7 @@ SPEC = {
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0,
               "max_m": L.DEPTH_MAX_M, "frames_encoding": "uint16 mm, zlib", "noise": L.DEPTH_NOISE},
 }
-L.check_spec(SPEC)  # a spec that misses a 2.2 field or names a forbidden one never starts the episode
+L.check_spec(SPEC)  # a spec that misses a required field or names a forbidden one never starts the episode
 EP.scene_built()
 
 
@@ -479,28 +475,27 @@ def write_final() -> None:
     L._write_json(os.path.join(DATA, "final.json"), {**summary(), "finalized": False, "live_sha": E.get("live_sha")})
 
 
-# Agent-ended episodes (PROTOCOL §3): how each DexJoCo task is judged when the agent ends it. "state": DexJoCo's success
+# Agent-ended episodes (docs/protocol/tasks.md#modes): how each DexJoCo task is judged when the agent ends it. "state": DexJoCo's success
 # check on the state the episode ends in; "event": the check held at some control step of the episode (a moment: the
 # start button pressed with the hot dog inside and the door shut, the shutter pressed with the camera aimed, the plant
 # watered for DexJoCo's 30 steps). END_WINDOW: a task whose check is a hold (DexJoCo's own trigger counters: 10 to 50
 # control steps) runs its hold on from the end state, the robot holding its last command, for at most that many control
 # steps, and succeeds if the check holds within them (the steps already held count). A task failure (task_text) ends the
 # episode as a failure, also after a success; on an event task the event that happened before it stands (the episode ends
-# with the events reached so far, standard_mode.md "Agent-ended episodes").
+# with the events reached so far, docs/protocol/eai-standard.md "Agent-ended episodes").
 END_JUDGEMENT = {"bimanual_microwave_cook": "event", "bimanual_photograph": "event", "water_plant": "event"}
 END_WINDOW = {t: int(1.2 * CTRL_HZ) for t in ("bimanual_assembly", "bimanual_hanoi", "bimanual_unlock_ipad", "click_mouse",
                                              "fold_glasses", "pinch_tongs")}   # control steps (1.2 s > fold_glasses' 50)
 
 
 def end_fields() -> dict:
-    return ({"end_judgement": END_JUDGEMENT.get(TASK, "state"), "end_window_steps": int(E.get("end_window_steps") or 0)}
-            if AE.ENABLED else {})
+    return {"end_judgement": END_JUDGEMENT.get(TASK, "state"), "end_window_steps": int(E.get("end_window_steps") or 0)}
 
 
 def judge_end(reason: str) -> bool:
     """An agent-ended episode's verdict (lock held): the end state's success, or for an event task whether it happened;
     a hold task's window first runs on from the end state (journaled and recorded: the trajectory has its rows). An
-    event that happened stands: a task failure after it does not take it back (standard_mode.md "Agent-ended episodes")."""
+    event that happened stands: a task failure after it does not take it back (docs/protocol/eai-standard.md "Agent-ended episodes")."""
     if END_JUDGEMENT.get(TASK, "state") == "event":
         return E.get("seen_step") is not None
     if S.done:                                   # a task failure ended it: an end-state task is never a success
@@ -524,16 +519,12 @@ def finish(reason: str) -> None:
     E["done"] = True
     E["reason"] = reason
     E["t_end"] = time.time()
-    if AE.ENABLED:   # agent-ended: the state it ends in; on an event task a task failure keeps the events seen before
-        try:             # it (as rcb_service._end); a simulator error is never a success
-            event_failure = END_JUDGEMENT.get(TASK, "state") == "event" and reason not in AE.ENDED_BY
-            E["success"] = (reason in AE.END_STATE_REASONS or event_failure) and judge_end(reason)
-        except Exception:
-            traceback.print_exc()
-            E["success"] = False
-    else:
-        # a simulator error ends the episode: the state after it is judged by nothing (PROTOCOL §4.6), never a success
-        E["success"] = bool(S.success) and reason != "error"
+    try:             # the state it ends in; on an event task a task failure keeps the events seen before it
+        event_failure = END_JUDGEMENT.get(TASK, "state") == "event" and reason not in AE.ENDED_BY   # (as rcb_service._end)
+        E["success"] = (reason in AE.END_STATE_REASONS or event_failure) and judge_end(reason)   # a simulator error: never
+    except Exception:
+        traceback.print_exc()
+        E["success"] = False
     E["episode_control_steps"] = ctrl_steps()
     EP.log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"])})
     dump()
@@ -553,18 +544,17 @@ def dump() -> None:
 def ctrl_step(a, rec) -> bool:
     """One executed control step (DexJoCo's own row), journaled. True when the call must stop here."""
     a = np.asarray(a, dtype=np.float64)
-    if AE.ENABLED and S.steps >= S.max_steps:   # agent-ended: the runaway guard ends it, judged on the state it leaves
+    if S.steps >= S.max_steps:   # the runaway guard ends it, judged on the state it leaves
         finish("step_limit")
         return True
     running = S.step(a)
     ROWS.append(a.copy())
     stop = EP.journal(a)
     rec.tick()
-    if AE.ENABLED:
-        AE.hidden_success(E, S.now_success, EP.log, ctrl_steps())
+    AE.hidden_success(E, S.now_success, EP.log, ctrl_steps())
     if not running:
         finish(S.reason or "done")
-    elif AE.ENABLED and S.steps >= S.max_steps:   # the cap reached at this step: the call that reached it ends it
+    elif S.steps >= S.max_steps:   # the cap reached at this step: the call that reached it ends it
         finish("step_limit")
     return E["done"] or stop
 
@@ -585,7 +575,7 @@ def frames_ok(cams, fps: int, steps: int, meta: dict) -> None:
 
 def checked(parse):
     """A request is checked in full before anything is executed. The layer answers a ValueError with 400 and takes any
-    other exception for a simulator error that ends the episode (PROTOCOL §4.6), so whatever a malformed field raises
+    other exception for a simulator error that ends the episode (docs/protocol/eai-standard.md#errors), so whatever a malformed field raises
     while it is being checked (null, a list where a number belongs, a number too large for a float) is a ValueError."""
     def run(*args):
         try:
@@ -815,8 +805,7 @@ def replay_row(row) -> None:
     """A journaled row during a resume."""
     S.step(row)
     ROWS.append(np.asarray(row, dtype=np.float64))
-    if AE.ENABLED:
-        E["now_success"] = bool(S.now_success)
+    E["now_success"] = bool(S.now_success)
 
 
 EP.begin(state=E, step=replay_row, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
@@ -829,6 +818,5 @@ open(PID_FILE, "w").write(str(os.getpid()))
 print(f"{L.PROTOCOL} DexJoCo sim ready ({TASK}; startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
 AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
                     on_submit_error=lambda exc: finish("error"), log=EP.log, episode=EP, state_sha=S.state_sha,
-                    proprio=proprio_row, **({"finish": lambda: finish("finished"),
-                                             "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})),
+                    proprio=proprio_row, finish=lambda: finish("finished"), end_step_limit=lambda: finish("step_limit")),
          port=int(os.environ.get("RCB_PORT", "8000")))

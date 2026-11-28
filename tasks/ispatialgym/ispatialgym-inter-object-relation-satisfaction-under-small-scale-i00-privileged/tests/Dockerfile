@@ -73,15 +73,15 @@ ENV OMNI_KIT_ACCEPT_EULA=YES HDF5_USE_FILE_LOCKING=FALSE HF_HUB_OFFLINE=1 \
     OMNIGIBSON_TRACK_STATE_UPDATES=1 OMNIGIBSON_CHANGE_DETECTION_NUMPY=1 OMP_NUM_THREADS=1 NUMPY_MADVISE_HUGEPAGE=0 \
     PYTHONHASHSEED=0
 # <<< images/ispatialgym/Dockerfile
-# Separate verifier sandbox (PROTOCOL §4, Appendix H.1): eai-ispatialgym as built (its BDDL problems and upstream's own
+# Separate verifier sandbox (docs/protocol/tasks.md#grading, invariants.md H.1): eai-ispatialgym as built (its BDDL problems and upstream's own
 # success check), the frozen start every copy shares, this task's goal.json (restored onto it and checked against
 # upstream's TRO by sha256), the measured facts and the tooling. Only /app/output/ reaches it.
 FROM ispatialgym-base
 COPY instance.json goal.json facts.json upstream.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:ispatialgym-files-0.7.0@sha256:2f0d19ceb2dfbb95805d4a854d37c3a5df255620e26160acd84bf7abecbb07c9 /privileged/environment/rcb_ispatialgym.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:ispatialgym-files-0.8.0@sha256:3fb821c292d069b60a25286effa62d10498e78226a27f83e82b46b4a831308b1 /privileged/environment/rcb_ispatialgym.py /privileged/tests/grade.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV OMNIGIBSON_HEADLESS=1
 WORKDIR /tests
-# resources (PROTOCOL §6) # rcb-monitor
+# resources (docs/protocol/resources.md) # rcb-monitor
 COPY --from=ghcr.io/mll-lab-nu/efe:monitor-0.5.0@sha256:ecc5f24f1516ca11711d7c2d3ac07c89f79cd9220812c1244498ec71e352402a /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
 COPY rcb_limits.json /tests/rcb_limits.json

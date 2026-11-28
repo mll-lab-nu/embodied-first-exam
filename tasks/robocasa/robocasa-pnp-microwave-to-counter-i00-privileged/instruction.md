@@ -5,8 +5,9 @@ Take the onion out of the microwave and put it on the plate on the counter, away
 hand away.
 
 ## Goal
-Success: the onion lies on the plate on the counter, away from the plate's edge, and your hand has let go of it and
-moved away. Your trajectory is replayed from the fixed start. What counts is the state after its last action.
+Success: the onion lies on the plate (the one that starts on the counter), away from the plate's edge, and your hand has
+let go of it and moved well away from it (what counts is how far the hand is from it). Your trajectory is replayed from
+the fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 12)`
 with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave

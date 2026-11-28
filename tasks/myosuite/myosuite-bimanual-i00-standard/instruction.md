@@ -2,11 +2,12 @@
 
 ## Task
 Pick up the object with your right hand, pass it to the prosthetic left hand, and set it on top of the goal pillar. Each
-hand must hold it for at least 1 s, and it must never touch the table or the floor.
+hand must touch it for at least 1 s in total, and it must never touch the table or the floor.
 
 ## Goal
-Success: the object rests on top of the goal pillar, touching only the pillar, after your right hand and then the
-prosthetic hand have each held it for at least 1 s, and it has never touched the table or the floor. Once this has
+Success: the object rests on top of the goal pillar, touching only the pillar, after your right hand and the prosthetic
+hand have each touched it for at least 1 s in total (in either order), and it has never touched the table or the
+floor. Once this has
 happened the task is passed, whatever happens afterwards. Before that, the episode ends as a failure if the object is
 dropped.
 
@@ -28,7 +29,7 @@ controller. The robot runs as a service you reach through its client or its MCP 
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                    # connects (waits while the service starts)

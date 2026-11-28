@@ -159,7 +159,7 @@ class Runtime:
         self.video()
 
     def video(self):
-        """After the verdict (PROTOCOL §4): render the held-out evaluation to /data/replay.mp4; never part of it."""
+        """After the verdict (docs/protocol/tasks.md#grading): render the held-out evaluation to /data/replay.mp4; never part of it."""
         if (self.root / "video.json").exists():
             return
         status = {"video": None}
@@ -224,7 +224,7 @@ def handler(runtime):
             runtime.session.audit({"operation": "http", "path": self.path[:256], "outcome": "rejected"})
             self.reply(404, {"error": "Unknown route"})
 
-        do_PUT = do_DELETE = do_PATCH = do_HEAD = do_OPTIONS = do_TRACE = do_CONNECT = unknown   # every non-protocol path is 404 (PROTOCOL H.3)
+        do_PUT = do_DELETE = do_PATCH = do_HEAD = do_OPTIONS = do_TRACE = do_CONNECT = unknown   # every non-protocol path is 404 (docs/protocol/invariants.md H.3)
 
         def do_POST(self):
             if self.path not in ("/describe", "/deploy", "/seal"):

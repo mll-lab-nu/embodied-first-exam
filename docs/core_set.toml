@@ -1,4 +1,4 @@
-# The core set: the tasks the headline statistics are computed on (PROTOCOL §4), one entry per task (the task dir
+# The core set: the tasks the headline statistics are computed on (docs/protocol/tasks.md#grading), one entry per task (the task dir
 # name without its mode suffix); every mode dir of a listed task is core.
 # Checked by `python3 scripts/task_conventions.py core-set --check`.
 

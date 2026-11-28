@@ -29,13 +29,15 @@ To run those families:
      https://huggingface.co/datasets/eai-v2-internal/robowits-blenderkit-encrypted (log in and accept its research
      terms), run `hf auth login`, then `images/robowits/fetch_blenderkit_encrypted.sh <dir>` (it checks every file
      against blenderkit_encrypted.sha256).
-     - The tooling (rcb_robowits.py) sees the key in the folder and decrypts only the models the task's family loads,
+     - The tooling (rcb_robowits.py) finds the key in the folder and decrypts only the models the task's family loads,
        at scene build, into a private tmpfs directory that it deletes as soon as the scene is built.
      - Terms: non-commercial academic research only, through this tooling only; no other decryption, extraction or
        conversion; no sharing or re-upload of the files or the key; models stay their authors' (ATTRIBUTION.csv).
-     - What it does not do: a privileged-mode agent is root in its container, where the folder and its key are
-       mounted, so it could decrypt the models itself. The encryption keeps the models from being copied around
-       as ordinary files; it does not hide them from a process inside the task container.
-  2. `export RCB_ROBOWITS_BLENDERKIT=<dir>`. Each of those tasks mounts it read-only at /opt/robowits/assets/blender_kit
-     (environment/ and tests/ docker-compose.yaml; the sim sidecar in the standard twins).
+     - The agent's container never sees the folder or its key: in privileged mode the task's `blenderkit` service
+       mounts it, decrypts the family's models and serves them on localhost:8765 (rcb_robowits.py blenderkit-serve);
+       the privileged verifier and the standard twins' sim sidecar mount it themselves. The encryption keeps the
+       models from being copied around as ordinary files.
+  2. `export RCB_ROBOWITS_BLENDERKIT=<dir>`. Each of those tasks mounts it read-only: the privileged tasks' `blenderkit`
+     service (environment/docker-compose.yaml) and verifier (tests/docker-compose.yaml, at /opt/robowits/assets/blender_kit),
+     and the sim sidecar in the standard twins.
 Keep the folder private.

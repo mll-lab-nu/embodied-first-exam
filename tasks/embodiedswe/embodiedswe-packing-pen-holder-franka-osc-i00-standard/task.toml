@@ -23,9 +23,9 @@ simulator = "embodiedswe"
 robot = "franka-panda"
 family = "packing.pen_holder.franka.osc"
 dynamics = "static"
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/3.0"
 oracle = "none"
-oracle_evidence = "No reference solution in the repository, and no positive example yet; nop scored 0 (Harbor, L40S, 2026-10-29). Human review per family (PROTOCOL §4)."
+oracle_evidence = "No reference solution in the repository, and no positive example yet; nop scored 0 (Harbor, L40S, 2026-10-29). Human review per family (docs/protocol/tasks.md#grading)."
 instance_seed = 0
 upstream_commit = "67f44e8a2ca51c3e133867e5e669377778e8f97d"
 expert_time_estimate_hours = 3.0
@@ -35,7 +35,7 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -64,7 +64,7 @@ memory_mb = 24576
 storage_mb = 10240
 gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada"]
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

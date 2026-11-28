@@ -161,8 +161,8 @@ class Task(TaskBase):
                   release_grace_s=0.15, touch_gain=0.95, grid_m=5.0, fall_z_m=0.35, instep_z_m=0.12, heel_x_m=0.08,
                   toe_x_m=0.15)
 
-    sentence = ("Drop the football from your hands and juggle it with your feet for ten touches in a row, each "
-                "sending it above your knees, without it touching the ground.")
+    sentence = ("Drop the football from your hands and juggle it with your feet for ten counted touches, each sending "
+                "it above your standing knee height, without it touching the ground.")
     rules = ("A size-5 football (0.22 m across, 0.43 kg, in air) starts pressed between your two open palms; you "
              "stand in the middle of a square grid {grid_m} m on each side, marked on the grass. Your hands have no "
              "fingers and no grip (the grip columns of the action rows do nothing in this task): only the squeeze of "

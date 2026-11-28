@@ -1,36 +1,41 @@
-# mujoco_playground_go1_joystick_rough_terrain-privileged
+# MuJoCo Playground · Go1JoystickRoughTerrain (privileged)
 
 | | |
 |---|---|
-| Benchmark | MuJoCo Playground |
+| Task ID | `mujoco_playground_go1_joystick_rough_terrain-privileged` |
+| Benchmark | [MuJoCo Playground](https://playground.mujoco.org/) (Zakka et al., 2025), upstream `google-deepmind/mujoco_playground@4057c14` |
+| Robot | Unitree Go1 quadruped, 12 joint position actuators |
 | Mode | privileged |
-| Twin | `mujoco_playground_go1_joystick_rough_terrain-standard` |
-| Simulator / robot | `mujoco` / `unitree-go1` |
-| Family / instance | `mujoco_playground/Go1JoystickRoughTerrain` / seed 1 |
-| Oracle | `full` |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` |
+| Instance | `mujoco_playground/Go1JoystickRoughTerrain`, seed 1 |
+| Time limit | 30 min |
+| Reference solution | Included |
 
 ## Task
-MuJoCo Playground `Go1JoystickRoughTerrain` (Unitree Go1), rebuilt in plain MuJoCo from Playground's scene files: Make the robot follow the joystick's commands for the whole schedule on the bumpy ground without falling over.
-For 20 s the robot gets a joystick command schedule (7 segments: planar velocity and yaw rate in its own frame) and must track it without falling over. The ground is a 20 x 20 m heightfield with bumps up to 5 cm. The deliverable is one replayable trajectory of joint position targets
-(`/app/output/trajectory.npz`, `(T, 12)`, T = 1000 (the whole schedule)).
+Make the robot follow the joystick's commands for the whole schedule on the bumpy ground without falling over.
 
-## Difficulty
-Velocity tracking for 20 s: the agent has to make a 12-joint quadruped walk (a gait, not one motion) and steer it through the schedule's changes of speed, direction and turning rate, and an open-loop trajectory of 1000 steps only works if it is computed against the simulator. Torque limits and a soft PD drive leave little margin; Playground trains a neural policy with 200 M steps of PPO for this. On the heightfield the feet land at unpredictable heights: Playground's own Go1 policy, which made the reference, falls or loses track on some of the candidate seeds (the instance selection skips them).
+## Success criteria
+Pass condition, defined by this benchmark (MuJoCo Playground's `Go1JoystickRoughTerrain` has only a shaped training reward and no success
+test): the episode runs all 1,000 control steps of the instance's command schedule (20 s at 50 Hz) with no
+termination, and in each of the schedule's 7 command segments the robot tracks the command on average. Over
+each segment, leaving out its first 25 control steps (0.5 s), the mean planar velocity error |(v_x, v_y) − (cmd_vx,
+cmd_vy)| is at most 0.2 m/s and the mean yaw-rate error |ω_z − cmd_wz| is at most 0.3 rad/s. The velocity is the IMU's
+velocimeter and the yaw rate its gyro, both in the trunk's IMU frame; the command is the schedule's (vx, vy, wz) in
+force at that control step. The ground is Playground's rough-terrain heightfield.
 
-## Reference solution
-MuJoCo Playground's own Go1 joystick policy (`experimental/sim2sim/onnx/go1_policy.onnx` @4057c14, not in the image) run closed loop on this instance with the observation of Playground's `play_go1_joystick.py`, its targets recorded: worst segment errors 0.079 m/s and 0.114 rad/s. Replayed by `solution/solve.sh` (`solution/oracle.npy`, 1000 rows); the rows are float32-exact, so the
-standard twin's client executes the same targets. Re-verified: two
-fresh-process replays succeed and end in the same state.
+Termination (a failure at any step; a live episode ends there): Playground's fall rule for this environment, the
+trunk's up axis pointing below the horizon (the IMU frame's z axis has a negative world z component).
 
-## Verification
-`tests/grade.py` in a separate sandbox without network: one replay, in a fresh process, from the verifier's own
-copy of the instance (`tests/instance.json`; the start state is checked against its hash on every load); pass iff it
-succeeds. Oracle: success, worst segment errors 0.079 m/s and 0.114 rad/s. `nop`: no trajectory, reward 0.
+Graded file: `/app/output/trajectory.npz`, array `actions` of shape (T, 12) with T at most 1,000: one row
+of actuator targets per control step, all finite (values outside the actuator ranges are clipped). After the agent's
+session the verifier, in a separate sandbox without network, replays it once, open-loop, from its own copy of the
+frozen start (`tests/instance.json`), and checks the condition on that replay. Only the trajectory is scored (`gen.py`
+is not). A missing file, a file that is not an `.npz` with a numeric `actions` array, or an array of another width, with
+more rows or with a NaN or infinite value scores 0. A replay that does not rebuild the frozen start (its state hash
+differs) and any other error inside the grader, such as a replay that dies or times out, are reported as a grader
+error, not as the agent's score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -39,10 +44,11 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | MuJoCo Playground @ 4057c14 (Apache-2.0): `locomotion/go1/xmls/scene_mjx_feetonly_rough_terrain.xml`; MuJoCo Menagerie @ 1b86ece (`unitree_go1`); simulated in MuJoCo 3.3.7 on the CPU |
-| Instance | Playground's `reset` with `jax.random.PRNGKey(1)` and Playground's command process over the 1000 steps; chosen (seed 1; skipped 0: reference fails) |
-| Actions | 12 joint position targets per control step (0.02 s of simulated time); kp = 35 N m/rad, joint damping 0.5 N m s/rad |
-| Resources | 4 CPUs, no GPU (CPU physics, EGL or OSMesa rendering) |
+## License
+MuJoCo Playground ([google-deepmind/mujoco_playground](https://github.com/google-deepmind/mujoco_playground) @
+`4057c14`) is released under the Apache License 2.0. The robot models come from MuJoCo Menagerie
+([google-deepmind/mujoco_menagerie](https://github.com/google-deepmind/mujoco_menagerie) @ `1b86ece`, the commit
+Playground pins), each under its own license: Unitree Go1 (BSD 3-Clause, Unitree Robotics), Boston Dynamics Spot
+(BSD 3-Clause, Clearpath Robotics), Google Barkour vB (Apache License 2.0, DeepMind), ALOHA 2 (BSD 3-Clause, Trossen
+Robotics), Franka Emika Panda (Apache License 2.0). The rough-terrain texture is from Poly Haven (CC0). No
+non-commercial terms apply. The simulator is MuJoCo 3.3.7 (Apache License 2.0).

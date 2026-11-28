@@ -130,7 +130,7 @@ def main() -> int:
                "goal_at_end": int(bool(outs[0].get("goal_at_end"))), "settle_steps": int((outs[0].get("settle") or {}).get("steps") or 0),
                "settle_max_move_mm": round(1000 * float((outs[0].get("settle") or {}).get("max_move_m") or 0.0), 2),
                "replay_wall_s": round(time.time() - t0, 1), "grader_error": 0, "video_rendered": 0, **cost}
-        write(ok, out)                  # the verdict is on disk before the video is rendered (PROTOCOL §4)
+        write(ok, out)                  # the verdict is on disk before the video is rendered (docs/protocol/tasks.md#grading)
         # Human-viewable replay video (never affects the verdict): /logs/verifier/replay.mp4 + replay.last.png
         # It is time-boxed: a verifier that Harbor stops at its timeout_sec loses the verdict that is already on disk.
         if not a.no_video:

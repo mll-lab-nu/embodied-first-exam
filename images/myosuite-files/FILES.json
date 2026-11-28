@@ -1,14 +1,13 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:myosuite-files-0.8.0@sha256:1eabccb4e8a6dcd506062f12a79361f626dd9ac8babbc83401274335d8cd2fd2",
+ "image": "ghcr.io/mll-lab-nu/efe:myosuite-files-0.9.0@sha256:1a0d096942399d847e09df0d3b2e6b312542b2a5481a374061a87df9f6fffefa",
  "source": "embodied_first_exam/benchmarks/myosuite",
  "files": {
-  "privileged/environment/rcb_myosuite.py": "a75674e92068538c659bc7b0ada1bb5cde0b62e99d439ce65567e0d828f00839",
-  "privileged/tests/grade.py": "7be32fe6d1338a80028021c06261a5fc5072d0a049bfa73b34cbf780367f4ddb",
-  "sim/finalize.sh": "bb42085bf3abf2f0ae28bb56c338ebff62c940151fac8ef799a1f8262252c510",
-  "sim/rcb_service.py": "e9d528c4a8e703a19ecfca2cd7b5a9e4e782dbc5280dc340e9b2184dffe6bcde",
-  "sim/server.py": "f43b41bba15d66d2b3c41c9f704a41ff4a393f8e48d034cbb8d8aa0e9d22cab3",
-  "sim/task.json": "112ffa34ccfb324c0402072e7325d4b0881095ca8667bc434cffac061a41f9fd",
+  "privileged/environment/rcb_myosuite.py": "bbc8c06942a3262d5e5ac413c2a07c3be2366d4cc6aea0bcea906c0dd5770a17",
+  "privileged/tests/grade.py": "d3804b120d5324284477a04010c66c9763075ad27128b0d9ce6ba6fc9e3e36a2",
+  "sim/finalize.sh": "cd8f01df0897ec0b92179f264d0c524ebc627dee25cc766988defb17a60c9745",
+  "sim/server.py": "160eb6257005b8c4265e8fe9bf754dc5de9eb5288f9231f8759d837e3a49dd11",
+  "sim/task.json": "08c0b4456dcfc8095c2c574554771ac3225b3de4e09ba78e01eb784f037578ee",
   "sim/video.py": "3c91ab66932205353f68341b2f5172861d88678c3516b0bf8f548ccaba9c656d",
-  "standard/tests/grade.py": "ee1265ae2027815790b9cfc1e5be43a7934179187bee2fbb142fca3ef9476569"
+  "standard/tests/grade.py": "abd8b308112ee6f7200e6e5c90c080338025f5411cfb43d686ce49a4f6e69b09"
  }
 }

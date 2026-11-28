@@ -1,4 +1,4 @@
-BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:robolab-<images/robolab/VERSION> is never public (docs/protocol/README.md §1, base
+BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:robolab-<images/robolab/VERSION> is never public (docs/operations.md, base
 images). It is kept in the organization's private package as the build cache of the RoboLab tasks: every task's Dockerfile starts
 with this recipe (images/robolab/Dockerfile, copied in by scripts/task_conventions.py normalize) and its compose names the
 private image in `build.cache_from`. A runner that can pull the image takes its layers; any other runner builds the same
@@ -7,13 +7,16 @@ recipe from public sources on its first task (`harbor run` does it; nothing to r
 Why
   The image contains NVIDIA Isaac Sim 5.1 / Omniverse Kit and the Isaac Lab 2.3.2 pip wheels (installed from
   pypi.nvidia.com). NVIDIA licenses them for use, not for redistribution, so the built image may not be published.
-  RoboLab itself (github.com/NVlabs/RoboLab v0.3.1, code and its ~6 GB LFS asset library) is Apache-2.0.
+  RoboLab's code (github.com/NVlabs/RoboLab v0.3.1) is Apache-2.0; most of its ~6 GB LFS asset library (the scenes,
+  fixtures, materials, robots and the handal, hope, basic, fruits_veggies and objaverse object sets) is CC BY-NC-SA 4.0
+  (non-commercial, share-alike), the rest under the licences in its THIRD_PARTY_NOTICES.md (tasks/robolab/README.md).
 
 What the builder accepts
   - the NVIDIA Isaac Sim / Omniverse license agreement (the recipe sets OMNI_KIT_ACCEPT_EULA=YES and ACCEPT_EULA=Y, and
     every container that runs it accepts it again at launch);
   - NVIDIA's terms for the isaacsim / isaaclab wheels on pypi.nvidia.com;
-  - RoboLab's Apache-2.0 licence (its assets are baked in, as RoboLab's own docker/Dockerfile does).
+  - RoboLab's Apache-2.0 licence and its assets' licences, CC BY-NC-SA 4.0 (non-commercial use) for most of them (they
+    are baked in, as RoboLab's own docker/Dockerfile does).
   No account, key or token is needed: everything is downloaded anonymously.
 
 Inputs (all pinned)
@@ -40,7 +43,8 @@ Host
   (22 min on a 32-core host). Run: one Isaac simulator per 32 GB of host RAM.
 
 Build and publish (maintainers; from the repository root)
-  RCB_PUSH_PRIVATE=1 scripts/build_images.sh builds every image (this one with BuildKit's inline cache); alone:
+  scripts/images.sh build builds every image (this one with BuildKit's inline cache), and RCB_PUSH_PRIVATE=1
+  scripts/images.sh push pushes it to efe-private with the others (without the variable push skips it); alone:
     docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ghcr.io/mll-lab-nu/efe-private:robolab-$(cat images/robolab/VERSION) images/robolab
     docker push ghcr.io/mll-lab-nu/efe-private:robolab-$(cat images/robolab/VERSION)
   A new VERSION: change the tag in the tasks' `cache_from` and normalize them.

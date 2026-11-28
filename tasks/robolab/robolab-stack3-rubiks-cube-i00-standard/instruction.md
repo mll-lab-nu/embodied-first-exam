@@ -4,7 +4,8 @@
 Stack the 3 Rubik's cubes into one tower.
 
 ## Goal
-Success: the three Rubik's cubes form one tower, in any order, each cube resting squarely on the one below it.
+Success: the three Rubik's cubes form one tower, in any order, each cube on the one below it, touching it, with its
+centre over it.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -21,7 +22,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.2`):
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`):
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while Isaac Sim starts and builds the scene, ~2 min; longer on a

@@ -1,5 +1,5 @@
-# roboEngineer's tasks keep the benchmark's own multi-round runtime (PROTOCOL §3: a benchmark with its own runtime;
-# Appendix H applies unchanged; results are reported apart): the agent tunes a numeric policy against a public nominal
+# roboEngineer's tasks keep the benchmark's own multi-round runtime (docs/protocol/tasks.md#modes: a benchmark with its own runtime;
+# docs/protocol/invariants.md applies unchanged; results are reported apart): the agent tunes a numeric policy against a public nominal
 # simulator in its own container, deploys it to the private evaluator in the `sim` sidecar for at most three feedback
 # rounds (noisy telemetry and camera images back), and the sidecar evaluates the selected policy on a private held-out
 # bank (tasks/roboengineer/README.md, tasks/roboengineer/policy.md). ci_checks/check-protocol.py accepts

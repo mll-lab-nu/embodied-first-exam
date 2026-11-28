@@ -1,51 +1,81 @@
-# pandadyn-d02-strike-catch-merge-i00-standard
+# Panda Dynamic Scenes · Strike, catch and merge two balls (D02) (standard)
 
 | | |
 |---|---|
-| Benchmark | Panda Dynamic Scenes |
-| Mode | standard (`eai-standard/2.1`) |
-| Twin | `pandadyn-d02-strike-catch-merge-i00-privileged` |
-| Simulator / robot | `maniskill` / `franka-panda-bimanual` |
-| Family / instance | `d02_strike_catch_merge` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
+| Task ID | `pandadyn-d02-strike-catch-merge-i00-standard` |
+| Benchmark | [Panda Dynamic Scenes](https://www.embodied-first-exam.ai/suite/pandadyn/) (Wang et al., 2026), upstream `mll-lab-nu/embodied-first-exam@b2280d8` |
+| Robot | Two Franka Emika Panda (FER) arms, each with 7 joints and its standard two-finger hand |
+| Mode | standard |
+| Instance | `d02_strike_catch_merge`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-Standard-mode twin of `pandadyn-d02-strike-catch-merge-i00-privileged` (same frozen instance and success check): the agent gets only the `eai-standard/2.1`
-client (docs/protocol/standard_mode.md Part 1, with the optional reset capability); the simulator runs in the `sim` sidecar
-(`environment/docker-compose.yaml`, GPU on the sidecar for SAPIEN's renderer), which owns the scene, judges the episode
-live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
-episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
-on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. Two balls roll down two lanes, one after the other. Touch each one with the left paddle once it has flown off its lane, catch the first in the right cup and carry it away, then catch the second in the same cup and put both balls into the basin.
+Two balls roll down two lanes, one after the other. Touch each one with the left paddle once it has flown off its lane,
+catch the first in the right cup and carry it away, then catch the second in the same cup and put both balls into the
+basin.
 
-## Difficulty
-That of `pandadyn-d02-strike-catch-merge-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects
-are seen only through two static cameras (RGB, depth) and the robot's own proprioception; the simulated clock advances
-only with the agent's calls (so the agent can look between control steps, at a cost in calls), and a missed catch costs
-an episode.
+## Success criteria
+The left paddle is panda-0's tool and the right cup panda-1's; the cup is 0.14 m square inside with 55 mm walls, and its
+frame has its origin at the centre of its floor's top surface. Ball 1 starts on the lane at y = -0.09 m, ball 2 on the
+lane at y = 0.09 m; each ball's radius r is 16 mm. The lane gates open by themselves.
 
-## Reference solution
-`solution/oracle_replay.py` spends the reset budget on short scouting episodes (the first second of the rows each, then
-`reset`), then streams the privileged oracle's rows (`solution/oracle_qpos.npy`, one row per control step, `hold`) as
-one-second `joint_position` chunks through the client in the last episode; after a service crash it waits for the
-resumed episode and continues from the control step the service reports. It uses no privileged information at run time.
+Phases, in order:
+1. `first_redirect`: the paddle touches ball 1, after ball 1 has been free of all contact for more than 25 ms at some
+   moment of this phase.
+2. `first_catch`: the cup catches ball 1.
+3. `loaded_cup_relocation`: the cup's frame is more than 0.06 m from where it was when phase 2 completed, with ball 1
+   contained in the cup.
+4. `second_redirect`: the paddle touches ball 2, after ball 2 has been free of all contact for more than 25 ms at some
+   moment of this phase.
+5. `second_catch`: the cup catches ball 2 while ball 1 is contained in the cup.
+6. `both_delivery`: both balls are contained in the basin (inner half-width 0.08 m, wall height 0.075 m) and neither
+   touches the cup, for 0.7 s.
 
-## Verification
-The sim service (`environment/sim/rcb_service.py`, the shared eai-standard/2.1 layer, with `environment/sim/server.py`,
-this benchmark's adapter on `rcb_pandadyn.Session`) judges the episode live and records every control step it ran
-(`trajectory_live.f64`); after the agent's time the collect hook stops the agent's programs and signals the service, which
-writes the last episode's verdict into `final.json` (`graded_by` = `live`, `replays` = 0; nothing is replayed to grade it)
-and then renders the video from the graded episode's rows; `tests/grade.py` (separate sandbox, no network) passes iff the
-last episode ended in the task's success (every phase in order, no failure: the episode's end, so there is no settle
-window to add). The frozen start is checked when the first episode begins and after every reset (the state hash against
-the instance's `initial_sha`; a mismatch is `instance_mismatch`, an infrastructure failure). Oracle: the last episode ends
-in the privileged oracle's final state (hash `8cb60683ef8fb56b`). `nop`: no control step is executed; the episode ends at
-the collect hook with no phase complete, reward 0.
+A catch: after at least 25 ms without touching anything, the ball's centre passes downward through the plane r above
+the cup's rim height (cup frame) while more than r inside the inner walls in x and y; after that the ball is contained
+in the cup for 0.18 s. Contained in a receptacle of inner half-width h and wall height H: in the receptacle's frame
+(origin at the centre of its floor), the ball's centre is less than h - 0.45 r from the centre in x and in y and
+between r - 4 mm and H - 0.12 r above the floor, the ball touched the receptacle within the last 25 ms, and its speed
+relative to the receptacle is below 0.09 m/s.
 
-## Resources
-Caps per container (PROTOCOL §6).
+Task failure: during phases 3 to 5, ball 1's centre more than 0.07 m from the cup's centre in x or y, or more than 10
+mm below the cup floor (cup frame).
+Allowed contacts: the paddle and the cup may touch the balls; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+
+Phases count only in order: each phase's condition is checked after every 1 ms physics step, and only once the phase
+before it is complete. A condition "for t s" must hold at every physics step over t s; a break restarts it. Positions
+are in the world frame (metres, z up, the table top is the plane z = 0); "horizontally" means in x and y.
+
+Failures shared by every task (each ends the episode at once, in any phase):
+- a forbidden contact: two arms touching each other (tools included); an arm touching itself, except its two fingers
+  touching each other (a finger touching the arm's own tool counts); any robot part, tool included, touching anything
+  the allowed contacts above do not list (the table, the floor and the arm pedestals included); any contact in the
+  scene that penetrates deeper than 4 mm;
+- a violation of the Franka Panda's safety limits by an arm, checked at every physics step: a joint more than 0.002 rad
+  beyond its position limits; measured joint speeds above 101 % of the limits (2.175 rad/s for joints 1-4, 2.61 rad/s
+  for joints 5-7); a finger faster than 0.051 m/s; the hand's TCP faster than 1.01 x 1.7 m/s or 1.01 x 2.5 rad/s,
+  measured or in the servo's reference motion; a motor torque above 87 N m (joints 1-4) or 12 N m (joints 5-7), or one
+  changing faster than 1000 N m/s; reference joint speeds, accelerations or jerks above the Panda's limits; measured
+  joint accelerations or jerks, or measured or reference TCP accelerations (13 m/s², 25 rad/s²), averaged over 20 ms,
+  above 105 % of the limits;
+- an object leaving the workspace (its centre below z = -0.2 m or more than 1.8 m from the world origin horizontally),
+  or a non-finite object position.
+
+Graded: the live episode, judged by the simulator service as it runs; nothing is replayed. Each row the agent sends (8
+values per arm, clipped to the limits) runs as one 10 ms control step; between the agent's calls the world is frozen.
+The task is judged as an event: once the last phase is complete at some control step with no failure recorded by then,
+the episode is a success, even if a failure above ends it afterwards; a failure before that scores 0. Completing the
+task neither ends the episode nor is shown to the agent. Otherwise the episode ends at the agent's `/finish`, at the
+task's horizon (whether or not every phase is done by then), after 4,500 control steps, or when the agent's time
+(1 h) runs out, and it is a success only if the task was completed by then. The agent has 3 resets, each
+starting a new episode from the frozen start; only the last episode (the one after the last reset) is graded. A
+simulator error raised by the agent's own call ends the episode with 0. An episode that does not start from the frozen
+instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -56,12 +86,8 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU with Vulkan (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Episode | it ends at the first control step where the task has succeeded or failed (the task's horizon, 25 s of simulated time, is a failure), when the agent's time is up, or on a simulator error; 3 resets (`POST /reset`: the scene rebuilt from the frozen instance); no step budget, the wall clock is the only budget |
-| Action space | `submit` chunks of `joint_position` (16: per arm 7 joint targets + the aperture, one row per 10 ms control step or `dt` apart, a chunk at most 10 s); `observe` the current frames or those recorded over the last seconds (`last_s`); hold chunks (`hold(s)`); binary RCB1 responses |
-| Cameras | `overview` and `closeup` (static), 640×480 RGB, z-depth on request |
-| Images | the `sim` sidecar runs efe:pandadyn (`images/pandadyn/`); the agent container and the verifier run the shared client image with its pip pins (`embodied_first_exam/standard/client.env`) |
-| Crash recovery | the shared service layer's: every control step journaled, a checkpoint with the state hash after every call; `restart: on-failure:6`, the service resumes the same episode |
-| Benchmark notes | tasks/pandadyn/README.md |
+## License
+Panda Dynamic Scenes is an original suite of Embodied First Exam. Its environment package (`images/pandadyn/panda_dynamics/`) is released
+with this repository under the repository's MIT License. The simulation stack in the image: ManiSkill 3 and its Franka
+Panda model (Apache License 2.0), SAPIEN (MIT), Ruckig community version (MIT), PyTorch (BSD 3-Clause). No
+non-commercial terms apply.

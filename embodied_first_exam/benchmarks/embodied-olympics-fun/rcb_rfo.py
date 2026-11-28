@@ -205,7 +205,7 @@ class Episode:
 def replay(instance: dict, rows, video: str | None = None, camera: str | None = None, after_done: bool = False) -> dict:
     """The sim rows from the frozen start in this process's own fresh world, until the referee ends the episode or
     the rows run out. success = the referee's verdict there (a success is latched the moment it happens and ends the
-    episode, so the rows must reach it). `after_done` (a standard-mode episode the agent ended, PROTOCOL §3): every row
+    episode, so the rows must reach it). `after_done` (a standard-mode episode the agent ended, docs/protocol/tasks.md#modes): every row
     runs, the physics going on after the referee's call (World.run_after_done); the verdict is the same."""
     t = time.time()
     ep = Episode(instance)

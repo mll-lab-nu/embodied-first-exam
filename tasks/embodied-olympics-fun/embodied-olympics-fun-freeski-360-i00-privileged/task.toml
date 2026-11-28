@@ -12,12 +12,12 @@ simulator = "mujoco"               # the Embodied Olympics simulator: MuJoCo 3.3
 robot = "unitree-g1"
 family = "freeski_360"
 category = "track-and-jumps"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 # scene = environment/instance.json (the family's parameters + its t = 0 state hash); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 50
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested: Big air on a level-A FIS course (ICR Book VI 3102.4.1: a 6 m level start platform, a 38 m in-run at 35 degrees, a 2.1 m kicker at 25 degrees, a 15 m table, a 36 degree landing). The robot starts itself from the level platform and rides the in-run and the kicker on its own control (the Embodied Olympics freeski reference skier, its drop-in re-searched in this physics). Positive by a declared magic action: in the jump's flight only, the robot and its skis are turned as one rigid body about their centre of mass, first a yaw rate of 10.47 rad/s for 0.6 s (the 360), then an alignment of the skis to the landing slope at the predicted touchdown (about 68 degrees over 1.4 s); the take-off, the flight's path, the touchdown, the landing and the ride-away past the finish line are physics and the robot's own control. The referee measures the trick from the skis' heading change in the air (take-off to first snow contact), requires both skis within 45 degrees of forwards at touchdown and no more than 90 degrees of turn on the snow from 0.5 s after the landing to the finish: measured ski spin 356.2 degrees (a 360; pelvis 355.8), touchdown 0.0 / 3.6 degrees off forwards, 5.5 degrees of turn after the landing, the same in two runs. A pelvis-only spin with the skis turned 188 degrees in the air, a landing backwards and a spin on the snow each fail. Negatives: the same jump with a 540 or an under-rotated spin (180) fails as the wrong trick, a hand on the snow and a sit-down after the landing fail as fell, no jump, doing nothing (did not start). Contacts in the flight and the landing: ski edge spheres in the snow at most 10 mm, no ski-body, ski-ski or body-snow contact. Own-motor reach: in a short search, the robot's own arm and torso wind-up reaches about 255 degrees of spin in 1.8 s of air; the 360 is near the edge of its reach, not shown. Stress scan (a flailing robot on the start platform and the in-run, 5 episodes): no instability, no hook errors; the worst contact is a ski tip sphere 2.8 cm into the in-run snow (hard snow, solref 0.005).; human review in the pull request that adds the benchmark (PROTOCOL §4)"
+oracle_evidence = "no reference solution; the referee is tested: Big air on a level-A FIS course (ICR Book VI 3102.4.1: a 6 m level start platform, a 38 m in-run at 35 degrees, a 2.1 m kicker at 25 degrees, a 15 m table, a 36 degree landing). The robot starts itself from the level platform and rides the in-run and the kicker on its own control (the Embodied Olympics freeski reference skier, its drop-in re-searched in this physics). Positive by a declared magic action: in the jump's flight only, the robot and its skis are turned as one rigid body about their centre of mass, first a yaw rate of 10.47 rad/s for 0.6 s (the 360), then an alignment of the skis to the landing slope at the predicted touchdown (about 68 degrees over 1.4 s); the take-off, the flight's path, the touchdown, the landing and the ride-away past the finish line are physics and the robot's own control. The referee measures the trick from the skis' heading change in the air (take-off to first snow contact), requires both skis within 45 degrees of forwards at touchdown and no more than 90 degrees of turn on the snow from 0.5 s after the landing to the finish: measured ski spin 356.2 degrees (a 360; pelvis 355.8), touchdown 0.0 / 3.6 degrees off forwards, 5.5 degrees of turn after the landing, the same in two runs. A pelvis-only spin with the skis turned 188 degrees in the air, a landing backwards and a spin on the snow each fail. Negatives: the same jump with a 540 or an under-rotated spin (180) fails as the wrong trick, a hand on the snow and a sit-down after the landing fail as fell, no jump, doing nothing (did not start). Contacts in the flight and the landing: ski edge spheres in the snow at most 10 mm, no ski-body, ski-ski or body-snow contact. Own-motor reach: in a short search, the robot's own arm and torso wind-up reaches about 255 degrees of spin in 1.8 s of air; the 360 is near the edge of its reach, not shown. Stress scan (a flailing robot on the start platform and the in-run, 5 episodes): no instability, no hook errors; the worst contact is a ski tip sphere 2.8 cm into the in-run snow (hard snow, solref 0.005).; human review in the pull request that adds the benchmark (docs/protocol/tasks.md#grading)"
 
 [verifier]
 timeout_sec = 900.0
@@ -26,7 +26,7 @@ timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -41,7 +41,7 @@ memory_mb = 8192
 timeout_sec = 7200.0
 # Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md).
-network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/invariants.md H.6)
 
 [environment]
 build_timeout_sec = 1800.0

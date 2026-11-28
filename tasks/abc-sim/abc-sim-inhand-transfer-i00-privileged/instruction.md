@@ -5,8 +5,9 @@ Move the cream cheese stick to the left arm's side of the table, at least a hand
 down there.
 
 ## Goal
-Success: the cream cheese stick lies on the table on the left arm's side, at least a hand's width past the middle line
-between the arms. The replay ends as soon as the task is done.
+Success: the cream cheese stick is down at table level on the left arm's side, at least a hand's width past the middle
+line between the arms. The task counts as done once this has held for about a second without a break before your rows
+run out; the replay ends at that moment.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: `(T, 14)` rows, one per
 control step, at most 20,000 rows. It is replayed open-loop from the same initial state and scores 1 if its episode ends

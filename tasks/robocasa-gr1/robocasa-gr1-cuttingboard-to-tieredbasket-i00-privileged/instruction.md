@@ -6,7 +6,8 @@ Put the sweet potato from the cutting board on the top tier of the tiered basket
 ## Goal
 Success: the sweet potato is on the top tier of the tiered basket, not touching the counter, with the tiered basket
 still upright and both hands moved away from the sweet potato and the tiered basket; the other item that started on the
-cutting board with the sweet potato is not in the tiered basket. Your trajectory is replayed from the fixed start. What
+cutting board with the sweet potato is not on the tiered basket's top tier. Your trajectory is replayed from the fixed
+start. What
 counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 24)`

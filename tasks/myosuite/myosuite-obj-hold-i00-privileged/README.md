@@ -1,31 +1,39 @@
-# myosuite-obj-hold-i00-privileged
+# MyoSuite · obj_hold (privileged)
 
 | | |
 |---|---|
-| Benchmark | MyoSuite |
+| Task ID | `myosuite-obj-hold-i00-privileged` |
+| Benchmark | [MyoSuite](https://github.com/MyoHub/myosuite) (Caggiano et al., 2022), upstream `MyoHub/myosuite@5635e1a` |
+| Robot | MyoHand: musculoskeletal model of the human forearm and hand, 39 muscles |
 | Mode | privileged |
-| Twin | `myosuite-obj-hold-i00-standard` |
-| Simulator / robot | `myosuite` / `myohand` |
-| Family / instance | `obj_hold` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
+| Instance | `obj_hold`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-MyoSuite `myoHandObjHoldFixed-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Grip the object in your palm and hold it at the goal spot right above it for a second.
-A small object rests in the palm of the upturned hand; the goal site is right above it. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 39)`, one row per 20 ms control step).
+Grip the object in your palm and hold it at the goal spot right above it for a second.
 
-## Difficulty
-First-pass rating: medium. The action is muscle-level (39 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint control from muscle excitations. MyoSuite's goal has to hold for 1.0 s, so passing through the goal does not count.
+## Success criteria
+Success rule (MyoSuite `myoHandObjHoldFixed-v0`, its `solved` held): the object's reference point is less than 0.01 m
+from the goal point, held for 50 consecutive control steps (1 s at 20 ms per step).
 
-## Reference solution
-MyoSuite's own NPG baseline policy for `myoHandObjHoldFixed-v0` (`myosuite/agents/baslines_NPG/`, shipped in the MyoSuite wheel and removed from the image), rolled out from the frozen instance and cut at the first success: `solution/oracle.npy`, 57 rows (float32-exact, so the standard twin's client executes the same rows), success after 57 control steps. Replayed and saved by `solution/solve.sh`; re-checked in two fresh sessions (same final state).
+Failure (MyoSuite's `done`, ends the episode with 0): the object is more than 0.3 m from the goal point (dropped).
 
-## Verification
-`tests/grade.py` in a separate sandbox without network: one replay of `/app/output/trajectory.npz`, in a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff the episode ends in success (the goal held 50 control steps). `nop`: no trajectory, reward 0.
+The replay ends in success at the first control step at which the goal has held for 50 consecutive control steps, or
+with 0 at a failure.
 
-## Resources
-Caps per container (PROTOCOL §6).
+Graded file: `/app/output/trajectory.npz` with `actions`, a numeric array with one row per control step and one column
+per actuator (muscles first, in the layout the tooling gives), as `s.save_trajectory(...)` writes it, at most
+612,000 rows. After the agent's session it is replayed once, open-loop, from the frozen start in a fresh process
+of a separate verifier container without network. The replay runs the rows in order until the episode ends as above;
+later rows are not run. If the rows run out before the episode has ended in success, the task fails. A missing file,
+a file that is not such an array, a file for another family, a wrong row width, an empty array, more rows than the
+limit, a non-finite value, or an `.npz` entry larger than the row limit allows scores 0. A replay that gives no result
+(it times out or dies), or a frozen start that does not rebuild with its recorded hash, is reported as
+`grader_error` (infrastructure), not as a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,13 +42,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
-| Instance | `myoHandObjHoldFixed-v0` after `seed(0)` and `reset(seed=0)` (`rcb_myosuite.py make-instance`); state hash `8a1f6bbaffdfea78`, checked on every load |
-| Actions | 39 actuator commands per control step (20 ms, 10 physics substeps); success rule `hold` (tasks/myosuite/README.md) |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
-
-### Provenance
-The frozen instance (`environment/instance.npz`), its scene facts and the reference solution (`solution/oracle.npy`) were made at generation time; see `tasks/myosuite/README.md`.
+## License
+MyoSuite ([MyoHub/myosuite](https://github.com/MyoHub/myosuite), version 2.12.2, tag `v2.12.2` = `5635e1a`) is
+released under the Apache License 2.0, as are the models it bundles (MyoSim, the MPL prosthetic arm, the object,
+furniture and YCB models). The MyoDex reference motions (the `dex_*` families) derive from the GRAB motion-capture
+dataset; MyoSuite asks their users to comply with GRAB's licence, which allows non-commercial scientific research
+only. The simulator is MuJoCo (Apache License 2.0).

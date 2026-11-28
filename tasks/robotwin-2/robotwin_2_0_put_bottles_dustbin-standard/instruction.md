@@ -4,7 +4,7 @@
 Put all three bottles into the dustbin on the floor at the robot's left. Only the left arm can reach the dustbin.
 
 ## Goal
-Success: all three bottles are in the dustbin.
+Success: all three bottles are in or just above the dustbin, below the table top; they need not be let go.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -21,7 +21,7 @@ its client or its MCP tools, as if it were real hardware: one live episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py` (protocol `eai-standard/2.1`):
+`/opt/tools/rcb_client.py` (protocol `eai-standard/3.0`):
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service warms up, ~1 min)

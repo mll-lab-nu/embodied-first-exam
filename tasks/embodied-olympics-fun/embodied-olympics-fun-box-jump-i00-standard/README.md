@@ -1,34 +1,47 @@
-# embodied-olympics-fun-box-jump-i00-standard
+# Embodied Olympics · box jump (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
-| Twin | `embodied-olympics-fun-box-jump-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-h1-2` |
-| Family / instance | `box_jump` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: positive by injection (1.6 m/s forward and 3.7 m/s up onto the 0.61 m box, a perfect landing, the stand is the robot's own); negatives: touching the box before the jump, landing on the floor, a leg tuck, a one-foot take-off, the box's side, not on the feet, the floor after the landing, a fall. The H1-2's open-loop squat jump leaves the ground at 1.8 m/s; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-box-jump-i00-standard` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree H1-2 humanoid (1.78 m, 67 kg, 27 joints), with Unitree's walking policy |
+| Mode | standard |
+| Instance | `box_jump`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Jump onto the box in front of you from both feet, land on top with both feet and stand up straight on it. (Embodied Olympics `box-jump`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Jump onto the box in front of you from both feet, land on top with both feet and stand up straight on it.
 
-## Difficulty
-No built-in action of this robot leaves the ground: the jump is whole-body joint control, and it must lift 67 kg far enough for the soles to clear 0.61 m, more than half the length of the legs. The landing has to be absorbed on a box only 0.51 m deep that is free to slide, and the robot must then straighten up on it. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
+## Success criteria
+The box is a free 25 kg body, 0.61 m high, with a top 0.51 m by 0.76 m. The referee's stages, in order: take-off,
+landing, stand.
+- Take-off: the robot's first flight phase of at least 0.1 s. It counts only if nothing of the robot touched the box
+  before it, each foot was on the floor within the last 0.1 s before lift-off, and the pelvis rose at least 0.1 m
+  above its height at lift-off; otherwise the attempt fails.
+- Landing: over the 0.5 s after the first contact, only the feet touch anything, and only the box's top face (each
+  contact within 0.02 m of the top plane and pushing within 20 degrees of straight out of it); at the end of the 0.5 s
+  both feet are on the top. Otherwise the attempt fails.
+- Stand: for 2 s without a break, both feet on the top face and nothing else touching anything, the torso within 20
+  degrees of vertical, the pelvis slower than 0.35 m/s and at least 1.0 m above the box's top. The success is called
+  when the 2 s are complete.
 
-## Reference solution
-None (as `embodied-olympics-fun-box-jump-i00-privileged`).
+Fouls (each fails the attempt at once): before the jump, any part other than the feet touching the floor, or anything
+touching the box; after the take-off, any part touching the floor, or any part other than a foot touching the box. The
+generic fall rule is off (no pelvis-height limit). Time limit: 20 s (2,000 control steps).
 
-## Verification
-The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
-infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
-`/data/final.json`: pass iff the live attempt succeeded. The
-rules: The box is a free rigid body of 25.0 kg (not fixed to the floor; friction coefficient 1.0, a stiff wooden surface: contact time constant 0.005 s): 0.61 m high, its top 0.51 m long (along +x, the way you face) and 0.76 m wide. You must get onto it with one jump. Your jump is your first flight phase of at least 0.1 s (nothing of you touches anything). It counts only if: nothing of you touched the box before it (no stepping or climbing up); it left the floor from both feet (each foot was on the floor within the last 0.1 s before lift-off); it was a real take-off (your pelvis rose at least 0.1 m above its height at lift-off: tucking the legs while falling is not a jump). The landing is judged over the 0.5 s that follow the first contact: in that time only your feet may touch anything, and only the box's top face (each contact within 0.02 m of the top plane and pushing within 20.0 degrees of straight out of it: a foot against a side face or jammed on an edge is not on the top), and at its end both feet are on the top. Then you stand up straight on the box for 2.0 s without a break: both feet on the top face and nothing else touching anything, your torso within 20.0 degrees of vertical, your pelvis moving no faster than 0.35 m/s and at least 1.0 m above the box's top (hips and knees extended). You fail if the jump breaks one of these rules, if any part of you touches the floor after the landing, if a part other than a foot touches the box, if you fall before the jump (a fall is any part of you other than your feet touching the floor; there is no pelvis-height limit, a deep squat is not a fall), or after 20 s. You may walk on the floor before the jump. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The referee's
+success call is an event: once it is made at some control step, the attempt is a success. It is never shown to the
+agent and does not end the attempt: the physics goes on until the agent's `/finish`, the attempt's time limit, or the
+end of the agent's time (2 h), and nothing after the call undoes it. A failure the referee calls before any
+success (a foul, a fall, the physics diverging) ends the attempt at once with 0. Reaching the time limit or the end of
+the session without a success call scores 0. The agent has 5 resets, each starting a new attempt from the
+frozen start; only the last attempt (the one after the last reset) is graded, and a success in an earlier attempt does
+not count. A simulator error raised by the agent's own call ends the attempt with 0. An attempt that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,13 +51,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | parkour-apparatus-balance |
-| Rule book | CrossFit's box jump movement standard (the CrossFit Games Open workout descriptions: both feet start on the floor, both feet end on the box, hips and knees fully extended on top) on the men's prescribed box: 24 in (0.61 m) high, the 20 x 24 x 30 in plyometric box standing on its 20 x 30 in face; deviations: the step-up that some Open workouts permit is not a box jump here: the take-off is from both feet and there is a flight (the family is the jump, not the step-up) · full extension on top is judged by the pelvis' height above the box's top (1.0 m; this robot's pelvis is 1.04 m above its soles with straight legs, 1.02 to 1.03 m in its own standing posture, whose knees stay bent 0.36 rad, and below 1.0 m once the knees bend more than about 0.65 rad) and by the torso's tilt: a referee cannot see "open hips" on a robot otherwise · one repetition, judged to a held stand of 2.0 s on the box (a workout counts repetitions; here the repetition is one attempt and the stand shows control) |
-| Stages | take-off → landing → stand |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 2000 control steps (20 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

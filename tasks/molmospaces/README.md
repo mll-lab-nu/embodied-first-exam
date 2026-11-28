@@ -1,161 +1,134 @@
 # MolmoSpaces
 
-The benchmark episodes Ai2 uses to evaluate robot policies zero-shot in unseen houses: picking, placing, articulated
-objects and navigation, on a fixed-base arm and a mobile manipulator.
+## Overview
 
-## Quick start
+The benchmark episodes Ai2 uses to evaluate robot policies zero-shot in unseen houses: picking, placing, articulated
+objects and navigation, on a fixed-base arm and a mobile manipulator. Eight families, one frozen upstream episode each,
+in two modes: 16 task directories, `tasks/molmospaces/molmospaces-<family>-i00-privileged` and `-standard`.
+
+| | |
+|---|---|
+| upstream | [Ai2 MolmoSpaces](https://github.com/allenai/molmospaces) (Kim et al., 2026), molmo-spaces 0.2.9 (tag `v0.2.9`, `7351388`), packages `molmospaces-bench-v2/20260415` |
+| simulator | MuJoCo 3.5.0, CPU physics, EGL rendering on a GPU (OSMesa without one, about 15 times slower) |
+| robots | `franka-robotiq-2f85` (Franka FR3 + Robotiq 2F-85 on a fixed base, the DROID setup); `rainbow-rby1` (RB-Y1: holonomic base, 6-joint torso, two 7-joint arms) |
+| score | upstream's `judge_success()` on the state at the episode's end |
+| image | `ghcr.io/mll-lab-nu/efe:molmospaces-0.2.5` (`images/molmospaces/`, about 1.8 GB of assets) |
+
+Quick start:
 ```bash
 harbor run -d embodied-first-exam@all -p tasks/molmospaces -a codex -m openai/gpt-6-astra
 ```
 Every image is public: Harbor pulls it.
 
-| | |
-|---|---|
-| upstream | [Ai2 MolmoSpaces](https://github.com/allenai/molmospaces) (molmo-spaces 0.2.9, Apache-2.0), packages `molmospaces-bench-v2/20260415` |
-| simulator | `molmospaces`: MuJoCo 3.5.0, CPU physics, EGL rendering on a GPU (OSMesa without one, ~15× slower) |
-| robots | `franka-robotiq-2f85` (Franka FR3 + Robotiq 2F-85 on a fixed base, the DROID setup); `rainbow-rby1` (RB-Y1: holonomic base, 6-joint torso, two 7-joint arms) |
-| score | upstream's `judge_success()` on the state at the episode's end |
-| tasks | 8 families × 2 modes: `tasks/molmospaces/molmospaces-<family>-i00-privileged` and `-standard` (`eai-standard/2.2`) |
-| image | `ghcr.io/mll-lab-nu/efe:molmospaces-0.2.5` (`images/molmospaces/`, ~1.8 GB of assets) |
-| oracle | none: upstream's planners and grasp files are not shipped; a positive example per family (`oracle_evidence`: GPT-6.1 Sol's privileged passes), human review in PR #276 |
+| mode | the agent gets | resets | graded |
+|---|---|---|---|
+| privileged | `Session`: full state (`s.state()`, `s.model` / `s.data`), any camera, upstream's kinematics, reward and success code | unlimited | `trajectory.npz`, replayed once in a fresh process |
+| standard | `joint_position` rows (Franka 8, RB-Y1 25) and `done`; the robot's cameras, proprioception, `/kinematics` | none | the live episode: upstream's `judge_success()` on the state it ends in |
 
-| family | upstream package | robot, control period | variants | kept episode (i00) | horizon |
-|---|---|---|---|---|---|
-| pick | `procthor-objaverse/FrankaPickHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #806: a pie slice among goblets | 303 steps (20 s) |
-| pick-and-place | `procthor-objaverse/FrankaPickandPlaceHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #228: a purple bottle into a clear ashtray | 606 (40 s) |
-| pick-and-place-next-to | `procthor-objaverse/FrankaPickandPlaceNextToHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #479: a black rail mount beside the bread | 455 (30 s) |
-| pick-and-place-color | `procthor-objaverse/FrankaPickandPlaceColorHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #299: a small dark bird figurine into the red bowl | 606 (40 s) |
-| open | `ithor/FrankaOpenHardBench` | Franka, 66 ms | drawer / hinged door | #52: a dishwasher's door (one joint counts) | 455 (30 s) |
-| close | `ithor/FrankaCloseHardBench` | Franka, 66 ms | drawer / hinged door | #346: an upper cabinet's hinged door | 455 (30 s) |
-| navigate-to | `holodeck-objaverse/NavToObjDataGenConfig` | RB-Y1, 200 ms | one target / several (nearest counts) | #237: a table lamp (two in the house; the nearest counts) | 500 (100 s) |
-| open-door | `procthor-10k/rby1_benchmarks/door_opening_benchmark` | RB-Y1 (RBY1M), 100 ms | push / pull | #0: a door to pull | 400 (40 s) |
+## Upstream and license
 
-## Instances
-Per family, the first episode in the package's order that passes every filter ships as `i00` (no model's results enter
-the choice):
+- Upstream: MolmoSpaces, [allenai/molmospaces](https://github.com/allenai/molmospaces), molmo-spaces 0.2.9 from PyPI
+  (tag `v0.2.9`, `735138876887eb64650742631b8dda841dd264bf`), installed with every dependency pinned in
+  `images/molmospaces/requirements.txt`. Apache License 2.0 (Allen Institute for Artificial Intelligence).
+- Assets: the scenes and AI2-THOR objects are CC BY 4.0; Objaverse objects are ODC-BY 1.0 and each its creator's CC
+  BY, CC BY-SA or CC0, listed with their attributions in the image's `/opt/molmospaces/ATTRIBUTION.md`. The build fails
+  on an asset with non-commercial terms, so none is included. Objaverse version `20251016_from_20250610`, the one the
+  benchmark was made with (0.2.9 defaults to `20260131`), pinned with upstream's `MLSPACES_PINNED_ASSETS_FILE`.
+- Simulator: MuJoCo 3.5.0 (Apache License 2.0).
+
+## Changes from upstream
+
+- The tooling, `rcb_molmospaces.py` (`embodied_first_exam/benchmarks/molmospaces/`, in every task from the pinned
+  files-only image `images/molmospaces-files/`), builds the frozen episode through upstream's evaluation path
+  (`JsonEvalRunner` → `JsonEvalTaskSampler` → `task.reset`, action noise off). One control step is one upstream
+  `Task.step` with every move group's targets; each step also polls every camera, as upstream's evaluation does.
+  Physics, controllers, kinematics and the success checks are upstream's.
+- One loader change: upstream's `set_joint_values` raises unless the articulated target has a grasp file. Grasp files
+  are not shipped, and the check only tests that the file exists, so it answers "exists" while the episode is built.
+- Upstream's scripted experts are replaced by stubs that raise (`images/molmospaces/scrub_experts.py`); no grasp file
+  is shipped. Only the assets the instances open are kept. Upstream's generic A* and grasp-generation library code
+  stay installed.
+- The episode ends at upstream's `is_done()` (the horizon) or when the agent ends it. Success is judged at the end
+  (`terminate_upon_success = False`, upstream's evaluation default).
+- Control rates: the Franka's from upstream's evaluation config; the RB-Y1's from its data-generation configs (it has
+  no evaluation config). Navigation uses the Holodeck package (the ProcTHOR-10k one misses objects on 0.2.9's scene
+  version).
+- Each instance is the upstream episode with `source` (its expert trajectory's path) removed; navigation's text is
+  upstream `NavToObjTask`'s own.
+
+## Interface
+
+Trajectory rows (both modes): the controlled move groups in upstream order, each the target upstream's joint-position
+controller receives. Franka (8): 7 arm joints (rad) + the Robotiq command (0 open .. 255 closed). RB-Y1 (25): base x,
+y (m) and yaw (rad), torso 6, left arm 7, right arm 7 (rad), left and right gripper (the finger motor's force, -100 ..
+100: positive closes).
+
+- **Privileged.** `/opt/tools/rcb_molmospaces.py` (`from rcb_molmospaces import Session`): `Session(instance)` builds
+  the frozen episode (10-40 s); `layout`, `hold_row()`, `step(row)`, `done`, `status()`, `state()`, `model` / `data`,
+  `render(cam)`, `render_depth(cam)`, `camera_info(cam)`, `proprio()`, `robot_spec()`, `kinematics(...)` (upstream's
+  kinematic model), `reset()` (unlimited), `replay(rows)`, `save_trajectory(rows, path)`. A trajectory holds at most
+  100,000 rows.
+- **Standard.** The `sim` sidecar serves `GET /spec`, `GET /status`, `POST /observe`, `POST /submit`, `POST /finish`
+  and `POST /kinematics` through `rcb_client.py` and the `efe-robot` MCP tools (wire protocol `eai-standard/3.0`).
+  Actions: `joint_position` rows streamed at the control rate (Franka 15.15 Hz; RB-Y1 5 Hz for navigation, 10 Hz for
+  the door), and `done`, which is the same as `/finish`; `ee_pose` is not offered. A hold chunk runs whole control
+  steps, and `meta["duration_s"]` is what ran. Cameras: Franka wrist and shoulder (moving) and three randomised static
+  ones; RB-Y1 head and two wrist cameras; MuJoCo depth. `/kinematics` is upstream's `MlSpacesKinematics` on the
+  robot's model (Franka 7 joints, RB-Y1 23 with the base). Proprioception: 29 columns (Franka), 85 (RB-Y1). One call
+  returns at most 1812 images. A request is checked completely before anything moves: a null or wrongly typed field
+  is a 400.
+
+World-frame information: standard mode's texts name objects and the goal only, never where they are
+(`ci_checks/check-world-frame-texts.sh`). The robot's pose and camera calibration come from the
+service; object poses never do.
+
+## Grading
+
+- **Privileged.** `tests/grade.py` replays `/app/output/trajectory.npz` once, open-loop, in a fresh process
+  (`rcb_molmospaces.py replay`): the rows in order until the last row or the horizon, then upstream's
+  `judge_success()` on the final state. The replay checks that it starts in the instance's t = 0 state; a start that
+  does not rebuild, a replay that dies or times out, or any other grader exception is `grader_error` with
+  `infra_error`. A file that is not a trajectory of this task (not an npz, pickled or non-numeric `actions`, a wrong
+  width, NaN or inf, more than 100,000 rows, an entry that unpacks to more than that many rows can hold, checked before
+  it is read) is `bad_trajectory`, the agent's 0. The verdict replay and a second, video-only replay share the
+  verifier's 1800 s.
+- **Standard.** The service judges the live episode: it ends at `/finish` or `done`, at the horizon
+  (`RCB_STEP_LIMIT`), or when the agent's time runs out, and is judged by upstream's `judge_success()` on the state it
+  ends in. A simulator error raised by the agent's actions is the agent's 0 (reason `error`). The service checks its
+  frozen start against the instance's hash before the agent is served (`instance_mismatch`, `infra_error`).
+  `tests/grade.py` transcribes the verdict. One video-only pass renders `replay.mp4` after `final.json` is written; it
+  never changes the verdict.
+
+## Tasks
+
+| family | upstream package | robot, control period | kept episode (i00) | horizon |
+|---|---|---|---|---|
+| pick | `procthor-objaverse/FrankaPickHardBench` | Franka, 66 ms | #806: a pie slice among goblets | 303 steps (20 s) |
+| pick-and-place | `procthor-objaverse/FrankaPickandPlaceHardBench` | Franka, 66 ms | #228: a purple bottle into a clear ashtray | 606 (40 s) |
+| pick-and-place-next-to | `procthor-objaverse/FrankaPickandPlaceNextToHardBench` | Franka, 66 ms | #479: a black rail mount beside the bread | 455 (30 s) |
+| pick-and-place-color | `procthor-objaverse/FrankaPickandPlaceColorHardBench` | Franka, 66 ms | #299: a small dark bird figurine into the red bowl | 606 (40 s) |
+| open | `ithor/FrankaOpenHardBench` | Franka, 66 ms | #52: a dishwasher's door (any dishwasher joint counts) | 455 (30 s) |
+| close | `ithor/FrankaCloseHardBench` | Franka, 66 ms | #346: an upper cabinet's hinged door | 455 (30 s) |
+| navigate-to | `holodeck-objaverse/NavToObjDataGenConfig` | RB-Y1, 200 ms | #237: a table lamp (two in the house; the nearest counts) | 500 (100 s) |
+| open-door | `procthor-10k/rby1_benchmarks/door_opening_benchmark` | RB-Y1 (RBY1M), 100 ms | #0: a door to pull | 400 (40 s) |
+
+Each task's README states its exact success check with its thresholds.
+
+Per family, the first episode in the package's order that passes every filter ships as `i00`:
 - **Valid:** no public MolmoBot trajectory of the house (`allenai/molmobot-data`, val); upstream builds every listed
-  object; not done at t = 0; no asset whose licence forbids commercial use (the image redistributes them).
+  object; not done at t = 0; no asset whose licence forbids commercial use.
 - **Named unambiguously:** no identical copy of the target or receptacle, and no other object of a named object's
   WordNet synset within 1 m of it (colour's second receptacle differs by colour, by design); navigation: every
   candidate target has the target's synset.
-- **Hard**, measurable and the same for every model:
+- **Hard**, measurable and the same for every agent:
 
 | families | rule |
 |---|---|
 | pick, pick-and-place(-next-to, -color) | at least 5 other objects within 30 cm of the target |
 | pick-and-place(-color) | the receptacle at least 0.25 m from the target (the packages' median) |
-| pick, pick-and-place(-next-to, -color) | the target small in the robot's fixed cameras (not on the arm) at t = 0: at most 1200 / 630 / 1100 / 670 pixels (pick / pick-and-place / -next-to / -color) in the best one (EGL, the tasks' renderer), the packages' lower quartiles; it and the receptacle or reference object at least 200 pixels in one, so the goal can be told from the images |
-| open, close | upstream's Hard packages: arm start posture randomised (±0.26 rad per joint, wrist ±90°), base up to ±30° off facing the fixture, 5 randomised cameras; the fixture at least 0.75 m (horizontally) from the robot base (the packages' median) |
-| open | at most 3 joints count toward upstream's success (every joint of every fixture of the named kind) |
-| open, close | the moving part has to travel at least 6 cm (open) / 14 cm (close) to reach upstream's success threshold (largest geom displacement; the packages' upper quartiles) |
+| pick, pick-and-place(-next-to, -color) | the target small in the robot's fixed cameras at t = 0: at most 1200 / 630 / 1100 / 670 pixels (pick / pick-and-place / -next-to / -color) in the best one, the packages' lower quartiles; it and the receptacle or reference object at least 200 pixels in one |
+| open, close | upstream's Hard packages: arm start posture randomised (±0.26 rad per joint, wrist ±90°), base up to ±30° off facing the fixture, 5 randomised cameras; the fixture at least 0.75 m (horizontally) from the robot base |
+| open | at most 3 joints count toward upstream's success |
+| open, close | the moving part has to travel at least 6 cm (open) / 14 cm (close) to reach upstream's success threshold (the packages' upper quartiles) |
 | navigate-to | the nearest target at least 8 m from the base and out of `head_camera`'s view at t = 0 |
-| open-door | none beyond the package (the handle's distance from the base and its size in `head_camera` hardly vary: 1.30–1.42 m, 26–36 pixels) |
-
-The instance is the upstream episode with `source` (its expert trajectory's path) removed; navigation's text is upstream
-`NavToObjTask`'s own. Assets: Objaverse `20251016_from_20250610`, the version the benchmark was made with (0.2.9 defaults
-to `20260131`), pinned with upstream's `MLSPACES_PINNED_ASSETS_FILE`; navigation uses the Holodeck package (the
-ProcTHOR-10k one misses objects on 0.2.9's scene version).
-
-## Upstream decides the outcome
-- The tooling, `rcb_molmospaces.py` (one source, `embodied_first_exam/benchmarks/molmospaces/`, in every task from the pinned
-  files-only image `images/molmospaces-files/`: `/opt/tools/` for the agent, `/tests/` and `/srv/` for the graders), builds the frozen episode through
-  upstream's evaluation path (`JsonEvalRunner` → `JsonEvalTaskSampler` → `task.reset`, action noise off). One control
-  step = one upstream `Task.step` with every move group's targets; each step also polls every camera, as upstream's
-  pick-and-place success reads that history. Physics, controllers, kinematics and the success checks are upstream's.
-- The episode ends at upstream's `is_done()` (the horizon) or when the agent ends it: standard mode's `done` ends it at
-  once (upstream's `"done": True` action still runs that row's step), privileged mode where its trajectory ends. Success
-  is judged at the end (`terminate_upon_success = False`, upstream's evaluation default).
-- Rates: the Franka's from upstream's evaluation config; the RB-Y1's from its data-generation configs (it has no
-  evaluation config).
-- One loader change: `set_joint_values` raises unless the articulated target has a grasp file; it only checks that the
-  file exists, so the check answers "exists" while the episode is built.
-
-## Modes
-
-| mode | the agent gets | resets | graded |
-|---|---|---|---|
-| privileged | `Session`: full state (`s.state()`, `s.model` / `s.data`), any camera, upstream's kinematics, reward and success code | unlimited | `tests/grade.py`: `trajectory.npz` replayed in one fresh process, which must succeed |
-| standard | `joint_position` (Franka 8, RB-Y1 25) and `done`; the robot's cameras (not the third-person follower), proprioception, `/kinematics` | none (D1) | the live episode: upstream's `judge_success()` on the state it ends in, in the sim service; nothing replays it |
-
-Standard mode's texts name objects and the goal only (D7, `ci_checks/benchmarks/molmospaces/advisory-world-frame.sh`); the robot's pose and
-camera calibration come from the service, object poses never. The privileged grader checks that each replay starts in the
-instance's t = 0 state (else `grader_error`, with `infra_error`); the standard sim service checks its own start against
-that hash when it builds the scene, before the agent is served (else it gives up: `instance_mismatch`, `infra_error`).
-Standard video: one video-only pass (`rcb_molmospaces.py replay --video` in a fresh process: a scene build + the episode
-rendered on the GPU, 20-120 s, over 500 s on a loaded host) renders `replay.mp4` after `final.json` is written
-(`video_pending` while it runs); its success and hash are not read, and a failed or late render loses only the video.
-Rendering during the live episode was not chosen: the service renders only what the agent asks for, and a frame every
-control step would add a GPU render to every step of the agent's calls. Crash recovery:
-resume class `exact`. Budget: each task's own `[agent] timeout_sec` (PROTOCOL §2,
-docs/protocol/running.md "The agent's time"), stated by the Time line of every instruction's closing `## Limits`; no step limit beyond the horizon.
-
-What is not the agent's failure is flagged, and a reward is always written. Standard `infra_error = 1`: no
-`final.json` (`missing_log`), an unreadable one (also `grader_error`), an unfinished one (`finalized` 0: the collect hook
-did not write its verdict), a give-up after crashes between
-calls or a failed resume, a service that did not end its episode for the hook (no `episode.json`: one the newest service
-start dumped before failing to exit in time is still the live verdict, `end_timed_out`; a resume whose episode goes on
-deletes one left by a call the crash lost), a frozen start that did not rebuild
-(`instance_mismatch`, found by the service at its start); a give-up after crashes during a call and a simulator error
-raised by the agent's actions stay the agent's failure (reason `error`: the state after the exception is never judged a
-success). `finalize.sh` writes `final.json` whole and renames it into
-place. The privileged verifier's verdict replay and video replay share its 1800 s. Privileged: a file that cannot be read
-as a trajectory (not an npz, a pickled or non-numeric `actions`, more than 100,000 rows, or an entry that unpacks to more
-than that many rows can hold: checked before it is read, `too_large`) is `bad_trajectory`, the agent's 0. The service
-checks a request completely before anything moves: a null or wrongly typed `dt`, `seconds`, `cameras`, `note`, `video`,
-`interpolate` or `type` is a 400. `hold(s)` (a hold chunk) runs whole control steps (the request rounded to the control period, 66 ms for the
-Franka tasks) and `meta["duration_s"]` is what ran, not what was asked for. The only step limit is upstream's horizon, which
-the instruction and `/spec` (`max_control_steps`, `episode`) state; a privileged trajectory holds at most 100,000 rows (more
-than 160 times the longest horizon; rows after the episode's end are never executed), which the instruction states too.
-
-## Image and tasks
-- `images/molmospaces/prepare_assets.sh`, then the image build: the measured environment (`requirements.txt`,
-  `--no-deps`); upstream's scripted experts replaced by raising stubs in the same layer (`scrub_experts.py`); the assets
-  the instances open under `strace` (everything else deleted, no grasp file); every instance's t = 0 hash checked again
-  without network. Upstream's generic A* and grasp-generation library code stay installed. Licences: scenes and
-  AI2-THOR objects CC BY 4.0; Objaverse objects ODC-BY 1.0 and each its creator's CC BY / BY-SA / CC0, listed with
-  their attributions in the image's `/opt/molmospaces/ATTRIBUTION.md` (the build fails on a non-commercial one).
-- The 16 task directories are the deliverable; the tooling that built them is kept outside this repository.
-
-## Run
-
-```bash
-harbor run -p tasks/molmospaces/molmospaces-pick-i00-standard -a codex -m openai/gpt-6-astra --env-file .env
-harbor run -p tasks/molmospaces/molmospaces-pick-i00-privileged -a nop      # scores 0
-```
-Agent, provider and effort settings: docs/protocol/running.md.
-
-## Standard-mode service details
-
-Resume class `exact` (MuJoCo, CPU physics).
-
-One call returns at most 1812 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
-
-Grading: the service judges the live episode, dumps it and exits; the hook writes `final.json` from it and renders the video once.
-
-Per-simulator notes:
-
-| | |
-|---|---|
-| simulator | molmo-spaces 0.2.9, MuJoCo 3.5.0 |
-| rows streamed at | Franka 15.15 Hz (33 substeps); RB-Y1 5 Hz (navigation, 100) or 10 Hz (door, 50) |
-| `joint_position` | Franka 8: 7 joints + Robotiq command (0–255); RB-Y1 25: base x, y, θ (world) + torso 6 + arms 14 + two gripper forces |
-| `ee_pose` | not offered (`not_yet`) |
-| cameras | Franka: wrist and shoulder (moving), three randomised static; RB-Y1: head + two wrist cameras (moving) |
-| depth | MuJoCo depth buffer |
-| `/kinematics` | upstream's `MlSpacesKinematics` on the robot's MuJoCo model (Franka 7, RB-Y1 23 with the base) |
-| proprio columns | 2.2: 29 (Franka), 85 (RB-Y1) |
-| grading replays | none (graded live); one video-only render pass |
-| resume class (docs/protocol/standard_mode.md) | `exact` |
-
-Measured scene builds (episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
-
-| benchmark | measured | build | note |
-|---|---|---|---|
-| MolmoSpaces | 8 families (213 trials), on a lab host (RTX 4090, 32 cores) | episode start 8–52 s after Harbor's environment setup began (median 11 s; navigate-to 33–52 s) | `RCB_STARTUP_TIMEOUT_S` = 300 |
-
-**Agent-ended episodes** (standard mode; PROTOCOL §3 "Agent-ended episodes", `RCB_AGENT_END` in each sim service,
-`rcb_agent_end.py`). The task's success is never shown and never ends the episode: the agent ends it with `POST /finish`
-(reason `finished`), or the end of its session does (`timeout`). The `done` action is the same as `/finish` (reason
-`finished`); the benchmark's horizon is the step limit (`RCB_STEP_LIMIT` = the task's horizon in control steps, the
-instruction's Steps line; reason `step_limit`). Every end is judged as before, on the final state with upstream's
-`judge_success()`; upstream's success is recorded after each control step (hidden) and never shown.
+| open-door | none beyond the package |

@@ -1,46 +1,43 @@
-# embodied-olympics-match-tabletennis-matchlow-i01-standard
+# Embodied Olympics · robot table tennis at the low level, match against level 1 (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Match |
-| Mode | standard (`eai-standard-lockstep/1.0`) |
-| Twin | `embodied-olympics-match-tabletennis-matchlow-i01-privileged` |
-| Simulator / robot | `mujoco` / `franka-panda` |
-| Family / instance | `tabletennis_matchlow` / seed 22 (allowed seeds: [22, 101, 111]; PROTOCOL §2) |
-| Oracle | `partial` — level 1, the easiest level, the low level (the agent's own hit in the loop, no execution scatter): our toolkit-only reference skill with the camera-only reference strategy lost 0:5 on this seed (twice) and on seeds 2-9 (its slow serves bounce twice on its own court; volleys on the receive), so the oracle is partial. Feasibility: the platform's own hit packaged as a skill (the same sandbox process) with the truth-state reference strategy wins level 1 in 7 of 8 development seeds of our evaluator's competition test (no wall clock), this seed 5:1, where our reference skill wins 0 of 4; through the live service (core 0.2.32's upload path) with the camera-only strategy it scored 2:5, 1:5, 2:5; the platform's hit meets every development request of the contract (118/118) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0` |
+| Task ID | `embodied-olympics-match-tabletennis-matchlow-i01-standard` |
+| Benchmark | [Embodied Olympics - Match](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@0d7f680` |
+| Robot | Franka Emika Panda arm on a moving base (an x-y rail in table tennis, a gantry in badminton), holding a paddle or racket |
+| Mode | standard |
+| Opponent | Scripted robot at level 1 of 4, with the same robot and limits as the agent's |
+| Instance | `tabletennis_matchlow`, seed 22 |
+| Time limit | 2 h |
+| Reference solution | Pipeline check only |
 
 ## Task
-Win a game of table tennis to 5 points against the scripted opponent, with a hitting skill you write yourself playing every stroke.
+Win a game of table tennis to 5 points against the scripted opponent, with a hitting skill you write yourself playing
+every stroke.
 
-Table tennis against the scripted opponent (level 1), program play, LOW LEVEL (Agent as Robotics Engineer: the agent implements the core skill itself from the robot's joint interface and toolkit and serves it from its own container to the simulator, which plays every stroke with it: the skill in the loop, its compute counted in match time): robot table tennis in a continuous world slowed by a factor S (MuJoCo Franka Panda + paddle on an x-y rail base behind the end line, both held to the real robot's limits: the Panda's joint velocity, acceleration, jerk, torque and torque rate, the rail's speed, acceleration and jerk; DeepMind ball and table model), seen only through two cameras of four frames each; one game to 5 points (lead by 2 from 4:4, at 6:6 the next point wins); the players' robots serve by the ITTF service laws (a toss device on the robot projects the ball at least 16 cm up from a point you choose behind your end line, you strike it as it falls; 2 serves each, from 4:4 one each); format match: you against a scripted opponent (level 1-4; you serve first), format duel: two players.
+## Success criteria
+The instance: the agent's robot (seat A) against the scripted opponent at level 1, seed 22, at
+the low action level. One game of table tennis: the first to 5 points wins, with a lead of 2 from 4:4, or the first to 7 (at 6:6 the next point wins). At 40 points played (lets included) the player ahead wins; at a level score, the player who won the last point. A player's third undue-delay fault (no toss within 5 s of the serve opening) loses it the match. There are no draws. Every stroke is a `hit` that the simulator hands, in the loop, to the agent's own
+skill server in the agent's own container; a call that fails, is late or returns no valid command gives no command.
+The world runs in lockstep: it advances only during the agent's waits and up to the step at which an action takes
+effect, and it waits for each skill call.
 
-## Difficulty
-Frozen development instance: seed 22, level 1, in lockstep (its realtime twin: S = 10). Not one of
-the sport's official (hidden) seeds, so results here are previews, not official Embodied Olympics results.
+Success: the match ends by the rules (`match_over`) with the agent's side as the winner. The grader checks only the
+match result. The agent's side loses the match, a valid 0, by any of these forfeits:
+- `no_show`: no `game start` within 1800 s of real time after the match service starts, or the session ends before
+  the start;
+- `ready_timeout`: no `game ready` review within 300 s of real time after a point, even when ahead;
+- `abandoned`: the agent's session ends while the match is in play.
 
-## Reference solution
-`solution/`: our camera-only reference player through the same HTTP interface. level 1, the easiest level, the low level (the agent's own hit in the loop, no execution scatter): our toolkit-only reference skill with the camera-only reference strategy lost 0:5 on this seed (twice) and on seeds 2-9 (its slow serves bounce twice on its own court; volleys on the receive), so the oracle is partial. Feasibility: the platform's own hit packaged as a skill (the same sandbox process) with the truth-state reference strategy wins level 1 in 7 of 8 development seeds of our evaluator's competition test (no wall clock), this seed 5:1, where our reference skill wins 0 of 4; through the live service (core 0.2.32's upload path) with the camera-only strategy it scored 2:5, 1:5, 2:5; the platform's hit meets every development request of the contract (118/118).
+A simulator error in a control step, after the agent's first applied action, is a valid 0 too.
 
-## Verification
-Separate sandbox, no network. The match is graded live (owner, 2026-10-17): the sim service records the
-match's scores, winner and reason as it plays it and nothing replays it to grade it (`final.json` `graded_by` live,
-`replays` 0; the replay video is drawn after the verdict). The verifier (`tests/grade.py`, our core's grader) applies
-the validity rule
-(technical failures void the trial, a player's own problems are a valid loss), and writes reward.json; success = a
-valid, finished match that the agent won. `tests/fexam_reward.py` adds the hub's fields (`infra_error`, `realtime`,
-`slowdown`, `opponent_level`).
-The skill in the loop (owner 2026-10-17, option c): the agent's skill runs only in its own
-container (`game skill serve`); no agent code runs in the sim (`RCB_SKILL_REMOTE_ONLY=1`, no upload endpoint). step() is
-one synchronous call per due control step, waited for at most one control period and applied at that step; a skill or
-server that is slow, failing or down only costs the agent its own commands (never a technical failure); every version
-of the skill that played is a `skill_load` row of the episode (tasks/embodied-olympics-fun/README.md).
-An error of the simulator's control step after the seat's first command (an act, or a command of its skill's
-step(), counted before it is applied) is the agent's result (`agent_sim_error`), before it a technical failure.
+Graded: the live match, as the trusted match service recorded it while it was played; nothing is replayed. There is
+one match and no reset, and the agent cannot end it with `/finish`: the match's rules end it. A technical failure of
+the match service (a crash, an error in its bookkeeping, rendering or metering) voids the trial as an infrastructure
+failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -50,11 +47,12 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
+## Others
+Exported by the Embodied Olympics task exporter from its task `roboolympics/tabletennis-match-wallclock-program-lowlevel-standard` (upstream commit
+`02c93822a35e`). The files changed here after the export are listed for this task in
+`ci_checks/benchmarks/embodied-olympics-match/exported.toml`.
 
-### Notes
-Source: Embodied Olympics task `tabletennis-match-wallclock-program-lowlevel-standard`, revision `wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2`. The rules, the referee, the scripted
-opponent, the observation, the review between points and the grader are ours, unchanged; only the seat is
-unmetered (Harbor records the model's usage) and the instance is frozen.
-
-Standard twin of `embodied-olympics-match-tabletennis-matchlow-i01-realtime`: the same export, the world in lockstep (`environment/sim/core/lockstep.py`; `eai-standard-lockstep/1.0` in tasks/embodied-olympics-match/README.md).
+## License
+Embodied Olympics ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics), a private repository) is released
+under the MIT License; its exported match services, referees, scripted opponents and graders inside this task are MIT
+too. The simulator is MuJoCo (Apache License 2.0). No non-commercial terms apply.

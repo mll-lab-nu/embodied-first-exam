@@ -11,7 +11,7 @@ task_type = "trajectory"
 simulator = "labutopia"           # LabUtopia @ 8df7278 on NVIDIA Isaac Sim 6.1.0 (PhysX on the CPU, RTX cameras)
 robot = "franka-panda"
 family = "open_drawer"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 oracle = "full"
 level = 1                         # LabUtopia's own level for the task (config level1_open_drawer)
 instance_seed = 2                 # numpy's and Python's random generators before LabUtopia's reset
@@ -22,7 +22,7 @@ timeout_sec = 5400.0              # one replay of about a minute (limited to 240
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

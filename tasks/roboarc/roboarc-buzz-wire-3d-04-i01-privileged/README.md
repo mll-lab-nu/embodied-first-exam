@@ -1,38 +1,81 @@
-# roboarc-buzz-wire-3d-04-i01-privileged
+# RoboARC · buzz_wire_3d (privileged)
 
 | | |
 |---|---|
-| Benchmark | RoboARC |
+| Task ID | `roboarc-buzz-wire-3d-04-i01-privileged` |
+| Benchmark | [RoboARC](https://github.com/mll-lab-nu/RoboARC) (The RoboARC authors, 2026), upstream `mll-lab-nu/RoboARC@153eb8c` |
+| Robot | Franka Panda 7-DoF arm with a Robotiq 2F-85 parallel gripper (MuJoCo Menagerie) |
 | Mode | privileged |
-| Twin | `roboarc-buzz-wire-3d-04-i01-standard` |
-| Simulator / robot | `roboarc` / `franka-robotiq-2f85` |
-| Family / instance | `buzz_wire_3d` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 10800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` |
+| Instance | `buzz_wire_3d`, seed 0 |
+| Time limit | 3 h |
+| Reference solution | Included |
 
 ## Task
-RoboARC buzz_wire_3d (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Guide the metal loop along the whole wire from start to finish without any metal part of the tool touching the wire. Then lay the tool on the finish support the way it lay at the start, let go of it and move the arm clear of it. Frozen scene instance (variation buzz_wire_3d_medium, seed 0).
+Guide the metal loop along the whole wire from start to finish without any metal part of the tool touching the wire.
+Then lay the tool on the finish support the way it lay at the start, let go of it and move the arm clear of it.
 
-## Difficulty
-A 7-dof franka panda arm with a robotiq 2f-85 parallel gripper on a fixed base with a 8-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 1 s. Grasping: assisted grasping (contact_weld_v1).
+## Success criteria
+Success needs all of these:
+- Start within 10 mm along the wire from its starting end and traverse continuously until within 10 mm of its
+  finishing end. Keep one unambiguous wire crossing inside the loop. Skipping branches or taking the loop off the
+  route before completing traversal does not count. A traversal that is lost must start again from the starting end.
+- After completing traversal, lower the tool onto the finish support. The completed traversal remains valid when the
+  loop leaves the wire to rest on the support.
+- Match the finish resting pose within 5 mm and 10 degrees. A half-turn about the handle axis is an equivalent
+  orientation. The tool must actually contact the finish support.
+- Keep all metal parts of the tool clear of the metal wire throughout the episode. Wooden-handle contact is not a
+  metal-wire failure. Remove all robot contact before final confirmation.
+- Release all target parts and disengage any assisted grasp. Withdraw the robot until there is at least 5 mm of
+  verified clearance from every target part; opening the fingers while still touching or surrounding the target is
+  insufficient.
+- During confirmation, every target point or rigid body's linear speed must be at most 1 mm/s and its displacement
+  from the start of confirmation at most 1 mm. Each target rigid body's angular speed must be at most 0.02 rad/s and
+  angular drift at most 0.02 rad.
+- Confirmation window: all of these conditions hold together for at least 1 s of simulated time. If one stops holding,
+  the window starts again.
 
-## Reference solution
-`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `e092a8ab59fd604c…`) to `/app/output/`: the MuJoCo reference (the released route re-recorded on MuJoCo with a held tail), which the verifier scored 1 in two fresh-process replays on the release image efe:roboarc-0.1.0, which holds the same frozen instance and reference rows (efe:roboarc-0.2.0 adds speed cuts in the simulator's host code only; its physics is bit-identical) (2026-10-14; simulator source 37aa7ac0, tooling d8692e15).
+How the grader measures it:
+- The release clearance is measured between axis-aligned bounding boxes: one around each collision geometry of the
+  whole robot (every link of both arms) and one around each collision geometry of the tool, so the true gap usually
+  has to be larger than 5 mm.
+- The loop's usable opening: the wire's centreline must cross the loop's disk less than 12.67 mm from the loop's
+  centre (loop inner radius 14.14 mm minus the 1.47 mm wire radius).
+- Continuous traversal: from one physics tick to the next, the crossing point may move along the wire by at most twice
+  the loop's own motion in that tick (its displacement plus 12.67 mm times its rotation angle) plus 3 mm. A larger
+  jump, no crossing, two crossings or a tangency cancels the traversal; it must then start again within 10 mm of the
+  starting end, the end where the tool rests at the start.
+- The finish support is the deck, and the finish resting pose is the start resting pose repeated at the wire's
+  finishing end: the tool lies on the deck with its loop at that end of the wire and its handle pointing inward, the
+  way it lies at the start.
+- Metal contact is sampled at all 4 solver substeps of every tick. If any tick since the start had incomplete contact
+  coverage (a simulator-side condition), the episode can no longer succeed.
+- Forcing: an arm drive (not a gripper drive) at 95% or more of its torque cap while that arm's gripper, or a part it
+  holds, presses on anything else with 20 N or more in total. Forcing alone never ends the episode and never changes
+  the score.
 
-## Verification
-Open-loop replay of `/app/output/trajectory.npz` from the frozen instance (`/tests/instance.json`, staged from the image and checked against `tests/runtime_binding.json`) in one fresh process; pass iff the
-task's predicate holds after the replay (`tests/grade.py`). `/logs/verifier/replay.mp4` is rendered during that
-replay (one pass, no separate video replay). The physics runs on the CPU and is bit-deterministic on one host; with one replay
-no final-state hashes are compared (`determinism_checked` 0); the rebuilt frozen scene must match (`instance_ok`)
-(Embodied First Exam's GPU-backend rule).
-A trajectory may have at most 130000 rows (`RCB_MAX_STEPS`: the replay must fit the verifier's timeout; a longer one is
-`bad_trajectory`).
+Failures:
+- Any metal-tool touch of the metal wire ends the episode in failure, including brief or zero-force touches.
+- The tool falling more than 100 mm below the tabletop ends the episode in failure.
 
-`nop` scored 0 on this base in both modes (the release image efe:roboarc-0.1.0; harbor run -a nop with rendering off; 2026-10-14).
+The verifier, in a separate sandbox without network, replays `/app/output/trajectory.npz` once, open-loop, in a fresh
+process from its own copy of the frozen start.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The rows run in order, one per control step, with the instance's own thresholds. The replay stops at the first success
+or failure: a success is the conditions above holding for the whole confirmation window, and the rows after it are not
+run. If the rows end first, the trajectory scores 0.
+
+A missing file scores 0. So does an invalid one:
+- not a readable `.npz` file;
+- no `actions` array of shape (T, action dimension) with numeric, finite values and T at least 1;
+- a `task` entry other than the task's family key;
+- an `action_layout` entry other than the frozen instance's;
+- more than 130,000 rows.
+
+Before the replay the verifier checks the rebuilt scene against the task's runtime binding (its files and its initial
+state); a mismatch is an infrastructure failure, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -42,41 +85,12 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `main`.
 - Recommended GPU: L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer).
 
-## Details
-| | |
-|---|---|
-| Grasping | assisted grasping (contact_weld_v1) |
-| Success rule | task-native success (goal_complete True; frozen parameters; terminal revision terminal_v4_traversal_then_deck_release) |
-
-### Goal
-Guide the metal loop along the whole wire from start to finish without any metal part of the tool touching the wire. Then lay the tool on the finish support the way it lay at the start, let go of it and move the arm clear of it.
-
-### Success requirements
-- Start within 10 mm along the wire from its starting end and traverse continuously until within 10 mm of its finishing end. Keep one unambiguous wire crossing inside the loop. Skipping branches or taking the loop off the route before completing traversal does not count; restart from the beginning if tracking is lost.
-- After completing traversal, lower the tool onto the finish support. The completed traversal remains valid when the loop leaves the wire to rest on the support.
-- Match the finish resting pose within 5 mm and 10 degrees. A half-turn about the handle axis is an equivalent orientation. The tool must actually contact the finish support.
-- Keep all metal parts of the tool clear of the metal wire throughout the episode. Wooden-handle contact is not a metal-wire failure. Remove all robot contact before final confirmation.
-- Release all target parts and disengage any assisted grasp. Withdraw the robot until there is at least 5 mm of verified clearance from every target part; opening the fingers while still touching or surrounding the target is insufficient.
-- During confirmation, every target point or rigid body's linear speed must be at most 1 mm/s and its displacement from the start of confirmation at most 1 mm. Each target rigid body's angular speed must be at most 0.02 rad/s and angular drift at most 0.02 rad.
-- Keep all final conditions satisfied together for at least 1 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
-
-### Task failure conditions
-- Any metal-tool touch of the metal wire ends the episode in failure, including brief or zero-force touches.
-- The tool falling more than 100 mm below the tabletop ends the episode in failure.
-
-### Grader details (in addition to the requirements above)
-- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 6 mm beyond the tool frame (TCP) along its approach axis when open and about 19 mm when closed (the Robotiq fingertips move forward as they close). Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque. If any part of an arm goes more than 5 mm into a fixed object, such as a fixture or the table, the arm is stopped where it is. For that control step its joint targets are set to its measured joint positions, so it stops pushing. The safety readings report these stops as static_guard.
-- Forcing is recorded, not judged: an arm drive (not a gripper drive) at 95% of its torque cap or more while that arm's gripper, or a part it holds, presses on anything else with 20 N or more in total is forcing; 0.5 s of it on every physics tick is a forcing event in the evidence (`s.safety()`, `s.status()["forcing"]`), shown to the reviewer when a success is reviewed. Forcing does not end the episode and does not change the grade by itself.
-- The release clearance is measured between axis-aligned bounding boxes: one around each collision geometry of the whole robot (every link of both arms) and one around each collision geometry of the tool, so the true gap usually has to be larger than 5 mm.
-- The loop's usable opening: the wire's centreline must cross the loop's disk less than 12.67 mm from the loop's centre (loop inner radius 14.14 mm minus the 1.47 mm wire radius).
-- Continuous traversal: from one physics tick to the next, the crossing point may move along the wire by at most twice the loop's own motion in that tick (its displacement plus 12.67 mm times its rotation angle) plus 3 mm. A larger jump, no crossing, two crossings or a tangency cancels the traversal; it must then start again within 10 mm of the starting end, the end where the tool rests at the start.
-- The finish support is the deck, and the finish resting pose is the start resting pose repeated at the wire's finishing end: the tool lies on the deck with its loop at that end of the wire and its handle pointing inward, the way it lies at the start.
-- Metal contact is sampled at all 4 solver substeps of every tick. If any tick since the start had incomplete contact coverage (a simulator-side condition), the episode can no longer succeed.
-- Grasp regions for assisted grasping, described under Grippers in instruction.md, with one sphere per graspable part: wand: radius 25 mm, on the wand's grip. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.
-- A failure is reported in `s.status()["episode_end"]` as "wire_touched", "Wand fell below table" or "forced_breakdown: <what>" (<what>: the readable reason); `s.safety()` reports forcing, contact depths, volume ratios and table-guard stops against these limits.
-
-### Provenance
-- Frozen instance: a MuJoCo instance (`simulator.physics_engine` "mujoco", its scene frozen under `instance_assets/mujoco/`), built by TopoGym source `05846213` (MuJoCo instance made before this image was built (TopoGym source 05846213; its bytes are bound into the release image efe:roboarc-0.2.0)); bound to this release's runtime (source `c9171f79`, tooling `d8692e15`).
-- Frozen instance files (`instance.json`, `instance_assets/`): not in this directory. The public image carries them in `/opt/robotangle/instances/buzz-wire-3d-04-i01/` (`images/roboarc/assets.json` pins each file's sha256), and `/opt/robotangle/stage_instance.py` copies this task's instance next to its `runtime_binding.json`, which names the instance's canonical sha256 and every asset's sha256. The tooling checks them again at every session start.
-- Release: dev/robotangle_mujoco `7947eaa7b`, image `ghcr.io/mll-lab-nu/efe:roboarc-0.2.0` (images/roboarc/).
-- Name: RoboARC is the published name of this benchmark. Code identifiers keep the simulator's name: the simulator package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables.
+## License
+RoboARC ([mll-lab-nu/RoboARC](https://github.com/mll-lab-nu/RoboARC) @ `153eb8c`) is released under the MIT License
+(Copyright (c) 2026 The RoboARC authors). The robot models are MuJoCo Menagerie's: ALOHA 2 (BSD-3-Clause, Trossen
+Robotics), Franka Emika Panda (Apache License 2.0) and Robotiq 2F-85 (BSD-2-Clause, ROS-Industrial). The furniture part
+meshes of the furniture-assembly scenes are CC BY 4.0 (Hugging Face dataset `MLL-Lab/embodied-first-exam-public`,
+`ikea-mujoco/`). The simulator is MuJoCo 3.14.0 (Apache License 2.0). RGB images are rendered with Nyx (`gs-nyx`), used
+in the images with its owners' permission; the studio lighting is a CC0 HDRI from Poly Haven. Puzzle designs modelled
+after Hanayama's Huzzle Cast puzzles and the IKEA product names and designs are used with the owners' permission. No
+non-commercial terms apply.

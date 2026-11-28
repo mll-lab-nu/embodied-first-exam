@@ -172,8 +172,8 @@ class Task(TaskBase):
                   touch_window_s=0.5, blame_recent_s=0.1, support_n=100.0,
                   strike_s=0.15, beside_m=0.10, down_z_m=0.40, down_limit_s=10.0)
 
-    sentence = ("Run the 50 m hurdles: go over each of the four hurdles in your lane and reach the finish line, "
-                "leaving at least one hurdle standing.")
+    sentence = ("Run the 50 m hurdles: go over each of the four hurdles in your lane and reach the finish line, leaving"
+                " at least one hurdle in place.")
     rules = ("World Athletics rules for the hurdles, at the indoor distance of 50 m. The lane runs along +x, "
              "{lane_width_m} m wide, centred on y = 0; the start line ({start_line_m} m wide) has its far edge at "
              "x = 0, the finish line is x = {distance_m} m. {hurdles} hurdles stand across the lane, the face of "
@@ -219,7 +219,7 @@ class Task(TaskBase):
              "have not yet gone over leaves its standing pose in any other way than the legal knock above "
              "(pushed, kicked or shoved along the track before you went over it); if your pelvis is more than "
              "half the lane's width from y = 0; if your torso reaches the finish line before every hurdle is gone "
-             "over; if you knock down every hurdle; when down for {down_limit_s} s; or "
+             "over; if every hurdle leaves its standing pose; when down for {down_limit_s} s; or "
              "after {time_limit_s} s.")
     venue = ("You stand in your lane facing the finish (+x), the front ends of your feet {toe_gap_m} m behind the "
              "start line, your pelvis 0.23 m behind it. The lane lines are white on a red track; the hurdles' top "

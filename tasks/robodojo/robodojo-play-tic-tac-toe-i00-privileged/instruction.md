@@ -6,9 +6,9 @@ back to where they started and keep them there until the opponent has placed its
 filled.
 
 ## Goal
-Success: all nine cells hold one piece each, lying flat in the middle of its cell: your five gold rings and the
-opponent's four crosses; no winner is needed. If one of your arms is away from where it started while the opponent arm
-is out, the episode ends at once as a failure. A replay ends as soon as the task is done; later rows are not run.
+Success: your five gold rings and the opponent's four crosses each lie low on the board near the middle of a cell; no
+winner is needed. If one of your arms is away from where it started while the opponent arm is out, the episode ends at
+once as a failure. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave

@@ -1,7 +1,7 @@
 """Trusted Harbor collect hook, invoked in sim after the agent stops (and after `kill -9 -1` in the agent's container).
 
 Signals the service (SIGUSR1: cutoff, then finalization) until final.json is written, then waits, within the same
-budget, for the video pass that follows the verdict (video.json); a missing video never fails the hook (PROTOCOL §4).
+budget, for the video pass that follows the verdict (video.json); a missing video never fails the hook (docs/protocol/tasks.md#grading).
 """
 
 import json

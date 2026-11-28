@@ -1,9 +1,12 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:embodiedswe-files-0.3.1@sha256:ef309a60a26d8813914d4c5284eb9a1008d58f3123871491535f7cf11bbc743e",
+ "image": "ghcr.io/mll-lab-nu/efe:embodiedswe-files-0.4.0@sha256:b35b3e41cf2f48d48c0b7e92d82a41beedb1e015e5d31bebef542506cf6300dd",
  "source": "embodied_first_exam/benchmarks/embodiedswe",
  "files": {
-  "esw_proxy.py": "4481f808beaf323aaf6aa02de9c859434e8d614a53e132ab9fc28318d68d271e",
+  "esw_proxy.py": "c0b9a24fce224d113b4ff850ac13a2add983a1f6a532c86050f64514618391ea",
   "esw_submit.py": "076b47e8657568344ff571c628ac489872578128253e0b440ab02736fe41dc49",
-  "rcb_embodiedswe.py": "2222062607afdf9ff02042e1a7e2fe140645585cdcbad5888f02d1a9ddbfd93c"
+  "rcb_embodiedswe.py": "2222062607afdf9ff02042e1a7e2fe140645585cdcbad5888f02d1a9ddbfd93c",
+  "sim/esw_std.py": "3670cecfa792274ff4a99af17bf0739dacb6b55544710843a2512e691883742d",
+  "sim/finalize.sh": "25a1930dc574bf258f3ece24afc09ef819a509dd6c3d0af09a7d1ca0868e1ab8",
+  "sim/server.py": "60c98b520fb72baddc6dfeef83e219cbcc99d4afa396ddc09179d83ac38195dd"
  }
 }

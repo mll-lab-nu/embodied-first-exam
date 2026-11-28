@@ -1,31 +1,43 @@
-# myosuite-dex-apple-lift-i00-standard
+# MyoSuite · dex_apple_lift (standard)
 
 | | |
 |---|---|
-| Benchmark | MyoSuite |
-| Mode | standard (`eai-standard/2.2`) |
-| Twin | `myosuite-dex-apple-lift-i00-privileged` |
-| Simulator / robot | `myosuite` / `myohand` |
-| Family / instance | `dex_apple_lift` / seed 0 |
-| Oracle | `none` — the privileged twin's positive example (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-dex-apple-lift-i00-priv__j5qaRCZ`, 57 rows) rounded to float32, as the client sends it, and streamed through the client: the service scores it 1 live and in both replays, in two fresh trials (tasks/myosuite/README.md); human review in PR #65 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
+| Task ID | `myosuite-dex-apple-lift-i00-standard` |
+| Benchmark | [MyoSuite](https://github.com/MyoHub/myosuite) (Caggiano et al., 2022), upstream `MyoHub/myosuite@5635e1a` |
+| Robot | MyoHand: musculoskeletal model of the human forearm and hand, 39 muscles |
+| Mode | standard |
+| Instance | `dex_apple_lift`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-MyoSuite `MyoHandAppleLift-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-dex-apple-lift-i00-privileged`: Lift the apple, following the recorded reference motion.
-An apple lies on the table; the MyoHand (with a 6-DoF positioned wrist) is at its pre-grasp pose next to it. Standard mode (eai-standard/2.2): the agent drives the body through a client, with only its own proprioception and the scene's cameras, and 10 resets (only the last episode is graded).
+Lift the apple, following the recorded reference motion.
 
-## Difficulty
-Same instance and success rule as `myosuite-dex-apple-lift-i00-privileged` (first-pass rating: hard). In standard mode the agent loses free resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in actuator-command chunks, and gets 10 resets, so it has to close the loop on what it sees and learn the body from a few real attempts.
+## Success criteria
+Success rule (ours, on MyoDex `MyoHandAppleLift-v0` and its recorded reference motion of the apple; MyoDex itself
+defines no success): over the 57 control steps of the reference motion (20 ms each), the apple's motion follows the
+reference's. A step is on track when its errors are within these bounds:
+- the apple's displacement since the start is within 0.03 m of the reference's displacement since its start.
 
-## Reference solution
-None. Solvability evidence: the privileged twin's positive example (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-dex-apple-lift-i00-priv__j5qaRCZ`, 57 rows) rounded to float32, as the client sends it, and streamed through the client: the service scores it 1 live and in both replays, in two fresh trials (tasks/myosuite/README.md); human review in PR #65.
+The task is passed if at least 90% of the 57 steps are on track, the last step is on track, and the displacement error
+is never above 0.05 m. The apple's orientation is not checked.
 
-## Verification
-The sim service judges the episode live (the task's rule on the steps it ran: on track over the 57-step reference) and records every executed control step; it checks at the episode's start that the scene is the frozen instance (its recorded state hash; else `instance_mismatch`, an infrastructure failure). The collect hook (`environment/sim/finalize.sh`) ends the service and writes that live verdict to `final.json` (`graded_by` = `live`; nothing is replayed to grade it), then renders `replay.mp4` in one pass over the recorded trajectory, which decides nothing; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded. A missing or unreadable `final.json`, one without a verdict, or a give-up after crashes not all inside the agent's calls is an infrastructure failure (`infra_error = 1`), not the agent's 0. No oracle; human review in PR #65. `nop`: the episode times out, reward 0.
+Failure (MyoDex's termination, ends the episode with 0): the apple's centre of mass is 0.25 m or more from the
+reference's, or 0.25 m or more from the wrist.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The episode lasts 57 control steps (1.14 s), the length of the reference motion, and is judged when it ends. An
+episode ended earlier by `/finish` or by the end of the agent's time fails. MyoDex's termination ends the episode with
+0.
+
+Graded: the live episode, judged by the simulator service; nothing is replayed. No success signal is shown to the
+agent. The episode ends at the agent's `/finish`, at a failure above, at the episode's own end where the rule above
+has one, or when the agent's time (1 h) runs out. Resets granted: 10. A reset starts a new episode from
+the frozen start; only the episode running at the end is graded. A simulator error raised by the agent's own call
+ends the episode with 0. An episode that does not start from the frozen instance, or a service crash outside the
+agent's calls, is an infrastructure failure, not a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -35,13 +47,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
-| Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`embodied_first_exam/standard/`); cameras `left_cam`, `right_cam`, `center_cam`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat` (640 x 480); forward kinematics of the body's links |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering); after the agent's phase the collect hook only renders the video (one pass over the graded episode), it replays nothing to grade |
-| Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §2): `POST /reset` starts a new episode from the frozen instance; only the last episode is graded, when the agent sends `POST /finish` or its session ends (a success ends nothing); results under another budget are reported separately |
-
-### Provenance
-The frozen instance (`environment/sim/instance.npz`) and its scene facts were made at generation time; see `tasks/myosuite/README.md`.
+## License
+MyoSuite ([MyoHub/myosuite](https://github.com/MyoHub/myosuite), version 2.12.2, tag `v2.12.2` = `5635e1a`) is
+released under the Apache License 2.0, as are the models it bundles (MyoSim, the MPL prosthetic arm, the object,
+furniture and YCB models). The MyoDex reference motions (the `dex_*` families) derive from the GRAB motion-capture
+dataset; MyoSuite asks their users to comply with GRAB's licence, which allows non-commercial scientific research
+only. The simulator is MuJoCo (Apache License 2.0).

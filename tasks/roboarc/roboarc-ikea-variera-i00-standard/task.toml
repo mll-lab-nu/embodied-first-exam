@@ -21,7 +21,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/roboarc-ikea-variera-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.4): IKEA MuJoCo VARIERA shelf insert (dual Franka Panda + Menagerie Panda hand, MuJoCo 3.14.0 CPU) on the same frozen scene as the privileged task. Assemble the VARIERA shelf insert: set up the two side frames, lower the shelf onto them, and screw the four screws through the shelf holes into the frames until they seat. Then let go of everything and move both arms clear. The agent only gets a client: get_obs (RGB from four ALOHA-style cameras, optional depth, proprioception, calibrated cameras), submit (joint_position chunks, joint targets within the robot's joint velocity limits), stateless kinematics, every pose in the robot's frame. No reset, no privileged state; the sim service records and grades the live episode (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): IKEA MuJoCo VARIERA shelf insert (dual Franka Panda + Menagerie Panda hand, MuJoCo 3.14.0 CPU) on the same frozen scene as the privileged task. Assemble the VARIERA shelf insert: set up the two side frames, lower the shelf onto them, and screw the four screws through the shelf holes into the frames until they seat. Then let go of everything and move both arms clear. The agent only gets a client: get_obs (RGB from four ALOHA-style cameras, optional depth, proprioception, calibrated cameras), submit (joint_position chunks, joint targets within the robot's joint velocity limits), stateless kinematics, every pose in the robot's frame. No reset, no privileged state; the sim service records and grades the live episode (no grading replay)."
 keywords = ["robotics", "roboarc", "ikea", "furniture-assembly", "mujoco", "panda", "bimanual", "standard-mode", "trajectory"]
 
 [metadata]
@@ -30,8 +30,8 @@ simulator = "mujoco"              # plain MuJoCo 3.14.0, CPU float64, the scene'
 robot = "franka-panda-bimanual"            # both arms (docs/TAXONOMY.md)
 family = "ikea_variera"
 suite = "ikea"                    # RoboARC's IKEA furniture-assembly suite (tasks/roboarc/README.md, IKEA suite)
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): only the robot and gravity do work; springs, latches and threads are passive
-protocol = "eai-standard/2.4"           # the shared 2.4 service layer; 2.1 / 2.2 requests are served unchanged
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): only the robot and gravity do work; springs, latches and threads are passive
+protocol = "eai-standard/3.0"
 oracle = "full"
 grasp = "physical (finger friction; no assisted grasp, no welds to a gripper)"
 success_rule = "the scene's success.py + the terminal rules (released, at rest, no breakdown): evaluated by the sim service on the live episode after each call (the first settled success ends the episode) and at its end: at the last row and again after a 1.0 s hold of it (on a copy); no grading replay"
@@ -43,7 +43,7 @@ timeout_sec = 600.0
 environment_mode = "separate"     # tests/Dockerfile: the shared client base; transcribes the sim service's final.json, no network
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -62,8 +62,8 @@ command = "sh /srv/finalize.sh"   # end (judge the live episode as it stands) + 
 timeout_sec = 7200                # the end waits through a call in progress, a crash-recovery resume and the live video's close
 
 [agent]
-timeout_sec = 10800.0             # Agent wall-clock budget (the privileged twin's; PROTOCOL H.7); verifier has its own budget
-network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL Appendix H.6
+timeout_sec = 10800.0             # Agent wall-clock budget (the privileged twin's; docs/protocol/invariants.md H.7); verifier has its own budget
+network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); docs/protocol/invariants.md H.6
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 
 [environment]
@@ -72,7 +72,7 @@ cpus = 4
 memory_mb = 10240
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

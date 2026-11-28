@@ -17,7 +17,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/bigym2-pick-box-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): BiGym 2.0 pick-box on the same frozen instance as bigym2-pick-box-i00-privileged. Move the cardboard box from the side table onto the kitchen counter and let go. The agent only gets a client: the robot's three onboard cameras (RGB) and its proprioception, whole-body command chunks (walking, height, lean, arm joints, grippers). One episode, no reset, no object state, no success signal; the sim service records the episode and grades it as it ran with BiGym's own success check (the live episode; nothing is replayed)."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): BiGym 2.0 pick-box on the same frozen instance as bigym2-pick-box-i00-privileged. Move the cardboard box from the side table onto the kitchen counter and let go. The agent only gets a client: the robot's three onboard cameras (RGB) and its proprioception, whole-body command chunks (walking, height, lean, arm joints, grippers). One episode, no reset, no object state, no success signal; the sim service records the episode and grades it as it ran with BiGym's own success check (the live episode; nothing is replayed)."
 keywords = ["robotics", "bigym2", "mujoco", "unitree-g1", "humanoid", "standard-mode", "trajectory", "pick-box"]
 
 [metadata]
@@ -25,8 +25,8 @@ task_type = "trajectory"
 simulator = "bigym2"
 robot = "unitree-g1-dex1"
 family = "pick-box"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
-protocol = "eai-standard/2.1"
+dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
+protocol = "eai-standard/3.0"
 instance_seed = 0
 expert_time_estimate_hours = 3.0
 oracle = "none"
@@ -34,7 +34,7 @@ oracle_evidence = "no reference solution (BiGym 2.0 ships no expert or planner; 
 
 [metadata.seeds]
 # the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
-# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+# under solution/ is for, where they are not the default seed alone (docs/protocol/tasks.md)
 allowed = [0, 620100, 620101]
 
 [verifier]
@@ -42,7 +42,7 @@ timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resources (PROTOCOL §6): seal the monitor's record first.
+# Resources (docs/protocol/resources.md): seal the monitor's record first.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
@@ -78,7 +78,7 @@ cpus = 4
 memory_mb = 4096
 storage_mb = 10240
 
-# The robot's MCP tools (docs/protocol/standard_mode.md "MCP tools"): Harbor starts this server for the agent.
+# The robot's MCP tools (docs/protocol/eai-standard.md "MCP tools"): Harbor starts this server for the agent.
 [[environment.mcp_servers]]
 name = "efe-robot"
 transport = "stdio"

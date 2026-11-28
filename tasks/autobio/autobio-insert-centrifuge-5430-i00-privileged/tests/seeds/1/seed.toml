@@ -7,13 +7,5 @@ old = "## Others\n- A tube let go above the slot stops just short of its seat, w
 new = "## Others\n- A tube let go just above the slot drops into its seat, which counts."
 
 [[replace]]
-old = "`reset(seed=0)`"
-new = "`reset(seed=1)`"
-
-[[replace]]
-old = "`843c5cc8cbffee91`"
-new = "`a0b0eece74c233a2`"
-
-[[replace]]
-old = "/ seed 0 (allowed"
-new = "/ seed 1 (allowed"
+old = "`insert_centrifuge_5430`, seed 0 |"
+new = "`insert_centrifuge_5430`, seed 1 |"

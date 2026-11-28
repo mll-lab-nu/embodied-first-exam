@@ -1,20 +1,21 @@
 # Embodied Olympics · juggling with the feet (privileged)
 
 ## Task
-Drop the football from your hands and juggle it with your feet for ten touches in a row, each sending it above your
-knees, without it touching the ground.
+Drop the football from your hands and juggle it with your feet for ten counted touches, each sending it above your
+standing knee height, without it touching the ground.
 
 ## Goal
-Success: you keep the ball up with ten foot touches in a row, each sending it above your knees, without it touching the
-ground or any other part of you.
+Success: you keep the ball up with ten counted foot touches, each sending the bottom of the ball above your standing
+knee height, without it touching the ground or any other part of you; a touch counts when it strikes the ball up, and
+a ball that only bounces off a foot, leaving slower than it came, is not counted.
 
 The referee judges these stages, in order: **each of the 10 touches**. An attempt ends at the success, at the first foul
 or after 60 s (6000 control steps) of robot time.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`. It holds `actions`: one sim row of 151
 floats per control step. It is replayed open-loop from the fixed start, one row per control step, until the referee ends
-the attempt. It scores 1 if the replay succeeds, else 0. If the rows run out first, the attempt is judged on its state
-at that point. At most 6000 rows are used. Every row must be finite, including rows after the attempt's end; a NaN or an
+the attempt. It scores 1 if the replay succeeds, else 0. If the rows run out before the referee calls a success, it
+scores 0. At most 6000 rows are used. Every row must be finite, including rows after the attempt's end; a NaN or an
 infinite value scores 0.
 
 Put two files beside it. `gen.py` is the script that produced it: it must run and reproduce `trajectory.npz`, reading

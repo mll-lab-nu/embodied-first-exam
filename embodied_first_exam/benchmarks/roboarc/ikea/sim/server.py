@@ -1,5 +1,5 @@
 """Standard-mode sim service of the IKEA MuJoCo tasks (robot as a service; the shared layer rcb_limited.py of
-embodied_first_exam/standard/v2_4/, serves eai-standard/2.4 and answers 2.1 / 2.2 requests unchanged).
+embodied_first_exam/standard/operations/, serves eai-standard/3.0 with the operations capability).
 Adapted from the RoboTangle / RoboARC standard services.
 
 Physics: the scene's own runtime (rcb_ikea.Session, the privileged twin's tooling, copied unchanged): MuJoCo 3.14.0 on
@@ -41,30 +41,26 @@ grading replay).
 Start state: the scene is checked file by file against runtime_binding.json and its initial-state hash, actuators and
 runtime before the episode begins; a mismatch writes final.json `instance_mismatch` (infra_error 1) and serves nothing.
 
-Episode end (the live verdict is THE verdict: the grader's rule, rcb_ikea.Session.final_check(), on the live simulator):
-  - success: the first time status()["success"] holds (success.py AND released AND at rest AND no breakdown so far)
-    AND the settled check passes: final_check() on a snapshot (the last executed row held SETTLE_S more, the same rules
-    again), restored bit-exactly afterwards (evaluating never changes the physics or the journal). If the settled check
-    fails, the episode goes on (meta settle_failed counts it): the agent can still fix it. Both checks run after every
-    /submit and every watching /observe;
+Episode end (agent-ended, docs/protocol/tasks.md#modes, rcb_agent_end.py; the live verdict is THE verdict: the grader's rule,
+rcb_ikea.Session.final_check(), on the live simulator): a success never ends the episode and is never shown (no settled
+check during the episode, no settle_failed in meta or /status). The episode ends at
+  - finished: POST /finish;
+  - timeout: the end of the agent's session (the wall clock, the collect hook);
   - sim_breakdown: status()["breakdown"] (a non-finite state, a MuJoCo BADQACC / BADQPOS / BADQVEL warning, a part
-    contact deeper than 10 mm), checked on every control step; no success;
-  - timeout (the wall clock), or error (a simulator error).
-An episode that ends otherwise (timeout, the collect hook's end) is judged as it stands by the same two checks on the
-live state (finish()). Then the service writes /data/trajectory.npz (rcb_ikea layout: ctrl (N, nu) float64 = every
+    contact deeper than 10 mm), checked on every control step; no success (after a success too);
+  - error: a simulator error; no success.
+An end at finish or at the session's end is judged as it stands (finish()): status()["success"] (success.py AND released
+AND at rest AND no breakdown so far) on the live state, then the settled check: final_check() on a snapshot (the last
+executed row held SETTLE_S more, the same rules again), restored bit-exactly afterwards (evaluating never changes the
+physics or the journal). An ordered goal's earlier steps count as they happened (the scene's own record), the rest must
+hold at the end. Then the service writes /data/trajectory.npz (rcb_ikea layout: ctrl (N, nu) float64 = every
 executed control step, substeps, timestep, actuators: the deliverable, replayable) and /data/episode.json (the live
 verdict, final state hash); the collect hook (finalize.sh) ends the service and writes final.json (graded_by "live",
 replays 0). The verifier only transcribes it; nothing is replayed to grade.
 A live video of cam_high (/data/live.mp4, RCB_LIVE_FPS frames per simulated second) is recorded during the episode; it
 never affects the verdict.
 
-Agent-ended episodes (PROTOCOL §3; RCB_AGENT_END "1" in the task's sim service, rcb_agent_end.py): a success never ends the
-episode and is never shown (no settled check during the episode, no settle_failed in meta or /status); POST /finish ends it
-(reason "finished"), and so do the end of the agent's session ("timeout": the wall clock, the collect hook) or a simulator
-breakdown / error (0, after a success too). An end at finish or at the session's end is judged as it stands, by the same
-two checks as above (the terminal rules on the live state, then on a copy with the last row held SETTLE_S more): an
-ordered goal's earlier steps count as they happened (the scene's own record), the rest must hold at the end. Calls are
-served one at a time: a /finish sent while a /submit runs (an operation in flight) waits for it to complete; after /finish
+Calls are served one at a time: a /finish sent while a /submit runs (an operation in flight) waits for it to complete; after /finish
 every call but GET /spec, /status and /operations/<id> is a 409."""
 from __future__ import annotations
 import json, math, os, queue, shutil, sys, threading, time, traceback
@@ -84,7 +80,7 @@ OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "10800"))
 LIVE_FPS = int(os.environ.get("RCB_LIVE_FPS", "10")); LIVE_CAM = os.environ.get("RCB_LIVE_CAMERA", "cam_high")
-# /spec max_frames_per_call (PROTOCOL §3 "Images per call"): cameras x frames as the recorder takes them (one every 1/fps of
+# /spec max_frames_per_call (docs/protocol/tasks.md#modes "Images per call"): cameras x frames as the recorder takes them (one every 1/fps of
 # sim time, its first and last frames included); a frame with per-frame depth counts once more (L.check_frames). The
 # recorder holds every frame of a call (848 x 480 RGB = 1.2 MB) until the response is sent.
 MAX_FRAMES = 1000
@@ -355,7 +351,7 @@ for c in CAMS:
                    "rgb_renderer": ("Nyx path tracer (RoboARC's renderer and look: 32 samples per pixel, denoised, Reinhard tone "
                                     "mapping, SMAA, studio HDRI and point lights)" if NYX is not None else "MuJoCo raster (EGL)")}
 SPEC = {
-    "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "mujoco 3.14.0 (CPU, float64; the scene's own runtime and mechanism)",
+    "protocol": PROTOCOL, "simulator": "mujoco 3.14.0 (CPU, float64; the scene's own runtime and mechanism)",
     "robot": R_SPEC["name"], "task_text": TEXTS["task_text"],
     "control_hz": CTRL_HZ, "control_dt": CTRL_DT, "physics_substeps": int(R.SUBSTEPS), "physics_dt": float(s.timestep),
     "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES, "max_video_fps": MAX_VIDEO_FPS,
@@ -384,24 +380,14 @@ SPEC = {
     "budget": {"reset": 0, "steps": None, "wall_clock_s": WALL_CLOCK_S,
                "clock": "time_s and elapsed_s count from your first request to the service; time_left_s is wall_clock_s minus "
                         "that, so it never runs out before the harness's limit does"},
-    "episode": (("one episode, no reset. It ends when you call POST /finish (reason finished), when the wall-clock budget is used "
+    "episode": ("one episode, no reset. It ends when you call POST /finish (reason finished), when the wall-clock budget is used "
                  "up (reason timeout), on a simulator breakdown (reason sim_breakdown, no success: a non-finite state, a MuJoCo "
                  f"BADQACC / BADQPOS / BADQVEL warning, a part contact deeper than {R.BREAKDOWN_DEPTH_M * 1000:g} mm) or on a "
                  "simulator error. Reaching the goal does not end it and is not shown. At finish or at the end of your session it "
                  "is judged as it stands: the task's success requirements AND the terminal rules (no robot link touches any part, "
                  f"every part at rest: at most {R.REST_LIN_M_S:g} m/s and {R.REST_ANG_RAD_S:g} rad/s, no simulator breakdown), "
                  f"then the same again after the last executed row is held {R.SETTLE_S:g} s more on a copy. The live episode is "
-                 "the verdict: nothing is replayed to grade it") if AE.ENABLED else
-                ("one episode, no reset. It ends at the first settled success (evaluated after every /submit and every /observe "
-                "that watches: the task's success requirements AND the terminal rules: no robot link touches any part, every "
-                f"part at rest (at most {R.REST_LIN_M_S:g} m/s and {R.REST_ANG_RAD_S:g} rad/s), no simulator breakdown so far; "
-                f"then, on a copy, the last executed row held {R.SETTLE_S:g} s more and the same checked again: if that fails "
-                "the episode goes on, meta settle_failed counts it), on a "
-                "simulator breakdown (reason sim_breakdown, no success: a non-finite state, a MuJoCo BADQACC / BADQPOS / "
-                f"BADQVEL warning, a part contact deeper than {R.BREAKDOWN_DEPTH_M * 1000:g} mm), when the wall-clock budget "
-                "is used up (reason timeout; graded as it stands: the same rules on the live state, and again after the last "
-                f"row is held {R.SETTLE_S:g} s more on a copy), or on a simulator error. The live episode is the verdict: "
-                "nothing is replayed to grade it")),
+                 "the verdict: nothing is replayed to grade it"),
     "robot_spec": R_SPEC, "kinematics": K_SPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
               "frames_encoding": "uint16 mm, zlib", "noise": L.DEPTH_NOISE,
@@ -473,7 +459,7 @@ def live_open() -> None:
     except Exception:  # noqa: BLE001 — the live video is evidence only
         traceback.print_exc(); LIVE["w"] = None
         return
-    live_tick()     # the start frame: every graded trial has a video, a trial with no step too (PROTOCOL §4)
+    live_tick()     # the start frame: every graded trial has a video, a trial with no step too (docs/protocol/tasks.md#grading)
 
 
 def live_tick() -> None:
@@ -566,22 +552,15 @@ def settled() -> dict:
 
 
 def evaluate() -> bool:
-    """After a call: end the episode at the first SETTLED success of the terminal rules (or at a breakdown). A success
-    whose settled check fails does not end the episode."""
+    """After a call: end the episode at a breakdown; else the terminal rules' success is only recorded (no settled
+    check, nothing ends here)."""
     if E["done"]:
         return bool(E["success"])
     v = verdict()
     if v["breakdown"] is not None:
         finish("sim_breakdown")
-    elif AE.ENABLED:    # agent-ended: the terminal rules' success is only recorded (no settled check, nothing ends here)
+    else:
         AE.hidden_success(E, v["success"], log, ctrl_steps())
-    elif v["success"]:
-        if settled()["success"]:
-            E["success"] = True
-            finish("success")
-        else:
-            E["settle_failed"] = E.get("settle_failed", 0) + 1
-            log({"ev": "settle_failed", "step": E["step"], "control_steps": ctrl_steps(), "settled": E["settled_verdict"]})
     return bool(E["success"])
 
 
@@ -589,15 +568,15 @@ def finish(reason: str) -> None:
     if E["done"]:
         return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
-    if AE.ENABLED and reason not in AE.END_STATE_REASONS:
-        E["success"] = False     # agent-ended: only finish and the session's end are judged on the state (a breakdown: 0)
-    elif not E["success"] and reason not in ("sim_breakdown", "error"):
+    if reason not in AE.END_STATE_REASONS:
+        E["success"] = False     # only finish and the session's end are judged on the state (a breakdown: 0)
+    elif not E["success"]:
         try:
             E["success"] = bool(verdict()["success"]) and bool(settled()["success"])   # graded as it stands: the verdict
         except Exception as exc:  # noqa: BLE001 - the end state was not judged: infrastructure (error_fields), never a 0
             traceback.print_exc()
             E["success"] = False; E["finalize_error"] = repr(exc)[:300]
-        if AE.ENABLED and E["success"]:     # the end state is a success: seen (at the last control step) if not before
+        if E["success"]:     # the end state is a success: seen (at the last control step) if not before
             AE.hidden_success(E, True, log, ctrl_steps())
     if reason in ("sim_breakdown", "error"):
         E["success"] = False
@@ -801,7 +780,7 @@ def encode_parts(rec, video: str, fps: int) -> list:
 
 def req_cameras(meta: dict) -> list:
     """The request's cameras (a list of names; unknown names are dropped, none left = every camera). A malformed field is
-    the caller's error, a 400 before anything executes (PROTOCOL §4.6), never a simulator error."""
+    the caller's error, a 400 before anything executes (docs/protocol/eai-standard.md#errors), never a simulator error."""
     c = meta.get("cameras")
     if c is None:
         return list(CAMS)
@@ -821,14 +800,14 @@ def infra_exception(exc: BaseException) -> bool:
     """Which errors in /submit or /observe are the service's infrastructure (reason "error", infra_error): the render
     process (ikea_nyx.RenderError), the host (OSError: disk, pipes; MemoryError). Everything else raised while the agent's
     rows run (the scene's code, MuJoCo) is a simulator error the rows caused (sim_error 1: the agent's 0,
-    docs/protocol/standard_mode.md "500"), so an agent cannot void a failed episode by breaking the simulator. Both end the episode
+    docs/protocol/eai-standard.md "Errors"), so an agent cannot void a failed episode by breaking the simulator. Both end the episode
     with reason "error"."""
     render = getattr(sys.modules.get("ikea_nyx"), "RenderError", ())
     return isinstance(exc, (OSError, MemoryError) + ((render,) if render else ()))
 
 
 def recorded_frames(steps: int, fps: int) -> int:
-    """The frames per camera the 2.4 recorder takes over a call of `steps` control steps (the count of real captures):
+    """The frames per camera the operations layer's recorder takes over a call of `steps` control steps (the count of real captures):
     one at the start, one at the first control step at or after each k/fps of sim time (k = 1 .. floor(steps x fps /
     control_hz)), and the last unless the last of those is taken at the call's last step."""
     m = int(steps * fps / CTRL_HZ + 1e-9)
@@ -1061,8 +1040,7 @@ threading.Thread(target=AE.serve, daemon=True, args=(AE.Service(
     spec=SPEC, lock=LOCK, state=E, submit=lambda meta, A: on_main(do_submit, meta, A), observe=lambda meta: on_main(do_observe, meta),
     kinematics=lambda req: on_main(do_kinematics, req), status=status, on_submit_error=lambda exc: on_main(fail, exc), log=log,
     episode=EP, state_sha=lambda: on_main(s.state_sha), proprio=lambda: on_main(proprio_row), hidden_keys=HIDDEN_KEYS,
-    **({"finish": lambda: on_main(finish, "finished"),
-       "end_step_limit": lambda: on_main(finish, "step_limit")} if AE.ENABLED else {})),)).start()
+    finish=lambda: on_main(finish, "finished"), end_step_limit=lambda: on_main(finish, "step_limit")),)).start()
 while True:
     if deadline_reached():                      # between simulator jobs: never inside a call
         finish("timeout")

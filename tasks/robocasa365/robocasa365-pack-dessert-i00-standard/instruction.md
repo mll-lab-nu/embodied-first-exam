@@ -5,7 +5,7 @@ Put the marshmallow in the tupperware with the hot dog, and move your hand away.
 
 ## Goal
 Success: the hot dog and the marshmallow are both in the tupperware, and the hand has let go of the marshmallow and
-moved well away.
+moved well away (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -23,7 +23,7 @@ episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service starts: about a minute)

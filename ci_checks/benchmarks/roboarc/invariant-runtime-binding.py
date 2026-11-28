@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""INVARIANT hook (docs/protocol/README.md Appendix H.8: a task runs the files it was frozen against), this benchmark's own:
+"""INVARIANT hook (docs/protocol/invariants.md H.8: a task runs the files it was frozen against), this benchmark's own:
 ci_checks/run_invariants.sh runs every ci_checks/benchmarks/*/invariant-* hook with the task directories in scope.
 
 A RoboARC topological task's runtime_binding.json (environment/, environment/sim/, tests/) pins the sha256 of the tooling

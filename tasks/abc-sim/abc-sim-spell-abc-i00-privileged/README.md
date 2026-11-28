@@ -1,31 +1,40 @@
-# abc-sim-spell-abc-i00-privileged
+# ABC Sim · spell abc (privileged)
 
 | | |
 |---|---|
-| Benchmark | ABC Sim |
+| Task ID | `abc-sim-spell-abc-i00-privileged` |
+| Benchmark | [ABC Sim](https://github.com/amazon-far/abc) (Allshire et al., 2026), upstream `amazon-far/abc@d0832d1` |
+| Robot | Two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each), side by side at a table |
 | Mode | privileged |
-| Twin | `abc-sim-spell-abc-i00-standard` |
-| Simulator / robot | `mujoco` / `i2rt-yam-bimanual` |
-| Family / instance | `spell_abc` / seed 0 (allowed seeds: [0, 7, 8]; PROTOCOL §2) |
-| Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.3.0` |
+| Instance | `spell_abc`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | Included |
 
 ## Task
-ABC Sim `spell_abc` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Spell ABC with the letter blocks: lay A, B and C side by side in a straight row on the table, each with a letter face up or down, reading from left to right as the arms face the table.
-Twenty-six wooden letter blocks (A to Z, 3 cm cubes; each letter is printed on two opposite faces) lie on the table, letter face up. The deliverable is one replayable trajectory (`/app/output/trajectory.npz`, `(T, 14)`, one row per 0.034 s control step).
+Spell ABC with the letter blocks: lay A, B and C side by side in a straight row on the table, each with a letter face up
+or down, reading from left to right as the arms face the table.
 
-## Difficulty
-First-pass rating: hard. Long-horizon pick and place: 3 blocks found among 26 by their printed letters (the letters are only visible from above and from the side), grasped from a cluttered layout and placed in a tight row, each within a few centimetres, on a table both arms share. The action is joint-level (two 6-joint arms and two grippers; no motion primitives), and the goal has to hold, so passing through it does not count.
+## Success criteria
+The letter blocks A, B and C form a row in that order, from left to right as the arms face the table: each
+block's origin is 1.5 to 6 cm to the right (-y) of the previous block's and at most 3 cm in front of or behind it (x).
+Each of these blocks rests at table height (its origin within 2 cm of the table's surface plus the block's own
+half-height) with a letter face up or down (that face's normal within about 32° of vertical). The other blocks are not
+checked. This must hold for 30 consecutive control steps (1.02 s).
 
-## Reference solution
-The commanded actions of one of upstream's validation demonstrations of this task, replayed from the frozen instance and cut at the success step: `solution/oracle.npy`, 507 rows (float32 values, so the standard twin's client sends the same rows), success after the last one. Replayed, checked and saved by `solution/solve.sh`.
+The verifier, in a separate sandbox without network, replays `/app/output/trajectory.npz` (array `actions`, shape
+(T, 14) with 1 ≤ T ≤ 20,000, all values finite) once, open-loop, in a fresh process from its own copy of the frozen
+instance, one row per 0.034 s control step. The rule above is checked after every control step. Where the condition
+must hold for 30 consecutive control steps, the episode ends in success at the 30th of them. The replay stops at the
+step the episode ends; later rows are not run. The task scores 1 when the replayed episode ends in success; a
+trajectory whose rows run out first scores 0.
 
-## Verification
-`/opt/abc-tools/grade.py` in a separate sandbox without network: one replay of `/app/output/trajectory.npz`, in a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff the episode ends in success. `nop`: no trajectory, reward 0.
+A missing file scores 0, and so does an invalid one: not a readable `.npz`, no `actions` array, a shape other than
+(T, 14), a NaN or infinite value, T outside 1 to 20,000, or a `family` entry that names another family. A replay that
+does not start at the instance's recorded state hash, or that gives no result within 40 min, is a grader error, not a
+score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -35,14 +44,11 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `main`.
 - Recommended GPU: any NVIDIA GPU with EGL (RTX 4090 / L4).
 
-## Details
-| | |
-|---|---|
-| Upstream | ABC Sim, `abc_sim` of github.com/amazon-far/abc @ d0832d1 (Apache-2.0; assets CC BY 4.0 / MIT), on MuJoCo 3.6.0 |
-| Instance | the scene of one of upstream's validation demonstrations (its assembled scene XML, initial qpos and randomization record); the model-side state its randomizer sets outside the XML written into the scene; state hash `2a83e3a237ac1ddd`, checked on every load |
-| Actions | 14 joint-position targets per control step (0.034 s, 17 physics substeps of 2 ms) |
-| Success | the upstream evaluator `spell_abc` held 30 control steps |
-
-### Provenance
-The frozen instance (`instance.npz`) and the reference solution (`solution/oracle.npy`) were made at generation time from
-an upstream validation demonstration; see `tasks/abc-sim/README.md`.
+## License
+ABC Sim (`abc_sim` of [amazon-far/abc](https://github.com/amazon-far/abc) @ `d0832d1`) is released under the
+[Apache License 2.0](https://github.com/amazon-far/abc/blob/d0832d12651d1b260a652861a14648dc5f3660c7/LICENSE). Its
+simulator assets are under CC BY 4.0 (RoboCasa's Objaverse, LightWheel and AI-generated packs, Google Scanned Objects,
+individually credited Sketchfab creators), CC0 (freepoly.org), MIT (the I2RT YAM robot model, a LIBERO drawer fixture)
+and Apache-2.0 (everything modelled in-house); no non-commercial terms apply. The licences and credits ship in the image
+at `/opt/abc/ASSET_LICENSES.md` (`images/abc-sim/ASSET_LICENSES.md`). The simulator is MuJoCo 3.6.0 (Apache License
+2.0).

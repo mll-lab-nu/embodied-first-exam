@@ -1,11 +1,11 @@
 # RoboDojo · sort_nesting_dolls_by_size_random (standard)
 
 ## Task
-Stand the five nesting dolls upright in a straight row from left to right, smallest to largest, with a little space
+Stand the five penguin toys upright in a straight row from left to right, smallest to largest, with a little space
 between them. Then move both arms back to where they started.
 
 ## Goal
-Success: the five nesting dolls stand upright in a straight row, smallest on the left to largest on the right, with a
+Success: the five penguin toys stand upright in a straight row, smallest on the left to largest on the right, with a
 little space between them, and both arms are back where they started.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
@@ -17,14 +17,14 @@ Rules:
 - You get only the cameras and the robot's own sensor readings: no object poses, no scene layout, no success signal.
 
 ### Detailed success criteria
-- The five nesting dolls are 5, 7, 9, 11 and 13 cm tall. Seen from above, the smallest is 3.5 × 3.4 cm and the largest
+- The five penguin toys are 5, 7, 9, 11 and 13 cm tall. Seen from above, the smallest is 3.5 × 3.4 cm and the largest
   9.0 × 8.7 cm.
-- A doll's position, as the check measures it, is its centre: the middle of its bounding box, half its height above its
+- A toy's position, as the check measures it, is its centre: the middle of its bounding box, half its height above its
   base.
-- Order: going from the smallest doll to the largest, each next doll's centre is more than 0.03 m further right (along
+- Order: going from the smallest toy to the largest, each next toy's centre is more than 0.03 m further right (along
   x) than the one before; only these four neighbouring pairs are compared.
 - Straight row: the y values of the five centres span at most 0.035 m (largest minus smallest).
-- Upright: each doll's up axis less than 15° from straight up.
+- Upright: each toy's up axis less than 15° from straight up.
 - Arms back: each arm's end-effector within 0.15 m of where it started along each of x, y and z, and within 20° of its
   starting orientation.
 - The 1,050-step limit is 42 s of simulated time.
@@ -36,7 +36,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "efe-robot-mcp/tools/v1",
   "title": "EFE Robot MCP tools, v1",
-  "description": "One tool per agent-facing endpoint of the robot service (docs/protocol/standard_mode.md, \"MCP tools\"): the request fields and the reply as the service's client sends and receives them. GET /status has no tool (its fields come back in every reply's meta); GET /operations/<id> has none either (the server re-queries it itself when a reply is lost). schema.py narrows the list per task and drops each tool's `realtime_only` fields outside realtime mode. Every inputSchema is a self-contained draft 2020-12 object schema without $ref or top-level combinators.",
+  "description": "One tool per agent-facing endpoint of the robot service (docs/protocol/eai-standard.md, \"MCP tools\"): the request fields and the reply as the service's client sends and receives them. GET /status has no tool (its fields come back in every reply's meta); GET /operations/<id> has none either (the server re-queries it itself when a reply is lost). schema.py narrows the list per task and drops each tool's `realtime_only` fields outside realtime mode. Every inputSchema is a self-contained draft 2020-12 object schema without $ref or top-level combinators.",
   "endpoints": {
     "GET /spec": "spec",
     "POST /observe": "observe",

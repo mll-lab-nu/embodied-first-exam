@@ -8,12 +8,12 @@ tip the ball into the basin.
 ## Goal
 Success: both forks hold the tray steadily together, the ball in it; carried on both forks, the tray passes waypoint A
 and then waypoint B; when the ball is pushed, the arms bring it back to rest near the tray's centre, both forks still
-supporting the tray; the tray is brought, on both forks, to the exit position beside the basin; finally the ball is
-tipped out and settles in the basin, clear of the tray.
+supporting the tray; the tray is brought, on both forks, to the exit position beside the basin; finally the ball leaves
+the tray and settles in the basin, clear of the tray.
 
 The steps count only in this order. Once a step is done, it stays done. The replay ends as soon as the task is done or
 has failed; the task also fails at once when:
-- the ball leaves the tray before it is tipped out;
+- the ball leaves the tray before the tray has reached the exit position;
 - the tray drops low (well below where it starts) at any time;
 - the task's horizon is reached before the task is done (Robot Interface);
 - an object leaves the workspace (falls well below the table top or flies far away);

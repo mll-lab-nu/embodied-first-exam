@@ -22,7 +22,7 @@ does not stop while you think: one live episode.
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, realtime mode. Its docstring is the full reference
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`, realtime mode. Its docstring is the full reference
 (`python -c "import rcb_client; help(rcb_client)"`).
 
 | call | endpoint | what it does |
@@ -83,7 +83,6 @@ back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `cli
   and the robot does not wait for it.
 
 ## Others
-- The kitchen moves on too: the timer knob, once set, slowly turns back by itself.
 - One turn of yours (a model response, a tool call) takes seconds: write a controller (Python in your container, with
   numpy and the client) that plans or streams the commands, in the background
   (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`) or in the foreground; use your turns to read what happened and

@@ -1,15 +1,11 @@
 [[replace]]
-old = "## Goal\nSuccess: the car, the toothbrush, the hammer and the shoe lie inside the box, each lengthwise with its front end\npointing left (the car's nose, the toothbrush's brush head, the hammer's head, the shoe's toe); the box still stands\nupright and is not turned; and both arms are back where they started. A replay ends as soon as the task is done; later\nrows are not run."
-new = "## Goal\nSuccess: the car, the toothbrush, the hammer and the shoe lie inside the box, each lengthwise with its front end\npointing left (for the car, the end that pointed toward you at the start; the toothbrush's brush head, the hammer's\nhead, the shoe's toe); the box still stands upright and is not turned; and both arms are back where they started. A\nreplay ends as soon as the task is done; later rows are not run."
+old = "## Goal\nSuccess: the car, the toothbrush, the hammer and the shoe have their centres over the box's floor, each lengthwise with\nits front end pointing left (the car's nose, the toothbrush's brush head, the hammer's head, the shoe's toe); the box\nstill stands upright and is not turned; and both arms are back where they started. A replay ends as soon as the task is\ndone; later rows are not run."
+new = "## Goal\nSuccess: the car, the toothbrush, the hammer and the shoe have their centres over the box's floor, each lengthwise with\nits front end pointing left (for the car, the end that pointed toward you at the start; the toothbrush's brush head, the\nhammer's head, the shoe's toe); the box still stands upright and is not turned; and both arms are back where they\nstarted. A replay ends as soon as the task is done; later rows are not run."
 
 [[replace]]
-old = "## Goal\nSuccess: the car, the toothbrush, the hammer and the shoe lie inside the box, each lengthwise with its front end\npointing left (the car's nose, the toothbrush's brush head, the hammer's head, the shoe's toe); the box still stands\nupright and is not turned; and both arms are back where they started."
-new = "## Goal\nSuccess: the car, the toothbrush, the hammer and the shoe lie inside the box, each lengthwise with its front end\npointing left (for the car, the end that pointed toward you at the start; the toothbrush's brush head, the hammer's\nhead, the shoe's toe); the box still stands upright and is not turned; and both arms are back where they started."
+old = "## Goal\nSuccess: the car, the toothbrush, the hammer and the shoe have their centres over the box's floor, each lengthwise with\nits front end pointing left (the car's nose, the toothbrush's brush head, the hammer's head, the shoe's toe); the box\nstill stands upright and is not turned; and both arms are back where they started."
+new = "## Goal\nSuccess: the car, the toothbrush, the hammer and the shoe have their centres over the box's floor, each lengthwise with\nits front end pointing left (for the car, the end that pointed toward you at the start; the toothbrush's brush head, the\nhammer's head, the shoe's toe); the box still stands upright and is not turned; and both arms are back where they\nstarted."
 
 [[replace]]
 old = "arx_x5/0/pack_objects_into_box_random_0.json"
 new = "arx_x5/2/pack_objects_into_box_random_0.json"
-
-[[replace]]
-old = "sha256 `f51946657574f10d`"
-new = "sha256 `8c07a3c2c47e8acf`"

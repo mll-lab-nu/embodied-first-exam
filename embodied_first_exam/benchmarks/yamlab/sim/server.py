@@ -1,9 +1,9 @@
-"""eai-standard/2.2 sim service for YAMLab (Isaac Lab / Isaac Sim 5.1; two I2RT YAM arms with parallel grippers; see
-docs/protocol/standard_mode.md). Owns the scene. HTTP surface (rcb_limited): GET /spec, GET /status, POST /observe, POST /submit,
+"""eai-standard/3.0 sim service for YAMLab (Isaac Lab / Isaac Sim 5.1; two I2RT YAM arms with parallel grippers; see
+docs/protocol/eai-standard.md). Owns the scene. HTTP surface (rcb_limited): GET /spec, GET /status, POST /observe, POST /submit,
 POST /kinematics (RCB1 bodies, RCB1 responses: videos / frames / depth / proprio as raw blobs, never base64). Logs every call
 to /data/episode.jsonl and keeps /data/final.json current. Nothing about objects ever leaves this process.
 
-Crash recovery (rcb_limited.Episode, docs/protocol/standard_mode.md §13, resume class `exact`): every executed control step is
+Crash recovery (rcb_limited.Episode, embodied_first_exam/standard/README.md#crash-recovery, resume class `exact`): every executed control step is
 journaled (the 14-D float32 row handed to Session.step), every completed call is checkpointed with the scene's state hash.
 After a crash compose restarts the container (`restart: on-failure:6`, run.sh exits non-zero) and this service, a fresh
 process, rebuilds the frozen scene, replays the journal up to the last checkpoint (the first run in a fresh process:
@@ -18,8 +18,9 @@ Differences from the RoboLab service, all from the robot and the simulator:
   closed loop (one update per arm per control step, as the privileged-mode `move_ee` primitive does it);
 - three cameras (top: static; left_wrist / right_wrist: on each arm's link_6), rendered when a frame is recorded (rendering
   never steps physics); depth from the same renders; /kinematics from numpy models of both arms;
-- the episode ends at the first control step where YAMLab's success check (evaluation thresholds) has latched every stage,
-  or when a task object falls off the table (YAMLab's own termination), or when the time is up;
+- the episode is agent-ended: it ends at the agent's POST /finish (YAMLab's stages count as they happen, the last one must
+  still hold then; a success never ends it and is never shown), or when a task object falls off the table (YAMLab's own
+  termination), at the runaway guard (the step limit), or when the time is up;
 - the episode is graded as it ran (no grading replay): when it ends the service writes
   /data/trajectory.npz (the deliverable) + /data/episode.json (the live result: YAMLab's success check, latched stage by
   stage after every control step; the end-state hash); the collect hook's SIGUSR1 makes it exit, and
@@ -76,7 +77,7 @@ def dump() -> None:
     E["dumped"] = True
     try:
         acts = S.record_stop(); E["live_sha"] = S.state_sha(); E["n_actions"] = int(len(acts))
-        S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "steps": E["step"],
+        S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/3.0)", "steps": E["step"],
                                                                             "reason": E["reason"], "resumes": EP.resumes})
     except Exception as exc:  # noqa
         traceback.print_exc(); log({"ev": "dump_error", "error": repr(exc)})
@@ -92,36 +93,28 @@ def dump() -> None:
 
 def finish(reason: str) -> None:
     if E["done"]: return
-    if AE.ENABLED:
-        # agent-ended episodes (PROTOCOL §3, rcb_agent_end.py; rcb_yamlab.AGENT_END): the earlier stages count as they
-        # happened, the last one must hold when the episode ends. At POST /finish and at the session's end, a last stage
-        # whose hold has begun (its consecutive steps short of YAMLab's requirement) is given the rest of its window: the
-        # last command is held (journaled, recorded) until it latches or breaks. The runaway guard is the step limit
-        # (judged as it stands); a fallen object is 0; a simulator error is judged as without the feature
-        if reason == "step_guard":
-            reason = "step_limit"
-        E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
-        if reason in ("finished", "timeout"):
-            try:
-                hold = np.asarray(S.hold_action(), dtype=np.float32); n = 0
-                k, need = S.last_stage_hold()
-                while 0 < k < need and not S.success() and not S.episode_done and n < need:
-                    n += 1; S.step(hold); EP.journal(hold); VIDEO.offer(ctrl_steps()); k, need = S.last_stage_hold()
-                E["end_window_steps"] = n
-            except Exception as exc:  # noqa: BLE001 -- judged as it stands
-                traceback.print_exc(); log({"ev": "end_window_error", "error": repr(exc)[:300]})
-        E["episode_control_steps"] = ctrl_steps()
-        try: E["success"] = reason in AE.END_STATE_REASONS + ("error",) and check_success()
-        except Exception: E["success"] = False  # noqa: E701
-        log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1),
-             "success": bool(E["success"]), "end_window_steps": E.get("end_window_steps")})
-        dump()
-        return
-    E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
-    if not E["success"]:
-        try: E["success"] = check_success()
-        except Exception: pass
-    log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"])})
+    # agent-ended episodes (docs/protocol/tasks.md#modes, rcb_agent_end.py; rcb_yamlab.AGENT_END): the earlier stages count as they
+    # happened, the last one must hold when the episode ends. At POST /finish and at the session's end, a last stage
+    # whose hold has begun (its consecutive steps short of YAMLab's requirement) is given the rest of its window: the
+    # last command is held (journaled, recorded) until it latches or breaks. The runaway guard is the step limit
+    # (judged as it stands); a fallen object is 0; a simulator error is judged on the state
+    if reason == "step_guard":
+        reason = "step_limit"
+    E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
+    if reason in ("finished", "timeout"):
+        try:
+            hold = np.asarray(S.hold_action(), dtype=np.float32); n = 0
+            k, need = S.last_stage_hold()
+            while 0 < k < need and not S.success() and not S.episode_done and n < need:
+                n += 1; S.step(hold); EP.journal(hold); VIDEO.offer(ctrl_steps()); k, need = S.last_stage_hold()
+            E["end_window_steps"] = n
+        except Exception as exc:  # noqa: BLE001 -- judged as it stands
+            traceback.print_exc(); log({"ev": "end_window_error", "error": repr(exc)[:300]})
+    E["episode_control_steps"] = ctrl_steps()
+    try: E["success"] = reason in AE.END_STATE_REASONS + ("error",) and check_success()
+    except Exception: E["success"] = False  # noqa: E701
+    log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1),
+         "success": bool(E["success"]), "end_window_steps": E.get("end_window_steps")})
     dump()
 
 
@@ -150,7 +143,7 @@ VIDEO = live_video.LiveVideo(DATA, ctrl_hz=CTRL_HZ, frame=live_frame, log=EP.log
 ARMS = M.ARMS
 LAYOUT = [f"{a}_{j}" for a in ARMS for j in list(M.ARM_JOINTS) + ["gripper"]]
 CAMS = list(M.CAMERAS)
-# /spec max_frames_per_call (PROTOCOL §3 "Images per call"): the longest /observe (a 30 s window at the control rate,
+# /spec max_frames_per_call (docs/protocol/tasks.md#modes "Images per call"): the longest /observe (a 30 s window at the control rate,
 # + the first and the last frame) with every camera and its depth
 BUDGET_WATCH_S = 30.0   # the budget is a 30 s watch's whatever max_chunk_s is: the sim memory cap and the instruction use it
 MAX_FRAMES = (int(round(BUDGET_WATCH_S * CTRL_HZ)) + 2) * 2 * len(CAMS)
@@ -178,7 +171,7 @@ PROPRIO_LAYOUT = (JPOS + [f"{a}_tcp_{k}" for a in ARMS for k in ("x", "y", "z", 
                   + [f"{j}_vel" for j in JPOS] + [f"{a}_gripper_opening_m" for a in ARMS] + [f"{a}_{j}_effort" for a in ARMS for j in M.ARM_JOINTS])
 
 SPEC = {
-    "protocol": PROTOCOL, "protocol_compat": list(L.COMPAT), "simulator": "yamlab (YAMLab on Isaac Lab / Isaac Sim 5.1)", "robot": "i2rt-yam-bimanual",
+    "protocol": PROTOCOL, "simulator": "yamlab (YAMLab on Isaac Lab / Isaac Sim 5.1)", "robot": "i2rt-yam-bimanual",
     "task_text": S.spec["text"], "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT[c], "resolution": [int(FIRST[c].shape[1]), int(FIRST[c].shape[0])],
                     "calibration_in_obs": OBS_CALIBRATION, "intrinsic_cv": CAM0[c]["intrinsic_cv"], "mount": CAM0[c]["mount"],
@@ -220,24 +213,20 @@ SPEC = {
               "up": "+z", "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "wxyz",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes (x right, y up, z back)"},
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "5400"))},
-    # PROTOCOL §4.5: no step budget, but a technical cap is stated here. The tooling's runaway guard ends the episode after
-    # MAX_STEPS control steps (reason "step_guard"): 55.6 min of simulated time, which 60-120 control steps/s can reach.
+    # docs/protocol/eai-standard.md#post-reset-reset-capability: no step budget, but a technical cap is stated here. The tooling's runaway guard ends the episode after
+    # MAX_STEPS control steps (reason "step_limit"): 55.6 min of simulated time, which 60-120 control steps/s can reach.
     "max_control_steps": int(M.MAX_STEPS),
     "episode": ("one episode, no reset: it ends when you call POST /finish or when your time is up (the service never tells you "
                 "whether you have succeeded): YAMLab's stages count as they happen, the last one must still hold then (a hold it "
                 "has begun gets the rest of its consecutive steps, your last command held); it also ends when a task object "
                 f"falls off the table, on a simulator error, or after {int(M.MAX_STEPS):,} control steps (a technical cap, reason "
-                "\"step_limit\", spec.max_control_steps; judged as it stands)") if AE.ENABLED else
-               ("one episode, no reset: it ends at the first control step where every stage of YAMLab's success check has latched "
-               "(checked after every control step), when a task object falls off the table, when your time is up, on a simulator "
-               f"error, or after {int(M.MAX_STEPS):,} control steps ({M.MAX_STEPS / CTRL_HZ / 60:.1f} min of simulated time: a "
-               "technical cap, reason \"step_guard\", spec.max_control_steps; graded as it stands)"),
+                "\"step_limit\", spec.max_control_steps; judged as it stands)"),
     "robot_spec": S.robot_spec(),
     "kinematics": S.kinematics_spec(),
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
               "frames_encoding": "uint16 mm, zlib", "noise": L.DEPTH_NOISE},
 }
-L.check_spec(SPEC)       # a spec that misses a 2.2 field or names a forbidden one never starts the episode
+L.check_spec(SPEC)       # a spec that misses a required field or names a forbidden one never starts the episode
 EP.scene_built()         # the watchdog stands down: a long resume replay below is not a hung build
 
 
@@ -259,7 +248,7 @@ def extrinsics(cams) -> dict:
 
 
 def video_fps(meta: dict) -> int:
-    """The request's frame rate (default 5): outside [1, 30] it is a 400 (2.1's rule), never a failed encode that would end
+    """The request's frame rate (default 5): outside [1, 30] it is a 400 (the sidecar layer's rule), never a failed encode that would end
     the episode."""
     fps = meta.get("video_fps")
     if fps is None:
@@ -270,7 +259,7 @@ def video_fps(meta: dict) -> int:
 
 
 # ---------------------------------------------------------------- request fields
-# PROTOCOL §4.6: a malformed request is a 400 and executes nothing. Every field is read and checked by the functions below
+# docs/protocol/eai-standard.md#errors: a malformed request is a 400 and executes nothing. Every field is read and checked by the functions below
 # BEFORE the first control step; a field that is absent or JSON null takes its default, a value of the wrong type or out
 # of range is a ValueError (the layer's 400). as_400() turns anything else a bad value can raise while it is being read
 # (TypeError, OverflowError, AttributeError, ...) into that 400 too: only an error while the simulator is stepping is a
@@ -378,19 +367,18 @@ def clip_row(row: np.ndarray, clipped: list, ri: int) -> np.ndarray:
 
 
 def end_reason() -> str:
-    if S.success() and not AE.ENABLED:  # agent-ended: a success never ends the episode (a fall or the guard did)
-        return "success"
+    # a success never ends the episode (a fall or the guard did)
     return "object_fell" if S.fallen() else "step_guard"
 
 
 def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     """One recorded control step, journaled for crash recovery. True when the call must stop here: the episode is over
-    (success, a task object off the table, the runaway guard), or the service stops the call (max_call_wall_s, the client
+    (a task object off the table, the runaway guard), or the service stops the call (max_call_wall_s, the client
     hung up)."""
     a = np.asarray(a, dtype=np.float32)                    # the exact row Session.step executes (and records)
     over = S.step(a); stop = EP.journal(a); rec.tick(); VIDEO.offer(ctrl_steps())
-    if AE.ENABLED:       # the state's success, recorded only (never shown); only a fallen object or the guard end it here
-        AE.hidden_success(E, check_success(), log, ctrl_steps())
+    # the state's success, recorded only (never shown); only a fallen object or the guard end it here
+    AE.hidden_success(E, check_success(), log, ctrl_steps())
     if over: finish(end_reason())
     return E["done"] or stop
 
@@ -434,7 +422,7 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list, clipped: list) -> No
             except Exception as exc:  # noqa: BLE001
                 st = {a: f"failed: {str(exc)[:80]}" for a in ARMS}; break
             if ctrl_step(act, rec):
-                st = {a: ("episode over" if E["done"] else f"stopped ({EP.stop_reason})") for a in ARMS}; break
+                st = {a: ("episode over" if E["done"] else f"stopped ({EP.stop_reason or 'step limit'})") for a in ARMS}; break
             for a, (_p0, p1, _q1, _g, _n) in goals.items():
                 err[a] = float(np.linalg.norm(S.ee_pose(a)[0] - p1))
             if i >= n_way and all(e is not None and e < tol for e in err.values()):
@@ -447,7 +435,7 @@ EE_POS_MAX_M = 3.0       # an ee_pose target further than this from the world or
 
 
 def check_ee_rows(A: np.ndarray) -> None:
-    """ee_pose rows that cannot be meant (PROTOCOL §4.6: a 400, nothing executed): a position outside the +-EE_POS_MAX_M
+    """ee_pose rows that cannot be meant (docs/protocol/eai-standard.md#errors: a 400, nothing executed): a position outside the +-EE_POS_MAX_M
     box around the world origin (a unit slip: such a row would run tens of thousands of control steps towards nowhere,
     and a huge value would end the episode with a simulator error), or a quaternion of zero length."""
     for ri, row in enumerate(A):
@@ -489,16 +477,13 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     if typ == "joint_position": run_joint_position(A, dt, interp, rec, clipped)
     else: run_ee_pose(A, rec, plan, clipped)
     rec.tick(force=True, last=True); VIDEO.offer(ctrl_steps())
-    succ = False if AE.ENABLED else (E["success"] or check_success())   # agent-ended: ctrl_step recorded it, nothing ends here
-    if not AE.ENABLED: E["success"] = succ
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
            "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True,
            **({"frames_skipped": rec.skipped} if rec.skipped else {})}
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": note,
-         "depth": rec.mode, **({"frames_skipped": rec.skipped} if rec.skipped else {}), "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ,
+         "depth": rec.mode, **({"frames_skipped": rec.skipped} if rec.skipped else {}), "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50],
          **({"stopped": EP.stop_reason} if EP.stopping else {})})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
-    if succ: finish("success")
     out["done"] = E["done"]; out["reason"] = E["reason"]
     return out, rec.parts(video, fps)
 
@@ -521,9 +506,6 @@ def do_observe(meta: dict) -> tuple[dict, list]:
         for _ in range(int(round(seconds * CTRL_HZ))):
             if ctrl_step(hold, rec): break
         rec.tick(force=True, last=True); VIDEO.offer(ctrl_steps())
-        if not AE.ENABLED:     # agent-ended: ctrl_step recorded the state's success, nothing ends here
-            succ = E["success"] or check_success(); E["success"] = succ
-            if succ: finish("success")
     else:
         rec.tick(force=True, last=True)                    # the current frames: no physics
     E["calls"] += 1
@@ -576,5 +558,4 @@ open(PID_FILE, "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
 AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
                     on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row,
-                    **({"finish": lambda: finish("finished"),
-                        "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})))
+                    finish=lambda: finish("finished"), end_step_limit=lambda: finish("step_limit")))

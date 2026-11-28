@@ -4,8 +4,8 @@
 Put both cups from the counter on the bottom shelf of the wall cabinet and let go.
 
 ## Goal
-Success: both cups are on the bottom shelf of the wall cabinet and neither gripper touches them, for a second. A fall
-(the pelvis tipping far over, or dropping low) makes the episode a failure without ending it.
+Success: both cups touch the bottom shelf of the wall cabinet and neither gripper's fingers touch them, for a second. A
+fall (the pelvis tipping far over, or dropping low) makes the episode a failure without ending it.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -25,7 +25,7 @@ robot runs as a service you reach through its client or its MCP tools, as if it 
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`, its docstring the full reference
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`, its docstring the full reference
 (`python -c "import rcb_client; help(rcb_client)"`); the action type is `"whole_body"`:
 
 | call | endpoint | what it does |

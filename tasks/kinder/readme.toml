@@ -1,0 +1,116 @@
+# README data for tasks/kinder/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every success text (upstream at 5b2dbac, read-only clone):
+#   goal check   src/kinder/envs/dynamic3d/envs.py `_is_terminated` L1234-1237 = `_check_goals` L1114-1224: every
+#                ["on", obj, region] predicate of the task JSON's `goal_state` holds (conjunction "and" by default);
+#                the object's centre (x, y, z; the robot: its base x, y and z = 0) inside the region's box
+#                (objects/base.py Region.check_in_region L148-188). Ground regions: the JSON's 2D range grown by
+#                0.05 m on every side, z 0 to 0.1 m (objects/base.py MujocoGround L850, L866-891).
+#   task JSONs   src/kinder/envs/dynamic3d/tasks/<Family>/<Family>-o<N>[-<instruction>].json, `goal_state` and `regions`
+#   privileged   embodied_first_exam/benchmarks/kinder/privileged/tests/grade.py main() L35-77 and
+#                .../privileged/environment/rcb_kinder.py Session (step L147-155, check_action L135-145,
+#                check_trajectory L223-229, replay L231-246, load_trajectory L253-257)
+#   standard     embodied_first_exam/benchmarks/kinder/sim/server.py (RCB_AGENT_END, end judgement "state", step cap
+#                L120) and standard/sidecar/rcb_service.py _end() L960-968 (END_STATE_REASONS L131: finished, timeout,
+#                step_limit); no settle window (server.py sets no end_window_steps)
+
+[benchmark]
+name = "KinDER"
+citation = "Huang et al., 2026"
+url = "https://github.com/Princeton-Robot-Planning-and-Learning/kindergarden"
+repo = "Princeton-Robot-Planning-and-Learning/kindergarden"
+commit = "5b2dbac"
+
+[license]
+text = """
+KinDER ([Princeton-Robot-Planning-and-Learning/kindergarden](https://github.com/Princeton-Robot-Planning-and-Learning/kindergarden)
+@ `5b2dbac`) is released under the MIT License (copyright (c) 2025 Tom Silver). The lab scenes are MimicLabs
+([Gatech-RL2/mimiclabs](https://github.com/Gatech-RL2/mimiclabs), MIT License), fetched by upstream's own download
+script when the image is built. The simulator is MuJoCo (Apache License 2.0). No non-commercial terms apply.
+"""
+
+[robots]
+tidybot-plus-plus = "TidyBot++ mobile manipulator: holonomic base, Kinova Gen3 7-DoF arm, Robotiq 2F-85 gripper"
+
+[modes.privileged]
+# grade.py L44-46: no file -> missing_trajectory; L50-56: not an npz with `actions`, `env_id`, `seed` of this instance,
+# not (T, 11), a non-finite value or a value outside the action space's bounds -> invalid_trajectory (all 0,
+# grader_error 0); L74-76: any other exception -> grader_error 1. rcb_kinder.replay(): reset to the frozen instance,
+# step at most max_steps rows, stop at the first step whose goal check holds.
+success = """
+Graded file: `/app/output/trajectory.npz`, as `s.save_trajectory(...)` writes it: actions for this instance, one row
+of 11 values per 10 Hz control step, each inside the action space's bounds. After the agent's session it is replayed
+once, open-loop, from the frozen start (`tests/instance.json`) in a fresh process of a separate verifier container
+without network. The task is passed if KinDER's goal check holds at any control step of the replay within the first
+1,000 rows (100 s). The replay stops at that step; later rows are not run, and rows after the 1,000th never run. Only
+the trajectory is scored (`gen.py` and `NOTES.md` are not). A missing file, a file for another instance, a wrong
+shape, a non-finite value or a value outside the bounds scores 0. An error inside the grader is reported as
+`grader_error` (infrastructure), not as a score.
+"""
+
+[modes.standard]
+# server.py: AGENT_END, so the goal check never ends the episode; step cap at max_steps (1000) -> reason step_limit;
+# rcb_service._end(): finished / timeout / step_limit judged on now_success (the state they leave); error and reset -> 0.
+# Reset budget: RCB_RESET_BUDGET default in environment/docker-compose.yaml (0); only the episode after the last reset is
+# graded. A start whose hash differs from the instance's scene_sha -> instance_mismatch (infra_error 1).
+success = """
+Graded: the live episode, judged by the simulator service; nothing is replayed. Reaching the goal does not end the
+episode and is not shown to the agent. The episode ends at the agent's `/finish`, after 1,000 control steps (100 s
+of robot time), or when the agent's time ({timeout}) runs out. It is passed if KinDER's goal check holds in the state
+the episode ends in. Resets granted: {resets}. A reset starts a new episode from the frozen start; only the episode
+after the last reset is graded. A simulator error raised by the agent's own call ends the episode with 0. An episode that does not
+start from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a
+score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families: one KinDER Dynamic3D environment each (task.toml comment `KinDER env ...`).
+
+[families.dynamo]
+# Dynamo3D-o3.json goal_state [["on", "robot", "ground_goal_region"]]; ground_goal_region range [3.45, 3.45, 4.2, 4.2]
+# (0.75 m square), grown by 0.05 m per side (MujocoGround L885-891): 0.85 m square, z 0 to 0.1 m; the robot's position
+# is its base x, y and z = 0 (envs.py L1148-1157).
+success = """
+Goal check (KinDER `Dynamo3D-o3`): the centre of the robot's base lies inside the green square marked on the floor,
+0.85 m on a side. Nothing else is checked: the chairs may be pushed anywhere, and the arm and gripper may be in any
+pose.
+"""
+
+[families.sweep-into-drawer]
+# SweepIntoDrawer3D-o5.json goal_state: ["on", "cube_<i>", "kitchen_island_shelf_1_partition_1_region"] for i = 0..4;
+# the region belongs to the kitchen island fixture (objects/fixtures.py check_in_region L460-485): a box inside that
+# drawer's compartment. The drawer's opening and the wiper are not checked.
+success = """
+Goal check (KinDER `SweepIntoDrawer3D-o5`): the centre of every one of the five cubes lies inside the goal region
+of the middle drawer of the kitchen island's top row, a box inside the drawer that stops short of its left and right
+walls. Nothing else is checked: the drawer may be left in any position, and the wiper anywhere.
+"""
+
+[families.scoop-pour]
+# ScoopPour3D-o50.json goal_state: ["on", "cube_<i>", "target_bin_region"] for i = 0..49; target_bin_region on
+# bin_green_0, range [-0.185, -0.11, 0.03, 0.185, 0.11, 0.055] in the bin's frame (objects/base.py L605-640).
+success = """
+Goal check (KinDER `ScoopPour3D-o50`): the centre of every one of the 50 cubes lies inside the green bin's goal
+region, a box 0.37 m by 0.22 m centred in the bin, from 3 cm to 5.5 cm above the bin's base frame, so a cube resting
+on the rim or stacked high does not count. Nothing else is checked: the scoop and the yellow bin may be anywhere.
+"""
+
+[families.constrained-cupboard]
+# ConstrainedCupboard3D-o6.json goal_state: ["on", "cuboid_<i>", "cupboard_<i>_shelf_<s>_goal"] for i = 0..5 (s = 1
+# for i <= 2, 0 for i >= 3): each rod has its own cupboard and compartment (Cupboard.check_in_region, objects/
+# fixtures.py L1694-1720).
+success = """
+Goal check (KinDER `ConstrainedCupboard3D-o6`): each of the six rods has its own cupboard, as the task names them,
+and the centre of every rod lies inside the goal region of the tall compartment of its own cupboard. A rod in another
+rod's cupboard does not count. Nothing else is checked.
+"""
+
+[families.sweep-simple]
+# SweepSimple3D-o50-sweep_the_blocks_to_the_right_side_of_the_kitchen_island.json goal_state: ["on", "cube_<i>",
+# "sweep_region"] for i = 0..49; sweep_region range [0.125, -1.375, 0.875, -1.0] (0.75 m x 0.375 m), grown by 0.05 m per
+# side: 0.85 m x 0.475 m, z 0 to 0.1 m (MujocoGround L885-891).
+success = """
+Goal check (KinDER `SweepSimple3D-o50`, the instruction "sweep the blocks to the right side of the kitchen island"):
+the centre of every one of the 50 cubes lies inside the grey box marked on the floor, 0.85 m by 0.475 m and 0.1 m
+high. Nothing else is checked: the wiper may be anywhere.
+"""

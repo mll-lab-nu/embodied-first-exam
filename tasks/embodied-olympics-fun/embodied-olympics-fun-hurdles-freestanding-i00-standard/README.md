@@ -1,34 +1,56 @@
-# embodied-olympics-fun-hurdles-freestanding-i00-standard
+# Embodied Olympics · hurdles (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
-| Twin | `embodied-olympics-fun-hurdles-freestanding-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-h1-2` |
-| Family / instance | `hurdles_freestanding` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: rule (stricter than TR 22.6 in one way): leg knocks stay legal, but at least one hurdle must be cleared cleanly; the attempt fails the moment the last standing hurdle leaves its standing pose (a top-bar point more than 0.10 m from where it stood). Positive by injection: the H1-2 given 2.0 m/s forward and 5.5 m/s up over each free-standing 1.067 m hurdle, nothing touched, a real walk to the line; and three hurdles knocked down legally by a trailing leg in the air with the fourth cleared cleanly succeeds (hurdles_clean 1). Negatives: all four knocked down legally fails at the fourth knock; the archived success that knocked all four over with its thighs, replayed on the core it ran on, succeeds under the old module and fails under this one at the fourth knock (t = 86.75 s); knocked with a hand (walking into one), standing on its top bar (climbing), shoved along the track or out of the lane by a foot, moved by something else, knocked in the air then a foot under the bar, a leg swung over from the ground, feet under the bar, beside it, a leg beside it, left the lane, down; nop fails on time with the hurdles still for 140 s; determinism by state hash. Hurdle statics in physics: toppling force 3.81 kgf (3.6 stands, 4.0 falls). Feasibility on the H2-class motor core (hips and knees 360 N m braking peak, ankle 67 / 40 N m), the robot's own motors, a searched standing take-off checked against the real colliding hurdle: an upright clean flight (no touch until touchdown) clears up to 0.914 m (search limit 0.90-0.93 m) but the robot then falls; the best clean clearance with a standing landing found is 0.553 m, below every official height (0.686 m the lowest), so the 1.067 m men's height is kept.; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-hurdles-freestanding-i00-standard` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree H1-2 humanoid (1.78 m, 67 kg, 27 joints), with Unitree's walking policy |
+| Mode | standard |
+| Instance | `hurdles_freestanding`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Run the 50 m hurdles: go over each of the four hurdles in your lane and reach the finish line, leaving at least one hurdle standing. (Embodied Olympics `hurdles-freestanding`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Run the 50 m hurdles: go over each of the four hurdles in your lane and reach the finish line, leaving at least one
+hurdle in place.
 
-## Difficulty
-A hurdle's top is higher than the robot's hip joints: each of the four has to be jumped with the whole pelvis above 1.067 m and each foot lifted a metre, on a body of 67 kg whose only built-in gait walks at 0.7 m/s and drifts in heading. The hurdles are loose: a clipped bar tips one into the landing, where it lies as an obstacle, and walking up to one shoves it away, which is a failure. Knocking a hurdle down is allowed, but not all four: at least one must be jumped cleanly. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
+## Success criteria
+A 50 m lane, 1.22 m wide, with four loose hurdles (1.067 m high, 1.19 m wide, 10.9 kg, tipping over under about 3.8 kg
+of push on the top bar): the first 13.72 m from the start line, then one every 9.14 m. Each hurdle is judged at the
+place where it stands at the start, wherever it is later. The referee's stages, in order: hurdle 1, hurdle 2,
+hurdle 3, hurdle 4, finish.
+- A hurdle is gone over when the pelvis and both ankle joints cross the plane of its top bar forwards, each between
+  the bar's ends, the pelvis higher than the hurdle's top and each foot higher than the lower edge of the top bar, in
+  one flight: from the first of these crossings to the last, nothing of the robot touches anything but that hurdle's
+  top bar. A point that comes back over the plane must cross it again. The hurdles are gone over in order.
+- Finish: the leading point of the torso (trunk and head, not the arms or legs) reaches the finish line, with all four
+  hurdles gone over.
+- Knocking a hurdle over with a leg during the clearance (in the air, or with the pelvis over its plane) is allowed,
+  but at least one hurdle must stay in its standing pose (no point of its top bar more than 0.10 m from where it
+  stood).
 
-## Reference solution
-None (as `embodied-olympics-fun-hurdles-freestanding-i00-privileged`).
+Fouls (each fails the attempt): the pelvis or a foot crosses the next hurdle's plane beside it or too low; the robot
+touches anything but the top bar between the first and the last crossing (stepping over); part of a leg is beside the
+next hurdle (within 0.10 m of its plane, beyond the bar's ends) lower than its top; a hurdle leaves its standing pose
+within 0.5 s of a touch by a hand, an arm, the trunk or the pelvis; a hurdle not yet gone over leaves its standing
+pose other than by a leg during the clearance; the robot climbs on a standing hurdle (it pushes the robot up by more
+than 100 N for longer than 0.15 s, or a part other than a leg on its top bar touches it at a crossing); every hurdle
+has left its standing pose; the pelvis is more than 0.61 m from the lane's centre line; the torso reaches the finish
+line before all hurdles are gone over; the pelvis is below 0.40 m for 10 s in a row. A fall by itself does not end the
+race; the generic fall rule is off. Time limit: 140 s (14,000 control steps).
 
-## Verification
-The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
-infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
-`/data/final.json`: pass iff the live attempt succeeded. The
-rules: World Athletics rules for the hurdles, at the indoor distance of 50 m. The lane runs along +x, 1.22 m wide, centred on y = 0; the start line (0.05 m wide) has its far edge at x = 0, the finish line is x = 50.0 m. 4 hurdles stand across the lane, the face of the first one's top bar 13.72 m from the start line and one every 9.14 m after it (the last 8.86 m before the finish). A hurdle is a loose object standing on the track: 1.19 m wide and 1.067 m high, a top bar 0.07 m high, two uprights and a cross bar 0.35 m below its top; its two bases, 0.7 m long, lie on the track on your side of it, with counterweights on them; it weighs 10.9 kg and tips over forwards when a horizontal force of more than 3.8 kg pushes the middle of its top bar (tipped further than about 55 degrees it falls on by itself); it can slide on the track (friction 0.6), fall, bounce and lie where it comes to rest, and you can trip on it, but not climb on it. Each hurdle is judged where it stands at the start (its standing pose on its mark), wherever it is later. The clock starts at t = 0. You go over a hurdle when your pelvis and both your feet (the ankle joints) have crossed the plane of its top bar in its standing pose towards +x, each between the bar's two ends, the pelvis higher than the hurdle's top (1.067 m above the track) and each foot higher than the lower edge of its top bar (1.067 m less 0.07 m), whether the hurdle still stands there or not, and in one flight: from the first of these three crossings to the last, no part of you touches anything but that hurdle's top bar; a pelvis or a foot that comes back over the plane has not crossed it and must cross it again. The hurdles are gone over in order. A hurdle leaves its standing pose when a point of its top bar is more than 0.1 m from where it stood. Knocking a hurdle down with your legs is allowed when a leg strikes its top bar during the clearance: while you touch nothing else but that hurdle's top bar (in the air) or once your pelvis is over the hurdle's plane; a hurdle tipped more than 60.0 degrees is counted as down, without a fault. Where a hurdle comes to rest after that does not matter. But at least one hurdle must be cleared cleanly: if every hurdle has left its standing pose (knocked, also legally), you fail at the moment the last one does. You finish at the moment the leading point of your torso (the trunk and head hull; not the arms, legs or feet) reaches the finish line, with all hurdles gone over. You succeed with a finish within 140 s of robot time. A fall does not end the race: you are down while your pelvis is below 0.4 m, you may get up and go on, but 10.0 s down in a row end it. You fail if your pelvis or a foot crosses the next hurdle's plane beside the hurdle, or lower than said above (going under its top); if between the first and the last of these crossings you touch the track or anything else but its top bar (stepping over it); if a part of one of your legs is beside the next hurdle (beyond the bar's ends, within 0.1 m of its plane) lower than the hurdle's top; if a hurdle leaves its standing pose within 0.5 s of being touched by a hand, an arm, your trunk or your pelvis, that touch being your latest on it or within 0.1 s before (knocked by hand or body; also one you have gone over); if you climb on a hurdle you have not yet gone over while it stands (tipped less than 60.0 degrees): it pushes you upwards by more than 100.0 N for longer than 0.15 s, or anything of you but a leg on its top bar touches it at the instant your pelvis or a foot crosses its plane; if a hurdle you have not yet gone over leaves its standing pose in any other way than the legal knock above (pushed, kicked or shoved along the track before you went over it); if your pelvis is more than half the lane's width from y = 0; if your torso reaches the finish line before every hurdle is gone over; if you knock down every hurdle; when down for 10.0 s; or after 140 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The referee's
+success call is an event: once it is made at some control step, the attempt is a success. It is never shown to the
+agent and does not end the attempt: the physics goes on until the agent's `/finish`, the attempt's time limit, or the
+end of the agent's time (2 h), and nothing after the call undoes it. A failure the referee calls before any
+success (a foul, a fall, the physics diverging) ends the attempt at once with 0. Reaching the time limit or the end of
+the session without a success call scores 0. The agent has 5 resets, each starting a new attempt from the
+frozen start; only the last attempt (the one after the last reset) is graded, and a success in an earlier attempt does
+not count. A simulator error raised by the agent's own call ends the attempt with 0. An attempt that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,13 +60,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | track-and-jumps |
-| Rule book | World Athletics Competition and Technical Rules, 2024 edition: TR 22 (22.1-22.3 distances and heights: the men's hurdle 1.067 m high, 13.72 m to the first, 9.14 m between; at the indoor distance of 50 m that is four hurdles and 8.86 m from the last to the finish; 22.4-22.5 the hurdle: metal with a non-metallic top bar, two bases and two uprights at the extreme end of each base supporting a rectangular frame reinforced by a cross bar, 1.18 to 1.20 m wide, a top bar 70 mm high and 10 to 25 mm thick, a base at most 0.70 m long, at least 10 kg, counterweights set so that a horizontal force of 3.6 to 4.0 kg at the centre of the top bar's top edge topples it; placed with the feet towards the approaching athlete; 22.6 each hurdle is gone over in the athlete's own lane; 22.6.1 a foot or leg beside the hurdle below the plane of its top; 22.6.2 knocking down or displacing a hurdle by hand or body; 22.7 knocking hurdles down otherwise is no offence), TR 17.3 (lanes), TR 18.2 and TR 19 (the finish); deviations: TR 16 (the start): no starter's commands, no blocks and no reaction time: the robot stands with the front ends of its feet 0.02 m behind the start line and the clock runs from t = 0 · TR 22.6 ('goes over each hurdle') is judged geometrically at the hurdle's standing pose on its mark, wherever the hurdle is now: the pelvis must pass above the height of the hurdle's top, each foot (its ankle joint) above the lower edge of the top bar, all three between the bar's ends, through the plane where the top bar stood, all three in one flight (from the first crossing to the last the robot touches nothing but that hurdle's top bar: the rule book's clearance is a stride in the air, and a leg swung over from the ground or a step over a hurdle that lies on the track is not one); a hurdle that has fallen, or has been pushed on or out of the lane, does not lower or move what is to be gone over; going over it on the hurdle (climbing) is judged by contact: a hurdle not yet gone over that still stands may not push the robot upwards by more than 100.0 N for longer than 0.15 s, and at the instant the pelvis or a foot crosses its plane only the legs may touch it, on its top bar · TR 22.6.2 (knocking down or displacing a hurdle by hand, body or the upper side of the lead leg) and TR 22.7: intent and the side of the leg cannot be judged, so the cause of a hurdle's displacement is judged from contacts: a hurdle that leaves its standing pose (a point of its top bar more than 0.1 m from where it stood) within 0.5 s of a touch by a hand, an arm, the trunk or the pelvis is a failure if that touch was the robot's latest on it or came within 0.1 s; the legs may knock it down, on its top bar, during the clearance (while the robot touches nothing but that hurdle's top bar, or its pelvis is over the hurdle's plane); any other displacement before the hurdle is gone over (pushed, kicked or shoved along the track first, from the ground) is a failure: the athlete did not go over that hurdle as it stood · TR 22.6 / 22.7 (knocking hurdles down with the legs is no offence): stricter here in one way only: an attempt in which every hurdle is knocked down (each leaves its standing pose, a point of its top bar more than 0.1 m from where it stood) fails at the moment the last one does, so at least one hurdle is cleared cleanly (gone over and still standing on its mark at the finish); a race that only knocks the hurdles over is not judged a hurdle clearance for a robot that cannot be watched for intent · TR 17.3 (lanes): the lane is judged by the pelvis (its centre more than half a lane width from the lane's centre line); TR 22.6.1 is judged on the centres of the legs' collision bodies within 0.1 m of the hurdle's plane · TR 17 (a fallen athlete): a robot whose pelvis is below 0.4 m is down; it may get up and go on, but 10.0 s down in a row end the race (did not finish) · TR 19 (photo finish): the time is the instant the leading point of the torso link's collision mesh reaches the finish line's plane, interpolated between 1 ms physics steps (the H1-2's trunk and head are one link, so its torso includes the head); no wind; the robot alone on a straight of three lanes · TR 22.4-22.5 (the hurdle): a rigid body (no deflection of the top bar); the rule book does not give the friction of a hurdle on the track: 0.6 (rubber feet on a polyurethane track); the counterweights are set once for the toppling force 3.8 kg; the distance is the indoor 50 m with its four hurdles, on an outdoor straight, not the 110 m; the time limit, 140 s, is this benchmark's (FAMILIES.md) |
-| Stages | hurdle 1 → hurdle 2 → hurdle 3 → hurdle 4 → finish |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 14000 control steps (140 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

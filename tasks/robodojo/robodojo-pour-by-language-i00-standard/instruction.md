@@ -5,10 +5,10 @@ Pour the violet bottle into the black bowl, then the red bottle into the white b
 brown bowl, in that order.
 
 ## Goal
-Success: the violet bottle has been poured into the black bowl, then the red bottle into the white bowl, then the
-turquoise bottle into the brown bowl, each bottle nearly emptied into its bowl with little spilled. Finish each pour
-before you stand its bottle up. If an arm comes back to where it started while a later bowl holds its liquid and an
-earlier one does not, the episode ends at once as a failure.
+Success: the violet bottle has been poured into the black bowl, the red bottle into the white bowl and the turquoise
+bottle into the brown bowl, each bottle nearly emptied into its bowl with little spilled. Finish each pour before you
+stand its bottle up. The order is checked whenever an arm comes back to where it started: if at that moment a later bowl
+holds its liquid and an earlier one does not, the episode ends at once as a failure.
 
 Each pour counts as it happens, at the moment its bottle stands upright again.
 
@@ -43,7 +43,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)

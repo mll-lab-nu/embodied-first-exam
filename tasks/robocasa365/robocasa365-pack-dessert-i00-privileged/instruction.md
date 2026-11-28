@@ -5,7 +5,8 @@ Put the marshmallow in the tupperware with the hot dog, and move your hand away.
 
 ## Goal
 Success: the hot dog and the marshmallow are both in the tupperware, and the hand has let go of the marshmallow and
-moved well away. Your trajectory is replayed from the fixed start. What counts is the state after its last action.
+moved well away (what counts is how far away the hand is). Your trajectory is replayed from the fixed start. What counts
+is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 13)`
 with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave

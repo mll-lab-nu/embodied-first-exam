@@ -1,0 +1,997 @@
+# README data for tasks/pandadyn/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# Sources checked for every text below (paths relative to the repository root; P = images/pandadyn/panda_dynamics/):
+#   phases         P/tasks/{single,dual}/<task>.py `update_task` (each phase's predicate, judged after every 1 ms physics
+#                  step, only while it is the current phase: P/base_env.py `advance`, `phase_hold`; P/events.py
+#                  EventLedger.hold = the condition true at every physics step for the stated time, a break restarts it)
+#   shared rules   P/tasks/predicates.py (supported, containment, cup_catch, ball_on_plate, bilateral_grip, crossed,
+#                  free_interval, face_up, inertial_flip); P/base_env.py `read_contacts` L508-638 (contact rules: two
+#                  roles, self contact unless finger-finger, robot link vs scene / object / fixture unless
+#                  ALLOW_FINGER_CONTACTS / ALLOWED_FINGER_FIXTURES, tool vs anything but objects / ALLOWED_TOOL_FIXTURES,
+#                  penetration < -4 mm; a contact counts at impulse >= 1e-8), `_step_action` L450-499 (limit violations,
+#                  out of bounds z < -0.2 or |xy| > 1.8, the horizon's "timeout" before physical_success), `evaluate`
+#                  (success = physical_success and valid and no failure); P/telemetry.py `sample` (safety limits, with
+#                  P/robots/panda_limits.py)
+#   parameters     each privileged task's environment/instance.json `parameters` (nominal, resolved; the same file in
+#                  every mode of a family)
+#   graders        embodied_first_exam/benchmarks/pandadyn/privileged/tests/grade.py (privileged; replay by
+#                  .../privileged/environment/rcb_pandadyn.py Session.replay / step: done = terminated (success or
+#                  failure) or the step cap MAX_ROWS = 4500); embodied_first_exam/benchmarks/pandadyn/sim/server.py
+#                  PandaDyn.step (RCB_AGENT_END=1: Session.run_on, end_judgement "events", the horizon as the step cap)
+#                  + rcb_service.py _step / _end (standard); embodied_first_exam/standard/realtime/rcb_realtime.py
+#                  (realtime clock and its error rule)
+
+[benchmark]
+name = "Panda Dynamic Scenes"
+citation = "Wang et al., 2026"      # Embodied First Exam (arXiv:2611.12177): Panda Dynamic Scenes is one of its original suites
+url = "https://www.embodied-first-exam.ai/suite/pandadyn/"
+repo = "mll-lab-nu/embodied-first-exam"
+commit = "b2280d8"                  # the commit that added tasks/pandadyn/ to this repository
+
+[license]
+text = """
+Panda Dynamic Scenes is an original suite of Embodied First Exam. Its environment package (`images/pandadyn/panda_dynamics/`) is released
+with this repository under the repository's MIT License. The simulation stack in the image: ManiSkill 3 and its Franka
+Panda model (Apache License 2.0), SAPIEN (MIT), Ruckig community version (MIT), PyTorch (BSD 3-Clause). No
+non-commercial terms apply.
+"""
+
+[robots]
+franka-panda = "Franka Emika Panda (FER), one 7-joint arm with its standard two-finger hand"
+franka-panda-bimanual = "Two Franka Emika Panda (FER) arms, each with 7 joints and its standard two-finger hand"
+
+[modes.privileged]
+# Shared failures: P/base_env.py read_contacts, _step_action; P/telemetry.py sample (joint position limit + 0.002 rad,
+# measured joint speed x1.01, finger speed 0.051, TCP 1.7 m/s / 2.5 rad/s x1.01 measured and reference, torque 87/12 N m
+# + 1e-4, torque rate 1000 N m/s + 0.1, reference joint v/a/j above the limits, 20 ms windowed joint acceleration, joint
+# jerk and TCP acceleration 13 m/s^2 / 25 rad/s^2 (measured and reference) x1.05).
+# Grading: privileged/tests/grade.py main / load_trajectory (missing_trajectory, wrong_task, bad_trajectory: 0;
+# sim_error: 0; replay_failed, replay_timed_out (300 s + rows / 10), instance_ok = 0, any exception: grader_error =
+# infra_error = 1); rcb_pandadyn.py Session.clip (joint limits, aperture [0, 0.08]), replay (stops at the first done),
+# success() = physical_success and valid and no failure_reason.
+success = """
+Phases count only in order: each phase's condition is checked after every 1 ms physics step, and only once the phase
+before it is complete. A condition "for t s" must hold at every physics step over t s; a break restarts it. Positions
+are in the world frame (metres, z up, the table top is the plane z = 0); "horizontally" means in x and y.
+
+Failures shared by every task (each ends the episode at once, in any phase):
+- a forbidden contact: two arms touching each other (tools included); an arm touching itself, except its two fingers
+  touching each other (a finger touching the arm's own tool counts); any robot part, tool included, touching anything
+  the allowed contacts above do not list (the table, the floor and the arm pedestals included); any contact in the
+  scene that penetrates deeper than 4 mm;
+- a violation of the Franka Panda's safety limits by an arm, checked at every physics step: a joint more than 0.002 rad
+  beyond its position limits; measured joint speeds above 101 % of the limits (2.175 rad/s for joints 1-4, 2.61 rad/s
+  for joints 5-7); a finger faster than 0.051 m/s; the hand's TCP faster than 1.01 x 1.7 m/s or 1.01 x 2.5 rad/s,
+  measured or in the servo's reference motion; a motor torque above 87 N m (joints 1-4) or 12 N m (joints 5-7), or one
+  changing faster than 1000 N m/s; reference joint speeds, accelerations or jerks above the Panda's limits; measured
+  joint accelerations or jerks, or measured or reference TCP accelerations (13 m/s², 25 rad/s²), averaged over 20 ms,
+  above 105 % of the limits;
+- an object leaving the workspace (its centre below z = -0.2 m or more than 1.8 m from the world origin horizontally),
+  or a non-finite object position;
+- the task's horizon (above) reached before the last phase is complete.
+
+Graded file: `/app/output/trajectory.npz`, as `Session.save_trajectory(...)` writes it: `task` naming this task and
+`actions`, a finite array with one row per 10 ms control step (8 values per arm: 7 joint-position targets and the total
+gripper aperture) and at most 4,500 rows. Each row's joint targets are clipped to the joint limits and its aperture to
+[0, 0.08] m before it runs. After the agent's session the verifier replays the file once, open-loop, in a fresh process
+of a separate container without network, from its own copy of the frozen instance. The replay stops at the end of the
+first control step in which the task has completed or failed (later rows are never run), or when the rows run out. The
+task is passed if, at that point, the last phase is complete and no failure has been recorded. A missing file, a file
+for another task, a file that is not such an array, a replay that ends without completing every phase, and a simulator
+error on the agent's rows (for example the servo's trajectory generator failing) score 0. A rebuilt start that does not
+match the frozen instance's state hash, a replay that gives no result or runs past its time limit (300 s plus 0.1 s per
+row), or any other error in the grader is an infrastructure error, not a score.
+"""
+
+[modes.standard]
+# Shared failures: as [modes.privileged]. server.py PandaDyn.step L183-194: a failure ends the episode (done, not
+# success); the horizon (Session.horizon_end, its "timeout" failure included) and MAX_ROWS end it as the step cap
+# (info step_cap -> rcb_service _step: "step_limit"). rcb_service.py _hidden_success / _judged / _end L960-967 with
+# end_judgement "events": finished / timeout (SIGUSR1 at the session's end) / step_limit / failed -> success iff the task
+# succeeded at some control step of the episode (seen_step); error (a simulator error) and reset -> 0. Reset budget:
+# RCB_RESET_BUDGET default 3 in environment/docker-compose.yaml; only the episode after the last reset is graded.
+# instance_mismatch, sim_crashed, resume_failed: infra_error (the shared sidecar grade.py); sim_crashed_on_call: 0.
+success = """
+Phases count only in order: each phase's condition is checked after every 1 ms physics step, and only once the phase
+before it is complete. A condition "for t s" must hold at every physics step over t s; a break restarts it. Positions
+are in the world frame (metres, z up, the table top is the plane z = 0); "horizontally" means in x and y.
+
+Failures shared by every task (each ends the episode at once, in any phase):
+- a forbidden contact: two arms touching each other (tools included); an arm touching itself, except its two fingers
+  touching each other (a finger touching the arm's own tool counts); any robot part, tool included, touching anything
+  the allowed contacts above do not list (the table, the floor and the arm pedestals included); any contact in the
+  scene that penetrates deeper than 4 mm;
+- a violation of the Franka Panda's safety limits by an arm, checked at every physics step: a joint more than 0.002 rad
+  beyond its position limits; measured joint speeds above 101 % of the limits (2.175 rad/s for joints 1-4, 2.61 rad/s
+  for joints 5-7); a finger faster than 0.051 m/s; the hand's TCP faster than 1.01 x 1.7 m/s or 1.01 x 2.5 rad/s,
+  measured or in the servo's reference motion; a motor torque above 87 N m (joints 1-4) or 12 N m (joints 5-7), or one
+  changing faster than 1000 N m/s; reference joint speeds, accelerations or jerks above the Panda's limits; measured
+  joint accelerations or jerks, or measured or reference TCP accelerations (13 m/s², 25 rad/s²), averaged over 20 ms,
+  above 105 % of the limits;
+- an object leaving the workspace (its centre below z = -0.2 m or more than 1.8 m from the world origin horizontally),
+  or a non-finite object position.
+
+Graded: the live episode, judged by the simulator service as it runs; nothing is replayed. Each row the agent sends (8
+values per arm, clipped to the limits) runs as one 10 ms control step; between the agent's calls the world is frozen.
+The task is judged as an event: once the last phase is complete at some control step with no failure recorded by then,
+the episode is a success, even if a failure above ends it afterwards; a failure before that scores 0. Completing the
+task neither ends the episode nor is shown to the agent. Otherwise the episode ends at the agent's `/finish`, at the
+task's horizon (whether or not every phase is done by then), after 4,500 control steps, or when the agent's time
+({timeout}) runs out, and it is a success only if the task was completed by then. The agent has {resets} resets, each
+starting a new episode from the frozen start; only the last episode (the one after the last reset) is graded. A
+simulator error raised by the agent's own call ends the episode with 0. An episode that does not start from the frozen
+instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
+"""
+
+[modes.realtime]
+# As [modes.standard] (rcb_realtime.py extends rcb_service.Service; the verdict is 2.1's), plus the clock (rcb_realtime.py
+# docstring: paused until the first /submit, one control step every control_dt x slowdown s of wall time, the last
+# target held when the plan runs out) and its error rule (after the first command a simulator error or a crash inside a
+# control step is the agent's; before it, a killed service, a failed resume, a reset that does not rebuild: infrastructure).
+# The slowdown S is the RCB_SLOWDOWN default of each task's environment/docker-compose.yaml.
+success = """
+Phases count only in order: each phase's condition is checked after every 1 ms physics step, and only once the phase
+before it is complete. A condition "for t s" must hold at every physics step over t s; a break restarts it. Positions
+are in the world frame (metres, z up, the table top is the plane z = 0); "horizontally" means in x and y.
+
+Failures shared by every task (each ends the episode at once, in any phase):
+- a forbidden contact: two arms touching each other (tools included); an arm touching itself, except its two fingers
+  touching each other (a finger touching the arm's own tool counts); any robot part, tool included, touching anything
+  the allowed contacts above do not list (the table, the floor and the arm pedestals included); any contact in the
+  scene that penetrates deeper than 4 mm;
+- a violation of the Franka Panda's safety limits by an arm, checked at every physics step: a joint more than 0.002 rad
+  beyond its position limits; measured joint speeds above 101 % of the limits (2.175 rad/s for joints 1-4, 2.61 rad/s
+  for joints 5-7); a finger faster than 0.051 m/s; the hand's TCP faster than 1.01 x 1.7 m/s or 1.01 x 2.5 rad/s,
+  measured or in the servo's reference motion; a motor torque above 87 N m (joints 1-4) or 12 N m (joints 5-7), or one
+  changing faster than 1000 N m/s; reference joint speeds, accelerations or jerks above the Panda's limits; measured
+  joint accelerations or jerks, or measured or reference TCP accelerations (13 m/s², 25 rad/s²), averaged over 20 ms,
+  above 105 % of the limits;
+- an object leaving the workspace (its centre below z = -0.2 m or more than 1.8 m from the world origin horizontally),
+  or a non-finite object position.
+
+Graded: the live episode, judged by the simulator service as it runs; nothing is replayed. The clock does not stop: an
+episode starts paused at the frozen start, and from the agent's first `submit` one 10 ms control step runs every 10 ms
+× S of wall time (slowdown S = {slowdown}) whether or not the agent sends anything; when the planned targets run out
+the last ones are held. The task is judged as an event: once the last phase is complete at some control step with no
+failure recorded by then, the episode is a success, even if a failure above ends it afterwards; a failure before that
+scores 0. Completing the task neither ends the episode nor is shown to the agent. Otherwise the episode ends at the
+agent's `/finish`, at the task's horizon (whether or not every phase is done by then), after 4,500 control steps, or
+when the agent's time ({timeout}) runs out, and it is a success only if the task was completed by then. The agent has
+{resets} resets, each starting a new, paused episode from the frozen start; only the last episode (the one after the
+last reset) is graded. After the agent's first command, a simulator error or a simulator crash inside a control step
+is the agent's 0; anything before the first command, a killed service, a failed resume or a reset that does not
+rebuild the scene is an infrastructure failure, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families. Each text states the task's update_task (file and lines in the comment) with the nominal parameters of its
+# instance.json; "catch" = predicates.cup_catch (entry: previous local z > H + r >= local z, max |local xy| < h - r,
+# >= 25 ms without any contact; then containment held 0.18 s), "contained" = predicates.containment (max |local xy| <
+# h - 0.45 r, r - 0.004 < local z < H - 0.12 r, supported within 25 ms, relative speed < 0.09 m/s).
+
+[families.d01_reciprocal_cup_relay]
+# P/tasks/dual/reciprocal_cup_relay.py update_task L86-160: cup_catch (tool_half 0.06, tool_height 0.028, radius
+# 0.018); free_interval > 0.045 and z > 0.30 / 0.31; right_entry_speed (horizontal tool speed at the entry) <
+# receiver_min_speed 0.15 -> right_cup_not_moving_at_catch; displacement from right_start > 0.04; SECOND_REGION within
+# 0.035 + containment in the right cup; reverse_release (last contact right cup only) offset > release_radius 0.035 ->
+# throw_back_outside_second_region; cart containment (0.075, 0.06) and |cart.v| > 0.02 and no left-cup contact, 0.7 s.
+# No ALLOW_* attributes: each tool may touch objects only (the ball). horizon 25.
+success = """
+The left cup is panda-0's tool and the right cup panda-1's; each cup is 0.12 m square inside with 28 mm walls, and its
+frame has its origin at the centre of its floor's top surface. The ball's radius r is 18 mm.
+
+Phases, in order:
+1. `left_initial_catch`: the left cup catches the ball.
+2. `left_to_right_flight`: the ball is free of all contact for more than 45 ms with its centre above z = 0.30 m.
+3. `right_catch`: the right cup catches the ball, and the right cup's frame is more than 4 cm from where it started.
+   If the catch holds while the right cup's horizontal speed, taken when the ball entered it, was below 0.15 m/s, the
+   task fails.
+4. `second_region`: the right cup's frame is within 35 mm of the second transfer point (0.13, 0.15, 0.24), with the
+   ball contained in the right cup.
+5. `right_to_left_flight`: the ball is free of all contact for more than 45 ms with its centre above z = 0.31 m. Its
+   last contact before that must have been with the right cup alone, at a ball position within 35 mm (horizontally) of
+   (0.13, 0.15); otherwise the task fails.
+6. `left_catch_and_deliver`: the left cup catches the ball; after that the ball is contained in the cart (inner
+   half-width 0.075 m, wall height 0.06 m), the cart slides at more than 0.02 m/s and the ball does not touch the left
+   cup, for 0.7 s.
+
+A catch: after at least 25 ms without touching anything, the ball's centre passes downward through the plane r above
+the cup's rim height (cup frame) while more than r inside the inner walls in x and y; after that the ball is contained
+in the cup for 0.18 s. Contained in a receptacle of inner half-width h and wall height H: in the receptacle's frame
+(origin at the centre of its floor), the ball's centre is less than h - 0.45 r from the centre in x and in y and
+between r - 4 mm and H - 0.12 r above the floor, the ball touched the receptacle within the last 25 ms, and its speed
+relative to the receptacle is below 0.09 m/s.
+
+Allowed contacts: each cup may touch the ball; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.d02_strike_catch_merge]
+# P/tasks/dual/strike_catch_merge.py update_task L137-177: first_airborne (free_interval > 0.025) then contact with
+# left_tool; cup_catch (tool_half 0.07, height 0.055 default, radius 0.016); relocation > 0.06 with containment (0.07,
+# 0.055, 0.016); second catch with ball1 contained; basin containment (0.08, 0.075, 0.016) and no right_tool contact for
+# both balls, 0.7 s; first_ball_spill in phases 2-4 (|local xy| > tool_half or local z < -0.01). horizon 25.
+success = """
+The left paddle is panda-0's tool and the right cup panda-1's; the cup is 0.14 m square inside with 55 mm walls, and its
+frame has its origin at the centre of its floor's top surface. Ball 1 starts on the lane at y = -0.09 m, ball 2 on the
+lane at y = 0.09 m; each ball's radius r is 16 mm. The lane gates open by themselves.
+
+Phases, in order:
+1. `first_redirect`: the paddle touches ball 1, after ball 1 has been free of all contact for more than 25 ms at some
+   moment of this phase.
+2. `first_catch`: the cup catches ball 1.
+3. `loaded_cup_relocation`: the cup's frame is more than 0.06 m from where it was when phase 2 completed, with ball 1
+   contained in the cup.
+4. `second_redirect`: the paddle touches ball 2, after ball 2 has been free of all contact for more than 25 ms at some
+   moment of this phase.
+5. `second_catch`: the cup catches ball 2 while ball 1 is contained in the cup.
+6. `both_delivery`: both balls are contained in the basin (inner half-width 0.08 m, wall height 0.075 m) and neither
+   touches the cup, for 0.7 s.
+
+A catch: after at least 25 ms without touching anything, the ball's centre passes downward through the plane r above
+the cup's rim height (cup frame) while more than r inside the inner walls in x and y; after that the ball is contained
+in the cup for 0.18 s. Contained in a receptacle of inner half-width h and wall height H: in the receptacle's frame
+(origin at the centre of its floor), the ball's centre is less than h - 0.45 r from the centre in x and in y and
+between r - 4 mm and H - 0.12 r above the floor, the ball touched the receptacle within the last 25 ms, and its speed
+relative to the receptacle is below 0.09 m/s.
+
+Task failure: during phases 3 to 5, ball 1's centre more than 0.07 m from the cup's centre in x or y, or more than 10
+mm below the cup floor (cup frame).
+Allowed contacts: the paddle and the cup may touch the balls; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.d03_cooperative_puck_course]
+# P/tasks/dual/cooperative_puck_course.py update_task L116-186: strike = contact with the stage's tool while that
+# tool's speed > 0.035 and > 0.06 s after the last strike; pass = free (no contact with that tool, > 0.035 s after the
+# strike) and crossed(passages[stage]) with half 0.055, direction -1 for stage 1; goal crossed(goal, half 0.05).
+# Nominal: volley_speed, volley_window, diagonal_angle = 0 (no extra rule). horizon 25.
+success = """
+The left paddle is panda-0's tool and the right paddle panda-1's. Each phase is a strike by one paddle followed by a
+pass of the puck across a line.
+
+Phases, in order:
+1. `left_first_pass`: the left paddle strikes the puck; then the puck crosses the line x = 0.12 m heading +x within 55
+   mm of y = -0.13 m.
+2. `right_return_route`: the right paddle strikes it; then it crosses x = 0.12 m heading -x within 55 mm of y = 0.19 m.
+3. `left_diagonal_pass`: the left paddle strikes it; then it crosses x = 0.12 m heading +x within 55 mm of y = 0.025 m.
+4. `right_terminal_shot`: the right paddle strikes it; then it crosses the goal line x = 0.46 m heading +x within 50 mm
+   of y = -0.02 m.
+
+A strike: a contact of that phase's paddle with the puck while the paddle moves faster than 0.035 m/s, more than 60
+ms after the previous strike. A crossing: the puck's centre passes the line during one physics step; it counts only
+while the puck does not touch the paddle that struck it and more than 35 ms after the strike.
+
+Allowed contacts: each paddle may touch the puck; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.d04_shared_tray_transport_discharge]
+# P/tasks/dual/shared_tray_transport_discharge.py update_task L101-151: shared = supported(tray, each fork, 0.04);
+# inside = |ball_local xy / (0.11, 0.16)| < 1 and z > -0.01 (tray frame); phase holds 0.35 / 0.4 / 0.7 s; waypoints
+# within 0.025; before_physics: the disturbance force for 0.03 s at phase 2's start (0.007 N s, +x); recovery: impulse
+# >= 0.95 x, |ball_local xy| < 0.045, relative speed < 0.07; exit |tray xy - (0.12, 0.18)| < 0.04; basin containment
+# (0.10, 0.08, 0.018) and no tray contact; ball_spill before phase 4, shared_support_drop at tray z < 0.17. horizon 25.
+success = """
+Each arm (panda-0, panda-1) holds a fork. Both forks support the tray when each touched the tray within the last 40
+ms. The ball is in the tray when, in the tray's frame, its centre is within 0.11 m of the tray's origin in x, within
+0.16 m in y and not more than 10 mm below the origin. The ball's radius r is 18 mm.
+
+Phases, in order:
+1. `shared_support`: both forks support the tray with the ball in it, for 0.35 s.
+2. `transport_turn`: with both forks supporting it, the tray's origin comes within 25 mm of waypoint A (0.12, -0.04,
+   0.27), and later within 25 mm of waypoint B (0.02, 0.08, 0.27).
+3. `disturbance_recovery`: when this phase starts, the scene pushes the ball along +x for 30 ms (0.007 N s in all).
+   Then, with at least 95 % of that push applied and both forks supporting the tray, the ball's centre is within 45 mm
+   of the tray's origin horizontally (tray frame) and moves at less than 0.07 m/s relative to the tray, for 0.4 s.
+4. `exit_alignment`: with both forks supporting it, the tray's origin is within 40 mm of (0.12, 0.18) horizontally.
+5. `natural_discharge`: the ball is contained in the basin (inner half-width 0.10 m, wall height 0.08 m) and does not
+   touch the tray, for 0.7 s.
+
+Contained in a receptacle of inner half-width h and wall height H: in the receptacle's frame (origin at the centre of
+its floor), the ball's centre is less than h - 0.45 r from the centre in x and in y and between r - 4 mm and H - 0.12 r
+above the floor, the ball touched the receptacle within the last 25 ms, and its speed relative to the receptacle is
+below 0.09 m/s.
+
+Task failures: the ball not in the tray before phase 5 starts; the tray's origin below z = 0.17 m at any time.
+Allowed contacts: the forks may touch the tray and the ball; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.d05_moving_ramp_relay]
+# P/tasks/dual/moving_ramp_relay.py update_task L96-137: entry = contact(ball, right_tool), local x < -0.045, no
+# left_tool contact; second entry ignored while |<q, q_first>| > cos(0.15) (a turn of 0.3 rad); exit = local x > 0.13
+# and no right_tool contact, outlet_speed (tool-frame point (right_tool_half 0.14, 0, 0)) < outlet_min_speed 0.10 ->
+# static_outlet_exit; cup_catch for panda-0 (tool_half 0.07, height 0.055 default, radius 0.018); basin containment
+# (0.075, 0.06) and no left_tool contact, 0.7 s. horizon 25.
+success = """
+The left cup is panda-0's tool, 0.14 m square inside with 55 mm walls; its frame has its origin at the centre of its
+floor's top surface. The channel is panda-1's tool, 0.28 m long; its frame has its origin at the centre of its floor,
+with +x toward the outlet end. The ball's radius r is 18 mm.
+
+Phases, in order:
+1. `first_channel_entry`: the ball touches the channel with its centre at channel-frame x < -0.045 m, not touching the
+   cup. The channel's pose at that moment is recorded.
+2. `first_moving_exit`: the ball's centre is beyond channel-frame x = 0.13 m and the ball does not touch the channel. At
+   that moment the channel's outlet end (channel-frame point (0.14, 0, 0)) must move at 0.10 m/s or faster; otherwise
+   the task fails.
+3. `first_catch`: the cup catches the ball.
+4. `second_channel_entry`: as phase 1, counted only while the channel is turned by more than 0.3 rad from its recorded
+   pose.
+5. `second_moving_exit`: as phase 2, with the same 0.10 m/s rule.
+6. `second_catch_and_delivery`: the cup catches the ball; after that the ball is contained in the basin (inner
+   half-width 0.075 m, wall height 0.06 m) and does not touch the cup, for 0.7 s.
+
+A catch: after at least 25 ms without touching anything, the ball's centre passes downward through the plane r above
+the cup's rim height (cup frame) while more than r inside the inner walls in x and y; after that the ball is contained
+in the cup for 0.18 s. Contained in a receptacle of inner half-width h and wall height H: in the receptacle's frame
+(origin at the centre of its floor), the ball's centre is less than h - 0.45 r from the centre in x and in y and
+between r - 4 mm and H - 0.12 r above the floor, the ball touched the receptacle within the last 25 ms, and its speed
+relative to the receptacle is below 0.09 m/s.
+
+Allowed contacts: the cup and the channel may touch the ball; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.d06_moving_bank_relay]
+# P/tasks/dual/moving_bank_relay.py update_task L231-319 with _struck_back (right touch after the phase start, <=
+# STRIKE_GAP 0.05 s ago, no paddle contact, x > 0.18, vx <= -STRIKE_SPEED 0.20; phase 2 also > 0.06 s after its start);
+# phase 1: crossed([0.16, -0.01], direction -1, half 0.048), cleared by a right contact or a left contact before the
+# bank; bank contact with bank speed >= MOVING_BANK 0.02; left contact with puck_speed >= REBOUND_SPEED 0.08; phase 3:
+# crossed([0.16, 0.16], -1, 0.048), cleared by a right contact; left board pose shift > MIN_BOARD_SHIFT 0.035 and
+# |<q, q1>| < cos(MIN_BOARD_TURN 0.24 / 2); phase 4: crossed([0.16, 0.16], +1, 0.048) (reset by a right contact),
+# crossed(goal [0.42, 0.16], half 0.055), no right contact, a left touch after the phase start. horizon 25.
+success = """
+The left paddle is panda-0's tool and the right paddle panda-1's. Speeds of the puck and of the bank board are those of
+the physics step before the contact.
+
+Phases, in order:
+1. `right_first_strike`: within 50 ms after a right-paddle contact made in this phase, the puck touches neither paddle,
+   its centre is at x > 0.18 m and its velocity along x is -0.20 m/s or less.
+2. `left_first_rebound`: the puck crosses the line x = 0.16 m heading -x within 48 mm of y = -0.01 m; then, with no
+   paddle contact in between, it touches the sliding bank board while the board moves at 0.02 m/s or faster; then it
+   touches the left paddle at a horizontal speed of 0.08 m/s or more. A right-paddle contact cancels the crossing. The
+   left paddle's pose at that contact is recorded.
+3. `right_recovery_strike`: as phase 1, more than 60 ms after phase 2 completed.
+4. `left_changed_rebound`: the puck crosses x = 0.16 m heading -x within 48 mm of y = 0.16 m; then, with no
+   right-paddle contact in between, it touches the left paddle at a horizontal speed of 0.08 m/s or more while the left
+   paddle's frame is more than 35 mm from, and turned by more than 0.24 rad from, its recorded pose.
+5. `terminal_goal`: the puck crosses x = 0.16 m heading +x within 48 mm of y = 0.16 m (a right-paddle contact cancels
+   this crossing); then it crosses the goal line x = 0.42 m heading +x within 55 mm of y = 0.16 m while not touching the
+   right paddle, the left paddle having touched it since phase 4 completed.
+
+A crossing: the puck's centre passes the line during one physics step.
+
+Allowed contacts: each paddle may touch the puck; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.d07_spring_gate_switchyard]
+# P/tasks/dual/spring_gate_switchyard.py update_task L151-214, gate_held / handle_grip: bilateral_grip(gate, panda-0)
+# and both fingers' summed impulse > GRIP_IMPULSE 1e-7 at contact points of this substep inside the handle box
+# (HANDLE_CENTER (0, -0.13, 0.07), HANDLE_HALF (0.016, 0.012, 0.012) + HANDLE_TOLERANCE 0.002, gate link frame); phase 0
+# q > 0.5; phase 1 first_shot (right_tool contact, |q| > GATE_OPEN 0.3) then x < -0.05 without right_tool contact, |q| >
+# 0.3; phase 2 upper_rail contact with q < -0.35; phase 3 right_tool contact, |q| > 0.3; phase 4 crossed(goal [0.43,
+# 0.15], half 0.055) without right_tool contact, |q| > 0.3. Nominal loop_window, intercept_min_speed = 0. ALLOWED_FINGER_
+# FIXTURES ("gate",): the gate's moving link, not gate_base. horizon 35.
+success = """
+panda-0 has no tool (its bare hand); the paddle is panda-1's tool. q is the spring gate's hinge angle: q > 0 opens it
+toward the right arm, q < 0 toward the left arm. The gate is held when both left fingers touch the gate and, in that
+physics step, each of them presses (impulse above 1e-7 N s) at contact points on the handle: inside the handle's box
+(centre (0, -0.13, 0.07) in the gate's frame, half sizes 16 x 12 x 12 mm) grown by 2 mm. The hold is checked only at
+the moments named below.
+
+Phases, in order:
+1. `left_gate_open`: the gate is held with q > 0.5 rad.
+2. `right_loop_shot`: the paddle touches the puck while the gate is held with |q| > 0.3 rad; later the puck's centre is
+   at x < -0.05 m, not touching the paddle, while the gate is held with |q| > 0.3 rad.
+3. `gate_reconfiguration`: the puck touches the upper rail (along x at y = 0.23 m) while the gate is held with q <
+   -0.35 rad.
+4. `return_interception`: the paddle touches the puck while the gate is held with |q| > 0.3 rad.
+5. `final_gate_shot`: the puck crosses the goal line x = 0.43 m heading +x within 55 mm of y = 0.15 m, not touching the
+   paddle, while the gate is held with |q| > 0.3 rad.
+
+A crossing: the puck's centre passes the line during one physics step.
+
+Allowed contacts: the left fingers may touch the puck and the gate's swinging leaf (handle included), not its base; the
+paddle may touch the puck; no other robot part may touch anything.
+Horizon: 35 s of simulated time (3,500 control steps).
+"""
+
+[families.d08_pendulum_energy_relay]
+# P/tasks/dual/pendulum_energy_relay.py update_task L70-141: left_active_contact (left_tool contact, tool speed > 0.03)
+# then q < -minimum_excursion 0.18; brake_catch onset: right contact, no left contact, no right contact in the previous
+# substep, |previous v| >= brake_min_speed 1.0; void on a left contact or after brake_window 0.5 s; complete with right
+# contact, |v| < 0.45 and energy <= (1 - brake_energy_drop 0.6) x onset energy; right_active_return (speed > 0.03) then
+# q > return_excursion 0.12, v > 0.25, no right contact; left contact; |q| < 0.055, |v| < 0.12, no right contact, 1.0 s.
+# ALLOWED_TOOL_FIXTURES ("pendulum",): the swinging link, not pendulum_base. horizon 25.
+success = """
+The left fork is panda-0's tool and the right fork panda-1's. q is the pendulum's hinge angle (0 = hanging straight
+down; q < 0 is a swing toward the right arm, q > 0 toward the left arm) and ω its angular velocity. The swing energy
+is the pendulum's potential and kinetic energy relative to hanging at rest.
+
+Phases, in order:
+1. `left_excitation`: the left fork touches the pendulum while the fork moves faster than 0.03 m/s; after that q <
+   -0.18 rad.
+2. `right_braking`: a brake starts when the right fork begins to touch the pendulum (it did not touch it in the physics
+   step before), the left fork not touching it, while |ω| (in the step before) is at least 1.0 rad/s; the swing energy
+   then is recorded. Within 0.5 s of that start, with no left-fork contact in between, the right fork touches the
+   pendulum, |ω| < 0.45 rad/s and the swing energy is at most 40 % of the recorded one. A left-fork contact or the 0.5 s
+   passing cancels the brake; a new start is needed.
+3. `right_return_impulse`: the right fork touches the pendulum while moving faster than 0.03 m/s; after that q > 0.12
+   rad and ω > 0.25 rad/s, the right fork not touching it.
+4. `left_recovery`: the left fork touches the pendulum.
+5. `low_energy_hold`: |q| < 0.055 rad and |ω| < 0.12 rad/s, the right fork not touching the pendulum, for 1.0 s.
+
+Allowed contacts: each fork may touch the pendulum's swinging rod and ball, not its hinge base; no other robot part may
+touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.d09_lever_launch_catch_reload]
+# P/tasks/dual/lever_launch_catch_reload.py update_task L110-158: loaded = contact(ball, lever), no right_tool contact,
+# |lever q| < 0.12, ball in the lever frame within 0.021 of (-0.12, 0) and 0.024 < z < 0.044, relative speed < 0.08,
+# held 0.1 s; clear = |right tool - (0, 0, 0.18)| > 0.16; strike = left_tool contact with lever or lever_pad in the
+# phase, then free_interval > 0.04 and z > 0.20; cup_catch for panda-1 (tool_half 0.07, height 0.055, radius 0.018);
+# cart containment (0.075, 0.06) and |cart.v| > 0.02, 0.7 s; direct_ball_hit on any left_tool-ball contact.
+# ALLOWED_TOOL_FIXTURES ("lever", "lever_pad"). horizon 25.
+success = """
+The mallet is panda-0's tool; the cup is panda-1's, 0.14 m square inside with 55 mm walls, its frame's origin at the
+centre of its floor's top surface. The ball's radius r is 18 mm. A load: the ball touches the lever and not the cup, the
+lever is within 0.12 rad of level, the ball's centre is within 21 mm of the basket point (-0.12, 0) horizontally and 24
+to 44 mm above it (lever frame), and the ball moves at less than 0.08 m/s relative to the lever, for 0.1 s.
+
+Phases, in order:
+1. `physical_loading`: a load; after it, the cup's frame is more than 0.16 m from (0, 0, 0.18).
+2. `first_launch`: the mallet touches the lever (or its strike pad) in this phase; after that the ball is free of all
+   contact for more than 40 ms with its centre above z = 0.20 m.
+3. `right_catch`: the cup catches the ball.
+4. `reload_and_clear`: as phase 1.
+5. `second_launch`: as phase 2.
+6. `moving_receptacle_retention`: the ball is contained in the moving box (inner half-width 0.075 m, wall height 0.06
+   m) while the box slides at more than 0.02 m/s, for 0.7 s.
+
+A catch: after at least 25 ms without touching anything, the ball's centre passes downward through the plane r above
+the cup's rim height (cup frame) while more than r inside the inner walls in x and y; after that the ball is contained
+in the cup for 0.18 s. Contained in a receptacle of inner half-width h and wall height H: in the receptacle's frame
+(origin at the centre of its floor), the ball's centre is less than h - 0.45 r from the centre in x and in y and
+between r - 4 mm and H - 0.12 r above the floor, the ball touched the receptacle within the last 25 ms, and its speed
+relative to the receptacle is below 0.09 m/s.
+
+Task failure: the mallet touching the ball at any time.
+Allowed contacts: the cup may touch the ball, the lever and its strike pad; the mallet may touch the lever and its pad;
+no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.d10_moving_grasp_handover]
+# P/tasks/dual/moving_grasp_handover.py update_task L102-173: bilateral_grip (each finger + pad summed impulse > 1e-7);
+# moving_grip (left grip, speed > 0.025) then left grip with z > 0.21; presentation within 0.07 of (0.09, 0.05, 0.24),
+# speed > 0.015; overlap both grips and speed > handover_speed 0.04 for 0.08 s; release: right grip, no left finger
+# contact (< 1e-8), left aperture > 0.065, release_contact_speed > 0.04, speed > 0.04, 0.12 s; slot: no grip,
+# slot_speed_at_release > release_slot_speed 0.02, contact(part, slot), |local x| < 0.014, |y| < 0.045, 0.01 < z <
+# 0.06, relative speed < 0.05, |slot.v| > 0.02, 0.7 s; handover_drop at z < 0.13 in phases 1-3. ALLOW_FINGER_CONTACTS,
+# no allowed fixtures. horizon 25.
+success = """
+Both arms are bare hands. A gripper grips the part when both of its fingers touch the part (impulse above 1e-7 N s in
+that physics step). Speeds are the part's.
+
+Phases, in order:
+1. `moving_pickup`: the left gripper grips the part while it moves faster than 0.025 m/s; after that, gripped by the
+   left gripper, the part's centre is above z = 0.21 m.
+2. `moving_presentation`: gripped by the left gripper, the part's centre is within 0.07 m of (0.09, 0.05, 0.24) while
+   the part moves faster than 0.015 m/s.
+3. `overlapping_grips`: both grippers grip the part while it moves faster than 0.04 m/s, for 0.08 s.
+4. `donor_release`: the right gripper grips the part, no left finger touches it, the left gripper's aperture is above
+   0.065 m, the part moved faster than 0.04 m/s at the left fingers' last contact and moves faster than 0.04 m/s now,
+   for 0.12 s.
+5. `receiver_slot_delivery`: neither gripper grips the part; the slot moved faster than 0.02 m/s at the right fingers'
+   last contact with the part; the part touches the slot, its centre is within 14 mm of the slot's centre along the
+   slot's x axis, within 45 mm along its y axis and 10 to 60 mm above it (slot frame); the part moves at less than
+   0.05 m/s relative to the slot; and the slot moves faster than 0.02 m/s; all for 0.7 s.
+
+Task failure: the part's centre below z = 0.13 m during phases 2 to 4.
+Allowed contacts: the fingers may touch the part; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.d11_moving_fixture_unlock]
+# P/tasks/dual/moving_fixture_unlock.py update_task L212-260 and check_outlet_exit L262-319: grip =
+# bilateral_grip(fixture, panda-0); phase 0 root > 0.018 from (0.02, 0, 0.26), speed > 0.005; phase 1 peg tip (tool
+# (0, 0, -0.07)) within 0.005 of (0.020, 0.065) in the fixture frame, 0.01 < depth (0.09 - local z) < 0.035, speed >
+# insert_min_speed 0.003, 0.06 s; phase 2 latch q < -0.017 with right_tool-latch contact (latch_min_speed 0); phase 3
+# depth < -0.015, no latch contact, grip; phase 4 a ball-chute contact after outlet_exit, basin containment (0.06, 0.04,
+# 0.016) 0.7 s; outlet_misaligned (EXIT_X 0.035, OUTLET_LATERAL 0.008, OUTLET_ALONG 0-0.06, OUTLET_HEIGHT 0.07,
+# OUTLET_HEADING_DEG 15) and fixture_grasp_drop (root z < 0.18) in any phase. ALLOW_FINGER_CONTACTS,
+# ALLOWED_FINGER_FIXTURES ("fixture",), ALLOWED_TOOL_FIXTURES ("fixture", "fixture_latch"). horizon 25.
+success = """
+panda-0 has no tool (its bare hand); the peg is panda-1's tool, its tip 0.07 m below its frame. The left gripper grips
+the fixture when both of its fingers touch the fixture's body (impulse above 1e-7 N s in that physics step). The peg's
+depth is how far its tip is below the socket's mouth: 0.09 m minus the tip's height in the fixture's frame. The ball's
+radius r is 16 mm.
+
+Phases, in order:
+1. `moving_fixture_presentation`: the fixture is gripped, its origin more than 18 mm from its start (0.02, 0, 0.26) and
+   moving faster than 5 mm/s.
+2. `relative_pin_insertion`: the fixture is gripped and moves faster than 3 mm/s, and the peg's tip is within 5 mm of
+   the socket's axis (fixture-frame point (0.020, 0.065) horizontally) at a depth of 10 to 35 mm, for 0.06 s.
+3. `mechanical_latch_open`: the latch is pressed down more than 17 mm while the peg touches it.
+4. `follow_and_withdraw`: the peg's tip is more than 15 mm above the socket's mouth, the peg does not touch the latch,
+   and the fixture is gripped.
+5. `gravity_delivery`: the ball touches the chute in this phase, after it has left the fixture; after that it is
+   contained in the basin (inner half-width 0.06 m, wall height 0.04 m), for 0.7 s.
+
+The outlet check, once, the first moment the ball leaves the fixture (in the fixture's frame its centre passes x =
+0.035 m through the outlet, or leaves the fixture otherwise): it must have left through the outlet, and the outlet
+point (fixture frame (0.03, 0, 0)) must lie, relative to the chute's upper end (0.15, 0.13, 0.205), 0 to 60 mm down
+along the chute, within 8 mm across it and 0 to 70 mm above the chute's floor plane, with the fixture's x axis within
+15° of the chute's horizontal direction; otherwise the task fails.
+Contained in a receptacle of inner half-width h and wall height H: in the receptacle's frame (origin at the centre of
+its floor), the ball's centre is less than h - 0.45 r from the centre in x and in y and between r - 4 mm and H - 0.12 r
+above the floor, the ball touched the receptacle within the last 25 ms, and its speed relative to the receptacle is
+below 0.09 m/s.
+
+Task failures: the outlet check above; the fixture's origin below z = 0.18 m at any time.
+Allowed contacts: the left fingers may touch the fixture's body and the ball, not the latch; the peg may touch the
+fixture's body, the latch and the ball; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.d12_reciprocal_sliding_transfer]
+# P/tasks/dual/reciprocal_sliding_transfer.py update_task L106-176 with track_arrival / braked_receive: on = supported
+# (25 ms); phase 0 left-frame x slide > 0.028 from start_local; receive: on this scoop only, max |local xy| < 0.065,
+# relative speed < 0.05, arrival horizontal speed >= receiver_min_speed 0.2, mismatch <= match_tolerance 0.05, scoop
+# speed < rest_speed 0.02, hold start - arrival <= brake_window 1.5, 0.3 s; phase 2 right tool > 0.06 from its pose at
+# phase 1's end; output: contact, on neither, |xy - (0.18, -0.22)| < 0.065, speed < 0.04, 0.5 s; tilt_only_shortcut
+# (tilt > 2.1 deg) and airborne_transfer_shortcut (no support > 0.09 s) before phase 4. horizon 25.
+success = """
+The left scoop is panda-0's tool and the right scoop panda-1's; each scoop's frame has its origin at the centre of its
+floor, with +x toward its open side. The block is on a scoop when it touched that scoop within the last 25 ms. When the
+block comes onto a scoop, that scoop's horizontal speed and the horizontal difference between the two scoops'
+velocities are recorded (its arrival).
+
+Phases, in order:
+1. `left_inertial_slip`: the block is on the left scoop and has moved more than 28 mm along the left scoop's x axis
+   from its start (scoop frame).
+2. `right_receive_and_brake`: the block is on the right scoop and not on the left one, within 65 mm of the right
+   scoop's centre in x and y (scoop frame), moving at less than 0.05 m/s relative to it; the right scoop's arrival
+   speed was at least 0.2 m/s with a velocity difference of at most 0.05 m/s; the right scoop moves slower than 0.02
+   m/s; and this hold starts within 1.5 s of that arrival; for 0.3 s.
+3. `reverse_geometry`: the block is on the right scoop, the right scoop's frame more than 0.06 m from where it was
+   when phase 2 completed.
+4. `left_receive_and_brake`: as phase 2 with the scoops' roles swapped.
+5. `final_support_deposit`: the block touches the output platform, is on neither scoop, its centre within 65 mm of
+   (0.18, -0.22) horizontally, and it moves slower than 0.04 m/s, for 0.5 s.
+
+Task failures, before phase 5 starts: a scoop tilted more than 2.1° from level; the block on neither scoop for more
+than 0.09 s.
+Allowed contacts: each scoop may touch the block; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.d13_supported_cube_flip_relay]
+# P/tasks/dual/supported_cube_flip_relay.py update_task L125-180 with moving_support / judge_support (tray speed from
+# the push onset, a pusher contact after a gap > 0.02 s, to the inertial crossing >= support_min_speed 0.08, else
+# static_support_flip) and predicates.inertial_flip (release angle 0.03 .. pi/4 - 0.02 after > 0.02 s without contact
+# and angular speed > 0.4; crossing pi/4 after it; recontact before it -> flip_recontact_before_balance; complete with the
+# target face within 0.18 rad of up, speed < 0.05, angular speed < 0.3); cube_lost_from_tray (|local xy| >= 0.115 or
+# local z <= -0.01) in any phase; presentation within 0.025 of (0.08, 0.015, 0.23); flips held 0.25 s supported; move >
+# 0.025; output within 0.025 of (-0.04, 0.16, 0.25), local -z up, relative speed < 0.04, 0.5 s. horizon 25.
+success = """
+The tray is panda-0's tool, its frame's origin at the centre of its floor; the pusher is panda-1's tool. The cube (44
+mm) is on the tray when it touched the tray within the last 25 ms. Its faces are named by the cube's own axes at the
+start: +x faces the right arm, -z is the bottom face.
+
+A flip about a balance axis to a target face: the pusher touches the cube, then does not touch it for more than 20 ms;
+the release counts if, at the pusher's last contact, the balance axis was tilted from vertical by more than 0.03 rad
+and less than π/4 - 0.02 rad, and the cube still turns faster than 0.4 rad/s; after that release the tilt passes π/4
+with no pusher contact. The flip is complete when the target face points up within 0.18 rad, the cube moves slower
+than 0.05 m/s and turns slower than 0.3 rad/s. A pusher contact after a counted release and before the tilt passes π/4
+fails the task. From the first pusher contact of a push (after a gap of more than 20 ms) until the tilt passes π/4,
+the tray must move at 0.08 m/s or faster throughout; otherwise the task fails.
+
+Phases, in order:
+1. `support_presentation`: the cube is on the tray and the tray's frame is within 25 mm of (0.08, 0.015, 0.23).
+2. `first_inertial_flip`: a flip about the cube's z axis to the +x face, with the cube on the tray, held for 0.25 s.
+3. `second_contact_geometry`: the cube is on the tray, more than 25 mm from where it was when phase 2 completed, and
+   does not touch the pusher.
+4. `second_inertial_flip`: a flip about the cube's x axis to the -z face, with the cube on the tray, held for 0.25 s.
+5. `oriented_output`: the cube is on the tray with its -z face up within 0.18 rad, the tray's frame within 25 mm of
+   (-0.04, 0.16, 0.25), and the cube moves at less than 0.04 m/s relative to the tray, for 0.5 s.
+
+Task failures: the flip rules above; the cube's centre 0.115 m or more from the tray's centre in x or y, or 10 mm or
+more below the tray floor (tray frame), at any time.
+Allowed contacts: the tray and the pusher may touch the cube; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.s01_cup_route_delivery]
+# P/tasks/single/cup_route_delivery.py update_task L88-125: cup_catch (tool_half 0.07, tool_height 0.028, radius
+# 0.018); route_index from the seed (rng.integers(2) = 1 for seed 0: route_1 at x = 0.08, the instruction's "farther
+# from you"); wrong_route on a route_{1-route} contact in phase 1; entry: contact with the route, y > 0.10, no tool
+# contact; phase 2 missed_gravity_route (table) / caught_before_required_rebound (tool); rebound contact with y < -0.12
+# and z > rebound_height 0.26 - 0.005; cart containment (0.075, 0.06), no tool contact, |cart.v| > 0.5 x 0.04, 0.7 s.
+# horizon 25.
+success = """
+The cup is the arm's tool, 0.14 m square inside with 28 mm walls; its frame's origin is the centre of its floor's top
+surface. The ball's radius r is 18 mm. This instance's designated channel is the one at x = 0.08 m (the one farther
+from the robot); the other channel is at x = -0.12 m.
+
+Phases, in order:
+1. `incoming_catch`: the cup catches the ball.
+2. `selected_route_entry`: the ball touches the designated channel with its centre at y > 0.10 m, not touching the cup.
+   The ball touching the other channel during this phase fails the task.
+3. `track_and_rebound`: the ball touches the designated channel's rebound plate with its centre at y < -0.12 m and z >
+   0.255 m. The ball touching the table or the cup during this phase fails the task.
+4. `downstream_catch`: the cup catches the ball.
+5. `moving_cart_delivery`: the ball is contained in the cart (inner half-width 0.075 m, wall height 0.06 m), does not
+   touch the cup, and the cart slides at more than 0.02 m/s, for 0.7 s.
+
+A catch: after at least 25 ms without touching anything, the ball's centre passes downward through the plane r above
+the cup's rim height (cup frame) while more than r inside the inner walls in x and y; after that the ball is contained
+in the cup for 0.18 s. Contained in a receptacle of inner half-width h and wall height H: in the receptacle's frame
+(origin at the centre of its floor), the ball's centre is less than h - 0.45 r from the centre in x and in y and
+between r - 4 mm and H - 0.12 r above the floor, the ball touched the receptacle within the last 25 ms, and its speed
+relative to the receptacle is below 0.09 m/s.
+
+Allowed contacts: the cup may touch the ball; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.s02_plate_catch_transport_release]
+# P/tasks/single/plate_catch_transport_release.py update_task L61-109: airborne (free_interval > 0.05) then tool
+# contact; ball_on_plate (|local xy| < tool_half 0.11 - 0.025, r - 0.004 < z < r + 0.015, supported); recenter within
+# 0.035, relative speed < 0.08, 0.3 s; waypoints within 0.025; recovery < 0.04, 0.4 s; basin containment (0.075, 0.06),
+# no tool contact, |basin.v| > 0.02, 0.7 s; rimless_plate_spill in phases 1-3 (|local xy| > 0.11 or z < -0.01).
+# horizon 25.
+success = """
+The plate is the arm's tool, 0.22 m square with no rim; its frame's origin is the centre of its top surface. The ball's
+radius r is 18 mm. The ball is on the plate when its centre is less than 0.085 m from the plate's centre in x and in y
+and 14 to 33 mm above the surface (plate frame), and it touched the plate within the last 25 ms.
+
+Phases, in order:
+1. `airborne_plate_catch`: the ball touches the plate, after it has been free of all contact for more than 50 ms at
+   some moment of this phase.
+2. `recenter`: the ball is on the plate within 35 mm of its centre horizontally (plate frame), moving at less than
+   0.08 m/s relative to the plate, for 0.3 s.
+3. `turning_transport`: with the ball on the plate, the plate's origin comes within 25 mm of waypoint A (0.0, 0.08,
+   0.27), and later within 25 mm of waypoint B (0.18, 0.13, 0.25).
+4. `rolling_recovery`: as phase 2 with a relative speed below 0.04 m/s, for 0.4 s.
+5. `moving_basin_release`: the ball is contained in the basin (inner half-width 0.075 m, wall height 0.06 m), does not
+   touch the plate, and the basin slides at more than 0.02 m/s, for 0.7 s.
+
+Contained in a receptacle of inner half-width h and wall height H: in the receptacle's frame (origin at the centre of
+its floor), the ball's centre is less than h - 0.45 r from the centre in x and in y and between r - 4 mm and H - 0.12 r
+above the floor, the ball touched the receptacle within the last 25 ms, and its speed relative to the receptacle is
+below 0.09 m/s.
+
+Task failure: during phases 2 to 4, the ball's centre more than 0.11 m from the plate's centre in x or y, or more than
+10 mm below its surface (plate frame).
+Allowed contacts: the plate may touch the ball; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.s03_clear_gate_hockey]
+# P/tasks/single/clear_gate_hockey.py update_task L138-211: route_rail from default_rng([seed, 3]) (seed 0 ->
+# return_rail, coloured green); direct_blocker_shortcut on a blocker-tool contact; phase 1 puck-blocker contact with
+# free < strike_free 0.15 -> puck_pushed_into_blocker, else pre_speed >= strike_min_speed 0.15 -> collision event;
+# blocker q > 0.065; phase 2 crossing x = RECOVER_X 0.16 toward -x, no contact, free >= recover_free 0.15; phase 4 a
+# rail contact onset with free >= bank_free 0.1 (paddle contact resets banked / wrong), any other-rail contact -> wrong;
+# crossed(goal [0.46, 0.06], half 0.055): advance with banked, not wrong, no contact, blocker q > 0.065, else wrong_rail
+# / skipped_route. horizon 35.
+success = """
+The paddle is the arm's tool. The blocker is a bar on a rail; its rail position starts at 0. This instance's
+designated rail is the green rail (along y at x = -0.14 m); the grey rail runs along x at y = -0.23 m. "Free" is the
+time since the paddle's last contact with the puck.
+
+Phases, in order:
+1. `first_strike`: the paddle touches the puck.
+2. `clear_blocker`: the puck hits the blocker while free for at least 0.15 s, at a horizontal speed (just before the
+   hit) of 0.15 m/s or more; after that the blocker's rail position is above 0.065 m. A puck–blocker contact while free
+   for less than 0.15 s fails the task.
+3. `recover_deflection`: the puck's centre crosses x = 0.16 m heading -x, not touching the paddle and free for at least
+   0.15 s.
+4. `second_strike`: the paddle touches the puck.
+5. `bank_and_goal`: since the paddle's last contact, the puck has begun a contact with the green rail while free for
+   at least 0.1 s and has not touched the grey rail; it then crosses the goal line x = 0.46 m heading +x within 55 mm
+   of y = 0.06 m, not touching the paddle, with the blocker's rail position above 0.065 m. A goal-line crossing in this
+   phase without all of these fails the task.
+
+A crossing: the puck's centre passes the line during one physics step.
+
+Task failure: the paddle touching the blocker at any time.
+Allowed contacts: the paddle may touch the puck; no other robot part may touch anything.
+Horizon: 35 s of simulated time (3,500 control steps).
+"""
+
+[families.s04_impact_release_relay]
+# P/tasks/single/impact_release_relay.py update_task L227-287: direct_latch_shortcut on a tool-latch contact; phase 0
+# cue-tool contact; phase 1 cue_latch_impact, latch_open (|q| > 0.45, payload x > LATCH_PIVOT x -0.185 + 0.02), advance
+# when payload x - pivot x > LATCH_LENGTH 0.125 sin|q| + radius 0.018 + 0.006 and velocity . chute direction >= 0.4
+# within RELEASE_WINDOW 1.0 s of the impact, else payload_not_released; phase 2 chute contact then tool contact with x >
+# INTERCEPT_X 0.10; phase 3 passage coordinates (PASSAGE_ENTRY (0.285, -0.163), PASSAGE_YAW 0.583: axis (0.551,
+# -0.835)) |across| < 0.045, along > 0.105, no tool contact; phase 4 braking_contact, |xy - zone| < 0.05 (zone = entry
+# + 0.215 axis - 0.005 lateral = (0.399, -0.345)), speed < 0.035, table contact, 0.5 s. horizon 25.
+success = """
+The paddle is the arm's tool. The cue is the sliding block; the ball (radius 18 mm) rests behind the latch gate at the
+top of the chute. The latch turns about a pivot at (-0.185, 0, 0.17); q is its angle.
+
+Phases, in order:
+1. `cue_strike`: the paddle touches the cue.
+2. `mechanical_unlatch`: the cue hits the latch; then the latch opens beyond |q| = 0.45 rad while the ball's centre is
+   at x > -0.165 m; and, within 1.0 s of the cue's first hit on the latch, the ball's centre is more than 0.125 m × sin
+   |q| + 24 mm beyond the pivot in x, moving down the chute at 0.4 m/s or faster. If the 1.0 s passes first, the task
+   fails.
+3. `payload_interception`: after the ball has touched the chute in this phase, the paddle touches the ball while its
+   centre is at x > 0.10 m.
+4. `passage_redirection`: the ball, not touching the paddle, is more than 0.105 m into the passage between the two
+   walls and within 45 mm of the passage's centre line, measured from the passage entry (0.285, -0.163) along the
+   direction (0.551, -0.835).
+5. `payload_braking`: after the paddle has touched the ball in this phase, the ball's centre is within 50 mm of the
+   target (0.399, -0.345) horizontally, the ball moves slower than 0.035 m/s and touches the table, for 0.5 s.
+
+Task failure: the paddle touching the latch at any time.
+Allowed contacts: the paddle may touch the cue and the ball; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.s05_sliding_receive_align_deliver]
+# P/tasks/single/sliding_receive_align_deliver.py update_task L98-196: on_tool = supported (25 ms); phase 0 after a
+# lane contact, on tool, no lane contact, x > 0.12, relative speed < 0.05, 0.10 s; phase 1 tilt > 2.1 deg ->
+# tilt_only_shortcut, TCP horizontal acceleration (telemetry tcp_a) > friction 0.05 x 9.81 x 1.1, slip > 0.025 from
+# received_local, staging (target_offset 0.03, 0) within target_tolerance 0.014, relative speed < 0.045, 0.3 s;
+# waypoints within 0.022; match: on tool, |v_tool - v_platform| < 0.05, |tool - (platform + (0.34, 0, 0.008))| < 0.012,
+# |platform v| >= receiver_min_speed 0 (nominal: no speed rule, no touchdown rule); transfer: contact with receiver,
+# not on tool, |relative xy| < 0.07, relative speed < 0.045, 0.5 s; spill in phases 1-3 (local z < -0.015 or |local xy|
+# > tool_half 0.09 + 0.02). horizon 25.
+success = """
+The tray is the arm's tool, 0.18 m square inside and open on its -x side; its frame's origin is the centre of its
+floor. The block is a 36 mm cube. The block is on the tray when it touched the tray within the last 25 ms.
+
+Phases, in order:
+1. `source_to_tray`: after the block has touched the source lane, the block is on the tray, does not touch the lane,
+   its centre is at x > 0.12 m and it moves at less than 0.05 m/s relative to the tray, for 0.10 s. Its tray-frame
+   position at that moment is recorded.
+2. `inertial_staging`: at some moment of this phase the hand's TCP accelerates horizontally at more than 0.54 m/s², and
+   the block has slid more than 25 mm (horizontally, tray frame) from its recorded position; then the block is on the
+   tray, its centre within 14 mm of the staging point (0.03, 0) of the tray frame, moving at less than 0.045 m/s
+   relative to the tray, for 0.3 s. The tray tilted more than 2.1° from level during this phase fails the task.
+3. `transport_turn`: with the block on the tray, the tray's origin comes within 22 mm of waypoint A (0.08, 0.13,
+   0.22), and later within 22 mm of waypoint B (0.19, 0.20, 0.22).
+4. `match_receiver`: with the block on the tray, the tray's origin is within 12 mm of the point 0.34 m along +x and 8
+   mm above the sliding platform's origin, and the tray's velocity differs from the platform's by less than 0.05 m/s.
+   The platform slides at up to 0.04 m/s.
+5. `support_transfer`: the block touches the platform, is not on the tray, its centre is within 70 mm of the platform's
+   origin in x and in y, and it moves at less than 0.045 m/s relative to the platform, for 0.5 s.
+
+Task failure: during phases 2 to 4, the block's centre more than 15 mm below the tray floor or more than 0.11 m from
+its centre in x or y (tray frame).
+Allowed contacts: the tray may touch the block; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.s06_cube_flip_route_recover]
+# P/tasks/single/cube_flip_route_recover.py update_task L122-178: phase 0 inertial_flip(cube, tool, target [-1, 0, 0])
+# and launch_surface contact, 0.25 s; phase 1 chute contact, x > 0.18, face_up_on_surface(-x, CHUTE_NORMAL, 0.35);
+# phase 2 tool contact with x > 0.32, chute contact, tool downhill ((tool - p) . CHUTE_DOWN > 0), free slide >=
+# free_slide 0.12 since intercept:free_from (entry or last tool contact), previous along-chute speed >= incoming_speed
+# 0.33, else free_from reset; phase 3 pocket contact, |xy - (0.41, 0)| < 0.04, face_up(-x) within 0.18, speed < 0.04,
+# angular speed < 0.2, 0.5 s. inertial_flip as in d13 (balance axis z). horizon 25.
+success = """
+The pusher blade is the arm's tool. The cube is 44 mm wide; its faces are named by the cube's own axes at the start
+(-x faces the robot). The chute runs down from (0.16, 0, 0.138) to (0.36, 0, 0.035).
+
+A flip to the -x face: the blade touches the cube, then does not touch it for more than 20 ms; the release counts if,
+at the blade's last contact, the cube's z axis was tilted from vertical by more than 0.03 rad and less than π/4 - 0.02
+rad, and the cube still turns faster than 0.4 rad/s; after that release the tilt passes π/4 with no blade contact. The
+flip is complete when the -x face points up within 0.18 rad, the cube moves slower than 0.05 m/s and turns slower than
+0.3 rad/s. A blade contact after a counted release and before the tilt passes π/4 fails the task.
+
+Phases, in order:
+1. `momentum_face_flip`: a flip to the -x face, with the cube touching the launch surface, held for 0.25 s.
+2. `oriented_chute_entry`: the cube touches the chute with its centre at x > 0.18 m and its -x face within 0.35 rad of
+   the chute floor's normal.
+3. `downstream_intercept`: the blade touches the cube while the cube's centre is at x > 0.32 m, the cube touches the
+   chute, the blade's frame is downhill of the cube's centre along the chute, the cube has slid at least 0.12 m down the
+   chute since phase 2 completed or since the blade's previous contact, and its speed down the chute (in the step
+   before) is at least 0.33 m/s. Any other blade contact in this phase restarts the 0.12 m count.
+4. `pocket_delivery`: the cube touches the pocket, its centre within 40 mm of (0.41, 0) horizontally, its -x face up
+   within 0.18 rad, moving slower than 0.04 m/s and turning slower than 0.2 rad/s, for 0.5 s.
+
+Task failure: the flip rule above.
+Allowed contacts: the blade may touch the cube; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.s07_conveyor_load_brake_unload]
+# P/tasks/single/conveyor_load_brake_unload.py update_task L143-199 with handle_grip (bilateral_grip(carriage) and every
+# finger-carriage contact point with impulse >= 1e-9 inside the handle box + HANDLE_TOLERANCE 0.002, each side > 1e-7):
+# phase 0 moving_grip (grip, speed > 0.025) then grip with z > 0.20; phase 1 carriage contact, no grip, |cart.v| >
+# release_min_speed 0.025; phase 2 handle, |cart.v| < 0.012, |part xy in carriage frame| < 0.07, contact, 0.25 s; phase
+# 3 grip, z > 0.20, no carriage contact; phase 4 no grip, dock contact, |xy - (0.20, -0.23)| < 0.04, speed < 0.03, 0.5
+# s; payload_spill (z < 0.09) in phases 2-3; carriage_hit_end_stop (rail [-0.42, 0.42] +- END_STOP_MARGIN 0.005) in
+# phases 0-2. ALLOW_FINGER_CONTACTS, ALLOWED_FINGER_FIXTURES ("carriage",). horizon 25.
+success = """
+The arm has no tool (its bare hand). The hand grips an object when both of its fingers touch it (impulse above 1e-7 N s
+in that physics step). The part is a 36 mm cube.
+
+Phases, in order:
+1. `moving_acquisition`: the hand grips the part while the part moves faster than 0.025 m/s; after that, gripped, the
+   part's centre is above z = 0.20 m.
+2. `loaded_carriage_release`: the part touches the carriage, is not gripped, and the carriage moves faster than 0.025
+   m/s.
+3. `handle_braking`: the hand grips the carriage with every finger–carriage contact point of that physics step on the
+   carriage's vertical handle (its box grown by 2 mm); the carriage moves slower than 0.012 m/s; and the part touches
+   the carriage within 70 mm of its centre in x and y (carriage frame); for 0.25 s.
+4. `payload_regrasp`: the part is gripped, its centre above z = 0.20 m, not touching the carriage.
+5. `dock_deposit`: the part is not gripped, touches the dock, its centre is within 40 mm of (0.20, -0.23)
+   horizontally, and it moves slower than 0.03 m/s, for 0.5 s.
+
+Task failures: the carriage within 5 mm of either end of its rail (±0.42 m) before phase 4 starts; the part's centre
+below z = 0.09 m during phases 3 and 4.
+Allowed contacts: the fingers may touch the part and the carriage's moving body (its tray and handle); no other robot
+part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.s08_load_switch_recover]
+# P/tasks/single/load_switch_recover.py update_task L133-195: branch from the seed (rng.choice([-1, 1]) after two
+# uniform draws = -1 for seed 0: x < 0, the instruction's "nearer to you"); phase 0 moving_pickup then grip, z > 0.20;
+# phase 1 no grip, part-cart contact, cart speed > 0.02; phase 2 a finger-switch contact, then -branch x switch q > 0.50,
+# |v| < 0.12, cart y < 0.105, else on a cart-switch contact or cart y > 0.105 missed_switch_deadline; phase 3 cart-switch
+# and branch_rail_{branch} contacts, cart y > 0.23, branch x cart x > 0.08; phase 4 |cart x| > 0.27 or cart y > 0.43 ->
+# missed_downstream_recovery_window, grip and part z > cart z + 0.10 and no part-cart contact, 0.5 s; loaded_cart_spill
+# (z < 0.018) in phases 2-3; cart_stalled_before_switch (planar speed < coast_min_ratio 0.75 x 0.04 for 0.1 s) in phases
+# 0-2. ALLOW_FINGER_CONTACTS (objects: part, cart, cart bearings), ALLOWED_FINGER_FIXTURES ("switch",). horizon 25.
+success = """
+The arm has no tool (its bare hand). The hand grips the part when both of its fingers touch it (impulse above 1e-7 N s
+in that physics step). The part is a 36 mm cube; the cart rolls on ball bearings. This instance's selected branch is
+the one nearer the robot (at x < 0); the switch angle q is positive toward it.
+
+Phases, in order:
+1. `moving_part_pickup`: the hand grips the part while the part moves faster than 0.025 m/s; after that, gripped, the
+   part's centre is above z = 0.20 m.
+2. `load_coasting_cart`: the part is not gripped, touches the cart, and the cart moves faster than 0.02 m/s.
+3. `physical_switch_operation`: after a finger has touched the switch in this phase, q is above 0.50 rad and the switch
+   turns slower than 0.12 rad/s, while the cart's centre is still at y < 0.105 m. Before that, a cart–switch contact or
+   the cart's centre reaching y > 0.105 m fails the task.
+4. `selected_branch`: the cart has touched the switch and the selected branch's rail; then the cart's centre is at y >
+   0.23 m and x < -0.08 m.
+5. `payload_recovery`: the part is gripped, its centre more than 0.10 m above the cart's centre, and it does not touch
+   the cart, for 0.5 s. The cart's centre at |x| > 0.27 m or y > 0.43 m during this phase fails the task.
+
+Task failures: the cart moving slower than 0.03 m/s (horizontally) for 0.1 s before phase 4 starts; the part's centre
+below z = 0.018 m during phases 3 and 4.
+Allowed contacts: the fingers may touch the part, the cart (chassis and bearings) and the switch's moving blade; no
+other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.s09_toss_recatch_delivery]
+# P/tasks/single/toss_recatch_delivery.py update_task L68-145: cup_catch (tool_half 0.06, tool_height 0.015, radius
+# 0.012); launch_region within 0.025 of (0.30, -0.10, 0.30); self_toss: active_upward_launch (vz > 0.2 and z > launch
+# cup z + 0.06), separation (airborne, last cup contact <= 0.06 s ago, local z < r + 0.012, vz > 0.2, normal speed >
+# 0.03, up . z > cos 0.35), cancelled by any contact, advance >= 0.06 s after it with clearance min(local z, z - cup z)
+# > lip + r; recatch with |cup xy - cup xy at separation| > 0.03; cart containment (0.075, 0.06), no tool contact,
+# |cart.v| > 0.02, 0.7 s. horizon 25.
+success = """
+The toss cup is the arm's tool, 0.12 m square inside with 15 mm walls and no wall on its +x side; its frame's origin is
+the centre of its floor's top surface. The ball's radius r is 12 mm.
+
+Phases, in order:
+1. `initial_catch`: the cup catches the ball.
+2. `launch_region`: the cup's frame comes within 25 mm of the launch point (0.30, -0.10, 0.30).
+3. `self_toss`: at some moment of this phase the ball rises faster than 0.2 m/s with its centre more than 0.06 m above
+   the cup's position at the end of phase 2. A separation: the ball touches nothing, the cup touched it within the
+   last 60 ms, its centre is less than 24 mm above the cup floor (cup frame), it rises faster than 0.2 m/s and moves
+   away from the cup floor, along the cup's z axis, faster than 0.03 m/s, and the cup's z axis is within 0.35 rad of
+   vertical. Any contact of the ball cancels the separation. The phase completes at least 60 ms after the separation,
+   with the ball still touching nothing and its centre more than 27 mm above both the cup floor (cup frame) and the
+   cup's origin height.
+4. `displaced_recatch`: the cup catches the ball with the cup's frame more than 30 mm (horizontally) from where it was
+   at the separation.
+5. `moving_receiver_delivery`: the ball is contained in the box (inner half-width 0.075 m, wall height 0.06 m), does
+   not touch the cup, and the box slides at more than 0.02 m/s, for 0.7 s.
+
+A catch: after at least 25 ms without touching anything, the ball's centre passes downward through the plane r above
+the cup's rim height (cup frame) while more than r inside the inner walls in x and y; after that the ball is contained
+in the cup for 0.18 s. Contained in a receptacle of inner half-width h and wall height H: in the receptacle's frame
+(origin at the centre of its floor), the ball's centre is less than h - 0.45 r from the centre in x and in y and
+between r - 4 mm and H - 0.12 r above the floor, the ball touched the receptacle within the last 25 ms, and its speed
+relative to the receptacle is below 0.09 m/s.
+
+Allowed contacts: the cup may touch the ball; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.s10_swinging_load_transit_dock]
+# P/tasks/single/swinging_load_transit_dock.py update_task L94-150: grip = bilateral_grip(carrier); settled = |q| <
+# 0.07 and |v| < 0.18; phase 0 0.35 s; waypoints within 0.035; brake: mean carrier speed over SPEED_WINDOW 0.05 s <
+# brake_speed 0.025, BRAKE_HOLD 0.2 s; phase 3 0.5 s; dock: supported(load, dock, 0.010), |bob z - 0.037| < 0.003,
+# |bob xy - (0.07, 0.19)| < 0.035, 0.5 s; dock_entry_too_fast (bob within DOCK_OUTER_HALF (0.057, 0.055) + BOB_RADIUS
+# 0.022 of DOCK_CENTER, bob z - 0.022 < DOCK_RIM_Z 0.07, mean bob speed > dock_entry_speed 0.05) before success;
+# obstacle_collision; carrier_grasp_lost (root z < 0.16). ALLOWED_FINGER_FIXTURES ("carrier",): the bar only (the
+# load is a fixture link too). length 0.15. horizon 25.
+success = """
+The arm has no tool (its bare hand). The carrier is a bar with a pendulum hanging from it (0.15 m long); the bob is the
+pendulum's lower end point. The bar is gripped when both fingers touch it (impulse above 1e-7 N s in that physics
+step). The swing is settled when the pendulum is within 0.07 rad of hanging straight down and turns slower than 0.18
+rad/s. Speeds of the bar and the bob are their mean speeds over the last 50 ms.
+
+Phases, in order:
+1. `grasp_settle_and_damp`: the bar is gripped and the swing settled, for 0.35 s.
+2. `obstacle_transit`: the bar is gripped, its centre within 35 mm of waypoint A (-0.05, 0.04, 0.38).
+3. `turn_and_brake`: the bar is gripped, its centre within 35 mm of waypoint B (0.0, 0.15, 0.37), moving slower than
+   0.025 m/s, for 0.2 s.
+4. `residual_swing_cancel`: the bar is gripped and the swing settled, for 0.5 s.
+5. `load_dock`: the bar is gripped, the swing settled, the pendulum touched the dock within the last 10 ms, and the bob
+   is at z = 0.037 ± 0.003 m and within 35 mm of (0.07, 0.19) horizontally, for 0.5 s.
+
+Task failures: before the task is complete, the bob moving faster than 0.05 m/s while it is within 0.079 m (x) and
+0.077 m (y) of the dock's centre (0.07, 0.19) with its lowest point below z = 0.07 m; the carrier or the pendulum
+touching the obstacle block; the bar's centre below z = 0.16 m.
+Allowed contacts: the fingers may touch the carrier bar; no other robot part may touch anything (the pendulum
+included).
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.s11_cylinder_rescue_route_deliver]
+# P/tasks/single/cylinder_rescue_route_deliver.py update_task L87-130: held = supported(cylinder, tool), max |local xy|
+# < tool_half 0.07, 0.013 < local z < 0.07; aligned = |axis_x . world y| > cos 0.2; phase 0 held, no source_lane
+# contact; phase 1 held, aligned, relative speed < 0.06, 0.3 s; phase 2 guide contact with x < 0.02, then x > 0.24
+# without tool contact; phase 3 held, aligned, no guide contact, relative speed < 0.06, 0.2 s; phase 4 pocket contact,
+# not held, |rel xy| + 0.019 + 0.019 |axis xy| < 0.075, 0.016 < rel z, rel z + 0.019 + 0.019 |axis z| < 0.063, aligned,
+# |pocket.v| > 0.5 x 0.04, relative speed < 0.06, 0.7 s; cylinder_left_route_or_receiver (table contact) from phase 1 on.
+# horizon 25.
+success = """
+The receiver tray is the arm's tool, 0.14 m square inside with 30 mm walls and open on its -x side; its frame's origin
+is the centre of its floor's top surface. The cylinder (radius 19 mm) is held when it touched the tray within the last
+25 ms and its centre is less than 0.07 m from the tray's centre in x and in y and 13 to 70 mm above the floor (tray
+frame). It is aligned when its long axis is within 0.2 rad of the world y axis.
+
+Phases, in order:
+1. `rolling_interception`: the cylinder is held and does not touch the source lane.
+2. `axial_alignment`: the cylinder is held and aligned and moves at less than 0.06 m/s relative to the tray, for 0.3 s.
+3. `guide_rail_traverse`: after the cylinder has touched the guide with its centre at x < 0.02 m, its centre is at x >
+   0.24 m while it does not touch the tray.
+4. `exit_reception`: the cylinder is held and aligned, does not touch the guide, and moves at less than 0.06 m/s
+   relative to the tray, for 0.2 s.
+5. `oriented_moving_delivery`: the cylinder touches the pocket and is not held; in the pocket's frame its centre is
+   more than 16 mm above the floor, and its extent (19 mm, plus 19 mm times its axis's share in each direction) stays
+   within 0.075 m of the centre in x and in y and below 63 mm above the floor; it is aligned and moves at less than
+   0.06 m/s relative to the pocket; and the pocket slides at more than 0.02 m/s; for 0.7 s.
+
+Task failure: the cylinder touching the table after phase 1 is complete.
+Allowed contacts: the tray may touch the cylinder; no other robot part may touch anything.
+Horizon: 25 s of simulated time (2,500 control steps).
+"""
+
+[families.s12_moving_bridge_puck_relay]
+# P/tasks/single/moving_bridge_puck_relay.py update_task L223-275: phase 0 tool contact with puck_speed_before >=
+# strike_min_speed 0.25, else strike_on_slow_puck; phase 1 bridge contact, then exit_lane contact without bridge contact;
+# phase 2 tool contact; phase 3 contact > 0.035 s after the first non-contact moment of the phase; phase 4 gate contact
+# -> puck_touched_gate; doorway (DOOR_X 0.37, DOOR_Y 0.12, DOOR_HALF 0.055) crossing with gate q >= gate_pass_angle 1.0,
+# else gate_not_open_at_doorway; crossed(goal [0.48, 0.12], half 0.045) with no contact, gate q > 0.20, gate_passage,
+# else closed_gate_or_carried_puck. horizon 32.
+success = """
+The paddle is the arm's tool. The bridge is a rotating platform; the swinging gate opens and closes by itself, and q
+is its opening angle. Speeds of the puck are horizontal, in the physics step before the contact.
+
+Phases, in order:
+1. `incoming_strike`: the paddle's first contact with the puck. The puck's speed must be 0.25 m/s or more; otherwise
+   the task fails.
+2. `physical_bridge_transfer`: after the puck has touched the bridge, it touches the exit lane while not touching the
+   bridge.
+3. `exit_interception`: the paddle touches the puck.
+4. `second_strike`: the paddle touches the puck more than 35 ms after the first moment of this phase at which it did
+   not touch it.
+5. `closing_gate_goal`: the puck crosses the doorway line x = 0.37 m heading +x within 55 mm of y = 0.12 m with q at
+   least 1.0 rad; after that it crosses the goal line x = 0.48 m heading +x within 45 mm of y = 0.12 m, not touching
+   the paddle, with q above 0.20 rad. In this phase the puck touching the gate, crossing the doorway line with q below
+   1.0 rad, or crossing the goal line without the other conditions fails the task.
+
+A crossing: the puck's centre passes the line during one physics step.
+
+Allowed contacts: the paddle may touch the puck; no other robot part may touch anything.
+Horizon: 32 s of simulated time (3,200 control steps).
+"""

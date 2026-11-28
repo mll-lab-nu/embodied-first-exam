@@ -1,31 +1,44 @@
-# myosuite-osl-run-i00-privileged
+# MyoSuite · osl_run (privileged)
 
 | | |
 |---|---|
-| Benchmark | MyoSuite |
+| Task ID | `myosuite-osl-run-i00-privileged` |
+| Benchmark | [MyoSuite](https://github.com/MyoHub/myosuite) (Caggiano et al., 2022), upstream `MyoHub/myosuite@5635e1a` |
+| Robot | MyoLeg with a powered knee-ankle prosthesis (OSL) on the right leg, 54 muscles |
 | Mode | privileged |
-| Twin | `myosuite-osl-run-i00-standard` |
-| Simulator / robot | `myosuite` / `myoleg-osl` |
-| Family / instance | `osl_run` / seed 0 |
-| Oracle | `none` — a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-osl-run-i00-privileged__cWgLuKv` (6714 rows); today's verifier scores its trajectory 1 in two fresh trials (tasks/myosuite/README.md); human review in PR #65 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
+| Instance | `osl_run`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-MyoSuite `myoChallengeOslRunFixed-v0` (MyoLeg + OSL, a free-standing musculoskeletal model of a human whose right leg is an Open-Source Leg knee-ankle prosthesis, 54 muscles and 2 other actuators): Run 29 m down the track to the finish, staying on your feet and within 1 m of the track's centre line.
-A musculoskeletal body whose right leg is an Open-Source Leg prosthesis (knee and ankle motors driven by its own controller) stands at the start of a straight, flat running track. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 56)`, one row per 5 ms control step).
+Run 30 m down the track to the finish, staying on your feet and near the middle of the track.
 
-## Difficulty
-First-pass rating: hard. The action is muscle-level (54 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint control from muscle excitations. Success is the challenge's own event (reaching the finish 29 m down the track); nothing short of it counts, and the challenge's failure conditions apply (a fall, more than 1 m off the centre line, 2 m backwards). There is no time limit.
+## Success criteria
+Success event (MyoChallenge 2024 `myoChallengeOslRunFixed-v0`, the finish): the body's root crosses the finish line, y
+= -15 m, 30 m down the flat track from where it starts (y = 15 m). There is no time limit.
 
-## Reference solution
-None. Solvability evidence: a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-osl-run-i00-privileged__cWgLuKv` (6714 rows); today's verifier scores its trajectory 1 in two fresh trials (tasks/myosuite/README.md); human review in PR #65.
+Failure (MyoSuite's `done`, ends the episode with 0):
+- the root is more than 1 m to the side of the track's centre line;
+- the root goes back past y = 16 m (1 m behind the start);
+- a fall: the head is less than 0.2 m above the mean height of the two feet, or less than 0.2 m above the ground.
 
-## Verification
-`tests/grade.py` in a separate sandbox without network: one replay of `/app/output/trajectory.npz`, in a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff the episode ends in success (the challenge's own success event). No oracle; human review in PR #65. `nop`: no trajectory, reward 0.
+The prosthetic leg's knee and ankle are driven by MyoSuite's own controller; the agent's commands for them are
+ignored.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The replay ends in success at the first control step at which the success event happens, or with 0 at a failure.
+
+Graded file: `/app/output/trajectory.npz` with `actions`, a numeric array with one row per control step and one column
+per actuator (muscles first, in the layout the tooling gives), as `s.save_trajectory(...)` writes it, at most
+216,000 rows. After the agent's session it is replayed once, open-loop, from the frozen start in a fresh process
+of a separate verifier container without network. The replay runs the rows in order until the episode ends as above;
+later rows are not run. If the rows run out before the episode has ended in success, the task fails. A missing file,
+a file that is not such an array, a file for another family, a wrong row width, an empty array, more rows than the
+limit, a non-finite value, or an `.npz` entry larger than the row limit allows scores 0. A replay that gives no result
+(it times out or dies), or a frozen start that does not rebuild with its recorded hash, is reported as
+`grader_error` (infrastructure), not as a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,13 +47,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
-| Instance | `myoChallengeOslRunFixed-v0` after `seed(0)` and `reset(seed=0)` (`rcb_myosuite.py make-instance`); state hash `c150e8ac3f15d79c`, checked on every load |
-| Actions | 56 actuator commands per control step (5 ms, 5 physics substeps); success rule `event` (tasks/myosuite/README.md) |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
-
-### Provenance
-The frozen instance (`environment/instance.npz`) and its scene facts were made at generation time; see `tasks/myosuite/README.md`.
+## License
+MyoSuite ([MyoHub/myosuite](https://github.com/MyoHub/myosuite), version 2.12.2, tag `v2.12.2` = `5635e1a`) is
+released under the Apache License 2.0, as are the models it bundles (MyoSim, the MPL prosthetic arm, the object,
+furniture and YCB models). The MyoDex reference motions (the `dex_*` families) derive from the GRAB motion-capture
+dataset; MyoSuite asks their users to comply with GRAB's licence, which allows non-commercial scientific research
+only. The simulator is MuJoCo (Apache License 2.0).

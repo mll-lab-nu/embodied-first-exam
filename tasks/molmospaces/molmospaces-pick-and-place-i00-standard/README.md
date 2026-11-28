@@ -1,44 +1,37 @@
-# molmospaces-pick-and-place-i00-standard
+# MolmoSpaces · pick-and-place (standard)
 
 | | |
 |---|---|
-| Benchmark | MolmoSpaces |
-| Mode | standard (`eai-standard/2.2`) |
-| Twin | `molmospaces-pick-and-place-i00-privileged` |
-| Simulator / robot | `molmospaces` / `franka-robotiq-2f85` |
-| Family / instance | `pick-and-place` / seed 0 |
-| Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1: molmospaces-pick-and-place-i00-p__w3GRFg3 (run codex-gpt6_1_sol-high, batch molmo-v2-sol, 2026-10-16; its verifier's replays ran out of time on a loaded host (the earlier 500 s limit), so it was graded 1 offline with the verifier's replay tool: two fresh replays in the task's image, no time limit, both successes with equal final hashes); human review in PR #276 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:molmospaces-0.2.5` |
+| Task ID | `molmospaces-pick-and-place-i00-standard` |
+| Benchmark | [MolmoSpaces](https://github.com/allenai/molmospaces) (Kim et al., 2026), upstream `allenai/molmospaces@7351388` |
+| Robot | Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup) |
+| Mode | standard |
+| Instance | `pick-and-place`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-Standard-mode twin of `molmospaces-pick-and-place-i00-privileged` (the same frozen MolmoSpaces episode): Put the purple bottle in the clear ashtray. The agent gets only the
-`eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
-(`environment/docker-compose.yaml`), which owns the episode, serves cameras, proprioception and upstream's kinematic
-model, and records every executed row. The collect hook (`environment/sim/finalize.sh`) ends the episode, lets the
-service exit and writes `final.json` from the live episode's result (nothing is replayed to grade it), then renders
-`replay.mp4`; the verifier grades those artifacts in a separate sandbox (`tests/Dockerfile`).
+Put the purple bottle in the clear ashtray.
 
-## Difficulty
-That of `molmospaces-pick-and-place-i00-privileged` (its README), without resets, object poses or a success check: every move is planned from camera
-images, depth and the robot's own proprioception, within the benchmark's 40 s of simulated time.
+## Success criteria
+Success check (upstream `PickAndPlaceTask`), all at once:
+- the purple bottle rests in or on the clear ashtray: the ashtray carries at least half of the bottle's weight through
+  their contacts, or upstream's geometric on-top test finds the bottle on it, or the bottle has stayed within 5 mm and
+  10° (in the ashtray's frame) of a pose at which one of these held earlier in the episode;
+- the robot does not touch the bottle;
+- the ashtray is at most 15 cm from where it started and tilted by at most 60° (turning it about the vertical does not
+  count).
 
-## Reference solution
-None is shipped (see `molmospaces-pick-and-place-i00-privileged`).
+Graded: the live episode, judged by the simulator service; nothing is replayed. Meeting the goal does not end the
+episode and is not shown to the agent. The episode ends at the agent's `/finish` (or the `done` action, which is the
+same), at the horizon (606 control steps, 40 s of robot time), or when the agent's time
+(1 h) runs out. It is passed if upstream's success check holds on the state the episode ends in; a success
+reached earlier and then undone does not count. No reset: the one episode is graded. A simulator error raised by the
+agent's actions ends the episode with 0. A frozen start that does not rebuild, or a service crash between the
+agent's calls, is an infrastructure failure, not a score.
 
-## Verification
-`success` = the live episode's success, judged by the sim service (graded live, no replay). The episode
-follows upstream's evaluation: one upstream `Task.step` per executed row; it ends at upstream's `is_done()`
-(606 control steps), at the agent's `done`, or when the agent's time is up; then upstream's
-`judge_success()` on the final state: the robot does not touch the object; the receptacle supports the object (it carries at least 50% of the object's weight through contact, or the object lies on it by upstream's on-receptacle test, or the object is within 5 mm and 10 degrees, relative to the receptacle, of a pose in which it was supported at an earlier control step); and the receptacle has moved at most 15 cm and tilted at most 60 degrees from its start pose. The service checks the frozen start (the instance's t = 0 state hash)
-when it builds the scene, before the agent is served. `replay.mp4` is rendered by one video-only pass from
-`trajectory.npz` after the verdict, which it never changes. `infra_error = 1` (no verdict on the agent): no, an
-unreadable or an unfinished `final.json`, a service that gave up after crashes between calls or never ended the
-episode, a frozen start the image no longer builds (`instance_mismatch`). No oracle; human review in PR #276 (PROTOCOL §4: per family, this task
-and its twin, a positive example and the `nop` result).
-
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -49,9 +42,10 @@ Caps per container (PROTOCOL §6).
 - GPU: any NVIDIA GPU, held by `sim`.
 - Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4 / L40S).
 
-## Details
-| | |
-|---|---|
-| Upstream | molmo-spaces 0.2.9, benchmark `molmospaces-bench-v2/20260415`, package `procthor-objaverse/FrankaPickandPlaceHardBench/FrankaPickandPlaceHardBench_20260206_json_benchmark` (PnP-v2 (MolmoBot benchmarks)), episode 228 |
-| World-frame information | none in the texts: object names and the goal only; the robot's own pose and the camera calibration come from the service (tasks/molmospaces/README.md) |
-| Benchmark notes | tasks/molmospaces/README.md |
+## License
+MolmoSpaces ([allenai/molmospaces](https://github.com/allenai/molmospaces), molmo-spaces 0.2.9, tag `v0.2.9` @
+`7351388`) is released under the Apache License 2.0 (Allen Institute for Artificial Intelligence). Assets: the scenes
+and AI2-THOR objects are CC BY 4.0; Objaverse objects are ODC-BY 1.0, each also under its creator's CC BY, CC BY-SA or
+CC0 licence, listed with its attribution in the image's `/opt/molmospaces/ATTRIBUTION.md`. The image build refuses
+any asset with non-commercial terms, so no non-commercial terms apply. The simulator is MuJoCo 3.5.0 (Apache License
+2.0).

@@ -4,9 +4,9 @@
 Take the spoon out of the mug, put it back in the other way round, and let go of the spoon and the mug.
 
 ## Goal
-Success: the spoon is back in the mug the other way round (the end that pointed up now points down), and neither gripper
-touches the spoon or the mug, for a second. A fall (the pelvis tipping far over, or dropping low) makes the episode a
-failure without ending it.
+Success: the spoon touches the mug with the end that pointed up now pointing down, and neither gripper's fingers touch
+the spoon or the mug, for a second. A fall (the pelvis tipping far over, or dropping low) makes the episode a failure
+without ending it.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -26,7 +26,7 @@ robot runs as a service you reach through its client or its MCP tools, as if it 
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`, its docstring the full reference
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`, its docstring the full reference
 (`python -c "import rcb_client; help(rcb_client)"`); the action type is `"whole_body"`:
 
 | call | endpoint | what it does |

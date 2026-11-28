@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# INVARIANT (docs/protocol/README.md Appendix H.1 verifier isolation, H.3 the standard trust boundary's topology, H.4 evidence
+# INVARIANT (docs/protocol/invariants.md H.1 verifier isolation, H.3 the standard trust boundary's topology, H.4 evidence
 # from a sidecar, H.6 egress): part of the required CI job `invariants` (ci_checks/run_invariants.sh); no task value can
 # turn a rule here off. The verifier must run in its own sandbox, never in the container the agent controlled.
 # task.toml: [verifier].environment_mode = "separate"; tests/Dockerfile exists and ships /tests/test.sh (image pins:
 # ci_checks/check-dockerfile.sh, advisory). Agent egress (H.6): a task is on the allowlist, whose hosts are those of
 # scripts/set_agent_egress.py (one list for every task; an empty one breaks the agent's model API), unless its author
 # declares open egress, `[agent] network_mode = "public"` (and no allowed_hosts).
-# Appendix H.1 adds two rules, because Harbor mounts /logs/verifier read-write into the agent's container and some
+# invariants.md H.1 adds two rules, because Harbor mounts /logs/verifier read-write into the agent's container and some
 # simulators keep a cache of generated code:
 # - tests/test.sh empties /logs/verifier before anything else (a planted reward.json must not survive a grader crash):
 #   `rm -rf /logs/verifier/*`, or `find /logs/verifier -mindepth 1 ... -exec rm ...` (the form that keeps Harbor's
@@ -42,16 +42,16 @@ def fail(m):
 d = tomllib.load(open(t / "task.toml", "rb"))
 if (d.get("verifier") or {}).get("environment_mode") != "separate": fail('[verifier].environment_mode must be "separate"')
 ag = d.get("agent") or {}
-# Appendix H.6: the default is the allowlist; open egress is the task author's own declaration in Harbor's own field,
+# invariants.md H.6: the default is the allowlist; open egress is the task author's own declaration in Harbor's own field,
 # `[agent] network_mode = "public"` (task_conventions.network_of), never a list kept here
 md = d.get("metadata") or {}
 if "network" in md:
-    fail(f'[metadata] network = {md["network"]!r}: the egress is declared by [agent] network_mode alone ("allowlist", or "public" for open egress; scripts/task_conventions.py normalize moves it)')
+    fail(f'[metadata] network = {md["network"]!r}: the egress is declared by [agent] network_mode alone: delete the `network = ...` line from [metadata] by hand and declare the egress in [agent]: network_mode = "allowlist" with allowed_hosts = scripts/set_agent_egress.py HOSTS, or network_mode = "public" for open egress')
 if ag.get("network_mode") == "public":
     if "allowed_hosts" in ag:
         fail('[agent] network_mode = "public" (open egress) with allowed_hosts: drop the list, or put the task on the allowlist')
 elif ag.get("network_mode") != "allowlist":
-    fail('[agent].network_mode must be "allowlist" (PROTOCOL Appendix H.6: the model APIs and the package registries; scripts/set_agent_egress.py allowlist writes it), or "public" where the task\'s author chose open egress')
+    fail('[agent].network_mode must be "allowlist" (docs/protocol/invariants.md H.6: the model APIs and the package registries; scripts/set_agent_egress.py allowlist writes it), or "public" where the task\'s author chose open egress')
 elif not ag.get("allowed_hosts"):
     fail('[agent] allowlist without allowed_hosts (the agent could not reach its model API)')
 else:
@@ -62,19 +62,19 @@ else:
     if not hosts: fail("cannot read HOSTS from scripts/set_agent_egress.py (the allowlist every task must have)")
     elif sorted(ag["allowed_hosts"]) != sorted(hosts):
         fail(f"[agent].allowed_hosts differs from scripts/set_agent_egress.py HOSTS (missing {sorted(set(hosts) - set(ag['allowed_hosts']))}, extra {sorted(set(ag['allowed_hosts']) - set(hosts))})")
-# Appendix H.6, the verifier: "the verifier has no network". Harbor 0.23 applies [verifier] network_mode to the separate
+# invariants.md H.6, the verifier: "the verifier has no network". Harbor 0.23 applies [verifier] network_mode to the separate
 # verifier environment while tests/test.sh runs (trial/network_policy.py resolve_verifier_phase_policy: the egress sidecar's
 # deny-all on every service of tests/docker-compose.yaml without a network setting of its own); without the key the
 # verifier keeps the baseline, [verifier.environment]'s network_mode, by default public. The baseline itself may only be
 # no-network too (or unset). task_conventions.normalize writes the line (normalize_verifier_network).
 ver = d.get("verifier") or {}
 if ver.get("network_mode") != "no-network" or "allowed_hosts" in ver:
-    fail('[verifier].network_mode must be "no-network" (PROTOCOL Appendix H.6: the verifier has no network; scripts/task_conventions.py normalize writes it), not '
+    fail('[verifier].network_mode must be "no-network" (docs/protocol/invariants.md H.6: the verifier has no network; scripts/task_conventions.py normalize writes it), not '
          + (repr(ver["network_mode"]) if "network_mode" in ver else "unset (Harbor: the verifier environment's baseline, public)")
          + (" with allowed_hosts" if "allowed_hosts" in ver else ""))
 venv = ver.get("environment") or {}
 if venv.get("network_mode", "no-network") != "no-network" or "allowed_hosts" in venv:
-    fail(f'[verifier.environment] sets network_mode = {venv.get("network_mode")!r}{" / allowed_hosts" if "allowed_hosts" in venv else ""}: leave it out (the verifier phase is no-network) or set "no-network" (PROTOCOL Appendix H.6)')
+    fail(f'[verifier.environment] sets network_mode = {venv.get("network_mode")!r}{" / allowed_hosts" if "allowed_hosts" in venv else ""}: leave it out (the verifier phase is no-network) or set "no-network" (docs/protocol/invariants.md H.6)')
 # Harbor lets a step's own policy override [agent] (trial/network_policy.py: `[[steps]]` with `[steps.agent]`): no task has
 # steps, and one that sets a network policy there would open what [agent] closes, and what a run's gateway-only copy narrows
 for st in d.get("steps") or []:
@@ -230,7 +230,7 @@ def named_volumes(services: dict) -> dict:
 
 
 env_c, test_c = t / "environment/docker-compose.yaml", t / "tests/docker-compose.yaml"
-# The resource monitor's beacons (PROTOCOL §6): written only by the trusted rcb_monitor service, mounted read-only in
+# The resource monitor's beacons (docs/protocol/resources.md): written only by the trusted rcb_monitor service, mounted read-only in
 # the services it watches (ci_checks/check-monitor.py checks the read-only mounts); no write crosses the boundary.
 BEACONS = {"rcb_limits", "rcb_observe"}
 # Nothing that widens a container beyond its own namespaces and file system (the generated rcb_monitor service has
@@ -269,7 +269,7 @@ def build_problems(svc: str, build: dict) -> list[str]:
             if not IMAGE_REF.match(r):
                 out.append(f"service {svc}: `build` cache_from `{r}` is not a registry image reference (no type=, no host path, no variable)")
     return out
-# the mode registry (PROTOCOL §3): RCB_MODES_TABLE from run_all.sh, "<mode> <sidecar 0|1> <twin>" longest first
+# the mode registry (docs/protocol/tasks.md#modes): RCB_MODES_TABLE from run_all.sh, "<mode> <sidecar 0|1> <twin>" longest first
 import os
 _table = os.environ.get("RCB_MODES_TABLE", "")
 if not _table:
@@ -285,14 +285,14 @@ if env_c.is_file():
         for k in WIDEN:
             if k in info["keys"]: fail(f"service {svc}: `{k}` is not allowed (it widens the container beyond its own namespaces and files)")
         for k in OWN_NETWORK:
-            if k in info["keys"]: fail(f"service {svc}: `{k}` is not allowed (Harbor's egress control skips a service with its own network setting: the allowlist would not apply; a sidecar is reached on localhost only, PROTOCOL §3)")
+            if k in info["keys"]: fail(f"service {svc}: `{k}` is not allowed (Harbor's egress control skips a service with its own network setting: the allowlist would not apply; a sidecar is reached on localhost only, docs/protocol/tasks.md#modes)")
         for k in HANDS_FILES:
             if k in info["keys"]: fail(f"service {svc}: `{k}` is not allowed (it hands the container files of the task or the host outside `volumes:`)")
         if "build" in info["keys"]:
             for b in build_problems(svc, info["build"]): fail(b)
         if svc != "main":
             for k in ("ports", "expose"):
-                if k in info["keys"]: fail(f"sidecar {svc}: `{k}` is not allowed (the agent reaches a sidecar on localhost only, PROTOCOL §3)")
+                if k in info["keys"]: fail(f"sidecar {svc}: `{k}` is not allowed (the agent reaches a sidecar on localhost only, docs/protocol/tasks.md#modes)")
         for kind, src, rest in info["mounts"]:
             if kind == "bind":
                 if svc == "main" and not src.startswith("$"):
@@ -315,7 +315,7 @@ if env_c.is_file():
                 fail(f"artifact {src}: service {who!r} is not a sidecar of environment/docker-compose.yaml")
         hooks = {h.get("service") for h in (d.get("verifier") or {}).get("collect") or [] if isinstance(h, dict)}
         if sidecars and not (hooks & set(sidecars)):
-            fail("no [[verifier.collect]] hook on a sidecar (the sidecar ends the episode and finalizes its own record, PROTOCOL H.4)")
+            fail("no [[verifier.collect]] hook on a sidecar (the sidecar ends the episode and finalizes its own record, docs/protocol/invariants.md H.4)")
 if test_c.is_file():
     services, bad = compose_services(test_c)
     for b in bad: fail(f"tests/docker-compose.yaml: {b}")
@@ -324,12 +324,12 @@ if test_c.is_file():
     for svc, info in services.items():
         for k in WIDEN + HANDS_FILES + ("build",):
             if k in info["keys"]: fail(f"tests/docker-compose.yaml: service {svc}: `{k}` is not allowed")
-        # Appendix H.6: Harbor's deny-all reaches only the services without a network setting of their own (docker.py
+        # invariants.md H.6: Harbor's deny-all reaches only the services without a network setting of their own (docker.py
         # _egress_controlled_service_names); `network_mode: none` is the one setting that keeps a verifier service offline
         if "networks" in info["keys"]:
-            fail(f"tests/docker-compose.yaml: service {svc}: `networks` is not allowed (Harbor's verifier deny-all would skip the service; PROTOCOL Appendix H.6: the verifier has no network)")
+            fail(f"tests/docker-compose.yaml: service {svc}: `networks` is not allowed (Harbor's verifier deny-all would skip the service; docs/protocol/invariants.md H.6: the verifier has no network)")
         if "network_mode" in info["keys"] and info["keys"]["network_mode"].strip("'\"") != "none":
             nm = info["keys"]["network_mode"]
-            fail(f"tests/docker-compose.yaml: service {svc}: `network_mode: {nm}` is not allowed (only `none`: Harbor's verifier deny-all skips a service with its own network setting; PROTOCOL Appendix H.6)")
+            fail(f"tests/docker-compose.yaml: service {svc}: `network_mode: {nm}` is not allowed (only `none`: Harbor's verifier deny-all skips a service with its own network setting; docs/protocol/invariants.md H.6)")
 sys.exit(rc)
 PY

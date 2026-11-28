@@ -1,10 +1,10 @@
 # MyoSuite · osl_run (privileged)
 
 ## Task
-Run 29 m down the track to the finish, staying on your feet and near the middle of the track.
+Run 30 m down the track to the finish, staying on your feet and near the middle of the track.
 
 ## Goal
-Success: you reach the finish, 29 m down the track. The episode ends as soon as the task is done. It ends as a failure
+Success: you reach the finish, 30 m down the track. The episode ends as soon as the task is done. It ends as a failure
 if you fall, stray from the middle of the track, or run backwards. There is no time limit.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`. It is replayed open-loop

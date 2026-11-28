@@ -1,39 +1,41 @@
-# embodied-olympics-match-fencing-bout-i02-standard
+# Embodied Olympics · robot epee fencing, bout against level 2 (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Match |
-| Mode | standard (`eai-standard/2.1+match/1.0`) |
-| Twin | `embodied-olympics-match-fencing-bout-i02-privileged` |
-| Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `fencing_bout` / seed 35 (allowed seeds: [35, 202, 212]; PROTOCOL §2) |
-| Oracle | `full` — in process (fencing-7): the oracle beats level 2 on this seed 15:13; over 40 player seeds the reference wins this instance 42.5 %, the equilibrium mix 50 % (fresh-seed means 48.0 %, 53.9 %); none of the nine constant intentions nor a random player wins it; live on vanilla Harbor 0.23.0 (2026-10-15, the exported task) the oracle won 15:13 in 32 phrases, replay identical (the world is deterministic) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0` |
+| Task ID | `embodied-olympics-match-fencing-bout-i02-standard` |
+| Benchmark | [Embodied Olympics - Match](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@0d7f680` |
+| Robot | Unitree G1 humanoid |
+| Mode | standard |
+| Opponent | Scripted fencer at level 2 (the higher of its two levels), which picks its intention before each phrase from what it has seen, never from the agent's choice for that phrase |
+| Instance | `fencing_bout`, seed 35 |
+| Time limit | 2 h |
+| Reference solution | Included |
 
 ## Task
 Win an epee bout to 15 touches against the scripted fencer.
 
-Robot epee fencing against the scripted opponent (level 2), program play: two Unitree G1 humanoids (the robot library's, NVIDIA's SONIC whole-body policy on the legs, waist and free arm, the point skill on the sword arm) holding real epees fence one FIE direct-elimination bout (15 touches or 9 minutes of fencing time, no draws; unwillingness to fight, FIE t.124) phrase by phrase: every phrase starts on guard 1.95 m apart, both fencers choose one of nine tactical intentions (lunge, low lunge, point in line, reactive line, stop-hit, counter-attack, delayed lunge, retreat, draw), each starts after a random 0-50 ms, and the phrase is played out as it was measured in MuJoCo (2916 phrases: every pair of intentions and delays); format bout: you against a scripted fencer that reads your choices (levels 1-2, `game spec` opponent), format duel: two players choosing at the same time.
+## Success criteria
+The instance: the agent's fencer (seat A) against the scripted fencer at level 2, seed 35.
+One epee bout between two Unitree G1s: the first to 15 touches wins. After 9 minutes of fencing time the fencer ahead wins; at equal scores one more minute is fenced, the first touch decides, else the fencer with priority (drawn by lot before it) wins. A second minute of fencing time without a touch (unwillingness to fight) loses the bout for the fencer with the lower score; at equal scores a seeded lot decides. There are no draws. The bout is played in turns: one action per turn, then the agent's review (`game ready`) before play goes
+on.
 
-## Difficulty
-Frozen development instance: seed 35, level 2, chess clock 3600 s per player. Not one of
-the sport's official (hidden) seeds, so results here are previews, not official Embodied Olympics results.
+Success: the bout ends by the rules (`match_over`) with the agent's side as the winner. The agent's side loses the
+bout, a valid 0, by any of these forfeits:
+- `no_show`: no `game start` within 1800 s of real time after the match service starts, or the session ends before
+  the start;
+- `clock`: the agent's chess clock (3600 s of real time, running only on its own turn: its actions and its reviews)
+  runs out;
+- `abandoned`: the agent's session ends while the bout is in play.
 
-## Reference solution
-`solution/`: our camera-only reference player through the same HTTP interface. in process (fencing-7): the oracle beats level 2 on this seed 15:13; over 40 player seeds the reference wins this instance 42.5 %, the equilibrium mix 50 % (fresh-seed means 48.0 %, 53.9 %); none of the nine constant intentions nor a random player wins it; live on vanilla Harbor 0.23.0 (2026-10-15, the exported task) the oracle won 15:13 in 32 phrases, replay identical (the world is deterministic).
+Any error of the match service, the simulator included, is an infrastructure failure, not a score.
 
-## Verification
-Separate sandbox, no network. The match is graded live (owner, 2026-10-17): the sim service records the
-match's scores, winner and reason as it plays it and nothing replays it to grade it (`final.json` `graded_by` live,
-`replays` 0; the replay video is drawn after the verdict). The verifier (`tests/grade.py`, our core's grader) applies
-the validity rule
-(technical failures void the trial, a player's own problems are a valid loss), and writes reward.json; success = a
-valid, finished match that the agent won. `tests/fexam_reward.py` adds the hub's fields (`infra_error`, `realtime`,
-`slowdown`, `opponent_level`; `realtime` = 0 for a turn-based match).
+Graded: the live match, as the trusted match service recorded it while it was played; nothing is replayed. There is
+one match and no reset, and the agent cannot end it with `/finish`: the match's rules end it. A technical failure of
+the match service (a crash, an error in its bookkeeping, rendering or metering) voids the trial as an infrastructure
+failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -43,9 +45,12 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
+## Others
+Exported by the Embodied Olympics task exporter from its task `roboolympics/fencing-bout-wallclock-program-standard` (upstream commit
+`a6712a675343`). The files changed here after the export are listed for this task in
+`ci_checks/benchmarks/embodied-olympics-match/exported.toml`.
 
-### Notes
-Source: Embodied Olympics task `fencing-bout-wallclock-program-standard`, revision `fencing-7+core-0.2`. The rules, the referee, the scripted
-opponent, the observation, the review between points and the grader are ours, unchanged; only the seat is
-unmetered (Harbor records the model's usage) and the instance is frozen.
+## License
+Embodied Olympics ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics), a private repository) is released
+under the MIT License; its exported match services, referees, scripted opponents and graders inside this task are MIT
+too. The simulator is MuJoCo (Apache License 2.0). No non-commercial terms apply.

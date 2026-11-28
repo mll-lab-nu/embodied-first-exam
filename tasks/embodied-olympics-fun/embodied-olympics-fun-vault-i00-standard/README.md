@@ -1,34 +1,53 @@
-# embodied-olympics-fun-vault-i00-standard
+# Embodied Olympics · vault (standard)
 
 | | |
 |---|---|
-| Benchmark | Embodied Olympics - Fun |
-| Mode | standard (`eai-standard/2.1`) |
-| Twin | `embodied-olympics-fun-vault-i00-privileged` |
-| Simulator / robot | `mujoco` / `unitree-h1-2` |
-| Family / instance | `vault` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested: positive by injection (a ballistic handspring: 3.5 m/s forward, 5.3 m/s up, 6.2 rad/s; both hands really on the 1.35 m table; stopped at touchdown); negatives: not over the table, another part on the table, no hand on it, not on the feet, off the mat; human review in the pull request that adds the benchmark (PROTOCOL §4) |
-| Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
+| Task ID | `embodied-olympics-fun-vault-i00-standard` |
+| Benchmark | [Embodied Olympics - Fun](https://github.com/CHIGUI0/roboolympics) (Embodied Olympics authors, 2026), upstream `CHIGUI0/roboolympics@7df999b` |
+| Robot | Unitree H1-2 humanoid (1.78 m, 67 kg, 27 joints), with Unitree's walking policy |
+| Mode | standard |
+| Instance | `vault`, seed 0 |
+| Time limit | 2 h |
+| Reference solution | None |
 
 ## Task
-Vault over the vaulting table: run up, push off it with your hands only, land on your feet on the mat and stand. (Embodied Olympics `vault`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Vault over the vaulting table: run up, push off it with your hands only, land on your feet on the mat and stand.
 
-## Difficulty
-The table is 1.35 m high and the robot has no running policy: its walk reaches about 0.65 m/s and its best standing jump lifts it far less than a metre, so the 67 kg body has to be carried over the table by a take-off and arm support that nobody has built for it. It must then come down feet first from above 1.35 m and absorb the landing without a hand on the mat. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 5 resets (only the last attempt is graded).
+## Success criteria
+A vault table, its top 1.35 m above the floor, 1.2 m long and 0.95 m wide, on a pedestal; its near edge is 25.0 m
+ahead of where the pelvis starts. A hinged springboard (1.2 m by 0.6 m, rising to 0.22 m) stands 0.5 m before it;
+using it is not required. The landing mat (6.0 m long, 2.5 m wide, 0.2 m thick, softer than the floor) begins at the
+table's far edge. The hands are the wrist links and the palms (not the forearms). The referee's stages, in order:
+hands on the table, over the table, landing, stand.
+- Hands on the table: at least one hand touches the table's top surface (a contact within 0.02 m of the top plane;
+  a hand against a side does not count).
+- Over the table: the pelvis passes the table's far edge.
+- Landing: then the feet touch the mat.
+- Stand: the robot stands on the mat for 1.0 s without a break: only the feet on it, the torso within 20 degrees of
+  upright, the pelvis no faster than 0.35 m/s. The success is called at the end of the 1.0 s.
 
-## Reference solution
-None (as `embodied-olympics-fun-vault-i00-privileged`).
+Fouls (each fails the attempt at once):
+- any part of the robot other than the hands touches the table or its pedestal;
+- the pelvis is between the table's near and far edges without being higher than its top and within its width
+  (under, beside or round it);
+- the pelvis passes the far edge before a hand has touched the top;
+- after the pelvis has passed the far edge, any part of the robot touches the floor, or a part other than the feet
+  touches the mat before the stand is complete.
+The generic fall rule is off: before the table any part may touch the floor and the springboard. Time limit: 80 s
+(8,000 control steps).
 
-## Verification
-The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
-infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
-`/data/final.json`: pass iff the live attempt succeeded. The
-rules: The vault table's top is 1.35 m above the floor, 1.2 m long (along +x, the way you face) and 0.95 m wide, on a pedestal; its near edge is 25.0 m ahead of where your pelvis starts, centred on your line. A springboard stands before it: a board 1.2 m long and 0.6 m wide (20.0 kg), hinged at its low near end and rising to 0.22 m at its high end, which is 0.5 m before the table; it rests on a spring of 120000.0 N m/rad about the hinge (damping 300.0 N m s/rad) and gives way under load down to the floor. The landing mat begins at the table's far edge: 6.0 m long, 2.5 m wide, 0.2 m thick, softer than the floor (contact time constant 0.04 s). A valid vault, in order: at least one hand touches the table's top surface (a contact within 0.02 m of the top plane; a hand against a side of the table does not count); your pelvis passes the table's far edge; your feet touch the mat; you stand on the mat for 1.0 s without a break (only your feet on it, your torso within 20.0 degrees of vertical, your pelvis moving no faster than 0.35 m/s). You fail the moment: any part of you other than your hands (the wrist links and the palms; not the forearms) touches the table or its pedestal; your pelvis is between the table's near and far edges without being higher than its top and within its width (you went under, beside or round it); your pelvis passes the far edge before a hand has touched the top; after your pelvis has passed the far edge, any part of you touches the floor, or a part other than your feet touches the mat before the stand is complete. Before the table there is no fall rule: any part of you may touch the floor and the springboard, and using the springboard is not required. The attempt ends after 80 s of robot time. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §4).
+Graded: the live attempt, judged by the referee in the simulator service as it runs; nothing is replayed. The referee's
+success call is an event: once it is made at some control step, the attempt is a success. It is never shown to the
+agent and does not end the attempt: the physics goes on until the agent's `/finish`, the attempt's time limit, or the
+end of the agent's time (2 h), and nothing after the call undoes it. A failure the referee calls before any
+success (a foul, a fall, the physics diverging) ends the attempt at once with 0. Reaching the time limit or the end of
+the session without a success call scores 0. The agent has 5 resets, each starting a new attempt from the
+frozen start; only the last attempt (the one after the last reset) is graded, and a success in an earlier attempt does
+not count. A simulator error raised by the agent's own call ends the attempt with 0. An attempt that does not start
+from the frozen instance, or a service crash outside the agent's calls, is an infrastructure failure, not a score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -38,13 +57,10 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Category | parkour-apparatus-balance |
-| Rule book | FIG Apparatus Norms (men's vault): the vault table 1.35 m high, its top 1.20 m long and 0.95 m wide; a run-up of 25 m, 1 m wide; a springboard 1.20 m by 0.60 m, 0.22 m high at its high end; landing mats 6 m by 2.5 m, 0.20 m thick. FIG Code of Points for Men's Artistic Gymnastics, the vault section, for what makes a vault invalid: no support of a hand on the table, a foot on the table, not landing feet first; deviations: Apparatus Norms (springboard): the board is a rigid plate hinged at its low end on one spring of 120000.0 N m/rad (83 kN/m at its high end with the default) with light damping, not a leaf-spring board with coil springs; its elasticity is not FIG-tested (the norm is a drop test on the real board) · Code of Points (springboard position): the board stands at a fixed place, its high end 0.5 m before the table, instead of where the gymnast puts it (nobody sets up the venue for the robot) · Code of Points (the vault): any passage over the table with hand support counts, with no vault number, no required take-off from the board and no execution score: the family asks whether the vault is valid, not how well it is done · Code of Points (landing): judged to a stand of 1.0 s on the mat with nothing but the feet on it; the landing mat's corridor lines are not judged · Apparatus Norms (run-up): the robot starts at the far end of the 25.0 m run-up (the gymnast may start nearer); the table's safety collar and the mat around the board are left out |
-| Stages | hands on the table → over the table → landing → stand |
-| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
-| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
-| Episode | 8000 control steps (80 s at 100 Hz); 5 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
+## License
+The Embodied Olympics robot library and running-policy port ([CHIGUI0/roboolympics](https://github.com/CHIGUI0/roboolympics)
+@ `7df999b`, a private repository) is released under the MIT License (`LICENSE.roboolympics` in the image); this
+benchmark's venues and referees are MIT too. Third-party parts in the image: the Unitree G1 model and meshes from MuJoCo
+Menagerie (BSD-3-Clause), the Unitree H1-2 model, meshes and walking policy and the G1 walking policy from
+unitree_rl_gym (BSD-3-Clause), the G1 running policy from C1801SYQ/g1_running (Apache-2.0), FALCON's G1 walking policy
+from LeCAR-Lab/FALCON (MIT) and the WBC-AGILE G1 walking policy from NVIDIA (Apache-2.0). No non-commercial terms apply.

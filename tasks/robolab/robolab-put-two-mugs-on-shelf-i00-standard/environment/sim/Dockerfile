@@ -31,7 +31,7 @@ COPY --from=ghcr.io/astral-sh/uv:0.13.0@sha256:cdc6093146eb3ff6a40107b38f008b789
 ENV PATH="/root/.local/bin:${PATH}"
 # RoboLab's code at v0.3.1 and its asset library (every LFS file present), in one RUN that then deletes the repository's
 # .git (its objects hold every committed file: `git show` would rebuild what is removed) and examples/recorded_data
-# (RoboLab's one recorded episode, a successful run of one of the RoboLab tasks: its actions, log and video; PROTOCOL H.2)
+# (RoboLab's one recorded episode, a successful run of one of the RoboLab tasks: its actions, log and video; docs/protocol/invariants.md H.2)
 RUN git init -q /opt/robolab && cd /opt/robolab && git remote add origin https://github.com/NVlabs/RoboLab && \
     git fetch -q --depth 1 origin 9db0aaf09d9fe5d4f37b168320788258c7012463 && GIT_LFS_SKIP_SMUDGE=1 git checkout -q FETCH_HEAD && \
     test "$(git rev-parse HEAD)" = 9db0aaf09d9fe5d4f37b168320788258c7012463 && \
@@ -61,15 +61,15 @@ WORKDIR /app
 # their paths under /srv the files it shares with other tasks, from pinned files-only images (images/<name>/
 # FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
 COPY . /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:robolab-files-0.8.0@sha256:faedb141d5d889db8f735d4589cc2293af77212d31a0a170ba34185e44f76eac \
+COPY --from=ghcr.io/mll-lab-nu/efe:robolab-files-0.9.0@sha256:42e83b3e429f939b1df5e4339a96aed7eec7c2eb2b9eaf6e7ff97d3cc606a009 \
      /sim/finalize.sh \
-     /sim/live_video.py \
      /rcb_robolab.py \
      /sim/server.py \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.7.0@sha256:1ab8c16d4372a0b44f5c0ea7f819f6febafcfdc132013b1736a04f360375b28f \
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.9.0@sha256:2cf5b6f826d698eaa0dcddf1561e6c673ca0ddabac2c3868d823598eb3cb75b6 /live_video.py /srv/live_video.py
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.9.0@sha256:2cf5b6f826d698eaa0dcddf1561e6c673ca0ddabac2c3868d823598eb3cb75b6 \
      /rcb1.py \
      /rcb_limited.py \
      /run.sh \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:agent-end-files-0.4.0@sha256:96a5c925a9128ed91e1654e2b9aac99373517c80c3aa5e47b8f74880a0c413d0 /rcb_agent_end.py /srv/rcb_agent_end.py
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.9.0@sha256:2cf5b6f826d698eaa0dcddf1561e6c673ca0ddabac2c3868d823598eb3cb75b6 /agent_end/rcb_agent_end.py /srv/rcb_agent_end.py

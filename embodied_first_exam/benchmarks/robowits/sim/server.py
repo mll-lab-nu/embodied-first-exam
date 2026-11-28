@@ -1,16 +1,16 @@
-"""eai-standard/2.2 sim service for RoboWits (Genesis 0.4.7, bimanual Marvin; docs/protocol/standard_mode.md): the RoboWits
+"""eai-standard/3.0 sim service for RoboWits (Genesis 0.4.7, bimanual Marvin; docs/protocol/eai-standard.md): the RoboWits
 adapter of the shared layer rcb_limited.py (embodied_first_exam/standard/). Served from the robowits-files image at
 /srv/server.py in every RoboWits standard task's sim sidecar.
 Owns the scene. HTTP surface (rcb_limited.py): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies, RCB1
 responses: videos / frames / depth / proprio / per-frame step, time and camera poses as raw blobs, never base64), POST
 /kinematics (stateless FK / IK on the robot's own model). Logs every call to /data/episode.jsonl, keeps /data/final.json
-current, and grades the live episode (docs/protocol/README.md H.4): success = the settle window
+current, and grades the live episode (docs/protocol/invariants.md H.4): success = the settle window
 that ended the episode passed on this simulator (inside the agent's last call, or after its last command when its phase
 is over: Session.settle_check), nothing replayed. The verdict goes to final.json first ("finalized", "graded_by":
 "live"); then the recorded (T, 16) trajectory, the deliverable, is rendered once into /data/replay.mp4 for people
 ("video_pending" while it runs; it never changes the verdict). Nothing about objects ever leaves this process.
 
-Crash recovery (rcb_limited.Episode, docs/protocol/standard_mode.md §13): every executed control step is journaled
+Crash recovery (rcb_limited.Episode, embodied_first_exam/standard/README.md#crash-recovery): every executed control step is journaled
 (/data/journal.f64, the exact row handed to the simulator), every completed call checkpointed (rows, state hash, proprio
 row). After a crash, run.sh exits non-zero, compose restarts the container (`restart: on-failure:6`) and this service
 rebuilds the frozen scene, replays the journal up to the last checkpoint and continues the SAME episode, never a reset.
@@ -23,7 +23,7 @@ a give-up record (reason "instance_mismatch") instead of crashing into every res
 trajectory's rows or hash the end state keeps the verdict the episode ended with (finalize_error; journal.f64 holds the
 rows). A crash in the settle window at the end of the agent's phase counts as a crash inside the agent's last call. A restart that finds the verdict on disk (the service died
 while it rendered the video) keeps it, marks the video as over and idles without rebuilding the scene.
-Requests (PROTOCOL §4.6): every field of a /submit header and an /observe body is checked for type and range before
+Requests (docs/protocol/eai-standard.md#errors): every field of a /submit header and an /observe body is checked for type and range before
 anything is executed (ValueError -> 400, no physics); a `joint_position` dt that is not a whole number of control periods
 is refused, never rounded.
 
@@ -98,7 +98,7 @@ def finalize() -> None:
         try:
             acts = S.record_stop(); E["live_sha"] = S.state_sha(); E["n_actions"] = int(len(acts))
             try:
-                S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "steps": E["step"],
+                S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/3.0)", "steps": E["step"],
                                                                                    "reason": E["reason"], "resumes": EP.resumes,
                                                                                    "final_window": E.get("final_window")})
             except Exception as exc:  # noqa — journal.f64 holds the same rows; the verdict does not depend on this file
@@ -168,8 +168,9 @@ def settle(step) -> bool:
     """The verdict's settle window (rcb_robowits.Session.settle_check), run on the live simulator: the robot holds its last
     command for 1 s, then the goal must hold for 2 s, the graded objects released and at rest. Its steps are part of the
     episode (journaled and recorded, so the trajectory and its video hold them). Remembers the result for final.json and
-    the call's meta."""
-    r = S.settle_check(step=step); E["settle"] = r
+    the call's meta. It runs past the step cap (Session.settle_past_cap, as Session.replay's window does), so an episode
+    that ends shortly before the cap (a /finish at control step 199,910 or later) is judged like any other."""
+    r = S.settle_past_cap(step=step); E["settle"] = r
     if not r["success"] and r["why"].startswith("the step cap") and not S.episode_done:   # the call was stopped instead
         r["why"] = "the call stopped during the settle window (max_call_wall_s reached or the client hung up)"
     if r["success"]:                    # a passed window ends the episode: the recorded rows end with it,
@@ -180,27 +181,26 @@ def settle(step) -> bool:
 
 def finish(reason: str) -> None:
     if E["done"]: return
-    if AE.ENABLED:
-        # agent-ended episodes (PROTOCOL §3, rcb_agent_end.py): a success never ends the episode (no settle window inside a
-        # call); the end of the agent's session is one reason, "timeout" (agent_exit is kept as evidence), the runaway guard
-        # is the step limit; the settle window runs from the state the episode ends in (/finish, the session's end); at the
-        # step limit no step can run, so the goal there is judged as it stands
-        if reason == "agent_exit":
-            E["agent_exit"], reason = True, "timeout"
-        elif reason == "step_guard":
-            reason = "step_limit"
+    # agent-ended episodes (docs/protocol/tasks.md#modes, rcb_agent_end.py): a success never ends the episode (no settle window inside a
+    # call); the end of the agent's session is one reason, "timeout" (agent_exit is kept as evidence), the runaway guard
+    # is the step limit; the settle window runs from the state the episode ends in (/finish, the session's end); at the
+    # step limit no step can run, so the goal there is judged as it stands
+    if reason == "agent_exit":
+        E["agent_exit"], reason = True, "timeout"
+    elif reason == "step_guard":
+        reason = "step_limit"
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
-    if AE.ENABLED and reason == "finished":
+    if reason == "finished":
         # POST /finish: the agent's own call (rcb_agent_end's handler has begun it): the window runs inside it
         try:
             E["success"] = settle(journal_step)
             E["final_window"] = int(E["settle"]["steps"]); E["final_window_end"] = ctrl_steps()
         except Exception:  # noqa
             traceback.print_exc(); E["success"] = False
-    elif AE.ENABLED and reason == "step_limit":
+    elif reason == "step_limit":
         try: E["success"] = check_success()
         except Exception: E["success"] = False  # noqa
-    elif not E["success"] and reason in ("timeout", "agent_exit"):
+    elif not E["success"] and reason == "timeout":
         # the agent phase is over: the last command is held for the settle window and the verdict taken there (as the
         # privileged grader does after the last action of a trajectory); never after a simulator error or at the step cap.
         # The window is the end of the agent's last call (docs/protocol/running.md): it runs as a call ("/settle"), so a crash of the
@@ -237,7 +237,7 @@ E["instance_exact"] = bool(S.instance_exact)
 E["ready"] = True                       # S exists: ctrl_steps() counts its control steps (a resume replay included)
 ROBOT = S.robot
 CAMS = ["ego", "wrist_right", "wrist_left"]
-# The images one call may hold (PROTOCOL §3 "Images per call"): every frame a call records stays in memory until its
+# The images one call may hold (docs/protocol/tasks.md#modes "Images per call"): every frame a call records stays in memory until its
 # response is sent, so a call without a bound could exhaust the sidecar's memory, and a service killed for memory is never
 # the agent's failure, so one large request could void a failed trial. Cameras x frames at the recorder's real stride,
 # its first and last frames included; a frame with per-frame depth counts once more (L.check_frames).
@@ -280,11 +280,11 @@ PROPRIO_GROUPS = {   # name: [first column, count, meaning]
                              "clamped at the drives' force range: a motor-current analogue that rises when the arm pushes against something"],
 }
 SPEC = {
-    "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "robowits (Genesis 0.4.7)", "robot": "marvin-bimanual", "task_text": S.spec["text"],
+    "protocol": PROTOCOL, "simulator": "robowits (Genesis 0.4.7)", "robot": "marvin-bimanual", "task_text": S.spec["text"],
     "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S,
     "max_frames_per_call": MAX_FRAMES,
     # not a step budget (budget.steps stays null: the wall clock is the budget) but the technical cap of one episode
-    # (PROTOCOL §4.5, `max_control_steps`): the tooling's runaway guard, also the longest trajectory the graders accept
+    # (docs/protocol/eai-standard.md#post-reset-reset-capability, `max_control_steps`): the tooling's runaway guard, also the longest trajectory the graders accept
     "max_control_steps": int(S.max_steps),
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT[c], "resolution": list(CAM_INFO[c]["image_size"]), "calibration_in_obs": OBS_CALIBRATION,
                     "intrinsic_cv": CAM_INFO[c]["intrinsic_cv"], "mount": CAM_INFO[c]["mount"],
@@ -322,16 +322,7 @@ SPEC = {
                 "then 2 s in which the goal (the task predicate, the graded objects released by the robot) must hold and the "
                 "graded objects stay at rest, within 2 mm; part of the episode), which decides the verdict. It also ends on a "
                 "simulator error, or after max_control_steps control steps (a technical cap, reason \"step_limit\", judged as it "
-                "stands, with no window); nothing is replayed to grade it") if AE.ENABLED else
-               ("ends at the first success: after every /submit and every /observe that watches, the goal is checked (the task "
-                "predicate, the graded objects released by the robot); when it holds, the service holds the last command for a "
-                "settle window (1 s, then 2 s in which the goal must hold and the graded objects stay at rest, within 2 mm; part "
-                "of the call and of the episode) and the episode ends with reason \"success\" if the window passes, else it goes "
-                "on (meta[\"settle\"] says why). It also ends when the agent's phase ends (the same window then decides; reason "
-                "\"agent_exit\" when the agent ended its session with time left, \"timeout\" at the time limit), on a simulator "
-                "error, or after max_control_steps control steps (a technical cap, reason \"step_guard\": the call in progress "
-                "stops there, and no settle window is run, so the episode ends as a failure); the verdict is the live episode's: "
-                "the settle window that ended it (its steps are part of the recording; nothing is replayed to grade it)"),
+                "stands, with no window); nothing is replayed to grade it"),
 }
 L.check_spec(SPEC)                      # refuse to start with an incomplete spec or a forbidden field
 
@@ -410,8 +401,7 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     past max_call_wall_s / its client hung up (EP.journal)."""
     row = np.asarray(a, dtype=np.float32)   # exactly what the simulator gets (Session.step casts to float32): the journal row
     guard = S.step(row); stop = EP.journal(row); rec.tick()
-    if AE.ENABLED:                      # the goal right now, recorded only (final.json hidden_success_*); never shown
-        AE.hidden_success(E, check_success(), log, ctrl_steps())
+    AE.hidden_success(E, check_success(), log, ctrl_steps())   # the goal right now, recorded only (final.json hidden_success_*)
     if guard: finish("step_guard")
     return E["done"] or stop
 
@@ -452,7 +442,7 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list, clipped: list) -> No
             if ctrl_step(cur + (goal - cur) * (k / n), rec): return
 
 
-# ---------------------------------------------------------------- request fields (PROTOCOL §4.6: 400, nothing executed)
+# ---------------------------------------------------------------- request fields (docs/protocol/eai-standard.md#errors: 400, nothing executed)
 # Every field is checked for type and range BEFORE anything is executed or counted. The shared layer answers a ValueError
 # with 400; any other exception is a 500 that ends the episode, so nothing here may raise anything else on a bad request.
 VIDEO_MODES = ("mp4", "frames", "both", "none")
@@ -516,7 +506,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     if not np.all(np.isfinite(A)): raise ValueError("actions contain NaN/inf")
     if not (1.0 / CTRL_HZ - 1e-9 <= dt <= MAX_DT_S): raise ValueError(f"dt must be in [{1.0 / CTRL_HZ:.4f}, {MAX_DT_S}] s")
     periods = dt * CTRL_HZ
-    if typ == "joint_position" and abs(periods - round(periods)) > 1e-6:     # never rounded (PROTOCOL §4.4); ee_pose ignores dt
+    if typ == "joint_position" and abs(periods - round(periods)) > 1e-6:     # never rounded (docs/protocol/tasks.md#grading); ee_pose ignores dt
         k = max(1, int(round(periods)))
         raise ValueError(f"dt must be a whole number of control periods (k/{CTRL_HZ} s, k = 1..{int(MAX_DT_S * CTRL_HZ)}): {dt} s is "
                          f"{periods:.4f} periods; the nearest is {k}/{CTRL_HZ} = {k / CTRL_HZ!r}")
@@ -530,18 +520,13 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     before = ctrl_steps(); rec.tick(force=True)
     if typ == "joint_position": run_joint_position(A, dt, interp, rec, clipped)
     else: run_ee_pose(A, rec, plan, clipped)
-    succ = False; settled = None
-    if not AE.ENABLED and not E["done"] and not EP.stopping and check_success():
-        succ = settle(lambda a: ctrl_step(a, rec)); settled = E["settle"]
-    rec.tick(force=True, last=True)
-    E["success"] = E["success"] or succ
+    rec.tick(force=True, last=True)     # a success never ends the episode: ctrl_step recorded it
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
            "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True,
-           **({"frames_skipped": rec.skipped} if rec.skipped else {}), **({"settle": settled} if settled else {})}
+           **({"frames_skipped": rec.skipped} if rec.skipped else {})}
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": note,
-         "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ})
+         "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50]})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
-    if succ: finish("success")          # settle() recorded the window: the recorded rows end with it
     out["done"] = E["done"]; out["reason"] = E["reason"]
     return out, rec.parts(video, fps)
 
@@ -552,21 +537,17 @@ def do_observe(meta: dict) -> tuple[dict, list]:
     if seconds < 0 or seconds > MAX_CHUNK_S: raise ValueError(f"seconds must be in [0, {MAX_CHUNK_S}] (max_chunk_s)")
     watch = seconds > 0 and not E["done"]
     frames_ok(cams, int(round(seconds * CTRL_HZ)) if watch else 0, fps, meta)   # (the depth mode is checked here: ValueError)
-    rec = recorder(cams, fps, meta); before = ctrl_steps(); settled = None
+    rec = recorder(cams, fps, meta); before = ctrl_steps()
     # ---- the request is valid
     rec.tick(force=True, last=not watch)
     if watch:
         hold = np.asarray(S.hold_action(), dtype=np.float64)
         for _ in range(int(round(seconds * CTRL_HZ))):
             if ctrl_step(hold, rec): break
-        if not AE.ENABLED and not E["done"] and not EP.stopping and check_success():
-            E["success"] = settle(lambda a: ctrl_step(a, rec)); settled = E["settle"]
         rec.tick(force=True, last=True)
-        if E["success"] and not AE.ENABLED: finish("success")  # settle() recorded the window (finish drops it if rows came after it)
     E["calls"] += 1
     out = {**meta_common(cams), "obs_id": E["calls"], "seconds": seconds, "control_steps_watch": ctrl_steps() - before,
-           "physics_steps_watch": (ctrl_steps() - before) * SUBSTEPS, "ok": True, **({"frames_skipped": rec.skipped} if rec.skipped else {}),
-           **({"settle": settled} if settled else {})}
+           "physics_steps_watch": (ctrl_steps() - before) * SUBSTEPS, "ok": True, **({"frames_skipped": rec.skipped} if rec.skipped else {})}
     log({"ev": "observe", "call": E["calls"], "seconds": seconds, "cameras": cams, "control_steps": ctrl_steps() - before})
     if seconds > 0: save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
     return out, rec.parts(video if seconds > 0 else ("frames" if video == "mp4" else video), fps)
@@ -612,5 +593,4 @@ open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
 AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
                     on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row,
-                    **({"finish": lambda: finish("finished"),
-                        "end_step_limit": lambda: finish("step_limit")} if AE.ENABLED else {})))
+                    finish=lambda: finish("finished"), end_step_limit=lambda: finish("step_limit")))

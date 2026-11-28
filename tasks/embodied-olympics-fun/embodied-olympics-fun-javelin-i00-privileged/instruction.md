@@ -2,19 +2,20 @@
 
 ## Task
 Throw the javelin over your shoulder from behind the arc so that it lands point first inside the sector at least 20 m
-out, then leave the runway behind the arc and stand.
+out, then leave the runway behind the arc's end lines, or step back at least 4 m behind them, and stand still for 1 s.
 
 ## Goal
 Success: you throw the javelin over your shoulder from behind the arc, it lands point first inside the sector at least
-20 m out, and you then leave the runway behind the arc and stand still.
+20 m out, and you then leave the runway correctly, stepping off it behind the arc's end lines or stepping on it at least
+4 m behind them, and stand still for 1 s.
 
 The referee judges these stages, in order: **release → landing → exit**. An attempt ends at the success, at the first
 foul or after 60 s (6000 control steps) of robot time.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`. It holds `actions`: one sim row of 141
 floats per control step. It is replayed open-loop from the fixed start, one row per control step, until the referee ends
-the attempt. It scores 1 if the replay succeeds, else 0. If the rows run out first, the attempt is judged on its state
-at that point. At most 6000 rows are used. Every row must be finite, including rows after the attempt's end; a NaN or an
+the attempt. It scores 1 if the replay succeeds, else 0. If the rows run out before the referee calls a success, it
+scores 0. At most 6000 rows are used. Every row must be finite, including rows after the attempt's end; a NaN or an
 infinite value scores 0.
 
 Put two files beside it. `gen.py` is the script that produced it: it must run and reproduce `trajectory.npz`, reading

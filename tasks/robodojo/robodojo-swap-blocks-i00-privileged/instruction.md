@@ -7,8 +7,9 @@ the button's cap up and press it once. Finish with the cap pulled up while both 
 ## Goal
 Success: the two cubes have swapped mats in three moves through the empty mat, each nearly centred on its new mat, the
 button was pressed after each move, and both arms are back where they started while the cap is pulled up. Press the
-button exactly three times in the whole episode: a fourth counted press ends the episode as a failure, and fewer than
-three means no success. A replay ends as soon as the task is done; later rows are not run.
+button exactly three times in the whole episode: a press counts when the cap goes from pulled fully up to below halfway
+down, and a fourth such press ends the episode as a failure. A replay ends as soon as the task is done; later rows are
+not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave

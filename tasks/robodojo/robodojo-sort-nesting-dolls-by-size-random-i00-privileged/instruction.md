@@ -1,11 +1,11 @@
 # RoboDojo · sort_nesting_dolls_by_size_random (privileged)
 
 ## Task
-Stand the five nesting dolls upright in a straight row from left to right, smallest to largest, with a little space
+Stand the five penguin toys upright in a straight row from left to right, smallest to largest, with a little space
 between them. Then move both arms back to where they started.
 
 ## Goal
-Success: the five nesting dolls stand upright in a straight row, smallest on the left to largest on the right, with a
+Success: the five penguin toys stand upright in a straight row, smallest on the left to largest on the right, with a
 little space between them, and both arms are back where they started. A replay ends as soon as the task is done; later
 rows are not run.
 
@@ -67,7 +67,7 @@ with this command; run it to self-check (it stops at the first success):
   end-effector pose in this frame.
 
 ## Others
-- Labels in `s.objects()`: `doll0`..`doll4` (the five nesting dolls).
+- Labels in `s.objects()`: `doll0`..`doll4` (the five penguin toys).
 - RoboDojo's own reset settles the scene again from where it is. So a reset after actions gives the same layout and
   start pose, but not bit-for-bit the same state, and a replay after such a reset can end slightly differently from the
   grader's. Each graded replay is the first episode of a newly started Session, with nothing stepped before it. Test

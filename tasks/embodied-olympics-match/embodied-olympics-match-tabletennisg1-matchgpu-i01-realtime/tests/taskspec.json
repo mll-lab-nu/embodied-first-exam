@@ -34,7 +34,7 @@
   ],
   "truth": true
  },
- "protocol": "eai-standard-realtime/1.0",
+ "protocol": "eai-standard/3.0",
  "resource": {
   "cpus": 8,
   "gpus": 1,

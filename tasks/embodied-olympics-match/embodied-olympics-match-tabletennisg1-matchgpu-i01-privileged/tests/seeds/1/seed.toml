@@ -11,10 +11,6 @@ old = ", seed 4:"
 new = ", seed 1:"
 
 [[replace]]
-old = ", seed 4,"
-new = ", seed 1,"
-
-[[replace]]
 old = "seed: int = 4,"
 new = "seed: int = 1,"
 

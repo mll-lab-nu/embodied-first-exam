@@ -20,7 +20,7 @@ MAX_BYTES = 64 << 20    # 40000 rows of 151 float64 are 48 MB uncompressed
 
 def write(ok: bool, out: dict) -> None:
     os.makedirs(LOG_DIR, exist_ok=True)
-    out = {**out, "deterministic": int(out.get("deterministic", 0))}   # in every branch (PROTOCOL §2.6)
+    out = {**out, "deterministic": int(out.get("deterministic", 0))}   # in every branch (docs/protocol/tasks.md#grading)
     with open(os.path.join(LOG_DIR, "reward.txt"), "w") as f:
         f.write("1\n" if ok else "0\n")
     with open(os.path.join(LOG_DIR, "reward.json"), "w") as f:

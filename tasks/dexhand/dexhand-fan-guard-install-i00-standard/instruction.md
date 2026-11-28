@@ -12,7 +12,7 @@ Any of these ends the episode at once as a failure, which later actions cannot u
 - The fan is moved or tilted.
 - The guard, once lifted, touches the worktop, a table leg or the floor again.
 - The guard is dropped, even if caught again.
-- The guard touches the fan's base, stem, neck, motor housing, feet or buttons.
+- The guard touches the fan's base, stem, neck, motor housing, oscillation knob, feet or buttons.
 - The guard falls below the worktop or leaves the work area.
 - The physics becomes unstable.
 

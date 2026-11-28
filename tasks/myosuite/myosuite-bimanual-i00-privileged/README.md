@@ -1,31 +1,50 @@
-# myosuite-bimanual-i00-privileged
+# MyoSuite · bimanual (privileged)
 
 | | |
 |---|---|
-| Benchmark | MyoSuite |
+| Task ID | `myosuite-bimanual-i00-privileged` |
+| Benchmark | [MyoSuite](https://github.com/MyoHub/myosuite) (Caggiano et al., 2022), upstream `MyoHub/myosuite@5635e1a` |
+| Robot | MyoArm (63 muscles) next to a motorized prosthetic arm (MPL, 17 motors) |
 | Mode | privileged |
-| Twin | `myosuite-bimanual-i00-standard` |
-| Simulator / robot | `myosuite` / `myoarm-mpl` |
-| Family / instance | `bimanual` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
-| Oracle | `none` — no positive example yet (two model attempts failed: Codex + GPT-6 Luna, effort high, run `codex-gpt6_luna-high` and Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06)); the task is marked unvalidated (PROTOCOL §2 `validated`); human review in PR #65 |
-| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
+| Instance | `bimanual`, seed 0 |
+| Time limit | 1 h |
+| Reference solution | None |
 
 ## Task
-MyoSuite `myoChallengeBimanual-v0` (MyoArm + MPL, a musculoskeletal right arm and hand next to a motorized prosthetic left arm (the Modular Prosthetic Limb), 63 muscles and 17 other actuators): Pick up the object with your right hand, pass it to the prosthetic left hand, and set it on top of the goal pillar. Each hand must hold it for at least 1 s, and it must never touch the table or the floor.
-The MyoArm (right, muscles) and a prosthetic MPL arm (left, motors) stand at a table; an object lies in front of the MyoHand and a pillar marks the goal on the far side. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 80)`, one row per 10 ms control step).
+Pick up the object with your right hand, pass it to the prosthetic left hand, and set it on top of the goal pillar. Each
+hand must touch it for at least 1 s in total, and it must never touch the table or the floor.
 
-## Difficulty
-First-pass rating: hard. The action is muscle-level (63 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint control from muscle excitations. Success is the challenge's own event; nothing short of it counts, and the challenge's failure conditions and time limit apply.
+## Success criteria
+Success event (MyoChallenge 2024 `myoChallengeBimanual-v0`, its `solved` and its contact check): the event is the
+first control step at which the object's centre is less than 0.17 m from the goal point on the goal pillar and the
+object has touched the goal pillar on at least 10 control steps of the episode so far. At that step the object's
+contact history must also pass MyoChallenge's contact check:
+- the object has touched the MyoArm's hand on at least 100 control steps (1 s at 10 ms per step);
+- the object has touched the prosthetic arm on at least 100 control steps;
+- on each of the last 8 control steps the object touched the goal pillar and nothing else;
+- the object never touched anything other than the MyoArm, the prosthesis, the start pillar and the goal pillar (the
+  table and the floor included).
 
-## Reference solution
-None. Solvability evidence: no positive example yet (two model attempts failed: Codex + GPT-6 Luna, effort high, run `codex-gpt6_luna-high` and Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06)); the task is marked unvalidated (PROTOCOL §2 `validated`); human review in PR #65.
+The order of the two hands is not checked. If the contact check fails at the step of the event, the episode ends with
+0.
 
-## Verification
-`tests/grade.py` in a separate sandbox without network: one replay of `/app/output/trajectory.npz`, in a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff the episode ends in success (the challenge's own success event). No oracle; human review in PR #65. `nop`: no trajectory, reward 0.
+Failure (MyoSuite's `done`, ends the episode with 0): 10 s of simulated time pass without the event, or the object is
+below 0.3 m.
 
-## Resources
-Caps per container (PROTOCOL §6).
+The replay ends in success at the first control step at which the success event happens, or with 0 at a failure.
+
+Graded file: `/app/output/trajectory.npz` with `actions`, a numeric array with one row per control step and one column
+per actuator (muscles first, in the layout the tooling gives), as `s.save_trajectory(...)` writes it, at most
+216,000 rows. After the agent's session it is replayed once, open-loop, from the frozen start in a fresh process
+of a separate verifier container without network. The replay runs the rows in order until the episode ends as above;
+later rows are not run. If the rows run out before the episode has ended in success, the task fails. A missing file,
+a file that is not such an array, a file for another family, a wrong row width, an empty array, more rows than the
+limit, a non-finite value, or an `.npz` entry larger than the row limit allows scores 0. A replay that gives no result
+(it times out or dies), or a frozen start that does not rebuild with its recorded hash, is reported as
+`grader_error` (infrastructure), not as a score.
+
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -34,13 +53,9 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
-| Instance | `myoChallengeBimanual-v0` after `seed(0)` and `reset(seed=0)` (`rcb_myosuite.py make-instance`); state hash `5dc92b021bddddf6`, checked on every load |
-| Actions | 80 actuator commands per control step (10 ms, 5 physics substeps); success rule `event` (tasks/myosuite/README.md) |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
-
-### Provenance
-The frozen instance (`environment/instance.npz`) and its scene facts were made at generation time; see `tasks/myosuite/README.md`.
+## License
+MyoSuite ([MyoHub/myosuite](https://github.com/MyoHub/myosuite), version 2.12.2, tag `v2.12.2` = `5635e1a`) is
+released under the Apache License 2.0, as are the models it bundles (MyoSim, the MPL prosthetic arm, the object,
+furniture and YCB models). The MyoDex reference motions (the `dex_*` families) derive from the GRAB motion-capture
+dataset; MyoSuite asks their users to comply with GRAB's licence, which allows non-commercial scientific research
+only. The simulator is MuJoCo (Apache License 2.0).

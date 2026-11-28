@@ -4,7 +4,7 @@
 # (Pyroki @ 2eafc99 with JAX 0.4.28 on the CPU, acados @ fa0af20 built with qpOASES). What is left out on purpose: AM-Bench's
 # scripted experts (source/ambench/ambench/policies/scripted/, the reference solutions; the task registrations' pointer to them is
 # blanked), its policy-learning package (ambench_learn), its scripts, documentation and git history: nothing an agent can read
-# here locates a solution (docs/protocol/README.md §2.7). Every web asset the twelve tasks' scenes load at run time (objects'
+# here locates a solution (docs/protocol/leakage.md). Every web asset the twelve tasks' scenes load at run time (objects'
 # payloads and materials, the robot's paint, Isaac Lab's ground, NDT's warehouse scene) is baked in under /opt/isaac-assets
 # (images/ambench/web_assets.txt), mirroring the asset buckets' layouts: the tasks run with closed egress.
 # Every Python package is pinned in images/ambench/requirements.lock (`uv pip freeze` of the reference build).
@@ -99,16 +99,16 @@ RUN sed -i -e '/ jammy-security /s|http://snapshot.ubuntu.com/ubuntu/20261001T00
     echo "15a39563d491def84446c8a5304e873a6b6509d56e2b54edce8eea154e1290a0  /etc/apt/sources.list" | sha256sum -c -
 WORKDIR /app
 # <<< images/ambench/Dockerfile
-# Separate verifier sandbox (PROTOCOL §4): the same simulator image with the verifier's own copies of the tooling and the
+# Separate verifier sandbox (docs/protocol/tasks.md#grading): the same simulator image with the verifier's own copies of the tooling and the
 # frozen instance baked in. Nothing the agent did in its container reaches this one -- Harbor uploads only the declared
 # artifacts (/app/output/), so a patched success check or a swapped interpreter in the agent container cannot influence
 # the verdict.
 FROM ambench-base
 COPY instance.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:ambench-files-0.9.0@sha256:e0eb312cf2b078320af4ba1e7baf0186e05d89da547014385e5380434172773a /privileged/environment/rcb_ambench.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:ambench-files-0.10.0@sha256:e1634af9f6f9431ccc9b224d488d2b009337eb0759894893cb501327ebd21246 /privileged/environment/rcb_ambench.py /privileged/tests/grade.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests
-# resources (PROTOCOL §6) # rcb-monitor
+# resources (docs/protocol/resources.md) # rcb-monitor
 COPY --from=ghcr.io/mll-lab-nu/efe:monitor-0.5.0@sha256:ecc5f24f1516ca11711d7c2d3ac07c89f79cd9220812c1244498ec71e352402a /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
 COPY rcb_limits.json /tests/rcb_limits.json

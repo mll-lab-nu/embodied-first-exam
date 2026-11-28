@@ -5,9 +5,9 @@ Put the car, the toothbrush, the hammer and the shoe in the box, each lying leng
 and keep the box upright without turning it. Then move both arms back to where they started.
 
 ## Goal
-Success: the car, the toothbrush, the hammer and the shoe lie inside the box, each lengthwise with its front end
-pointing left (the car's nose, the toothbrush's brush head, the hammer's head, the shoe's toe); the box still stands
-upright and is not turned; and both arms are back where they started.
+Success: the car, the toothbrush, the hammer and the shoe have their centres over the box's floor, each lengthwise with
+its front end pointing left (the car's nose, the toothbrush's brush head, the hammer's head, the shoe's toe); the box
+still stands upright and is not turned; and both arms are back where they started.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
@@ -43,7 +43,7 @@ runs as a service you reach through its client or its MCP tools, as if it were r
 `POST /finish` (client `r.finish()`, MCP tool `finish`): ends the episode; it is graded right away.
 
 ### Client
-`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`:
+`/opt/tools/rcb_client.py`, protocol `eai-standard/3.0`:
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects: waits while Isaac Sim starts and builds the scene (see below)

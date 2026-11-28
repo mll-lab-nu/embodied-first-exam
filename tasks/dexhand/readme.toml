@@ -1,0 +1,1137 @@
+# README data for tasks/dexhand/*/README.md (scripts/task_conventions.py render_readme_v3)
+#
+# DexHand has no upstream benchmark: the scenes, checkers and graders are this repository's. Sources checked for every
+# success text (B = embodied_first_exam/benchmarks/dexhand):
+#   checkers    each family's checker (a standard task's environment/sim/checker.py is byte-identical to the
+#               B/privileged/environment/variants/<id>/checker.py its privileged Dockerfile copies); the families
+#               without a checker.py keep the predicate in runtime.py; the six essential families share
+#               B/privileged/environment/{checker,essential,essential_inhand,essential_articulated,
+#               essential_rotary_multi}.py with the bounds of each task's catalog.json / instance.json
+#   thresholds  each task's environment/sim/task.json (or instance.json / catalog.json) and scene.py constants
+#   privileged  B/privileged/tests/grade.py main() (missing file -> missing_trajectory; > 64 MB -> bad_trajectory; one
+#               fresh replay through checked_replay.py; instance_mismatch -> infra_error), the family's replay.py
+#               (load_trajectory / hands.read_trajectory: width per hand, 1..MAX_ROWS rows, finite, task and
+#               actuator_names must match; targets outside actuator_ctrlrange + 1e-6 -> bad_trajectory; the replay
+#               breaks at session.done, i.e. the first success or failure)
+#   standard    B/sim/server.py execute() L423-445 (RCB_AGENT_END=1: a latched success is recorded, the verdict state
+#               put back and the physics goes on; a failure -> finish("task_failure"), the family's episode budget
+#               -> finish("step_limit")), end_window() L378-396 (END_WINDOW_S = 3.0, only for "finished"/"timeout"),
+#               finish() L399-415 (reason "error" -> success False), do_submit L536 (targets clipped to the ranges);
+#               RCB_RESET_BUDGET in environment/docker-compose.yaml; B/standard/tests/grade.py verdict()
+#               (success = final.json success, graded_by live, no infra_error, reason != "error").
+# Each family's text states when its checks run (after each physics substep, or once per control step) as its own
+# runtime.py step() does.
+
+[benchmark]
+name = "DexHand"
+citation = "Wang et al., 2026"      # Embodied First Exam (arXiv:2611.12177): DexHand is one of its original suites
+url = "https://www.embodied-first-exam.ai/suite/dexhand/"
+repo = "mll-lab-nu/embodied-first-exam"
+commit = "b2280d8"                  # the commit that added tasks/dexhand/ to this repository
+
+[license]
+text = """
+DexHand's scenes, checkers and graders are original to this repository (MIT License). Robot models: the Sharpa Wave
+hand from [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie/tree/0059d4335f8156206f63a35662313385f7ad6d74/sharpa_wave)
+@ `0059d43` (Apache License 2.0); the Wuji Hand 2.2 from
+[wuji-technology/wuji-description](https://github.com/wuji-technology/wuji-description/tree/829c9aa27cb12c3a49d5b8d63c9869dd8f656702)
+@ `829c9aa` (MIT License); the Tianji Marvin arm meshes from DexForce `embodichain_data` (Apache License 2.0) with
+inertias from Genesis' `dual_arms_primitives.urdf` (MIT License), see `images/dexhand/tianji/NOTICE.md`. Object
+assets are original geometry of this repository, CC0 (the Poly Haven rubber boot, the Innerscene stockpot, Monet's
+public-domain Water Lilies, original page and letter artwork) or CC BY 4.0 (the Joy-Con, pen, rotary-knob and walnut
+meshes; credits in each task's `object_assets/*/CREDITS.txt`); printed text uses the DejaVu fonts (Bitstream Vera
+license). No non-commercial terms apply.
+"""
+
+[robots]
+sharpa-wave-floating = "A dexterous right hand on a six-DoF actuated wrist stage, no arm: Sharpa Wave (22 finger actuators) by default, or Wuji Hand 2.2 (20)"
+sharpa-wave-floating-bimanual = "Two dexterous hands, each on its own six-DoF actuated wrist stage, no arms: Sharpa Wave (22 finger actuators each) by default, or Wuji Hand 2.2 (20 each)"
+marvin-bimanual-sharpa-wave = "Tianji Marvin fixed stand with two 7-joint arms and a dexterous hand on each wrist: Sharpa Wave (22 finger actuators each) by default, or Wuji Hand 2.2 (20 each)"
+
+[modes.privileged]
+# B/privileged/tests/grade.py main(): reward 1 iff one fresh replay's verdict has success True and no bad_trajectory;
+# MAX_BYTES 64,000,000; the family's replay.py: hands.read_trajectory (hand member default "sharpa", exact width per
+# hand, 1 <= T <= MAX_ROWS, finite; optional task / actuator_names must match), actuator_ctrlrange check, the replay
+# loop breaks at session.done; checked_replay.py: start state != instance.json start_state_sha -> instance_mismatch
+# (infra_error 1, no row run). A step budget reached without success is the runtime's "episode_budget" failure.
+success = """
+The graded file is `/app/output/trajectory.npz`, as `s.save_trajectory` writes it: a finite numeric `actions` array
+with one row of motor targets per control step ({vars[w_sharpa]} values for the Sharpa Wave hand, {vars[w_wuji]} for
+the Wuji Hand 2.2), 1 to {vars[rows]} rows, and a `hand` member that names the hand (an archive without it counts as
+Sharpa Wave). After the agent's session, the verifier rebuilds the frozen scene with that hand in a fresh process of a
+separate container without network and replays the rows once, open-loop. The replay stops at the first success or the
+first failure, and later rows are not run. The task is passed if the replay ends in success; rows that run out first,
+or the step budget reached first, leave it failed. Only the motor targets are read: no other member of the archive
+changes the verdict.
+
+A missing file scores 0, and so does a rejected one: larger than 64 MB, a row width that does not match the hand, a
+non-finite value, no rows or too many, a target outside its actuator's range, or a `task` or `actuator_names` member
+that does not match this task. A frozen scene that does not build to its recorded start is an infrastructure error,
+not a score.
+"""
+
+[modes.standard]
+# B/sim/server.py: RCB_AGENT_END=1 and RCB_RESET_BUDGET (environment/docker-compose.yaml); execute() L423-445 (success
+# latched -> verdict_restore, the physics goes on; failure -> task_failure; clock() >= BUDGET -> step_limit);
+# end_window() L378-396 (finished / timeout only: hold_action() rows for up to END_WINDOW_S = 3 s while the success
+# does not hold); finish() (reason "error" -> 0); do_submit() L536 np.clip to actuator_ctrlrange; reset_mismatch() and
+# the start check (instance_mismatch, infra_error). B/standard/tests/grade.py verdict().
+success = """
+Graded is the live episode on the simulator service; nothing is replayed. The service runs the hand the runner
+selects (Sharpa Wave unless the Wuji Hand 2.2 is selected; `spec()["hand"]` names it). The agent may reset up to
+{resets} times, each reset starting a new episode from the same frozen start; only the last episode is graded. An
+episode ends at the agent's `POST /finish`, when the agent's session ends (at the latest after {timeout}), at the first
+failure above (a score of 0), at the step budget where the task has one, or on a simulator error (a score of 0). A
+success neither ends the episode nor is shown to the agent.
+
+Each stage before the last counts at the moment it is completed. The last stage, with its full hold, must be met on
+the state the episode ends in: every check goes on after it is first met, and a failure after it still scores 0. If
+it is not met at `/finish` or at the session's end, the robot holds its current targets for up to 3 s of simulated
+time, and the episode passes if the last stage completes within that time without a failure. At the step budget it
+must be met at that step. Targets outside an actuator's range are clipped. Each episode's start is checked against
+the frozen instance; a mismatch is an infrastructure error, not a score.
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Families. vars: rows = the privileged archive's row limit (replay.py MAX_ROWS), w_sharpa / w_wuji = the row widths
+# (replay.py WIDTHS). "at most" = <=, "more than" = >, as in the source.
+
+[families.coffee_stir]
+# environment/sim/checker.py (= B/privileged/environment/variants/f716640f13/checker.py): Checker.update L206-286
+# (stage 0 -> 1: bowl() submerged and grasped = thumb + another finger L214; stage 1: theta reset when not submerged,
+# accumulates while grasped and radius >= stir_min_radius_m, |delta| <= stir_max_step_rad; stage 2 at |theta| >=
+# 2 pi stir_revolutions; placed L248-260: not held (no contact with any wrist_stage body), spoon_cup == 0,
+# worktop contact, clearance of bowl_center and spoon_top >= place_clearance_m, axis tilt <= place_max_tilt_deg,
+# spoon and cup speeds; hold >= rest_hold_steps L262); bowl() L103-109 (cup frame: CUP_FLOOR_Z - 0.004 <= z <=
+# COFFEE_Z, radius <= CUP_INNER_R; scene.py: 0.008 / 0.064 / 0.050); violation() L145-204; task.json thresholds
+# (cup_max_tilt_deg 10, cup_max_slide_m 0.02, cup_max_lift_m 0.005, drop_speed_m_s 0.2, below_table_margin_m 0.003,
+# workspace, stir 6 / 0.008 / 0.785398, rest 0.02 / 0.5 / 50, place 0.1 / 15, max_steps 3000); runtime.py step()
+# L112-149; replay.py MAX_ROWS 3000, WIDTHS 58 / 54.
+vars = { rows = "3,000", w_sharpa = "58", w_wuji = "54" }
+success = """
+Three stages, in this order, checked once per control step (50 Hz):
+1. In the hand and in the coffee: the thumb and at least one other finger touch the spoon, and the bowl centre, the
+   bowl tip and the bowl neck (23 mm either side of the centre along the spoon) are all between 4 mm and 64 mm (the
+   coffee surface) above the mug base and within 50 mm of the mug axis.
+2. Stirred: the bowl centre has turned at least six full revolutions about the mug's vertical axis (world frame, net
+   signed angle). The angle grows only while the thumb and another finger touch the spoon, the bowl is in the coffee
+   as in stage 1 and the bowl centre is at least 8 mm from the axis; a change of more than 0.785 rad in one control
+   step is not counted, and the count restarts from zero whenever the bowl leaves the coffee before the six turns are
+   complete.
+3. Laid down, for 50 consecutive control steps (1 s): nothing of the hand touches the spoon; the spoon touches the
+   worktop and does not touch the mug; the bowl centre and the handle end are both at least 0.10 m from the mug axis
+   horizontally; the spoon's axis is within 15° of horizontal; spoon and mug each move at most 0.02 m/s and turn at
+   most 0.5 rad/s.
+
+The coffee is not simulated: it exerts no force, and only the bowl's revolutions in it are measured.
+
+The episode fails at once, checked after every 2 ms physics substep, when: the mug tilts more than 10°, slides more
+than 20 mm or rises more than 5 mm; the spoon touches the floor, or touches the worktop before stage 2 is complete;
+the spoon touches neither the hand, the mug nor the worktop while its centre of mass falls faster than 0.2 m/s; the
+mug touches the floor; the bowl centre, bowl tip, bowl neck or handle end is more than 3 mm below the worktop top
+(z = 0.75 m), or the mug base more than 5 mm below it; the bowl centre or the handle end leaves the box x 0 to 0.96 m,
+y -0.48 to 0.48 m, z 0.70 to 1.60 m; a fingertip is inside the mug radius below the coffee surface; an arm link or
+the stand, or the parked left hand, touches the mug, the spoon, the worktop or the floor; or the physics becomes
+unstable. The step budget is 3,000 control steps (60 s).
+"""
+
+[families.jar_lid_open]
+# environment/sim/checker.py (= B/privileged/environment/variants/<id>/checker.py): Checker.substep L174-247 (fail-fast
+# after every substep; turn = unwrapped CCW yaw of the lid relative to the jar; stage 1 in_zone (height above
+# LID_SEAT_Z < 6 mm, radial < 4 mm) and turn >= RELEASE_ANGLE; stage 2 lid_lowest() - rim_z() > CLEAR_HEIGHT 0.03;
+# lid_forced_through_thread: leaving the zone with radial < 4 mm while turn mod pi/2 is outside [RELEASE_ANGLE - 0.03,
+# STOP_ANGLE + 0.03]); control_end L264-279 (FINAL dict, HOLD_STEPS 50; hand contact = HAND or ARM owners);
+# constants L22-37 (JAR_TILT_FAIL 15 deg, JAR_SLIDE_FAIL 0.03, JAR_LIFT_FAIL 0.015, LID_FREE_FALL_SPEED 0.3,
+# LID_FALL_SPEED_FAIL 1.0, LID_AIR_HEIGHT 0.010); task.json (release_angle_rad 1.0493, stop_angle_rad 1.2615,
+# table_z 0.75, table_half 0.45 / 0.58, workspace, max_steps 3000); runtime.py step() L95-115; replay.py MAX_ROWS 3000.
+vars = { rows = "3,000", w_sharpa = "58", w_wuji = "54" }
+success = """
+Three stages, in this order:
+1. Unscrewed: while the lid still sits on the thread (its origin less than 6 mm above its closed height and less than
+   4 mm from the jar axis), it has turned counter-clockwise relative to the jar (seen from above) by at least
+   1.049 rad, the angle at which every lug has passed its ramp end. The turn is tracked after every 2 ms physics
+   substep.
+2. Lifted clear: the lowest point of the lid's skirt is more than 30 mm above the jar rim.
+3. Set aside, for 50 consecutive control steps (1 s), checked at the end of each control step: the lid touches the
+   worktop and touches neither the robot nor the jar; the jar touches the worktop and not the robot; the lid's tilt is
+   at most 0.15 rad and the jar's at most 0.10 rad; the lid's centre is at least 90 mm from the jar's centre
+   horizontally; the lid moves at most 0.02 m/s and turns at most 0.3 rad/s; the jar moves at most 0.02 m/s.
+
+The episode fails at once, checked after every physics substep, when: the jar tilts more than 15°, its centre slides
+more than 30 mm horizontally from its start or rises more than 15 mm; the jar's or the lid's origin leaves the box
+x -0.45 to 0.45 m, y -0.40 to 0.40 m, z 0.73 to 1.25 m, the worktop's footprint (|x| at most 0.45 m, |y| at most
+0.58 m) or drops more than 5 mm below the worktop top (z = 0.75 m); the jar or the lid touches the floor; the lid
+touches the worktop before stage 2; the lid's lowest point is more than 10 mm above the worktop top while its centre of
+mass falls faster than 1.0 m/s, or faster than 0.3 m/s while the lid touches nothing; the lid leaves the thread
+upward (more than 6 mm above its closed height while within 4 mm of the axis) at a turn whose remainder modulo a
+quarter turn is outside 1.019 to 1.291 rad (lugs not in the gaps between the ramps); the parked left arm or left hand
+touches the jar or the lid; or the physics becomes unstable. The step budget is 3,000 control steps (60 s).
+"""
+
+[families.grinder_crank]
+# environment/sim/checker.py: Checker.substep (fail-fast after every substep: robot_collision = any contact of a stand,
+# torso or arm geom (under base_link, above the hand mounts), grinder_below_counter, grinder_tipped, grinder_slid,
+# grinder_lifted, grinder_spun, crank_reversed, BADQPOS/QVEL/QACC), Checker.control (stage 1: net clockwise crank
+# angle -(q - q0) >= 2 pi required_turns; stage 2: still turned, no hand-grinder contact, mill_base on counter, tilt,
+# rest speeds, for released_hold_steps); task.json checker block (required_turns 2, max_tilt_deg 10, max_slide_m 0.02,
+# max_lift_m 0.02, below_counter_tolerance_m 0.005, max_body_yaw_deg 45, max_reverse_deg 90, rest 0.02 / 0.2 / 0.5,
+# released_hold_steps 50), counter top = 0.68 + 0.02 = 0.70 m, max_steps 3000; runtime.py step(); replay.py MAX_ROWS 3000.
+vars = { rows = "3,000", w_sharpa = "58", w_wuji = "54" }
+success = """
+Two stages, in this order, checked at the end of each control step (50 Hz):
+1. Turned: the crank has turned at least two full turns (4π rad) clockwise, seen from above, relative to the grinder
+   body, net of any turning back (the crank hinge's angle from its start).
+2. Released, for 50 consecutive control steps (1 s): the crank is still at least two net turns from its start; no
+   part of either hand touches the grinder (body, crank or knob); the grinder's base touches the counter; the grinder
+   tilts at most 10°; it moves at most 0.02 m/s and turns at most 0.2 rad/s; the crank turns at most 0.5 rad/s.
+
+The episode fails at once, checked after every 2 ms physics substep, when: any stand, torso or arm link of the robot
+(anything but the two hands) touches anything; the grinder's origin is more than 5 mm below the counter top
+(z = 0.70 m); the grinder's axis tilts more than 10° from vertical; its origin moves more than 20 mm horizontally from
+its start or rises more than 20 mm; the grinder body turns more than 45° about its own axis; the crank is more than 90°
+net counter-clockwise from its start; or the physics becomes unstable. The step budget is 3,000 control steps (60 s).
+"""
+
+[families.pancake_serve]
+# environment/sim/checker.py: Checker.features (blade_only = a pancake-blade contact and the turner the pancake's only
+# partner; on_blade, over_plate (plate origin + 0.006 m), served, withdrawn = no turner contact and every blade corner /
+# tip point farther than pancake_radius_m + withdraw_clearance_m = 0.08 m horizontally); Checker.control (stage 1 after
+# on_blade_controls consecutive on_blade samples, stage 2 at over_plate, then hold_controls of served); Checker.substep
+# (fail-fast after every substep; owner "hand" = everything under wrist_stage or base_link, i.e. the whole robot);
+# task.json (physics_dt 0.001, counter_z 0.85, lift_m 0.015, carry_tilt_deg 30, on_blade_controls 10, carry / serve
+# radius 0.058, serve_tilt_deg 20, rest 0.02 / 0.3, hold_controls 50, drop_speed_m_s 0.35, support_shift_m 0.03,
+# support_tilt_deg 15, workspace, max_steps 3000); runtime.py step(); replay.py MAX_ROWS 3000.
+vars = { rows = "3,000", w_sharpa = "58", w_wuji = "54" }
+success = """
+Three stages, in this order, checked at the end of each control step (50 Hz, twenty 1 ms physics substeps):
+1. On the blade, for 10 consecutive control steps: the pancake touches the turner's blade and nothing but the turner,
+   it is at least 15 mm above its start height, and it tilts at most 30°.
+2. Over the plate: still touching the blade and nothing but the turner, the pancake's centre is within 58 mm of the
+   plate's centre horizontally and more than 6 mm above the plate's origin.
+3. Served, for 50 consecutive control steps (1 s): the pancake touches the plate and nothing else; its centre is
+   within 58 mm of the plate's centre horizontally; it tilts at most 20°; it moves at most 0.02 m/s and turns at most
+   0.3 rad/s; the turner does not touch it, and every corner and the tip of the turner's blade is more than 80 mm from
+   the pancake's centre horizontally (10 mm beyond its rim).
+
+The episode fails at once, checked after every physics substep, when: the pancake touches nothing while its centre of
+mass falls faster than 0.35 m/s; the turner does not touch the robot while its centre of mass falls faster than
+0.35 m/s; the pancake touches the counter top or the floor; any part of the robot touches the pancake; the turner
+touches the floor; the pancake's or the turner's origin is below the counter top (z = 0.85 m); the pan or the plate
+moves more than 30 mm from its start or tilts more than 15°; the pancake, the pan, the plate or the turner leaves the
+box x 0.23 to 1.13 m, y -0.65 to 0.45 m, z 0.80 to 1.50 m; or the physics becomes unstable. The step budget is
+3,000 control steps (60 s).
+"""
+
+[families.vacuum_bin_reseat]
+# environment/sim/checker.py: Checker.substep (released_in_seat: button travel >= press_depth_m while seat_error <=
+# release_seat_distance_m, tracked every substep; fail-fast vacuum_body_disturbed, bin_below_counter,
+# bin_left_workspace, bin_dropped (fall speed, unsupported fall, floor / table-leg contact), geometry_forced, unstable);
+# Checker.control (stage 1: released_in_seat and seat distance > removed_distance_m; stage 2: seated(); stage 2 falls
+# back to 1 when not seated; hold of seated and calm (no robot contact with bin / body / button: hand_body = everything
+# under wrist_stage, left_wrist_stage or base_link; speeds) for hold_steps); seated() (seat_tolerance_m 0.003,
+# seat_tolerance_rad 0.05, latched_button_m 0.0015, catch clearance >= -catch_tolerance_m 0.0005); task.json checker
+# block (press_depth_m 0.0058, removed_distance_m 0.03, release_seat_distance_m 0.005, rest 0.01 / 0.1, hold_steps 50,
+# body 0.05 m / 0.35 rad, counter_top_z 0.65, drop 0.99, unsupported 0.55, max_penetration_m 0.004, workspace),
+# physics_dt 0.001, max_steps 3000; runtime.py step(); replay.py MAX_ROWS 3000, WIDTHS 56 / 52.
+vars = { rows = "3,000", w_sharpa = "56", w_wuji = "52" }
+success = """
+Positions of the bin are measured in the vacuum body's frame, relative to the bin's seated pose. Three stages, in this
+order, checked at the end of each control step (50 Hz, twenty 1 ms physics substeps):
+1. Removed: the release button has been pressed down at least 5.8 mm at a moment when the bin's origin was within
+   5 mm of its seated position (tracked after every physics substep), and afterwards the bin's origin is more than
+   30 mm from its seated position.
+2. Reseated: the bin's origin is within 3 mm and its orientation within 0.05 rad of the seated pose, the button is
+   back up (at most 1.5 mm pressed), and the bin's catch is behind the latch tooth's face (at most 0.5 mm in front of
+   it). Whenever this no longer holds, stage 2 has to be reached again.
+3. Final hold, for 50 consecutive control steps (1 s): stage 2 holds; no part of the robot touches the bin, the vacuum
+   body or the button; the bin moves at most 0.01 m/s and turns at most 0.1 rad/s; the vacuum body moves at most
+   0.01 m/s.
+
+The episode fails at once, checked after every physics substep, when: the vacuum body moves more than 50 mm from its
+start or tilts more than 0.35 rad; the bin's origin goes below the counter top (z = 0.65 m) or leaves the box x 0.20
+to 1.10 m, y -0.45 to 0.45 m, z 0.60 to 1.20 m; the bin's centre of mass falls faster than 0.99 m/s, or faster than
+0.55 m/s while the bin touches nothing; the bin touches the floor or a table leg; a contact between the bin and the
+vacuum body or button penetrates more than 4 mm; or the physics becomes unstable. The step budget is 3,000 control
+steps (60 s).
+"""
+
+[families.drying_rack_unfold]
+# environment/sim/checker.py: RackChecker.invariant (fail-fast after every substep: collision-geom centres below
+# table_z, above table_z + max_height_above_table_m or outside the counter footprint; floor / counter_cabinet
+# contact; airborne (no counter-top or hand contact) and root-body COM vz < -drop_fall_speed_m_s; after stage 2:
+# tilt > fell_over_tilt_deg, fold > fold_open_max_rad or a leg < leg_open_min_rad); features (unfolded: fold hinge <=
+# fold_open_max_rad and all four leg hinges >= leg_open_min_rad; standing: unfolded, tilt <= standing_tilt_max_deg,
+# all four FOOT_GEOMS on counter_top and no other rack geom on it; speeds = max over rack bodies); update (stages 1, 2,
+# then released_hold_steps of standing, no hand-rack contact, speeds); task.json predicate block (pi/10, pi/2, 10 deg,
+# 20 deg, 0.02, 0.2, 50, 0.9, 0.05), counter center 0.62 / 0 half 0.75 / 0.48, table_z 0.75, max_steps 6000;
+# runtime.py step() (BADQPOS/QVEL/QACC, invariant, episode_budget); replay.py MAX_ROWS 6000.
+vars = { rows = "6,000", w_sharpa = "28", w_wuji = "26" }
+success = """
+Three stages, in this order, checked at the end of each control step (50 Hz):
+1. Unfolded: the hinge between the two halves is within 0.314 rad (18°) of flat, and each of the four leg hinges is
+   open at least 1.571 rad (90°).
+2. Standing: stage 1 holds, the rack tilts at most 10°, all four feet touch the counter top, and no other part of
+   the rack touches it.
+3. Released, for 50 consecutive control steps (1 s): the rack is standing as in stage 2, the hand does not touch it,
+   and every part of the rack moves at most 0.02 m/s and turns at most 0.2 rad/s.
+
+The episode fails at once, checked after every 2 ms physics substep, when: the centre of any collision shape of the
+rack is below the counter top (z = 0.75 m), more than 0.90 m above it, or outside the counter's footprint (x -0.13 to
+1.37 m, y -0.48 to 0.48 m); the rack touches the floor or the counter cabinet; the rack touches neither the counter
+top nor the hand while its centre of mass falls faster than 0.05 m/s; once stage 2 has been reached, the rack tilts
+more than 20°, the halves' hinge opens beyond 0.314 rad from flat or a leg closes below 1.571 rad; or the physics
+becomes unstable. The step budget is 6,000 control steps (120 s).
+"""
+
+[families.picture_hang]
+# environment/sim/checker.py: Checker.update (stage 1: origin z >= start z + lift_clearance_m and no frame-console
+# contact; stage 2: both rings threaded() and touching their hooks; hanging hold: both hanging, hook load shares from
+# mj_contactForce (vertical force on each ring / frame weight) >= min_hook_share each and >= min_total_share together,
+# no hand contact, no console / floor contact, |roll|, tilt, speeds, for hold_steps); threaded() (hook saddle centre
+# inside the ring's D loop in the ring frame, thread_tolerance_m); failure_reason (robot_collision: any active contact
+# of a stand / torso / arm body under base_link; floor; workspace; fail_tilt_rad; below start z - below_support_m after
+# stage 1; fell_off_hook after stage 2; picture_unsupported after stage 1: within a control only when COM vz <
+# -fall_speed_m_s, at the control's end always); substep (every substep); task.json predicate block (0.02, 0.0005, 0.2,
+# 0.85, 3 deg, 0.1, 0.02, 0.15, 50, 0.6, 0.01, workspace, 0.2), start z 0.72, max_steps 3000; runtime.py step();
+# replay.py MAX_ROWS 3000.
+vars = { rows = "3,000", w_sharpa = "58", w_wuji = "54" }
+success = """
+Three stages, in this order, checked at the end of each control step (50 Hz):
+1. Lifted: the frame's origin is at least 20 mm above its start height (z = 0.74 m or higher) and the frame does not
+   touch the console.
+2. Engaged: each D-ring on the frame's back is threaded on its own hook (the hook's load saddle lies inside the ring's
+   D-shaped loop, within 0.5 mm) and touches it.
+3. Hanging, for 50 consecutive control steps (1 s): both rings are threaded on and touching their hooks; each hook
+   carries at least 20 % of the frame's weight through its ring (vertical contact force) and the two together at least
+   85 %; no hand touches the frame or the rings; the frame touches neither the console nor the floor; it rolls at most
+   3° and tilts at most 0.1 rad from upright; its centre of mass moves at most 0.02 m/s and it turns at most
+   0.15 rad/s. Contact with the wall is allowed.
+
+The episode fails at once, checked after every 2 ms physics substep and at the end of every control step, when: a
+stand, torso or arm link of the robot touches anything (only the hands may make contact); the frame or a ring touches
+the floor; the frame's origin leaves the box x 0.20 to 0.76 m, y -0.45 to 0.45 m, z 0.60 to 1.30 m; the frame tilts
+more than 0.6 rad; after stage 1, the frame's origin is more than 10 mm below its start height; after stage 2, no
+hand touches the frame and the two rings are not both threaded; after stage 1, the frame is supported by nothing (no
+hand touches it, it does not touch the console, and the two rings are not both threaded on and touching their hooks):
+at the end of a control step this fails at once, within a control step only while its centre of mass falls faster
+than 0.2 m/s; or the physics becomes unstable. The step budget is 3,000 control steps (60 s).
+"""
+
+[families.usb_plug_insert]
+# environment/sim/checker.py: Checker.update (stage 1 lifted: thumb + another finger on the rigid plug, the rigid plug
+# touching only the hand, plug z >= counter_top_z + lift_height_m; plug_dropped after stage 1: not engaged in any port
+# (depth >= engaged_depth_m, |lateral|, |vertical| <= 0.004) and no hand contact with plug or cable while COM vz <
+# -drop_fall_speed_m_s or the rigid plug touches counter / floor; stage 2: seated() in target_port 3 (0-based);
+# released hold: seated, no hand on plug / cable / hub, plug speed, for hold_controls); seated() / port_errors() (plug
+# origin in the hub frame minus the port mouth: depth >= min_depth_fraction * port_depth (assets/usb_scene.json 0.012),
+# |lateral| <= max_lateral_m, |vertical| <= max_vertical_m, axis error, polarity); substep_violation (every substep:
+# robot_collision = stand / torso / arm links / parked left hand (scene.robot_parts) in any active contact,
+# plug / hub below the top, workspace, hub displaced / tipped, cable far end); task.json checker block (0.03, 0.9,
+# 0.0006, 0.0005, 5 deg, 20 deg, 0.003, 0.01, 50, 0.02, 20 deg, 0.05, 0.015, 0.2), counter_top_z 0.70, workspace,
+# max_steps 3000; runtime.py step(); replay.py MAX_ROWS 3000.
+vars = { rows = "3,000", w_sharpa = "58", w_wuji = "54" }
+success = """
+Three stages, in this order, checked at the end of each control step (50 Hz). The plug's position is its origin,
+measured in the hub's frame from the mouth of a port.
+1. Lifted: the thumb and at least one other finger touch the plug, the plug touches nothing but the hand, and its
+   origin is at least 30 mm above the desk top (z = 0.73 m or higher).
+2. Seated in port 4 (the rightmost port seen from the front): the plug is at least 10.8 mm deep in the port (90 % of
+   its 12 mm depth), within 0.6 mm of the port's centre sideways and 0.5 mm in height; its axis is within 5° of the
+   port's axis; and its top face is within 20° of the hub's up direction (correct polarity).
+3. Released, for 50 consecutive control steps (1 s): the plug is seated in port 4 as in stage 2; the hand touches
+   neither the plug, its cable nor the hub; the plug moves at most 0.01 m/s.
+
+The episode fails at once, checked after every 2 ms physics substep, when: an arm link, the stand, the torso or the
+parked left hand touches anything; the plug's origin is more than 15 mm below the desk top (z = 0.70 m), or the hub's
+below it; the plug's or the hub's origin leaves the box x 0.25 to 1.15 m, y -0.40 to 0.95 m, z 0.685 to 1.10 m; the
+hub moves more than 20 mm from its start or tilts more than 20°; the cable's far end is more than 50 mm below the desk
+top; or the physics becomes unstable. It also fails, checked at the end of each control step after stage 1, when the
+plug is not engaged in any port (at least 3 mm deep and within 4 mm of its centre) and the hand touches neither the
+plug nor its cable, while the plug falls faster than 0.2 m/s or touches the desk or the floor. The step budget is
+3,000 control steps (60 s).
+"""
+
+[families.fan_guard_install]
+# environment/sim/checker.py: Checker.evaluate L210-250 (no latched stages: seated(), clips_ok = all four clip hinges
+# <= clip_locked_rad, rim_in_clips() inside every channel, and each UPPER clip (geometry.py UPPER = (0, 1)) locked
+# continuously since a control >= first_seated; complete = seated, clips_ok, no hand contact with guard / clip / fan,
+# guard speeds; hold_steps of complete); seat() L112-120 (guard origin in the fan frame: radial distance from the axis,
+# axial offset - GUARD_SEAT 0.00365, angle between the guard x axis and the fan axis); invariant_violation() L181-208
+# (every substep: fan displacement / tilt, guard COM below table_z or outside the workspace, ground contact once lifted
+# (COM > start + lift_height_m), unsupported COM vz < -free_fall_speed_m_s, fan body parts); task.json checker block
+# (concentric_m 0.005, seat_axial_m 0.0025, parallel_rad 0.0873, clip_locked_rad 0.12, hold 50 / 0.02 / 0.2,
+# lift_height_m 0.05, fan 0.03 m / 0.1 rad, table_z 0.65, workspace, free_fall 0.2), max_steps 6000; runtime.py
+# step(); replay.py MAX_ROWS 6000.
+vars = { rows = "6,000", w_sharpa = "28", w_wuji = "26" }
+success = """
+One final condition, checked at the end of each control step (50 Hz), must hold for 50 consecutive control steps
+(1 s):
+- Seated: the guard's origin is within 5 mm of the fan's axis and within 2.5 mm of the seated position along it, and
+  the guard's axis is within 5° (0.0873 rad) of the fan's axis, dome facing out.
+- Clipped: all four clips are closed (hinge angle at most 0.12 rad), the guard's rim lies inside each clip's U channel
+  (between the fan's rear rim and the clip's lip along the axis, and between the lip's end and the clip's bridge
+  radially), and each of the two upper clips has stayed closed since a control step at or after the one at which the
+  guard was first seated (the lower clips may close earlier).
+- Released: the hand touches neither the guard, a clip nor the fan, and the guard moves at most 0.02 m/s and turns
+  at most 0.2 rad/s.
+
+The episode fails at once, checked after every 2 ms physics substep, when: the fan moves more than 30 mm from its
+start or tilts more than 0.1 rad; the guard's centre of mass is below the worktop top (z = 0.65 m) or leaves the box
+x 0.20 to 1.10 m, y -0.55 to 0.55 m, z 0.60 to 1.40 m; once the guard's centre of mass has been more than 50 mm above
+its start, the guard touches the worktop, a table leg or the floor; the guard touches nothing while its centre of mass
+falls faster than 0.2 m/s; the guard touches the fan's base, stem, neck, motor housing, oscillation knob, feet or
+speed buttons; or the physics becomes unstable. The step budget is 6,000 control steps (120 s).
+"""
+
+[families.stool_brace_insert]
+# environment/sim/checker.py: Checker.evaluate (flags brace_lifted (no brace-table contact, origin >= start z +
+# lift_height_m, lowest bounding-box corner >= table_z + lift_clearance_m), brace_lower (a brace dowel end seated in a
+# lower-frame bore), frame_lifted (same for upper_frame), assembled (every dowel end in exactly one bore and every bore
+# holding exactly one end, each rail spanning both frames); stages advance in order, several in one control; released
+# hold for released_hold_steps); seated_matrix() (depth >= seat_depth_m and <= bore_depth + 0.003, lateral <=
+# seat_lateral_m, axis <= seat_axis_rad); invariant_violation() (every substep; tilt() = angle of the body z axis line
+# from vertical); task.json (table_z 0.74, seat 0.012 / 0.0016 / 0.105, lift 0.05 / 0.02, frame 0.03 / 0.1745,
+# rail_knock 0.008 / 0.1745, dropped_height_m 0.09, knocked_tilt_rad 0.349, free_fall 0.2, speeds 0.02 / 0.2, hold 50,
+# workspace, max_steps 6000); runtime.py step(); replay.py MAX_ROWS 6000.
+vars = { rows = "6,000", w_sharpa = "28", w_wuji = "26" }
+success = """
+A dowel end counts as seated in a bore when its tip is 12 to 19 mm past the bore's entry along the bore's axis, within
+1.6 mm of that axis, and the dowel's axis is within 0.105 rad of the bore's. Four stages, in this order, checked at the
+end of each control step (50 Hz; several may complete in the same step):
+1. Brace lifted: the brace does not touch the table, its origin is at least 50 mm above its start, and the lowest
+   corner of its bounding box is at least 20 mm above the table top (z = 0.76 m or higher).
+2. Brace seated: one of the brace's dowels is seated in a bore of the lower side frame.
+3. Frame lifted: the opposite (upper) side frame is lifted in the same sense as the brace in stage 1.
+4. Assembled: every dowel end of the four rails (the brace included) is seated in exactly one bore, every bore of the
+   two side frames holds exactly one dowel end, and every rail has one end in each side frame.
+
+Then, for 50 consecutive control steps (1 s): the assembly of stage 4 holds, the hand touches no part, and every part
+(both side frames and all four rails) moves at most 0.02 m/s and turns at most 0.2 rad/s.
+
+The episode fails at once, checked after every 2 ms physics substep, when: the origin of a part is below the table top
+(z = 0.74 m) or leaves the box x 0.23 to 1.23 m, y -0.73 to 1.03 m, z 0.70 to 1.60 m; the lower side frame moves more
+than 30 mm from its start or tilts more than 10°; a rail that started seated tilts more than 10° or its seated dowel is
+less than 8 mm deep in its bore; after stage 1, the brace's origin is less than 90 mm above the table top or the brace
+touches the table; after stage 2, the brace tilts more than 20°; after stage 3, the upper frame is more than 20° from
+upside down or touches the table; a part touches nothing while its centre of mass falls faster than 0.2 m/s; a part
+touches the floor; or the physics becomes unstable. Tilts are measured between a part's long axis line and the
+vertical. The step budget is 6,000 control steps (120 s).
+"""
+
+[families.ram_module_install]
+# environment/sim/checker.py: Checker.features (picked: no holder contact, DIMM origin (its lower edge) z >=
+# picked_min_bottom_z, thumb + another finger; seated: both lower ends (+-HALF_LENGTH 0.066675) at depth_min_m ..
+# depth_max_m above the socket_3 origin, lateral <= lateral_max_m, |origin x| <= along_max_m, upright / keyed angles;
+# latched: seated and latch_hinge <= latch_closed_max_rad; released: no hand contact on module or moving_latch; still);
+# update (stages 1-3 in order, then hold_steps of seated, latched, released, still); invariant_violation (every
+# substep: off-target contact (allowed: hand, holder_* geoms, socket_3 subtree), unsupported COM vz <
+# -max_unsupported_fall_speed_m_s or a contact-free fall > max_free_fall_m, a corner (z 0 or 0.03125 in the module
+# frame) below bench_top_z, an end below socket_floor_min_m near the socket, workspace); task.json checker block
+# (0.851, 0.0015, 0.0026, 0.0005, 0.001, 3 deg, 3 deg, 0.08, 0.0012, 0.01, 0.2, 50, 0.05, workspace, 0.2),
+# bench_top_z 0.825, max_steps 3000; runtime.py step(); replay.py MAX_ROWS 3000.
+vars = { rows = "3,000", w_sharpa = "28", w_wuji = "26" }
+success = """
+Positions in the socket are measured in the target socket's frame. Three stages, in this order, checked at the end of
+each control step (50 Hz):
+1. Picked: the module does not touch its foam holder, its lower edge (the module's origin) is at z = 0.851 m or
+   higher, and the thumb and at least one other finger touch it.
+2. Seated: both ends of the module's lower edge are 1.5 to 2.6 mm above the socket's base, at most 0.5 mm off the
+   slot's centre line sideways; the module's centre is within 1.0 mm of the slot's centre along it; the module's
+   height axis is within 3° of the socket's vertical, and its length axis within 3° of the socket's keyed direction
+   (a reversed module never counts).
+3. Latched: the module is seated as in stage 2 and the socket's latch is closed (hinge angle at most 0.08 rad).
+
+Then, for 50 consecutive control steps (1 s): the module is seated and latched, the hand touches neither the module nor
+the latch, and the module moves at most 0.01 m/s and turns at most 0.2 rad/s.
+
+The episode fails at once, checked after every 2 ms physics substep, when: the module touches anything other than the
+hand, its foam holder or the target socket (the bench, the tray, the motherboard and its components, the other
+sockets, the floor); the module touches nothing while its centre of mass falls faster than 0.2 m/s, or falls more than
+50 mm while touching nothing; a corner of the module is below the bench top (z = 0.825 m); within the target socket,
+an end of the module's lower edge is less than 1.2 mm above the socket's base; the module's origin leaves the box
+x 0.30 to 0.95 m, y -0.36 to 0.34 m, z 0.826 to 1.25 m; or the physics becomes unstable. The step budget is 3,000
+control steps (60 s).
+"""
+
+[families.boot_sole_brush]
+# environment/sim/checker.py: BrushChecker.control (stage 1: brush_contact_controls cumulative controls with the
+# bristle pad touching the boot, the hand touching the brush and the brush not on the counter; stage 2: in_tray() for
+# all six clods; hold: all in tray, withdrawn (no brush-boot / brush-clod contact and pad centre >= boot z +
+# withdraw_height_m or >= withdraw_distance_m horizontally from the boot origin), clod speeds <= rest_speed_m_s, for
+# hold_controls); in_tray() (clod origin inside the tray walls: centre +- (half - wall_thickness), table_z < z <
+# table_z + wall_height); substep() (every substep: robot_collision for every robot part but the wrist_stage subtree,
+# boot_displaced, clods below table_z / outside the workspace / on counter or floor, hand on a clod, brush below /
+# outside / on floor, tray_* or rack_* geoms, brush unsupported (no contact but clods) with COM vz <
+# -brush_fall_speed_m_s); task.json predicate block (0.03, 0.35, 10, 0.04, 0.18, 0.05, 50, workspace, 0.2), table_z
+# 0.886, tray center 0.53 / 0.1 half 0.17 / 0.29 wall 0.006 / 0.045, max_steps 3000; runtime.py step(); replay.py
+# MAX_ROWS 3000.
+vars = { rows = "3,000", w_sharpa = "58", w_wuji = "54" }
+success = """
+Three stages, in this order, checked at the end of each control step (50 Hz). A clod is in the tray when its origin
+lies inside the tray's walls (x 0.366 to 0.694 m, y -0.184 to 0.384 m) and between the counter top (z = 0.886 m) and
+the top of the walls (z = 0.931 m).
+1. Brushed: for at least 10 control steps in all (not necessarily in a row), the brush's bristle pad touches the
+   boot while the hand touches the brush and the brush does not touch the counter.
+2. Clean: all six clods are in the tray, however they got there.
+3. Withdrawn, for 50 consecutive control steps (1 s): all six clods are in the tray and each moves at most 0.05 m/s;
+   the brush touches neither the boot nor a clod, and its bristle pad's centre is at least 0.04 m above the boot's
+   origin (the sole plane) or at least 0.18 m from it horizontally.
+
+The episode fails at once, checked after every 2 ms physics substep, when: any part of the robot other than its right
+hand (the stand, the torso, an arm link or flange, the parked left hand) touches anything, the robot itself included;
+the boot's origin moves more than 30 mm from its start or its axis tilts more than 0.35 rad; a clod's or the brush's
+origin goes below the counter top or leaves the box x 0.25 to 1.20 m, y -0.45 to 0.45 m, z 0.886 to 1.80 m; a clod
+touches the counter or the floor; any part of the right hand touches a clod; the brush touches the floor, the tray or
+the rack; the brush touches nothing but clods while its centre of mass falls faster than 0.2 m/s; or the physics
+becomes unstable. The step budget is 3,000 control steps (60 s).
+"""
+
+[families.paper_staple]
+# environment/sim/checker.py: Checker.features (aligned: corners of sheets 1-2 within align_tolerance_m of sheet 0's in
+# its plane, gaps 0.5-3 thicknesses along its normal, adjacent sheets in contact; in_throat: staple point (scene.py
+# STAPLE_LOCAL on the base) in every sheet's frame with both edge margins in [staple_margin_min_m, staple_margin_max_m]
+# and the mid-plane 0..throat_height_max_m above it; pressed: head hinge >= stop - stroke_tolerance_rad; blade_on_stack:
+# driver_blade touching the top sheet); update (stages 1-3 latched in order, each needing the earlier predicates at the
+# same control; then hold_steps with head <= head_up_rad, no contact of any robot body (owner "hand" = every body that
+# is not world, a sheet or the stapler) with sheets or stapler, sheet speeds <= 0.02); violation() (every substep:
+# non-finite / warnings, sheet origin below table_z + t/2 - 0.001, off the desk footprint or the workspace, a corner
+# below table_z - 0.015, stapler shift / tilt, a falling (vz < -drop_speed_m_s) sheet or stapler base with no contact,
+# arm_collision: robot_body_ids (stand and arms) touching a non-robot geom, sheet or stapler on floor / desk_leg*);
+# task.json (0.002, 0.02, 0.003, 0.03, 0.006, 0.01, 0.02, 50, 0.03, 0.26, workspace, desk, 0.2, max_steps 6000);
+# runtime.py step(); replay.py MAX_ROWS 6000.
+vars = { rows = "6,000", w_sharpa = "58", w_wuji = "54" }
+success = """
+The sheets are numbered from the bottom one up. Four stages, in this order, checked at the end of each control step
+(50 Hz); each later stage also needs the conditions of stages 1 and 2 at the same step:
+1. Aligned: every corner of sheets 2 and 3 is within 2 mm of the matching corner of sheet 1 (in sheet 1's plane);
+   each sheet lies 0.25 to 1.5 mm (0.5 to 3 sheet thicknesses) above the one below it along sheet 1's normal; sheets
+   1 and 2, and sheets 2 and 3, touch.
+2. In the throat: the stapler's staple point (on its anvil, under the driver blade) lies inside every sheet, 3 to
+   30 mm from both edges at one corner of it, and every sheet's mid-plane is 0 to 6 mm above that point.
+3. Pressed: the head's hinge is within 0.01 rad of its bottom stop and the driver blade touches the top sheet.
+4. Released, for 50 consecutive control steps (1 s): the head's hinge is back up (at most 0.02 rad), no part of the
+   robot touches a sheet or the stapler, and every sheet moves at most 0.02 m/s.
+
+The episode fails at once, checked after every 2 ms physics substep, when: a sheet's origin is more than 1 mm below its
+resting height on the desk top (z = 0.78 m), leaves the desk's footprint (x 0.25 to 0.99 m, y -0.36 to 0.36 m) or the
+box x 0.20 to 1.10 m, y -0.45 to 0.45 m, z 0.70 to 1.20 m, or a sheet's corner is more than 15 mm below the desk top;
+the stapler's base moves more than 30 mm horizontally from its start or tilts more than 0.26 rad; a sheet or the
+stapler's base falls faster than 0.2 m/s while touching nothing; an arm link or the stand touches anything but the
+robot itself; a sheet or the stapler touches the floor or a desk leg; or the physics becomes unstable. The step budget
+is 6,000 control steps (120 s).
+"""
+
+[families.binder_page_load]
+# environment/sim/checker.py: features() (rings_open: both toggles >= open_rad; rings_closed: both <= closed_rad;
+# per hole: open_threaded = the right ring half's centre line crosses the hole disk (hole_capture_radius_m) exactly once
+# and the left half not at all; linked = the closed loop's signed crossing count is +-1 with one crossing; resting =
+# contact with the binder or the other page; over_cover = page centre (origin + 0.06 m along its x axis) inside a box
+# of the binder frame); placed() / closed_and_linked() / terminal() / still(); failure() (every substep: page origin
+# below desk_top - 0.002 or outside the workspace, binder shift / tilt, page-floor contact, hand or ring penetration of
+# a page, an untouched page falling faster than free_fall_m_s with no ring through its holes); runtime.py step() (the
+# stage machine: stages 1-3 in order, then hold_steps with every page within page_still_m / page_still_rad of its pose
+# at the window's start; RUNTIME_VERDICT in standard mode); task.json checker block (0.5, 0.05, 50, 0.03, 0.35, 0.0012,
+# 0.0035, 0.7, workspace, 0.003, 0.002, 0.03, 0.2), max_steps 6000; replay.py MAX_ROWS 6000.
+vars = { rows = "6,000", w_sharpa = "28", w_wuji = "26" }
+success = """
+Each page has three punched holes, one per ring. Four stages, in this order, checked at the end of each control step
+(50 Hz):
+1. Rings open: both toggle plates of the ring mechanism are at least 0.5 rad open.
+2. Pages placed: the rings are open; each of the six holes is threaded by the right half of its own ring exactly once
+   (the wire's centre line passes through the hole, within 3.5 mm of its centre) and not by the left half; the hand
+   touches neither page; each page rests on the binder or on the other page; and each page's centre lies over the
+   back cover.
+3. Rings closed: both toggle plates are at most 0.05 rad open, every hole is linked exactly once by its closed ring,
+   and both pages lie over the back cover.
+4. Final hold, for 50 consecutive control steps (1 s): stage 3 holds, the hand touches neither page nor the binder,
+   both pages rest on the binder or on each other, and each page stays within 2 mm and 0.03 rad of its pose at the
+   start of the hold.
+
+The episode fails at once, checked after every 2 ms physics substep, when: a page's origin is more than 2 mm below the
+desk top (z = 0.70 m) or leaves the box x 0.20 to 0.98 m, y -0.38 to 0.48 m, z 0.698 to 1.10 m; the binder moves more
+than 30 mm horizontally from its start or tilts more than 0.35 rad; a page touches the floor; a part of the hand
+penetrates a page by more than 3 mm, or a ring wire by more than 1.2 mm (a ring may enter a page only through its
+hole); a page touches nothing while it falls faster than 0.2 m/s and no ring half passes through any of its holes; or
+the physics becomes unstable. The step budget is 6,000 control steps (120 s).
+"""
+
+[families.envelope_letter_insert]
+# environment/sim/checker.py: geometry() (letter corners in the envelope frame; mouth line x = depth / 2; at_mouth:
+# the two leading corners >= mouth_entry_m past it, inside the seams (|y| <= width / 2 - side_seam + wall_tolerance)
+# and between the walls, the two trailing corners still outside; inserted: outermost corner <= outside_fraction_max *
+# letter depth beyond the mouth line, all corners inside the seams, in front of the bottom seam and between the walls);
+# violation() (every substep: below desk_top - below_desk_tolerance_m, outside the desk footprint or more than
+# max_height_above_desk_m above it, envelope shift / tilt, floor contact, letter-envelope penetration, robot (base_link
+# subtree minus the working hand) contact, through_wall() sample points inside a wall / seam / lip slab, unsupported
+# fall); at_rest(); runtime.py step() (stages 1-2 latched in order, then hold_steps of inserted + no hand contact on
+# letter or envelope + at rest; RUNTIME_VERDICT in standard mode); task.json (envelope depth 0.11, width 0.22, wall
+# 0.0008, gap 0.004, side_seam 0.003, bottom_seam 0.004; letter 0.099 x 0.21 x 0.002; checker block 0.01, 0.05,
+# 0.0006, 50, 0.01, 0.2, 0.002, 0.3, 0.05, 0.35, 0.1, 0.0007), desk, max_steps 6000; replay.py MAX_ROWS 6000.
+vars = { rows = "6,000", w_sharpa = "58", w_wuji = "54" }
+success = """
+The letter's corners are taken on its mid-plane and measured in the envelope's frame. "Inside the seams" means within
+the pocket's width between the two side seams (107 mm either side of the centre line, 0.6 mm tolerance); "between the
+walls" means the letter's mid-plane lies inside the 4 mm gap between the envelope's back and front walls, allowing
+for the letter's 2 mm thickness (0.6 mm tolerance). Three stages, in this order, checked at the end of each control
+step (50 Hz):
+1. At the mouth: the two leading corners are at least 10 mm past the mouth line, inside the seams and between the
+   walls, while the two trailing corners are still outside the mouth line.
+2. Inserted: the outermost corner is at most 4.95 mm (5 % of the letter's length) beyond the mouth line, and all four
+   corners are inside the seams, in front of the bottom seam and between the walls.
+3. Released, for 50 consecutive control steps (1 s): stage 2 holds, the hand touches neither the letter nor the
+   envelope, and both move at most 0.01 m/s and turn at most 0.2 rad/s.
+
+The episode fails at once, checked after every 2 ms physics substep, when: the letter's or the envelope's origin is
+more than 2 mm below the desk top (z = 0.70 m), more than 0.30 m above it, or outside the desk's footprint (x 0.18 to
+0.78 m, y -0.40 to 0.40 m); the envelope moves more than 50 mm horizontally from its start or tilts more than
+0.35 rad; the letter or the envelope touches the floor; the letter and the envelope interpenetrate by more than
+0.7 mm; a point of the letter's mid-plane lies inside the envelope's back wall, front wall, a side seam, the bottom
+seam or the mouth lip; the robot's arm, stand or parked left hand touches the letter or the envelope; the letter or the
+envelope touches nothing while its centre of mass falls faster than 0.1 m/s; or the physics becomes unstable. The step
+budget is 6,000 control steps (120 s).
+"""
+
+[families.book_page_turn]
+# environment/sim/checker.py: PageTurnChecker.update (target_leaf leaf_2 binding hinge angle: stage 1 > lifted 30 deg,
+# stage 2 > past_vertical 90 deg; laid: stage >= 2, angle > 170 deg, leaf_2_board touching a board of LEFT_STACK
+# (leaf_0, leaf_1, left_cover), hinge speed <= laid_max_speed_rad_s, every other leaf / cover within
+# other_leaf_tolerance_deg of its start, no robot contact with the book; hold_steps); hand_body = the wrist_stage
+# subtree plus arm_rig.robot_body_ids (stand, arms) and the left hand; invariant() (every substep: non-finite /
+# warnings, spine shift > book_max_displacement_m, spine rotation > book_max_rotation_deg, a book body COM (xipos) below
+# table_z - below_table_margin_m, another board's hinge > second_leaf_turn_deg from its start); task.json (30 / 90 /
+# 170 deg, 5 deg, 30 deg, 0.03 m, 10 deg, 0.002, 0.2, 50, table_z 0.78, max_steps 3000); runtime.py step(); replay.py
+# MAX_ROWS 3000.
+vars = { rows = "3,000", w_sharpa = "58", w_wuji = "54" }
+success = """
+The page to turn is leaf 2, the board leaf on top of the right-hand stack; its angle is its hinge angle at the spine,
+from its start. Three stages and a hold, in this order, checked at the
+end of each control step (50 Hz):
+1. Lifted: the page has turned more than 30°.
+2. Past vertical: it has turned more than 90°.
+3. Laid, held for 50 consecutive control steps (1 s): it has turned more than 170°; it touches the left-hand stack
+   (leaf 0, leaf 1 or the left cover); its hinge turns at most 0.2 rad/s; every other leaf and
+   both covers are within 5° of their start angles; and no part of the robot touches the book.
+
+The episode fails at once, checked after every 2 ms physics substep, when: the book's spine moves more than 30 mm or
+turns more than 10° from its start; the centre of mass of any part of the book is more than 2 mm below the desk top
+(z = 0.78 m); any other leaf turns more than 30° from its start angle, or either cover does (the book closing); or the
+physics becomes unstable. The step budget is 3,000 control steps (60 s).
+"""
+
+[families.tray_glass_carry]
+# environment/sim/checker.py: Checker.update (lifted: tray touches neither counter_0 nor counter_1, tray origin z >=
+# table_top_z + lift_height_m, both glasses seated = glass base z in the tray frame in [-3 mm, 2 mm +
+# glass_seat_tolerance_m]; placed (only after lifted): tray touches counter_1 only, |offset| <= target_tolerance_xy,
+# tilt <= placed_tilt_deg, |yaw| <= placed_yaw_deg (start yaw 0, assets/t48_tray_glasses.xml), seated; released: placed,
+# no wrist-stage-subtree geom touching tray or glass, glass tilt <= glass_upright_hold_deg, max linear speed <=
+# rest_speed_m_s, max angular speed <= rest_angular_speed_rad_s; hold_steps); Checker.violation (every substep: unstable,
+# glass tilt > spill_tilt_deg, glass outside glass_footprint_semi_axes ellipse, glass base z > 2 mm + glass_lifted_m or <
+# -10 mm, tray tilt > tray_tip_deg, body origin below table_top_z - below_table_margin_m or outside workspace, downward
+# speed > drop_speed_m_s, unsupported downward speed > unsupported_fall_speed_m_s, bottle contact, tray on counter_0
+# after stage 1, tray on counter_1 with |offset| > tolerance + drag_margin_m, object on floor); task.json; runtime.py
+# step(); replay.py MAX_ROWS 3000.
+vars = { rows = "3,000", w_sharpa = "56", w_wuji = "52" }
+success = """
+The tray's position is the bottom centre of its floor. The receiving counter's target point is (0.78, 0.00) m, and its
+tolerance is ±20 mm in x and ±30 mm in y. A glass is seated when its base is between 3 mm below and 8 mm above the tray
+floor, in the tray's frame. Three stages, in this order, checked at the end of each control step (50 Hz):
+1. Lifted: the tray touches neither counter, its base is at least 30 mm above the counter tops (z ≥ 0.91 m), and both
+   glasses are seated.
+2. Placed: the tray touches the receiving counter and not the source counter, its centre is within the target
+   tolerance, it is tilted at most 5° and turned at most 10° about the vertical from its start, and both glasses are
+   seated.
+3. Released, held for 50 consecutive control steps (1 s): the placed conditions; no part of either hand touches the
+   tray or a glass; both glasses are within 6° of vertical; and the tray and both glasses move at most 0.02 m/s and
+   turn at most 0.2 rad/s.
+
+The episode fails at once, checked after every 2 ms physics substep, when: a glass tilts more than 15° from vertical
+(spilled); a glass base leaves its footprint ellipse on the tray (semi-axes 0.165 m and 0.23 m), rises more than 22 mm
+above the tray floor or sinks more than 10 mm below it; the tray tilts more than 35°; the tray or a glass falls faster
+than 0.6 m/s, or falls faster than 0.2 m/s while unsupported (the tray touching no hand and no counter, a glass
+touching no hand, counter, tray or other glass); the steel bottle touches the tray, a glass or a hand; the tray touches
+the source counter after stage 1; the tray touches the receiving counter while its centre is more than 40 mm (x) or
+50 mm (y) from the target point; the tray or a glass touches the floor, has its origin more than 20 mm below the counter
+tops (z = 0.88 m), or leaves the work box x 0 to 1.15 m, y -0.6 to 0.6 m, z 0.86 to 1.12 m; or the physics becomes
+unstable. The step budget is 3,000 control steps (60 s).
+"""
+
+[families.batter_whisk]
+# environment/sim/checker.py: Checker.update (all checks once per control after the substeps; stage 0 pickup: robot
+# contact, no counter or bowl contact, lowest outline point >= pickup_clearance_m above table_z, pickup_steps; stage 2
+# in_batter (measure(): head site in the bowl frame, 0.003 <= z <= batter_height() = 35.7 mm, r <= inner_radius(z) -
+# wall_margin_m); net unwrapped turns with head_radius >= min_orbit_radius_m, reset on leaving the batter;
+# revolutions_required; stage 3 drain: robot contact, tip_above_rim >= drain_clearance_m, head xy radius <=
+# drain_max_radius_m, axis tilt <= drain_max_tilt_deg, drain_steps; stage 4 rest: counter contact, no robot / bowl
+# contact, |axis_z| <= sin(rest_max_axis_deg), COM >= rest_min_distance_m from the bowl axis, speed / spin limits,
+# hold_steps); failures in the same function (bowl_max_tilt/slide/lift, floor, COM below table_z or outside workspace,
+# falling_unsupported, counter contact or > max_free_steps without robot contact before placed, >
+# max_unsupported_steps after placed, episode_budget at max_steps); is_hand = every body outside the bowl and whisk
+# trees; runtime.py step() (unstable flag from substep warnings); task.json predicate; replay.py MAX_ROWS 4000.
+vars = { rows = "4,000", w_sharpa = "58", w_wuji = "54" }
+success = """
+The batter is not simulated. Whisking is measured on the head point, a point inside the whisk head 20 mm from the wire
+tip along the whisk axis. The head point is in the batter when it is between 3 mm and 35.7 mm above the bowl's inner
+floor origin, in the bowl's frame, and at least 4 mm inside the bowl's inner wall. "The robot" below means any part of
+the arms, hands or stand. Five stages, in this order, checked at the end of each control step (50 Hz):
+1. Picked up, for 10 consecutive control steps: the robot touches the whisk, the whisk touches neither the counter nor
+   the bowl, and its lowest point is at least 30 mm above the counter top.
+2. Immersed: the head point is in the batter.
+3. Whisked: the head point has made at least 5 net revolutions about the bowl's axis during one continuous stay in the
+   batter. Leaving the batter resets the count to zero. Steps with the head point less than 8 mm from the axis do not
+   add to the count.
+4. Drained, for 25 consecutive control steps: the robot touches the whisk, the wire tip is at least 10 mm above the
+   bowl rim, the head point is within 55 mm of the bowl's axis, and the whisk hangs head-down with its axis within 30°
+   of vertical.
+5. Set down, held for 50 consecutive control steps (1 s): the whisk touches the counter top and touches neither the
+   robot nor the bowl; its axis is within 30° of horizontal; its centre of mass is at least 0.12 m from the bowl's
+   axis; and it moves at most 0.02 m/s and turns at most 0.3 rad/s.
+
+The episode fails at once, checked at the end of each control step, when: the bowl tilts more than 10°, slides more
+than 30 mm or lifts more than 20 mm from its start; the bowl or the whisk touches the floor, or its centre of mass is
+below the counter top (z = 0.68 m) or outside the work box x 0.25 to 0.99 m, y -0.36 to 0.36 m, z 0.6 to 1.5 m; after
+stage 1, the whisk touches nothing, its lowest point is more than 2 mm above the counter and it falls faster than
+0.2 m/s; after stage 1 and before it is put on the counter, the whisk touches the counter, or goes more than 10
+control steps in a row without robot contact. The whisk is put on the counter when, after stage 4, it first touches
+the counter while the robot still touches it. After that, the episode fails if the whisk touches neither the robot nor
+the counter for more than 5 control steps in a row. A physics warning in any substep also fails the episode. The step
+budget is 4,000 control steps (80 s).
+"""
+
+[families.bicycle_pump_stroke]
+# environment/sim/checker.py: PumpChecker.substep (every substep: latched = head_slide <= -head_travel_m +
+# seat_tolerance_m and lever_angle >= lever_closed_rad - lock_tolerance_rad; connected latches; stroke armed at depth >=
+# down_depth_fraction * travel while latched, counted at depth <= return_depth_fraction * travel while latched, disarmed
+# when unlatched; head_disconnected / head_forced_off with unseat_m and unlock_rad; disconnected latches at lever <=
+# open_rad and head >= -head_travel_m + off_m after inflation); PumpChecker.violation (non-finite, |qvel| > 1e3,
+# warnings, COM below table_z, tilt > max_tilt_rad, base shift > max_displacement_m, lift > max_lift_m, floor contact);
+# PumpChecker.control (stages; release: depth <= max_depth_fraction * travel, no robot contact with pump geoms or the
+# head, tilt <= release max_tilt_rad, pump / handle speed limits, hold_steps); robot = scene.robot_body_ids; pressure =
+# initial_gauge_pa + strokes * 380 Pa reaches target_gauge_pa at 28 strokes; runtime.py step() (episode_budget at
+# max_steps); task.json; replay.py MAX_ROWS 5000.
+vars = { rows = "5,000", w_sharpa = "58", w_wuji = "54" }
+success = """
+Piston depth is how far the handle is pushed down from its top position (full travel 0.20 m). Air and the tyre are not
+simulated: the gauge reading is a count of strokes. The head is connected when its slide is within 0.5 mm of its seat
+on the valve stem and its thumb lock lever is at 1.5 rad or more (closed is 1.65 rad). Stages, in this order:
+1. Connected: the head is connected once. This is checked after every 2 ms physics substep.
+2. Strokes: 28 strokes are counted. A stroke counts when the handle reaches a depth of at least 0.18 m and later comes
+   back to a depth of at most 0.04 m, with the head connected at every substep in between. A substep with the head
+   not connected cancels the stroke in progress. Shallower strokes do not count and are not failures.
+3. Disconnected: after the 28 strokes, the lock lever is opened to 0.5 rad or less while the head is at least 12.5 mm
+   back from its seat. This is checked after every substep.
+4. Released, held for 50 consecutive control steps (1 s), checked at the end of each control step (50 Hz): the
+   handle depth is at most 10 mm; no part of the robot touches the pump or its head; the pump is tilted at most 5°;
+   and the pump body and the handle each move at most 0.02 m/s.
+
+The episode fails at once, checked after every 2 ms physics substep, when: after the head is first connected and
+before the 28 strokes, the head moves more than 2 mm back from its seat or the lock lever drops below 1.2 rad; after
+the 28 strokes, the head is more than 2 mm back from its seat while the lever is at 1.2 rad or more; the pump tilts
+more than 15°, its base moves more than 30 mm sideways or rises more than 20 mm from its start; the pump's centre of
+mass is below the bench top (z = 0.7 m) or any part of the pump touches the floor; or the physics becomes unstable.
+The step budget is 5,000 control steps (100 s).
+"""
+
+[families.remote_battery_swap]
+# environment/sim/checker.py: Checker.features (cover_open: cover_slide >= cover_open_m; old_cell_in_tray: old cell
+# origin in the tray frame within tray_inner_half, z <= tray_rest_max_height_m, touching tray_floor, no robot contact;
+# new_cell_seated: new cell origin in the remote frame within seat_tol_x/y/z_m of slot_center_local, cell axis within
+# seat_axis_tol_deg of the remote +x axis (the gold positive contact, scene.py positive_terminal_block), touching both
+# cradle ribs, no robot contact; cover_closed: cover_slide <= cover_closed_m and tab_depth <= latch_tab_up_max_m);
+# Checker.control (one stage latched per control, in order; hold: all latched, stages 2-4 true, no robot contact with
+# remote (with its door), tray or cells, speed <= rest_speed_m_s, spin <= rest_spin_rad_s, hold_steps; new cell lifted
+# = origin > start z + lift_height_m while off the table); Checker.substep (every substep: body origin below table_z
+# or outside workspace, remote / tray displacement and tilt, left arm or left hand contact, floor contact, old cell on
+# table, new cell on table after lifted, fall faster than sqrt(2 g drop_height_m) without robot contact, fall faster
+# than unsupported_fall_speed_m_s without any contact); robot = wrist_stage and base_link subtrees; runtime.py step()
+# (warnings, episode_budget); task.json checker block; replay.py MAX_ROWS 6000.
+vars = { rows = "6,000", w_sharpa = "58", w_wuji = "54" }
+success = """
+The door's slide is how far the battery door is slid open from its closed position. The robot means any part of the
+arms, hands or stand; the remote includes its door. Four stages, in this order, checked at the end of each control
+step (50 Hz); each counts once it has been met, and at most one stage is reached per control step:
+1. Door open: the door is slid open at least 60 mm.
+2. Old cell in the tray: the gray cell's centre, in the tray's frame, is within 37 mm (x) and 32 mm (y) of the tray
+   centre and at most 14 mm above it; the cell touches the tray floor; and the robot does not touch it.
+3. New cell seated: the green cell's centre, in the remote's frame, is within 5 mm (x), 3 mm (y) and 2 mm (z) of the
+   slot centre; its + end points toward the gold contact, its axis within 10° of the slot axis; it touches both
+   cradle ribs; and the robot does not touch it.
+4. Door closed: the door's slide is at most 2 mm and the latch tab is back up, pressed in at most 1.5 mm.
+
+Then, held for 50 consecutive control steps (1 s): stages 2, 3 and 4 are all met again (the door may not reopen); the
+robot touches neither the remote, the tray nor a cell; and the remote, the tray and both cells each move at most
+0.02 m/s and turn at most 0.5 rad/s.
+
+The new cell counts as lifted once, at the end of a control step, its centre is more than 10 mm above its start height
+and it does not touch the table. The episode fails at once, checked after every 2 ms physics substep, when: a cell,
+the door, the remote or the tray has its origin below the table top (z = 0.3 m) or outside the work box x -0.37 to
+0.47 m, y -0.34 to 0.34 m, z 0.3 to 0.8 m, or touches the floor; the remote or the tray moves more than 30 mm sideways
+or tilts more than 15° from its start; the parked left arm or the left hand touches the remote, the tray or a cell;
+the gray cell touches the table top; the green cell touches the table top after it has been lifted; a cell falls
+faster than 0.886 m/s (a drop from 40 mm) while the robot does not touch it, or faster than 0.5 m/s while it touches
+nothing; or the physics becomes unstable. The step budget is 6,000 control steps (120 s).
+"""
+
+[families.assemble_hamburger]
+# environment/sim/runtime.py (no checker.py): Session.step (complete = all six recipe body origins within
+# alignment_tolerance_m of target_xy horizontally, heights strictly increasing in recipe order, all five adjacent
+# pairs in contact, bottom_bun touching serving_plate, no wrist_stage-subtree contact with an ingredient, max tilt <=
+# tilt_tolerance_rad, every ingredient body's linear / angular speed <= linear_ / angular_speed_tolerance, peak bend
+# <= max_bend_rad; released_hold_steps; episode_budget at max_steps); Session.invariant_violation (every substep: an
+# ingredient body origin below table_z or outside workspace, an ingredient geom touching table or floor, a *_bend_*
+# hinge (cheese and lettuce wings, scene.py) beyond max_bend_rad) plus physics warnings; task.json; replay.py MAX_ROWS
+# 7500.
+vars = { rows = "7,500", w_sharpa = "28", w_wuji = "26" }
+success = """
+The six layers are the bottom bun, patty, cheese, tomato, lettuce and top bun, in that order from the bottom. The cheese
+and the lettuce each have two hinged side wings. There are no stages. Success needs one condition, held for 100
+consecutive control steps (2 s), checked at the end of each control step (50 Hz):
+- the centre of every layer is within 12 mm, horizontally, of the plate centre (x = -0.16 m, y = 0);
+- the layer centres rise in recipe order, and each layer touches the next one up;
+- the bottom bun touches the plate;
+- no part of the hand touches any layer;
+- every layer is tilted at most 0.22 rad (12.6°) from level;
+- every part of every layer moves at most 0.025 m/s and turns at most 0.25 rad/s.
+
+The episode fails at once, checked after every 2 ms physics substep, when: any part of a layer has its origin below
+the table top (z = 0.3 m) or outside the work box x -0.64 to 0.64 m, y -0.52 to 0.52 m, z 0.3 to 0.8 m; any layer
+touches the table top or the floor; a wing of the cheese or the lettuce bends more than 0.65 rad; or the physics
+becomes unstable. The step budget is 7,500 control steps (150 s).
+"""
+
+[families.paper_half_fold]
+# environment/sim/runtime.py (no checker.py): Session.step (40 substeps of physics_dt 0.5 ms per control; every
+# substep: physics warnings, shell.max_strain > max_strain (running max of |edge length / rest length - 1|, shell.py
+# apply), support_failure on every flex vertex; released_goal held goal_hold_steps; episode_budget at max_steps);
+# Session.features (fold_angle = atan2(max(dz, 0), dx) from the mean of grid column nx//2 to the mean of the last
+# column; edge_alignment = mean distance between the last and first columns; crease = plastic rest angles of the
+# centre-line hinges: mean > goal_crease_angle_rad and share > it >= goal_crease_coverage; hand_contacts = flex
+# contacts with a geom of a non-world body); released_goal / folded / creased / on_table; instance.json config and
+# support; replay.py MAX_ROWS 1500.
+vars = { rows = "1,500", w_sharpa = "28", w_wuji = "26" }
+success = """
+The sheet is simulated as a 9 × 5 grid of points (vertices) with elastic and plastic bending. Its left half is fixed.
+The fold angle is the angle of the line from the centre line to the free edge, measured up from the table: flat is 0,
+folded fully over is π rad. The crease is the permanent (plastic) bend of the hinges on the centre line. Stretch is
+the largest relative change in length of any edge of the sheet so far in the episode. There are no stages. Success
+needs one condition, held for 100 consecutive control steps (2 s), checked at the end of each control step (50 Hz):
+- the fold angle is above 2.6 rad;
+- the free edge is within 18 mm of the fixed edge (mean distance between matching points);
+- the crease is above 2.2 rad on average, and at least 90% of the centre-line hinges are above 2.2 rad;
+- no part of the hand touches the paper;
+- the stretch is below 8%;
+- every vertex is over the table top (x from -0.345 to 0.135 m, y from -0.30 to 0.30 m) and at most 2 mm below it
+  (z ≥ 0.298 m).
+
+The episode fails at once, checked after every 0.5 ms physics substep (40 per control step), when: any vertex is more
+than 10 mm below the table top (z < 0.29 m); any vertex leaves the work box x -0.03 to 0.19 m, y -0.09 to 0.09 m,
+z ≤ 0.45 m; the stretch exceeds 8%; or the physics becomes unstable. The step budget is 1,500 control steps (30 s).
+"""
+
+[families.sweep_dustpan]
+# environment/sim/checker.py: SweepChecker.observe (after every 0.5 ms mj_step; contacts count at efc force >=
+# contact_force_floor_n; brushed latches on a bristle_geom_* contact; direct robot (base_link subtree) contact with a
+# piece -> robot_touched_debris; robot-robot contact other than within one hand -> robot_self_collision; a tool touched
+# by a robot geom outside its holding hand with force > max_nonholding_tool_force_n; from settle_s on: fewer than
+# min_grip_contacts hand geoms on the shaft at >= grip_contact_force_n -> <tool>_dropped, grip-marker drift in the palm
+# frame >= max_grip_drift_m or relative rotation >= max_grip_rotation_rad -> tool_slipped_in_hand; debris origin outside
+# workspace_x/y_m or height above the floor > workspace_max_height_above_floor_m or < -workspace_max_depth_below_floor_m;
+# terminal: settled, every piece contained() (whole collision shape inside the pan floor volume, margin, half depth,
+# max height, in the pan frame) and touching a pan_support_geom, pan origin >= min_pan_lift_m above the floor, max
+# debris speed < max_debris_speed_m_s and spin < max_debris_angular_speed_rad_s, all brushed; terminal_hold_steps);
+# runtime.py _advance (one row = one mj_step; warnings or non-finite qacc -> unstable_physics; episode_budget at
+# max_rows); instance.json predicate; replay.py max_rows 160000.
+vars = { rows = "160,000", w_sharpa = "58", w_wuji = "54" }
+success = """
+Here a control step is one 0.5 ms physics step (2,000 Hz), and every check below runs after each one. The right hand
+starts holding the broom and the left hand the dustpan. A contact counts only when it carries at least 0.001 N. A
+piece is brushed once any of the broom's bristles has touched it. A piece is in the pan when its whole collision shape
+lies inside the pan floor's volume, in the pan's frame (within 1 mm of the floor's side edges, at most 131 mm forward
+or back of its centre, and no higher than 0.11 m), and it touches the pan's floor, lip, back or a side. Success needs
+one condition, held for 2,000 consecutive physics steps (1 s):
+- all six pieces have been brushed;
+- all six pieces are in the pan;
+- the pan's origin is at least 0.05 m above the floor;
+- every piece moves slower than 0.03 m/s and turns slower than 0.8 rad/s;
+- the first 1.2 s of the episode (the settling period) are over.
+
+The episode fails at once when: a piece's centre leaves the floor work area (x 0.45 to 1.0 m, y -0.5 to 0.4 m, from
+10 mm below to 0.25 m above the floor); any part of the robot touches a piece; two parts of the robot touch each other,
+other than two parts of the same hand; a part of the robot other than a tool's own hand presses that tool with more
+than 0.01 N; after the settling period, fewer than two parts of a tool's hand touch its shaft with at least 0.01 N
+each (the tool dropped), or a tool slips in its hand by 25 mm or more, or turns in it by 0.25 rad or more, from where it
+sat at the end of the settling period; or the physics becomes unstable. The step budget is 160,000 physics steps
+(80 s).
+"""
+
+[families.pot_shelf_transfer]
+# environment/sim/runtime.py (no checker.py): Session.step (one row = one 2 ms mj_step; warnings -> unstable_physics;
+# step_budget at max_rows); Session._measure (load-bearing contact = normal force >= contact_force_n; hand upward load
+# per hand; other pot contacts with world geoms; pot vs non-hand robot link and every robot contact other than within
+# one hand -> bad); Session._evaluate (fell_below_z_m, workspace, tipped_tilt_rad, > max_free_steps without any pot
+# contact, max_drop_speed_m_s, other world contact, bad, max_hand_penetration_m, hinge overshoot >
+# max_joint_overshoot_rad; stage 1: lift_steps total (not consecutive) of base z > lift_min_z_m, no worktop / board
+# support, each hand load >= min_hand_up_load_n; stage 2: _terminal held hold_steps); Session._terminal (target_xy /
+# target_z tolerances, upright_tilt_rad, speed limits, vessel_radius_m circle on the board, board support and no other
+# contact geom, collision AABB inside the bay with front_overhang_m, hand_clearance >= withdrawn_clearance_m);
+# task.json predicate; replay via Session.replay / hands.read_trajectory max_rows 30000.
+vars = { rows = "30,000", w_sharpa = "58", w_wuji = "54" }
+success = """
+Here a control step is one 2 ms physics step (500 Hz), and every check below runs after each one. The pot's position is
+the centre of its base. A contact carries load when its normal force is at least 0.02 N. Two stages, in this order:
+1. Lifted, for 250 physics steps (0.5 s) in total, not necessarily in a row: the pot's base is above z = 0.785 m; no
+   loaded contact joins the pot to the worktop or the shelf board; and each hand pushes the pot upward with at least
+   0.5 N.
+2. Placed, held for 1,000 consecutive physics steps (2 s): the pot's base is within 40 mm horizontally of the target
+   (0.46, 0.31) m and within 12 mm of its height (z = 0.79 m); the pot is tilted at most 0.1 rad; it moves at most
+   0.03 m/s and turns at most 0.15 rad/s; the vessel (radius 0.143 m) lies within the shelf board's outline; the pot has
+   a loaded contact with the shelf board and touches nothing else; the pot's collision shape lies inside the shelf
+   compartment (between the side walls, from 50 mm in front of the board's front edge to the back wall, below the
+   shelf top, and no lower than 12 mm below the board top); and no part of either hand is within 40 mm of the pot.
+
+The episode fails at once when: the pot's base falls below z = 0.7 m or leaves the work box x -0.1 to 1.1 m, y -0.5
+to 0.85 m, z 0.7 to 1.45 m; the pot tilts more than 0.5 rad; the pot touches nothing for more than 30 physics steps in
+a row, or falls faster than 0.6 m/s; with load, the pot touches anything other than the two hands, the worktop and the
+shelf board, or any robot part other than a hand; with load, a robot part touches the furniture, the floor or another
+robot part, other than two parts of the same hand; a hand presses more than 3 mm into the pot; any joint passes its
+range by more than 0.005 rad; or the physics becomes unstable. The step budget is 30,000 physics steps (60 s).
+"""
+
+# ---------------------------------------------------------------------------------------------------------------------
+# The six essential families: B/privileged/environment/checker.py Checker.update (ordered stages, each held for its
+# hold_steps consecutive control samples with window_valid, i.e. its bounds true at every substep; a stage-completing
+# sample does not count for the next; invariants and the active stage's guards fail at once; terminal hold after the
+# last stage; missing / non-finite features fail), runtime.py Session.step (10 substeps of 2 ms; invariants and guards
+# checked after every substep; force / speed are the peaks over the step; BADQPOS / BADQVEL / BADQACC / BADCTRL ->
+# unstable_physics; locked_wrist_targets_match: a row whose six wrist targets differ from initial_wrist beyond float32
+# rounding raises ValueError: privileged replay.py -> bad_trajectory, standard server.py do_submit -> HTTP 400 at that
+# row), Session._contact_features (force = largest contact force on a task_* geom; contacts / contact_<finger> =
+# fingertip_collision geoms touching a task geom with > 0.01 N; support = task-geom contacts with world-body geoms
+# > 0.01 N), Session.features (speed = max |qvel| over the task dofs; palm_drift / wrist_rotation from the reset palm
+# pose); no step budget (sim/server.py family_budget() returns None); replay.py MAX_ROWS 50,000. Bounds: each task's
+# environment/sim/instance.json (stages, terminal, invariants, parameters.initial_wrist).
+
+[families.essential_cube_layer]
+# essential_cube_layer_scene.py -> essential_articulated.py features (body_drift / body_rotation of the cube body from
+# its reset pose in the world frame; base_contacts / mechanism_contacts = fingers, any right_<finger>_ link, touching
+# task_cube_base / task_cube_top_collision with >= 0.005 N); top_turn = qpos of the top-layer hinge (axis cube z);
+# instance.json stages quarter_turn / return_zero / repeat_quarter_turn (hold 5), terminal (hold 15), invariants.
+vars = { rows = "50,000", w_sharpa = "28", w_wuji = "26" }
+success = """
+The six wrist targets are locked at (-0.08, 0, 0.29, 0, 0, 0) (metres, then radians).
+{vars[wrist]}
+
+The top layer's turn is its hinge angle relative to the cube's body, positive counter-clockwise seen from above. A
+finger counts as touching a part when any of its links presses it with at least 0.005 N. Every check below runs after
+each 2 ms physics substep (ten per control step). Three stages, in this order, then a final hold. A control step counts
+toward a stage or the final hold only when its conditions held at every substep of that step:
+1. Quarter turn, for 5 consecutive control steps: the turn is between 1.4508 and 1.6908 rad (π/2 ± 0.12), at least
+   one finger touches the body and at least one touches the top layer.
+2. Back to zero, for 5 consecutive control steps: the turn is within ±0.12 rad, with the same finger contacts.
+3. Quarter turn again, for 5 consecutive control steps: as in stage 1.
+4. Final hold, for 15 consecutive control steps: the turn is between 1.4508 and 1.6908 rad, at least one finger
+   touches the body, and no part of the cube moves faster than 0.12 (m/s or rad/s).
+
+The episode fails at once when: any contact force on the cube exceeds 80 N; any part of the cube moves faster than 20
+(m/s or rad/s); the palm moves more than 6 mm or turns more than 0.035 rad from its start; the cube touches anything
+other than the hand with more than 0.01 N; the cube's body moves more than 20 mm or turns more than 0.35 rad from its
+start; or the physics becomes unstable. There is no step budget.
+"""
+
+[families.essential_held_joystick]
+# essential_held_joystick_scene.py features (body_drift / body_rotation of the controller from its reset pose;
+# base_contacts = fingers, any right_<finger>_ geom, touching a task_controller_shell* geom with >= 0.005 N);
+# joystick_x / joystick_y = qpos of the two stick hinges (range +-0.48 rad); instance.json stages left / front /
+# right / back / center (hold 5), terminal (hold 15), invariants.
+vars = { rows = "50,000", w_sharpa = "28", w_wuji = "26" }
+success = """
+The six wrist targets are locked at (-0.08, 0, 0.29, 0, 0, 0) (metres, then radians).
+{vars[wrist]}
+
+The stick's tilt is measured as its two hinge angles x and y relative to the controller's shell (each stops at ±0.48
+rad). A finger holds the shell when any of its links presses the shell with at least 0.005 N. Every check below runs
+after each 2 ms physics substep (ten per control step). Five stages, in this order, then a final hold. Each stage needs
+5 consecutive control steps, and a control step counts only when its conditions held at every substep of that step. In
+every stage at least one finger holds the shell.
+1. Toward the wrist: x between -0.4 and -0.2 rad, y within ±0.1 rad.
+2. Toward the little-finger side: x within ±0.1 rad, y between 0.2 and 0.4 rad.
+3. Toward the fingertips: x between 0.2 and 0.4 rad, y within ±0.1 rad.
+4. Toward the thumb side: x within ±0.1 rad, y between -0.4 and -0.2 rad.
+5. Centre: x and y within ±0.1 rad.
+6. Final hold, for 15 consecutive control steps: x and y within ±0.08 rad, at least one finger holds the shell, and no
+   part of the controller moves faster than 0.12 (m/s or rad/s).
+
+The episode fails at once when: any contact force on the controller exceeds 80 N; any part of it moves faster than
+20 (m/s or rad/s); the palm moves more than 6 mm or turns more than 0.035 rad from its start; the controller touches
+anything other than the hand with more than 0.01 N; the controller's shell moves more than 20 mm or turns more than
+0.35 rad from its start; or the physics becomes unstable. There is no step budget.
+"""
+
+[families.essential_cube_reorient]
+# essential_cube_reorient_scene.py -> essential_inhand.py features (palm frame PALM_AXES: x along the fingers, y
+# across the palm, z out of the palm; cube_error_1 = angle to the +90 deg turn about palm y, cube_error_2 = then +90
+# deg about palm x, cube_error_3 = angle to the start orientation; object_displacement in the palm frame;
+# object_height = world z; object_hand_contacts = contacts > 0.005 N with the hand below the palm body); contacts =
+# fingertips > 0.01 N (runtime.py); instance.json stages (hold 5), terminal (hold 25), invariants.
+vars = { rows = "50,000", w_sharpa = "28", w_wuji = "26" }
+success = """
+The six wrist targets are locked at (-0.08, 0, 0.29, 0, 0, 0) (metres, then radians).
+{vars[wrist]}
+
+The ball's orientation is measured in the palm's frame, relative to its start. A fingertip counts when it presses the
+ball with more than 0.01 N. Every check below runs after each 2 ms physics substep (ten per control step). Three stages,
+in this order, then a final hold. A control step counts toward a stage or the final hold only when its conditions held
+at every substep of that step:
+1. First quarter turn, for 5 consecutive control steps: the ball is within 0.16 rad of its start orientation turned
+   90° about the palm's across-palm axis (its top moving toward the fingertips); 2 to 5 fingertips touch it; and it
+   turns slower than 0.25 rad/s and moves slower than 0.25 m/s.
+2. Second quarter turn, for 5 consecutive control steps: within 0.16 rad of that orientation turned a further 90°
+   about the palm's along-finger axis (its top moving toward the thumb side), with the same contact and speed limits.
+3. Back to the start, for 5 consecutive control steps: within 0.16 rad of its start orientation, with the same
+   contact and speed limits.
+4. Final hold, for 25 consecutive control steps: within 0.16 rad of its start orientation, 2 to 5 fingertips touch it,
+   and it moves and turns slower than 0.06 (m/s or rad/s).
+
+The episode fails at once when: any contact force on the ball exceeds 80 N; it moves faster than 12 (m/s or rad/s);
+the palm moves more than 3 mm or turns more than 0.01 rad from its start; the ball touches anything other than the
+hand with more than 0.01 N; no part of the hand touches it with more than 0.005 N; its centre moves more than 70 mm
+from its start place in the palm's frame, or is below z = 0.18 m or above z = 0.6 m; or the physics becomes
+unstable. There is no step budget.
+"""
+
+[families.essential_pen_regrasp]
+# essential_pen_regrasp_scene.py -> essential_inhand.py features (pen_axial = palm-frame displacement along the
+# initial pen axis; pen_angle = angle between the current and initial axes; pen_grip_contacts / pen_grip_<finger> =
+# fingertips > 0.01 N with the contact point within grip_band_half_width_m (15 mm) of grip_band_z (24.7 mm) along the
+# pen axis; pen_palm_contacts = contacts > 0.01 N with palm* geoms; pen_initial_* are reset evidence, fixed per
+# episode); contact_<finger> = fingertip > 0.01 N (runtime.py); instance.json stages (hold 5), terminal (hold 25),
+# invariants.
+vars = { rows = "50,000", w_sharpa = "28", w_wuji = "26" }
+success = """
+The six wrist targets are locked at (-0.08, 0, 0.29, 0, 0, 0) (metres, then radians).
+{vars[wrist]}
+
+The pen's slide is how far it has moved, in the palm's frame, along the direction it pointed at the start; its swing is
+the angle between its axis and that start direction. A fingertip counts when it presses the pen with more than 0.01 N;
+it is on the grip band when that contact lies within 15 mm of the band's centre, 24.7 mm along the pen's axis from its
+origin. Every check below runs after each 2 ms physics substep (ten per control step). Two stages, in this order, then a
+final hold. A control step counts toward a stage or the final hold only when its conditions held at every substep of
+that step:
+1. Slide, for 5 consecutive control steps: the slide is between 24 and 36 mm, the swing at most 0.2 rad, and 2 to 5
+   fingertips touch the pen.
+2. Swing and tripod grip, for 5 consecutive control steps: the slide is between 24 and 36 mm; the swing is between
+   0.65 and 0.92 rad; the thumb, index and middle fingertips each touch the pen on the grip band, and 3 to 5
+   fingertips are on the band; and the palm does not touch the pen with more than 0.01 N.
+3. Final hold, for 25 consecutive control steps: the stage 2 conditions, and no part of the pen moves faster than 0.06
+   (m/s or rad/s).
+
+The episode fails at once when: any contact force on the pen exceeds 80 N; it moves faster than 12 (m/s or rad/s);
+the palm moves more than 3 mm or turns more than 0.01 rad from its start; the pen touches anything other than the hand
+with more than 0.01 N; no part of the hand touches it with more than 0.005 N; its centre moves more than 70 mm from
+its start place in the palm's frame, or is below z = 0.18 m or above z = 0.6 m; or the physics becomes unstable. There
+is no step budget.
+"""
+
+[families.essential_rotary_gait]
+# essential_rotary_gait_scene.py -> essential_rotary_multi.py features (turn = qpos of the unlimited "turn" hinge;
+# rotor fingers = fingers, any right_<finger>_ geom, touching task_rotor with > 0.005 N; rotor_hand_contacts = such
+# contacts with right_* / palm* geoms; rotor_handoffs += 1 when the finger set, stable for 0.04 s, differs from the
+# previous stable set and shares a finger with it); speed = max |qvel| (runtime.py); instance.json stages
+# two_forward_turns / one_reverse_turn (hold 5), terminal (hold 25), invariants.
+vars = { rows = "50,000", w_sharpa = "28", w_wuji = "26" }
+success = """
+The six wrist targets are locked at (-0.08, 0, 0.29, 0, 0, 0) (metres, then radians).
+{vars[wrist]}
+
+The knob's turn is its unwrapped hinge angle from the start, positive clockwise seen looking at its face. A finger
+touches the knob when any of its links presses it with more than 0.005 N. A handoff is counted when the set of fingers
+touching the knob has stayed the same for 0.04 s, differs from the previous such set and shares at least one finger with
+it. Every check below runs after each 2 ms physics substep (ten per control step). Two stages, in this order, then a
+final hold. A control step counts toward a stage or the final hold only when its conditions held at every substep of
+that step:
+1. Two turns forward, for 5 consecutive control steps: the turn is between 12.4464 and 12.6864 rad (4π ± 0.12), at
+   least 4 handoffs have been counted, at least one finger touches the knob, and it turns slower than 0.25 rad/s.
+2. One turn back, for 5 consecutive control steps: the turn is between 6.1632 and 6.4032 rad (2π ± 0.12), at least one
+   finger touches the knob, and it turns slower than 0.25 rad/s.
+3. Final hold, for 25 consecutive control steps: the turn is between 6.1632 and 6.4032 rad, at least one finger
+   touches the knob, and it turns slower than 0.06 rad/s.
+
+The episode fails at once when: any contact force on the knob exceeds 80 N; it turns faster than 12 rad/s; the palm
+moves more than 3 mm or turns more than 0.01 rad from its start; no part of the hand touches the knob with more than
+0.005 N; or the physics becomes unstable. There is no step budget.
+"""
+
+[families.essential_two_object]
+# essential_two_object_scene.py features (a/b_hand_contacts = contacts > 0.005 N with bodies below the palm;
+# a/b_finger_contacts = fingers whose summed force on the walnut > 0.005 N) on top of essential_rotary_multi.py
+# (palm-frame a/b_position_error and a/b_orientation_error from the start; a_quarter_turn_error = angle to +90 deg
+# about palm y; a/b_support = contacts > 0.005 N with world-body geoms; ball_pair_contacts; deposit_support_a =
+# contacts > 0.005 N with ball_a_deposit; a_deposit_distance = horizontal distance to ball_a_deposit; a_height =
+# world z; a linear / angular speed); speed = max |qvel| over both walnuts (runtime.py); instance.json stages with
+# guards (hold 5), terminal (hold 25), invariants.
+vars = { rows = "50,000", w_sharpa = "28", w_wuji = "26" }
+success = """
+The six wrist targets are locked at (-0.08, 0, 0.29, 0, 0, 0) (metres, then radians).
+{vars[wrist]}
+
+Walnut poses are measured in the palm's frame, relative to their start. A contact counts when it carries more than 0.005
+N; a finger touches a walnut when its links press it with more than 0.005 N in total. The speed is the fastest motion of
+either walnut (m/s or rad/s). Every check below runs after each 2 ms physics substep (ten per control step). Three
+stages, in this order, then a final hold. A control step counts toward a stage or the final hold only when its
+conditions held at every substep of that step:
+1. Turn A, for 5 consecutive control steps: A is within 0.16 rad of its start orientation turned 90° about the palm's
+   across-palm axis (its top moving toward the fingertips), 1 to 5 fingers touch A, and the speed is below 0.25.
+   While this stage is active, the episode fails if the hand stops touching A, A touches anything other than the
+   hand, A moves more than 35 mm from its start place, or the speed exceeds 12.
+2. Return A, for 5 consecutive control steps: A is within 0.16 rad of its start orientation, 1 to 5 fingers touch A,
+   and the speed is below 0.25, with the same failures while active.
+3. Release A, for 5 consecutive control steps: the hand does not touch A, A touches the catch tray's floor, and A is
+   within 40 mm horizontally of the tray floor's centre.
+4. Final hold, for 25 consecutive control steps: the stage 3 conditions, 1 to 5 fingers touch B, and the speed is
+   below 0.06.
+
+The episode fails at once when: any contact force on a walnut exceeds 80 N; the palm moves more than 3 mm or turns more
+than 0.01 rad from its start; the walnuts touch each other; B moves more than 15 mm or turns more than 0.2 rad from its
+start in the palm's frame, touches anything other than the hand, has no single hand contact above 0.005 N, or has no
+finger touching it; A moves faster than 2.5 m/s or turns faster than 80 rad/s; A's centre is below z = 0.135 m or above
+z = 0.6 m, or more than 0.1 m horizontally from the tray floor's centre; or the physics becomes unstable. There is no
+step budget.
+"""
+
+# Per-task vars of the essential families: what happens to a row that changes the locked wrist targets
+# (privileged: replay.py / runtime.py replay() -> bad_trajectory; standard: runtime.py step() ValueError -> server.py
+# HTTP 400 for that request, the rows before it in the request have run).
+[tasks."dexhand-essential-cube-layer-i00-privileged"]
+vars = { wrist = "A trajectory with a row that changes any of them beyond float32 rounding is rejected." }
+
+[tasks."dexhand-essential-cube-layer-i00-standard"]
+vars = { wrist = "A request with a row that changes any of them beyond float32 rounding is refused with an error at that row; the rows before it in the same request have already run." }
+
+[tasks."dexhand-essential-cube-reorient-i00-privileged"]
+vars = { wrist = "A trajectory with a row that changes any of them beyond float32 rounding is rejected." }
+
+[tasks."dexhand-essential-cube-reorient-i00-standard"]
+vars = { wrist = "A request with a row that changes any of them beyond float32 rounding is refused with an error at that row; the rows before it in the same request have already run." }
+
+[tasks."dexhand-essential-held-joystick-i00-privileged"]
+vars = { wrist = "A trajectory with a row that changes any of them beyond float32 rounding is rejected." }
+
+[tasks."dexhand-essential-held-joystick-i00-standard"]
+vars = { wrist = "A request with a row that changes any of them beyond float32 rounding is refused with an error at that row; the rows before it in the same request have already run." }
+
+[tasks."dexhand-essential-pen-regrasp-i00-privileged"]
+vars = { wrist = "A trajectory with a row that changes any of them beyond float32 rounding is rejected." }
+
+[tasks."dexhand-essential-pen-regrasp-i00-standard"]
+vars = { wrist = "A request with a row that changes any of them beyond float32 rounding is refused with an error at that row; the rows before it in the same request have already run." }
+
+[tasks."dexhand-essential-rotary-gait-i00-privileged"]
+vars = { wrist = "A trajectory with a row that changes any of them beyond float32 rounding is rejected." }
+
+[tasks."dexhand-essential-rotary-gait-i00-standard"]
+vars = { wrist = "A request with a row that changes any of them beyond float32 rounding is refused with an error at that row; the rows before it in the same request have already run." }
+
+[tasks."dexhand-essential-two-object-i00-privileged"]
+vars = { wrist = "A trajectory with a row that changes any of them beyond float32 rounding is rejected." }
+
+[tasks."dexhand-essential-two-object-i00-standard"]
+vars = { wrist = "A request with a row that changes any of them beyond float32 rounding is refused with an error at that row; the rows before it in the same request have already run." }

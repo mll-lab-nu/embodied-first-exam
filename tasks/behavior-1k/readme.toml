@@ -1,0 +1,853 @@
+# README data for tasks/behavior-1k/*/README.md (scripts/task_conventions.py render_readme_v3)
+# B/ = embodied_first_exam/benchmarks/behavior-1k/. Upstream = StanfordVL/BEHAVIOR-1K at tag v3.9.2 (b1979916ec15), the
+# release in the base image stanfordvl/behavior:3.9.2 (images/behavior/Dockerfile, by digest).
+# Each family's goal is bddl3/bddl/activity_definitions/<family>/problem0.bddl, :goal block (line numbers below), read by
+# bddl3/bddl/parsing.py L280-281 (only the FIRST expression after :goal) and evaluated by bddl3/bddl/condition_evaluation.py:
+#   forall = every instance (L205-210), exists = at least one (L254-259), forn (N) = EXACTLY N (L300-305),
+#   forpairs over (A, B) = at least min(|A|, |B|) A's each relate to some B and at least that many B's each relate to some
+#   A (L365-375; with equal counts: every A with a B and every B with an A).
+# Predicates: OmniGibson/omnigibson/utils/bddl_utils.py evaluate_bddl_predicate L207-236 (a missing object or substance
+# is False; real = it exists), object_states/: on_top.py L43-52, inside.py L240-263, next_to.py L16-58, under.py L42-52,
+# touching.py L29-38, open_state.py L15-21 + L172-202 (open: a joint past 5 % of its range), toggle.py L116-117,
+# covered.py L12-18 + L55-80 (one particle), filled.py L10 + L16-35 (20 % of the volume), contains.py L92-95 (one
+# particle), cooked.py L10 + L35-36 (max temperature), frozen.py L42-43, on_fire.py L86-87, attached_to.py L311-313.
+# Category names and room qualifiers come from each file's :objects and (inroom ...) lines; "_*" wildcard instances
+# (bddl3/bddl/wildcard.py) stand for every object of that category in that room of the scene.
+[benchmark]
+name = "BEHAVIOR-1K"
+citation = "Li et al., 2024"
+url = "https://behavior.stanford.edu/"
+repo = "StanfordVL/BEHAVIOR-1K"
+commit = "b197991"
+
+[license]
+text = """
+The task definitions (BDDL activity definitions) and the simulator are BEHAVIOR-1K's
+([StanfordVL/BEHAVIOR-1K](https://github.com/StanfordVL/BEHAVIOR-1K) v3.9.2: OmniGibson and bddl, MIT License; paper: Li
+et al., 2024, "BEHAVIOR-1K: A Human-Centered, Embodied AI Benchmark with 1,000 Everyday Activities and Realistic
+Simulation", arXiv:2403.09227). The scenes, objects, robot assets and task instances are the BEHAVIOR Data Bundle, under
+the BEHAVIOR Data Bundle End User License Agreement: **non-commercial academic research use only (NC)**, no
+redistribution, use only within OmniGibson. It is never in an image or in this repository; each user downloads it after
+accepting that licence and mounts it read-only. The simulator image contains NVIDIA Isaac Sim 5.1 and Omniverse Kit
+(NVIDIA proprietary licence terms, accepted when the image is built).
+"""
+
+[robots]
+r1pro = "Galaxea R1 Pro mobile bimanual manipulator (holonomic wheeled base, 4-joint trunk, two 7-joint arms with parallel-jaw grippers)"
+
+# ------------------------------------------------------------------------------------------------------------------
+[modes.privileged]
+# B/rcb_behavior.py: REST_* L103-105, RestWatch L147-165, goal_object_names L181-190 (+ Session.__init__ L1307-1313),
+# Session.step L1380-1403 (breakdown, then success, then fall), _success_step L1427-1448 (env.task.success = OmniGibson's
+# PredicateGoal, tasks/behavior_task.py L172-181; assisted-grasp _ag_obj_in_hand; base-link speed), _breakdown_step
+# L1450-1484 + BREAKDOWN_* L110-113, settle L1486-1494 (SETTLE_STEPS 150), _fall_step L1496-1503 + FALL_* L96-99,
+# replay L1586-1603, cmd_replay L2313-2341. B/privileged/grade.py: MAX_ROWS L50, replay_timeout L63-64, missing file
+# L140-141, unreadable / wrong task / shape / rows / non-finite L146-156, up to --repeat 3 replays, any success L160-182
+# (tests/test.sh passes --repeat 3), instance_ok / infra_error L183-193, timed-out or failed replay L164-174.
+success = """
+The relations above are OmniGibson's object states, evaluated on the simulator after every control step (30 Hz). An
+object is *on* another (`ontop`) when the two touch and the other is directly below it; *inside* when the centre of its
+bounding box lies in one of the other's container volumes; *next to* (`nextto`) when their bounding boxes are no farther
+apart than a sixth of their mean side length and one is a horizontal neighbour of the other; *under* when the other is
+directly above it; *touching* when the two are in contact. An object is *closed* when none of its openable joints is
+more than 5 % of its range away from closed, and *switched on* when its toggle state is on.
+
+Success needs more than these conditions: they hold for 30 consecutive control steps (1 s of simulated time), and on
+each of those steps no object they name (furniture and floors included; a substance has no pose and is not checked) is
+held by a gripper's assisted grasp, and each of those objects moves slower than 0.05 m/s. The replay ends at the end of
+that window. There is no partial credit.
+
+The graded file is `/app/output/trajectory.npz`: `actions`, a finite (T, 25) array with one row per control step and
+at most 40,000 rows, and `task` = `{family}`. The verifier replays it open-loop, in a fresh process, from the frozen
+start (the scene is rebuilt and checked against the recorded state hash, or every object pose within tolerance). After
+the last row the robot holds its last command with the base still for up to 150 control steps (5 s), and a success
+within that window counts. It runs up to 3 such replays and the task passes if any one of them succeeds. A replay ends
+as a failure when the robot has fallen over (its base more than 3 cm below the floor, or its up axis tilted more than
+41.4° from vertical, for 300 consecutive control steps) or on a simulator breakdown (a non-finite robot state, the robot
+or a named object more than 10 km from the origin, or the base faster than 100 m/s).
+
+A missing file scores 0, and so does a file that is not a plain npz, lacks `task` or `actions`, names another task, has
+another shape, a non-finite value or more than 40,000 rows. A frozen scene that does not rebuild in the verifier, or a
+replay process that dies or exceeds its time limit (1200 s plus T / 1.5 s, at least 3600 s and at most 28000 s), is an
+infrastructure error, not a score.
+"""
+
+[modes.standard]
+# B/sim/server.py (RCB_AGENT_END=1 in every environment/docker-compose.yaml, S.agent_end L175): settle_window L120-144
+# (stops once now_success; steps held before count: RestWatch.run), finish L146-167 (finished / timeout -> window;
+# other reasons judged as they stand: rcb_agent_end.py END_STATE_REASONS L40), check_success L405-407, ctrl_step
+# L515-526 (a fall / breakdown ends the episode: finish(S.end_reason); MAX_STEPS 200,000 -> "step_limit"), end_live
+# L647-659 (the session's end -> finish("timeout")), on_submit_error -> finish("error") L768. Success rule as privileged
+# (B/rcb_behavior.py L103-105, L1409-1413 now_success, L1427-1448). B/standard/grade.py L29-58: success = live and
+# reason != "error" and not gave_up and not infra (missing / unreadable / unfinalized final.json, sim_crashed,
+# resume_failed, instance_mismatch are infra_error; sim_crashed_on_call is gave_up, the agent's 0).
+success = """
+The relations above are OmniGibson's object states, evaluated on the simulator after every control step (30 Hz). An
+object is *on* another (`ontop`) when the two touch and the other is directly below it; *inside* when the centre of its
+bounding box lies in one of the other's container volumes; *next to* (`nextto`) when their bounding boxes are no farther
+apart than a sixth of their mean side length and one is a horizontal neighbour of the other; *under* when the other is
+directly above it; *touching* when the two are in contact. An object is *closed* when none of its openable joints is
+more than 5 % of its range away from closed, and *switched on* when its toggle state is on.
+
+Success needs more than these conditions: they hold for 30 consecutive control steps (1 s of simulated time), and on
+each of those steps no object they name (furniture and floors included; a substance has no pose and is not checked) is
+held by a gripper's assisted grasp, and each of those objects moves slower than 0.05 m/s. There is no partial credit.
+
+Graded is the one live episode (no reset), judged by the simulator service; nothing is replayed. A success during the
+episode neither ends it nor is reported. The episode ends at the agent's `/finish` or when the time limit ({timeout})
+is up. The robot then holds its last command with the base still for up to 150 control steps (5 s), and the task passes
+if the success rule holds at the end of that window (it stops as soon as the rule holds; steps that held before the end
+count toward the 30). The episode also ends, with 0, when the robot has fallen over (its base more than 3 cm below the
+floor, or its up axis tilted more than 41.4° from vertical, for 300 consecutive control steps, also within the window),
+on a simulator breakdown (a non-finite robot state, the robot or a named object more than 10 km from the origin, or the
+base faster than 100 m/s), or on a simulator error raised by an agent's call. At the runaway guard of 200,000 control
+steps the episode ends and is judged as it stands, without the window.
+
+Repeated service crashes that all happened while serving the agent's calls score 0. A frozen start that does not rebuild
+(checked before the agent is served), a crash the episode cannot be resumed from, or a service that leaves no finalized
+result is an infrastructure error, not a score.
+"""
+
+# ------------------------------------------------------------------------------------------------------------------
+# Families (100): the BDDL goal of bddl3/bddl/activity_definitions/<family>/problem0.bddl at b197991, :goal lines cited.
+
+[families.assembling_gift_baskets]
+# problem0.bddl L41-64: forpairs (basket, candle) inside; forpairs (basket, swiss_cheese); forpairs (basket,
+# butter_cookie); forpairs (basket, bow); 4 of each (L2-8).
+success = """
+Each of the four wicker baskets holds at least one of the four candles, and each candle is inside one of the baskets.
+The same holds for the four butter cookies, the four pieces of Swiss cheese and the four bows.
+"""
+
+[families.attach_a_camera_to_a_tripod]
+# problem0.bddl L18-22: attached digital_camera_1 camera_tripod_1.
+success = """
+The digital camera is attached to the camera tripod (`attached`: the tripod is the camera's attachment parent in
+OmniGibson's attachment state).
+"""
+
+[families.boxing_books_up_for_storage]
+# problem0.bddl L28-35: forall book (inside book box_1); 6 books.
+success = """
+All six books are inside the box.
+"""
+
+[families.boxing_food_after_dinner]
+# problem0.bddl L30-43: forall taco (inside taco tupperware_1); ontop plate_1 sink_1; ontop plate_2 sink_1; inside
+# tupperware_1 electric_refrigerator_1; not open electric_refrigerator_1.
+success = """
+Both tacos are inside the tupperware, the tupperware is inside the refrigerator, both plates are on the kitchen sink
+(`ontop` the sink object), and the refrigerator is closed.
+"""
+
+[families.bringing_in_wood]
+# problem0.bddl L19-26: forall plywood (ontop plywood floor_2); floor_2 = corridor (inroom), floor_1 = garden.
+success = """
+All three plywood sheets are on the corridor floor (`floor.n.01_2`).
+"""
+
+[families.bringing_paper_to_recycling]
+# problem0.bddl L23-31: inside sack_1 recycling_bin_1; inside newspaper_1 recycling_bin_1; not open recycling_bin_1.
+success = """
+The sack and the newspaper are inside the recycling bin, and the recycling bin is closed.
+"""
+
+[families.bringing_water]
+# problem0.bddl L21-31: forall bottle (ontop bottle coffee_table_1); not open electric_refrigerator_1.
+success = """
+Both bottles are on the living-room coffee table, and the kitchen refrigerator is closed.
+"""
+
+[families.can_meat]
+# problem0.bddl L32-56: forall jar (inside jar cabinet_1); forall jar (not open jar); forall jar (forn 2 bratwurst
+# (inside bratwurst jar)); not open cabinet_1.
+success = """
+Both hinged jars are inside the kitchen cabinet and closed; each jar holds exactly two of the four bratwursts (inside);
+and the cabinet is closed.
+"""
+
+[families.canning_food]
+# problem0.bddl L35-70: real diced__steak_1; real diced__pineapple_1; exists bowl (filled bowl diced_steak and not
+# contains bowl diced_pineapple); exists bowl (filled bowl diced_pineapple and not contains bowl diced_steak); forall
+# bowl (inside bowl cabinet_1); not open electric_refrigerator_1; not open cabinet_1.
+success = """
+Diced steak and diced pineapple exist in the scene (`real`; neither exists at the start). One bowl is filled with diced
+steak (its particles fill more than 20 % of the bowl's container volume) and contains no diced pineapple (no particle in
+its volume); a bowl is filled with diced pineapple and contains no diced steak. Both bowls are inside the kitchen
+cabinet, and the refrigerator and the cabinet are closed.
+"""
+
+[families.carrying_in_groceries]
+# problem0.bddl L26-42: exists fridge (inside tomato fridge and inside milk fridge) over electric_refrigerator_1 and the
+# kitchen's other refrigerators (_* wildcard); not open car_1; not open electric_refrigerator_1 (the one instance only).
+success = """
+The beefsteak tomato and the carton of milk are inside one and the same refrigerator (any refrigerator of the kitchen),
+the car is closed, and the kitchen refrigerator (`electric_refrigerator.n.01_1`) is closed. The kitchen's other
+refrigerators are not checked for being closed.
+"""
+
+[families.carrying_out_garden_furniture]
+# problem0.bddl L21-29: ontop lawn_chair_1 floor_2 (garden); exists lawn (ontop barrow_1 lawn); one lawn.
+success = """
+The lawn chair is on the garden floor (`floor.n.01_2`), and the wheelbarrow is on the lawn.
+"""
+
+[families.chop_an_onion]
+# problem0.bddl L28-35: real diced__vidalia_onion_1; inside parer_1 sink_1; inside chopping_board_1 sink_1; contains
+# bowl_1 diced__vidalia_onion_1.
+success = """
+Diced onion exists in the scene (`real`; it does not exist at the start), the bowl contains diced onion (at least one
+particle of it inside the bowl's container volume), and the paring knife and the chopping board are inside the sink.
+"""
+
+[families.chopping_wood]
+# problem0.bddl L32-43: real half__log_1 ... real half__log_8 (8 half logs; 4 logs, L2-3).
+success = """
+Eight half logs exist in the scene (`real`, `half__log.n.01_1` to `_8`; none exists at the start, a half log appears
+when a log is split). Nothing else is checked.
+"""
+
+[families.clean_a_keyboard]
+# problem0.bddl L22-28: not covered keyboard_1 dust_1.
+success = """
+No dust particle is left on the keyboard (`not covered`: the keyboard counts as covered while a single dust particle is
+on it).
+"""
+
+[families.clean_a_patio]
+# problem0.bddl L18-24: not covered floor_1 (garden) mud_1.
+success = """
+No mud particle is left on the garden floor (`not covered`: the floor counts as covered while a single mud particle is
+on it).
+"""
+
+[families.clean_a_trumpet]
+# problem0.bddl L22-28: not covered cornet_1 dust_1.
+success = """
+No dust particle is left on the cornet (`not covered`: it counts as covered while a single dust particle is on it).
+"""
+
+[families.clean_boxing_gloves]
+# problem0.bddl L24-33: forall boxing_glove (not covered glove dust_1); 2 gloves.
+success = """
+No dust particle is left on either of the two boxing gloves (`not covered`: a glove counts as covered while a single
+dust particle is on it).
+"""
+
+[families.cleaning_up_branches_and_twigs]
+# problem0.bddl L21-29: forall branch (inside branch recycling_bin_1); ontop recycling_bin_1 floor_1 (garden).
+success = """
+All four branches are inside the recycling bin, and the recycling bin is on the garden floor.
+"""
+
+[families.cleaning_up_plates_and_food]
+# problem0.bddl L31-59: forpairs (pizza, plate) ontop pizza plate; exists fridge (forall pizza inside fridge); exists
+# sink (forall bowl inside sink); forall fridge (not open fridge); fridges and sinks: _1 + the kitchen's (_*).
+success = """
+Each of the two pizzas is on one of the two plates and each plate has one of the pizzas on it; both pizzas are inside one
+and the same kitchen refrigerator; both bowls are inside one and the same kitchen sink; and every refrigerator of the
+kitchen is closed.
+"""
+
+[families.clean_up_broken_glass]
+# problem0.bddl L21-28: forall broken__glass (inside glass ashcan_1); 3 pieces.
+success = """
+All three pieces of broken glass are inside the trash can.
+"""
+
+[families.clean_up_your_desk]
+# problem0.bddl L40-62: forall folder (inside folder bookcase_1); forall pen (inside pen pencil_box_1); forall
+# paperback_book (inside book bookcase_1); inside pencil_1 pencil_box_1; ontop stapler_1 desk_1; ontop pencil_box_1
+# desk_1; ontop laptop_1 desk_1; not open laptop_1.
+success = """
+Both folders and both paperback books are inside the bookcase; the pencil and both pens are inside the pencil box; the
+stapler, the pencil box and the laptop are on the desk; and the laptop is closed.
+"""
+
+[families.clean_your_rusty_garden_tools]
+# problem0.bddl L25-39: not covered trowel_1 rust_1; not covered scraper_1 rust_1; inside trowel_1 toolbox_1; inside
+# scraper_1 toolbox_1; not open toolbox_1.
+success = """
+No rust particle is left on the trowel or on the scraper (`not covered`: a tool counts as covered while a single rust
+particle is on it), both are inside the toolbox, and the toolbox is closed.
+"""
+
+[families.clearing_food_from_table_into_fridge]
+# problem0.bddl L30-48: exists tupperware (inside half__apple_pie_1 tw); exists tupperware (inside half__chicken_1 tw);
+# forall tupperware (inside tw electric_refrigerator_1); not open electric_refrigerator_1.
+success = """
+The half apple pie is inside a tupperware and the half chicken is inside a tupperware (the same one or not), both
+tupperwares are inside the refrigerator, and the refrigerator is closed.
+"""
+
+[families.collecting_aluminum_cans]
+# problem0.bddl L25-32: forall can__of__soda (inside can bucket_1); 6 cans.
+success = """
+All six soda cans are inside the bucket.
+"""
+
+[families.collecting_childrens_toys]
+# problem0.bddl L32-56: exists bookcase (_1 + the child's room's _*) (forall die inside; forall teddy inside; forall
+# board_game inside; forall train_set inside).
+success = """
+Both dice, both teddy bears, both board games and the train set are inside one and the same bookcase (any bookcase of
+the child's room).
+"""
+
+[families.composting_waste]
+# problem0.bddl L24-29: inside half__banana_1 ashcan_1; inside half__pomegranate_1 ashcan_1.
+success = """
+The half banana and the half pomegranate are inside the trash can.
+"""
+
+[families.cook_a_brisket]
+# problem0.bddl L29-35: cooked brisket_1; ontop brisket_1 chopping_board_1; ontop frying_pan_1 countertop_1.
+success = """
+The brisket is cooked (the highest temperature it has reached is at or above its cooking temperature; once cooked it
+stays cooked) and is on the chopping board, and the frying pan is on the kitchen countertop.
+"""
+
+[families.cook_a_frozen_pie]
+# problem0.bddl L25-30: ontop apple_pie_1 tray_1; cooked apple_pie_1.
+success = """
+The apple pie is on the tray and is cooked (the highest temperature it has reached is at or above its cooking
+temperature; once cooked it stays cooked).
+"""
+
+[families.cook_bacon]
+# problem0.bddl L47-57: forall bacon (cooked bacon); 6 slices; not open electric_refrigerator_1.
+success = """
+All six slices of bacon are cooked (the highest temperature each has reached is at or above its cooking temperature;
+once cooked it stays cooked), and the refrigerator is closed. Where the bacon lies is not checked.
+"""
+
+[families.cook_broccolini]
+# problem0.bddl L32-50: forall clove (ontop clove frying_pan_1 and cooked clove); forall broccolini (ontop frying_pan_1
+# and cooked); ontop frying_pan_1 stove_1.
+success = """
+Both garlic cloves and all three broccolini are on the frying pan and cooked (the highest temperature each has reached
+is at or above its cooking temperature; once cooked it stays cooked), and the frying pan is on the stove.
+"""
+
+[families.cook_brussels_sprouts]
+# problem0.bddl L46-63: forall half__brussels_sprouts (real and cooked and inside oven_1); 8 halves; not open
+# electric_refrigerator_1; not open oven_1.
+success = """
+Eight Brussels sprout halves exist in the scene (`real`, `half__brussels_sprouts.n.01_1` to `_8`; none exists at the
+start), each of them is cooked (the highest temperature it has reached is at or above its cooking temperature) and
+inside the oven, and the oven and the refrigerator are closed.
+"""
+
+[families.cook_cabbage]
+# problem0.bddl L39-46: real cooked__diced__head_cabbage_1; real cooked__diced__chili_1; contains frying_pan_1 each.
+success = """
+Cooked diced cabbage and cooked diced chili exist in the scene (`real`; neither exists at the start), and the frying pan
+contains both (at least one particle of each inside the pan's container volume).
+"""
+
+[families.cook_hot_dogs]
+# problem0.bddl L27-34: forall hotdog (cooked hotdog); 2 hot dogs.
+success = """
+Both hot dogs are cooked (the highest temperature each has reached is at or above its cooking temperature; once cooked
+it stays cooked). Where they lie is not checked.
+"""
+
+[families.dispose_of_batteries]
+# problem0.bddl L24-32: forall battery (inside battery ashcan_1); ontop ashcan_1 floor_1 (copy_room).
+success = """
+All three batteries are inside the trash can, and the trash can is on the copy-room floor.
+"""
+
+[families.dispose_of_glass]
+# problem0.bddl L24-31: forall water_glass (inside glass ashcan_1); 4 glasses.
+success = """
+All four water glasses are inside the trash can.
+"""
+
+[families.freeze_fruit]
+# problem0.bddl L33-53: forpairs (apple, tupperware) inside; forpairs (strawberry, tupperware) inside; forall
+# tupperware (inside tw electric_refrigerator_1); not open electric_refrigerator_1. No frozen predicate.
+success = """
+Each of the two apples is inside one of the two tupperwares and each tupperware holds one of the apples; the same holds
+for the two strawberries. Both tupperwares are inside the refrigerator, and the refrigerator is closed. Whether the
+fruit is frozen is not checked.
+"""
+
+[families.freeze_pies]
+# problem0.bddl L35-54: forpairs (apple_pie, tupperware) inside; forall tupperware (inside fridge_1); forall apple_pie
+# (frozen); not open electric_refrigerator_1.
+success = """
+Each of the two apple pies is inside one of the two tupperwares and each tupperware holds one of the pies; both
+tupperwares are inside the refrigerator; both pies are frozen (each one's current temperature is at or below its
+freezing temperature); and the refrigerator is closed.
+"""
+
+[families.getting_organized_for_work]
+# problem0.bddl L32-45: nextto keyboard monitor; ontop keyboard desk; under computer desk; ontop monitor desk; nextto
+# mouse keyboard; ontop mouse desk; nextto folder mouse; ontop notebook folder; ontop pen notebook; nextto swivel_chair desk.
+success = """
+The monitor, the keyboard and the mouse are on the desk; the keyboard is next to the monitor and the mouse next to the
+keyboard; the computer is under the desk; the folder is next to the mouse, the notebook is on the folder and the pen is
+on the notebook; and the swivel chair is next to the desk.
+"""
+
+[families.halve_an_egg]
+# problem0.bddl L32-40: real half__hard-boiled_egg_1, _2; ontop each half plate_1; inside carving_knife_1 sink_1.
+success = """
+Two halves of the hard-boiled egg exist in the scene (`real`; neither exists at the start), both halves are on the
+plate, and the carving knife is inside the sink.
+"""
+
+[families.hanging_pictures]
+# problem0.bddl L21-28: exists wall_nail (_1 + the kitchen's _*) (attached poster_1 wall_nail).
+success = """
+The poster is attached to one of the kitchen's wall nails (`attached`: the nail is the poster's attachment parent in
+OmniGibson's attachment state).
+"""
+
+[families.hiding_Easter_eggs]
+# problem0.bddl L23-44: exists tree (_1 + the garden's _*) (forall egg nextto egg tree); forall egg (not inside egg
+# wicker_basket_1 and ontop egg lawn_1).
+success = """
+All three Easter eggs are next to one and the same tree of the garden, and each egg is on the lawn and not inside the
+wicker basket.
+"""
+
+[families.installing_a_fax_machine]
+# problem0.bddl L23-31: toggled_on facsimile_1; exists carrel (_1 + the shared office's _*) (ontop facsimile carrel).
+success = """
+The fax machine is switched on and is on one of the shared office's carrels.
+"""
+
+[families.installing_a_modem]
+# problem0.bddl L26-38: toggled_on modem_1; nextto modem_1 television_receiver_1; exists cabinet (ontop tv cabinet and
+# ontop modem cabinet); 2 living-room cabinets.
+success = """
+The modem is switched on and is next to the television, and the television and the modem are both on one and the same
+of the two living-room cabinets.
+"""
+
+[families.installing_a_scanner]
+# problem0.bddl L23-28: toggled_on scanner_1; nextto scanner_1 laptop_1.
+success = """
+The scanner is switched on and is next to the laptop.
+"""
+
+[families.installing_smoke_detectors]
+# problem0.bddl L20-24: attached fire_alarm_1 wall_nail_1.
+success = """
+The fire alarm is attached to the wall nail (`attached`: the nail is the alarm's attachment parent in OmniGibson's
+attachment state).
+"""
+
+[families.laying_tile_floors]
+# problem0.bddl L20-36: forall tile (ontop tile floor_2 (bathroom)); forall tile (or nextto tile tile_1..tile_4).
+success = """
+All four tiles are on the bathroom floor (`floor.n.01_2`), and each tile is next to at least one other tile. How the
+tiles are laid out beyond that is not checked.
+"""
+
+[families.loading_the_car]
+# problem0.bddl L25-34: the :goal holds two expressions, (and (inside container_1 car_1) (inside digital_camera_1
+# container_1) (inside tennis_racket_1 car_1)) and (not (open car_1)); parsing.py L280-281 reads only the first.
+success = """
+The container is inside the car, the digital camera is inside the container, and the tennis racket is inside the car.
+Whether the car is closed is not checked (the activity definition lists it after the goal's main expression, which BDDL
+does not read).
+"""
+
+[families.make_cabinet_doors]
+# problem0.bddl L18-22: attached cabinet_door_1 cabinet_base_1.
+success = """
+The cabinet door is attached to the cabinet base (`attached`: the base is the door's attachment parent in OmniGibson's
+attachment state).
+"""
+
+[families.make_gift_bags_for_baby_showers]
+# problem0.bddl L29-46: forall sack (ontop sack coffee_table_1); forpairs (toy_dice, sack) inside; forpairs (wafer,
+# sack) inside.
+success = """
+Both sacks are on the coffee table. Each of the two toy dice is inside one of the sacks and each sack holds one of the
+dice; the same holds for the two wafers.
+"""
+
+[families.make_microwave_popcorn]
+# problem0.bddl L24-29: real cooked__popcorn_1; contains popcorn__bag_1 cooked__popcorn_1.
+success = """
+Cooked popcorn exists in the scene (`real`; it does not exist at the start), and the popcorn bag contains cooked popcorn
+(at least one particle of it inside the bag's container volume).
+"""
+
+[families.make_pizza]
+# problem0.bddl L50-55: real pizza_1; ontop pizza_1 cookie_sheet_1.
+success = """
+A pizza exists in the scene (`real`; it does not exist at the start) and is on the cookie sheet. Nothing else is
+checked.
+"""
+
+[families.make_rose_centerpieces]
+# problem0.bddl L24-31: inside rose_1..3 vase_1; ontop vase_1 coffee_table_1.
+success = """
+All three roses are inside the vase, and the vase is on the coffee table.
+"""
+
+[families.moving_boxes_to_storage]
+# problem0.bddl L18-31: or (ontop sc_1 floor_2 and ontop sc_2 sc_1) (ontop sc_2 floor_2 and ontop sc_1 sc_2); floor_2 = garage.
+success = """
+One of the two storage containers is on the garage floor and the other is on top of it.
+"""
+
+[families.organizing_art_supplies]
+# problem0.bddl L26-34: inside glue_stick_1, rubber_eraser_1, paintbrush_1, marker_1 carryall_1; ontop carryall_1 desk_1.
+success = """
+The glue stick, the rubber eraser, the paintbrush and the marker are inside the carryall, and the carryall is on the
+desk.
+"""
+
+[families.organizing_school_stuff]
+# problem0.bddl L30-39: inside folder_1, book_1, pencil_1, pen_1, calculator_1 carryall_1; ontop carryall_1 bed_1.
+success = """
+The folder, the book, the pencil, the pen and the calculator are inside the carryall, and the carryall is on the bed.
+"""
+
+[families.outfit_a_basic_toolbox]
+# problem0.bddl L28-40: inside drill_1, pliers_1, flashlight_1, allen_wrench_1, screwdriver_1 toolbox_1; ontop
+# toolbox_1 tabletop_1; not open toolbox_1.
+success = """
+The drill, the pliers, the flashlight, the Allen wrench and the screwdriver are inside the toolbox; the toolbox is on the
+table top of the utility room and is closed.
+"""
+
+[families.packing_meal_for_delivery]
+# problem0.bddl L28-40: forpairs (wrapped_hamburger, sack) inside; forall sack (ontop sack storage_container_1).
+success = """
+Each of the three wrapped hamburgers is inside one of the three sacks and each sack holds one of the hamburgers, and all
+three sacks are on the storage container.
+"""
+
+[families.picking_up_toys]
+# problem0.bddl L29-53: exists toy_box (forall jigsaw_puzzle inside); exists toy_box (forall board_game inside); exists
+# toy_box (forall tennis_ball inside); one toy box.
+success = """
+Both jigsaw puzzles, all three board games and the tennis ball are inside the toy box.
+"""
+
+[families.picking_up_trash]
+# problem0.bddl L21-28: forall can__of__soda (inside can ashcan_1); 3 cans.
+success = """
+All three soda cans are inside the trash can.
+"""
+
+[families.polishing_shoes]
+# problem0.bddl L27-45: ontop scrub_brush_1 stand_1; not covered shoe_1 dust_1; not covered shoe_2 dust_1; nextto
+# shoe_1 shoe_2; exists footstool (nextto shoe_1 fs and nextto shoe_2 fs); 2 footstools.
+success = """
+No dust particle is left on either shoe (`not covered`: a shoe counts as covered while a single dust particle is on it);
+the two shoes are next to each other and both next to one and the same of the two footstools; and the scrub brush is on
+the stand.
+"""
+
+[families.preparing_lunch_box]
+# problem0.bddl L31-44: forall half__apple (inside packing_box_1); inside club_sandwich_1, chocolate_chip_cookie_1,
+# bottle__of__tea_1 packing_box_1; not open electric_refrigerator_1.
+success = """
+Both apple halves, the club sandwich, the chocolate chip cookie and the bottle of tea are inside the packing box, and
+the refrigerator is closed.
+"""
+
+[families.putting_away_Halloween_decorations]
+# problem0.bddl L29-56: forall pumpkin (exists cabinet inside); forall candle (exists cabinet inside); exists table
+# (nextto caldron_1 table); forall cabinet (not open); cabinets and tables: _1 + the living room's _*.
+success = """
+Each of the two pumpkins and each of the three candles is inside a cabinet of the living room (not necessarily the same
+one), the cauldron is next to one of the living room's tables, and every cabinet of the living room is closed.
+"""
+
+[families.putting_away_toys]
+# problem0.bddl L29-39: forall toy_figure (exists toy_box inside); 8 figures, 2 toy boxes.
+success = """
+Each of the eight toy figures is inside one of the two toy boxes (not necessarily the same one).
+"""
+
+[families.putting_dirty_dishes_in_sink]
+# problem0.bddl L30-41: forall bowl (inside bowl sink_1); forall plate (inside plate sink_1); sink_1 = kitchen.
+success = """
+Both bowls and both plates are inside the kitchen sink.
+"""
+
+[families.putting_dishes_away_after_cleaning]
+# problem0.bddl L29-45: exists cabinet (forall plate inside cabinet); forall cabinet (not open); cabinet_1 + the
+# kitchen's _*; 8 plates.
+success = """
+All eight plates are inside one and the same kitchen cabinet, and every cabinet of the kitchen is closed.
+"""
+
+[families.putting_shoes_on_rack]
+# problem0.bddl L22-45: forall sandal (touching sandal hallstand_1 and not touching sandal floor_1); forall gym_shoe
+# (the same); nextto gym_shoe_1 gym_shoe_2; nextto sandal_1 sandal_2.
+success = """
+Each of the two sandals and the two gym shoes touches the hall tree and does not touch the corridor floor; the two gym
+shoes are next to each other, and the two sandals are next to each other.
+"""
+
+[families.putting_up_Christmas_decorations_inside]
+# problem0.bddl L37-78: forall gift_box (nextto or under or touching christmas_tree_1); exists table (forall
+# pillar_candle ontop table); exists table (forn 1 candy_cane ontop table); exists sofa (forall wreath ontop sofa);
+# exists sofa (forn 2 candy_cane ontop sofa); tables: _1 + the dining room's _*, sofas: _1 + the living room's _*.
+success = """
+Each of the three gift boxes is next to, under or touching the Christmas tree; both pillar candles are on one and the
+same dining-room table; some dining-room table has exactly one of the three candy canes on it; the wreath is on one of
+the living-room sofas; and some living-room sofa has exactly two of the candy canes on it.
+"""
+
+[families.put_together_a_basic_pruning_kit]
+# problem0.bddl L20-29: ontop toolbox_1 floor_1 (garage); inside pruner_1 toolbox_1; inside shears_1 toolbox_1; not open toolbox_1.
+success = """
+The pruner and the shears are inside the toolbox, the toolbox is on the garage floor, and the toolbox is closed.
+"""
+
+[families.rearrange_your_room]
+# problem0.bddl L27-39: exists stand (_* of the bedroom) (ontop tissue_dispenser_1 stand); forpairs (pillow, bed) ontop.
+success = """
+The tissue dispenser is on one of the bedroom's stands, and each of the two pillows is on one of the two beds with each
+bed holding one of the pillows.
+"""
+
+[families.rearranging_kitchen_furniture]
+# problem0.bddl L25-39: exists cabinet (_1 + the kitchen's _*) (inside toaster_1, food_processor_1, french_press_1 and
+# not open cabinet).
+success = """
+The toaster, the food processor and the French press are inside one and the same kitchen cabinet, and that cabinet is
+closed. The kitchen's other cabinets are not checked.
+"""
+
+[families.re_shelving_library_books]
+# problem0.bddl L22-32: forall book (exists bookcase (the living room's _*) inside); 3 books.
+success = """
+Each of the three books is inside one of the living room's bookcases (not necessarily the same one).
+"""
+
+[families.scrubbing_bathroom_floor]
+# problem0.bddl L18-24: not covered floor_1 (bathroom) dirt_1.
+success = """
+No dirt particle is left on the bathroom floor (`not covered`: the floor counts as covered while a single dirt particle
+is on it).
+"""
+
+[families.setting_mousetraps]
+# problem0.bddl L25-46: exists floor (_1 + the bathroom's _*) (forall mousetrap ontop floor); exists sink (_1 + the
+# bathroom's _*) (forn 2 mousetrap (under or nextto sink)).
+success = """
+All four mousetraps are on one and the same bathroom floor, and for one of the bathroom's sinks exactly two of the
+mousetraps are under it or next to it.
+"""
+
+[families.setting_the_fire]
+# problem0.bddl L25-40: forall firewood (on_fire and ontop firewood newspaper_1 and inside firewood wood_fireplace_1);
+# on_fire newspaper_1; not toggled_on cigar_lighter_1.
+success = """
+Both pieces of firewood are on fire (each one's temperature is at or above its ignition temperature), on the newspaper
+and inside the fireplace; the newspaper is on fire; and the cigar lighter is switched off.
+"""
+
+[families.setting_the_table]
+# problem0.bddl L34-56: forall plate (ontop plate breakfast_table_1); forpairs (plate, cupcake) ontop cupcake plate;
+# forpairs (tablefork, plate) nextto; forpairs (table_knife, plate) nextto.
+success = """
+Both plates are on the breakfast table; each of the two cupcakes is on one of the plates and each plate has one of the
+cupcakes on it; each of the two forks is next to one of the plates and each plate has one of the forks next to it; the
+same holds for the two table knives.
+"""
+
+[families.setup_a_bar_for_a_cocktail_party]
+# problem0.bddl L42-73: ontop wine_bottle_1 countertop_1; forall can (or nextto can can_1..can_3, and ontop can
+# countertop_1); forall ice_cube (inside bucket_1); ontop bucket_1 countertop_1; forall wineglass (ontop countertop_1);
+# exists wineglass (nextto wine_bottle_1); nextto wineglass_1 wineglass_2; ontop corkscrew_1 countertop_1; nextto
+# corkscrew_1 wine_bottle_1.
+success = """
+On the bar countertop are the wine bottle, the bucket, both wine glasses, the corkscrew and all three soda cans. Each
+soda can is next to another soda can; all six ice cubes are inside the bucket; the two wine glasses are next to each
+other and at least one of them is next to the wine bottle; and the corkscrew is next to the wine bottle.
+"""
+
+[families.set_up_a_coffee_station_in_your_kitchen]
+# problem0.bddl L32-41: ontop coffee_maker_1 countertop_1; nextto bottle__of__coffee_1 coffee_maker_1; ontop
+# paper_coffee_filter_1 coffee_maker_1; nextto saucer_1 coffee_maker_1; ontop coffee_cup_1 saucer_1; nextto
+# electric_kettle_1 coffee_maker_1.
+success = """
+The coffee maker is on the countertop and the paper coffee filter is on the coffee maker; the bottle of coffee, the
+saucer and the electric kettle are each next to the coffee maker; and the coffee cup is on the saucer.
+"""
+
+[families.slicing_vegetables]
+# problem0.bddl L37-64: real diced__zucchini_1, diced__bell_pepper_1, diced__beet_1; not open electric_refrigerator_1;
+# forall bell_pepper (not real); forall beet (not real); forall zucchini (not real).
+success = """
+Diced zucchini, diced bell pepper and diced beet exist in the scene (`real`; none exists at the start); neither of the
+two bell peppers, neither of the two beets and not the zucchini is left in the scene as a whole object (`not real`); and
+the refrigerator is closed.
+"""
+
+[families.sorting_books_on_shelf]
+# problem0.bddl L26-64: forall comic (inside bookcase_1); forn 2 comic (ontop comic comic_1 or comic_2 or comic_3);
+# forall notebook (inside); exists notebook (ontop notebook notebook_1 or notebook_2); forall hardback (inside); exists
+# hardback (ontop hardback hardback_1 or hardback_2).
+success = """
+All three comic books, both notebooks and both hardbacks are inside the bookcase. Exactly two of the comic books are
+each on top of a comic book; at least one notebook is on top of a notebook; and at least one hardback is on top of a
+hardback.
+"""
+
+[families.sorting_bottles_cans_and_paper]
+# problem0.bddl L30-88: exists bucket (forall wine_bottle inside, not inside can_1, newspaper_1, magazine_1); exists
+# bucket (forall can inside, not inside wine_bottle_1, newspaper_1, magazine_1); exists bucket (forall can not inside,
+# forall wine_bottle not inside, inside newspaper_1 and magazine_1); 3 buckets.
+success = """
+One bucket holds both wine bottles and not the first soda can (`can__of__soda.n.01_1`), the newspaper or the magazine;
+a bucket holds both soda cans and not the first wine bottle (`wine_bottle.n.01_1`), the newspaper or the magazine; and a
+bucket holds the newspaper and the magazine and none of the soda cans or wine bottles.
+"""
+
+[families.sorting_household_items]
+# problem0.bddl L34-47: forall bottle__of__detergent (under sink_1); nextto detergent_1 detergent_2; ontop
+# box__of__sanitary_napkin_1 shelf_1; ontop soap_dispenser_1 sink_1; ontop cup_1 sink_1; nextto
+# tube__of__toothpaste_1 cup_1; inside toothbrush_1 cup_1.
+success = """
+Both bottles of detergent are under the bathroom sink and next to each other; the box of sanitary napkins is on the
+bathroom shelf; the soap dispenser and the cup are on the sink; the tube of toothpaste is next to the cup; and the
+toothbrush is inside the cup.
+"""
+
+[families.sorting_vegetables]
+# problem0.bddl L41-79: exists mixing_bowl (forall bok_choy inside, forall vidalia_onion inside); exists mixing_bowl
+# (forall leek inside, forall broccoli inside); exists mixing_bowl (forall sweet_corn inside). The three bowls need not
+# be different.
+success = """
+A mixing bowl holds all three bok choy and all three onions; a mixing bowl holds both leeks and both broccoli; and a
+mixing bowl holds all three ears of sweet corn. The three groups need not be in three different bowls.
+"""
+
+[families.spraying_for_bugs]
+# problem0.bddl L21-28: forall pot_plant (covered pot_plant insectifuge_1).
+success = """
+Both potted plants are covered with insectifuge (`covered`: at least one insectifuge particle is on each plant).
+"""
+
+[families.spraying_fruit_trees]
+# problem0.bddl L21-26: covered tree_1 pesticide_1; covered tree_2 pesticide_1.
+success = """
+Both trees of the garden are covered with pesticide (`covered`: at least one pesticide particle is on each tree).
+"""
+
+[families.stacking_wood]
+# problem0.bddl L21-33: forall log (or touching log log_1 .. log_6); 6 logs.
+success = """
+Each of the six logs touches at least one other log. How the logs are arranged beyond that is not checked.
+"""
+
+[families.store_batteries]
+# problem0.bddl L25-35: exists cabinet (forall battery inside cabinet); 2 living-room cabinets.
+success = """
+All three batteries are inside one and the same of the two living-room cabinets.
+"""
+
+[families.store_honey]
+# problem0.bddl L20-24: inside jar__of__honey_1 cabinet_1 (entryway).
+success = """
+The jar of honey is inside the entryway cabinet.
+"""
+
+[families.store_produce]
+# problem0.bddl L25-41: exists fridge (forall pomegranate inside, forall mango inside); 2 kitchen refrigerators.
+success = """
+Both pomegranates and both mangos are inside one and the same of the two kitchen refrigerators.
+"""
+
+[families.storing_food]
+# problem0.bddl L31-62: forall box__of__oatmeal / bag__of__chips / bottle__of__olive_oil / jar__of__sugar (exists
+# cabinet inside); cabinet_1 + the kitchen's _*.
+success = """
+Each of the two boxes of oatmeal, the two bags of chips, the two bottles of olive oil and the two jars of sugar is inside
+a kitchen cabinet (not necessarily the same one).
+"""
+
+[families.sweeping_garage]
+# problem0.bddl L22-31: not covered floor_1 (garage) sand_1; not covered floor_1 dust_1.
+success = """
+No sand particle and no dust particle is left on the garage floor (`not covered`: the floor counts as covered while a
+single particle of either is on it).
+"""
+
+[families.thawing_frozen_food]
+# problem0.bddl L29-59: not frozen chicken_breast_1; exists plate (ontop chicken plate and inside plate microwave_1);
+# toggled_on microwave_1; not open microwave_1; not open electric_refrigerator_1; not frozen bread_slice_1; exists plate
+# (ontop bread_slice plate and ontop plate countertop_1).
+success = """
+The chicken breast is not frozen (its current temperature is above its freezing temperature) and is on a plate that is
+inside the microwave; the microwave is switched on and closed; the bread slice is not frozen and is on a plate that is on
+the countertop; and the refrigerator is closed.
+"""
+
+[families.tidying_bathroom]
+# problem0.bddl L32-39: ontop bar_soap_1 soap_dish_1; ontop tissue_dispenser_1 sink_1; ontop toilet_tissue_1 toilet_1;
+# inside cork_1 ashcan_1.
+success = """
+The bar of soap is on the soap dish, the tissue dispenser is on the sink, the toilet tissue is on the toilet, and the
+cork is inside the trash can.
+"""
+
+[families.tidying_bedroom]
+# problem0.bddl L24-33: nextto sandal_1 bed_1; nextto sandal_2 sandal_1; exists table (_1 + the bedroom's _*) (ontop
+# book_1 table).
+success = """
+The first sandal (`sandal.n.01_1`) is next to the bed and the second sandal (`sandal.n.01_2`) is next to the first; the
+book is on one of the bedroom's tables. Whether the second sandal is next to the bed is not checked.
+"""
+
+[families.tidying_living_room]
+# problem0.bddl L28-38: ontop pot_plant_1 coffee_table_1; exists bookcase (the living room's _*) (inside hardback_1);
+# ontop newspaper_1 coffee_table_1; ontop notebook_1 desk_1.
+success = """
+The potted plant and the newspaper are on the coffee table, the hardback is inside one of the living room's bookcases,
+and the notebook is on the desk.
+"""
+
+[families.turning_on_radio]
+# problem0.bddl L21-25: toggled_on radio_receiver_1.
+success = """
+The radio is switched on.
+"""
+
+[families.turning_out_all_lights_before_sleep]
+# problem0.bddl L30-45: forall switch (not toggled_on); forall table_lamp (not toggled_on); 3 switches, 2 lamps.
+success = """
+All three light switches and both table lamps are switched off.
+"""
+
+[families.unloading_the_car]
+# problem0.bddl L22-33: forall briefcase (nextto briefcase sofa_1); forall satchel (nextto satchel sofa_1).
+success = """
+The briefcase and the satchel are both next to the living-room sofa.
+"""
+
+[families.vacuuming_floors]
+# problem0.bddl L18-24: not covered floor_1 (bedroom) dust_1.
+success = """
+No dust particle is left on the bedroom floor (`not covered`: the floor counts as covered while a single dust particle
+is on it).
+"""
+
+[families.wash_a_baseball_cap]
+# problem0.bddl L24-33: forall baseball_cap (not covered cap dirt_1); 2 caps.
+success = """
+No dirt particle is left on either of the two baseball caps (`not covered`: a cap counts as covered while a single dirt
+particle is on it).
+"""
+
+[families.wash_dog_toys]
+# problem0.bddl L32-52: forall teddy (not covered dirt_1 and not covered dust_1); not covered tennis_ball_1 debris_1;
+# not covered softball_1 dirt_1.
+success = """
+No dirt and no dust particle is left on either of the two teddy bears, no debris particle on the tennis ball, and no
+dirt particle on the softball (`not covered`: an object counts as covered while a single particle is on it).
+"""

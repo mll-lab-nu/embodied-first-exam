@@ -1,36 +1,40 @@
-# mujoco_playground_go1_footstand-privileged
+# MuJoCo Playground · Go1Footstand (privileged)
 
 | | |
 |---|---|
-| Benchmark | MuJoCo Playground |
+| Task ID | `mujoco_playground_go1_footstand-privileged` |
+| Benchmark | [MuJoCo Playground](https://playground.mujoco.org/) (Zakka et al., 2025), upstream `google-deepmind/mujoco_playground@4057c14` |
+| Robot | Unitree Go1 quadruped, 12 joint position actuators |
 | Mode | privileged |
-| Twin | `mujoco_playground_go1_footstand-standard` |
-| Simulator / robot | `mujoco` / `unitree-go1` |
-| Family / instance | `mujoco_playground/Go1Footstand` / seed 0 |
-| Oracle | `full` |
-| Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` |
+| Instance | `mujoco_playground/Go1Footstand`, seed 0 |
+| Time limit | 30 min |
+| Reference solution | Included |
 
 ## Task
-MuJoCo Playground `Go1Footstand` (Unitree Go1), rebuilt in plain MuJoCo from Playground's scene files: Make the robot stand up on its hind legs, nose up and front legs in the air, and balance there for 2 s.
-From standing, it has 10 s to get into a footstand on its hind legs and hold it for 2 s (Playground's footstand reward aims at the IMU 0.53 m high). The deliverable is one replayable trajectory of joint position targets
-(`/app/output/trajectory.npz`, `(T, 12)`, 1 <= T <= 500).
+Make the robot stand up on its hind legs, nose up and front legs in the air, and balance there for 2 s.
 
-## Difficulty
-Dynamic balance on two legs: the robot has to throw its weight onto its hind legs, lift the other pair and then balance an inverted, top-heavy body on two small feet with 35 N m/rad position drives, correcting continuously; a front leg touching the floor or a tip-over ends it. Playground's footstand is trained with 100 M steps of PPO.
+## Success criteria
+Pass condition, defined by this benchmark (MuJoCo Playground's `Go1Footstand` has only a shaped training reward and no success
+test): no termination at any step, and the last 100 control steps (2 s) of the episode all have the trunk's forward
+axis (the IMU frame's x axis) within 30° of straight up, the IMU at least 0.40 m above the floor, and neither front
+foot touching the floor. An episode is at most 500 control steps (10 s at 50 Hz).
 
-## Reference solution
-A policy trained here on Playground's Go1Footstand reward (PPO on the CPU; the training code is not in the image) with three training-only changes (Go1FootstandStrict3): this task's hind-leg termination (with Playground's rule alone it learns to sit on a hind hip), half of the episodes starting in Playground's `footstand` keyframe, and a steeper height reward (with Playground's it settles in a squat at 0.2 m), run closed loop with Playground's action semantics (targets accumulate) until the hold completes: 113 control steps, pose angle 9.6 deg and IMU at 0.541 m at the end. Replayed by `solution/solve.sh` (`solution/oracle.npy`, 113 rows); the rows are float32-exact, so the
-standard twin's client executes the same targets. Re-verified: two
-fresh-process replays succeed and end in the same state.
+Termination (a failure at any step; a live episode ends there), any of: the trunk tipped over, its up axis more than
+about 15° below the horizon (the IMU frame's z axis has a world z component below −0.25); a thigh, calf or hip of a
+front leg touching the floor; a thigh, calf or hip of a hind leg touching the floor. The hind-leg rule is this
+benchmark's addition to Playground's.
 
-## Verification
-`tests/grade.py` in a separate sandbox without network: one replay, in a fresh process, from the verifier's own
-copy of the instance (`tests/instance.json`; the start state is checked against its hash on every load); pass iff it
-succeeds. Oracle: success after 113 control steps. `nop`: no trajectory, reward 0.
+Graded file: `/app/output/trajectory.npz`, array `actions` of shape (T, 12) with T at most 500: one row
+of actuator targets per control step, all finite (values outside the actuator ranges are clipped). After the agent's
+session the verifier, in a separate sandbox without network, replays it once, open-loop, from its own copy of the
+frozen start (`tests/instance.json`), and checks the condition on that replay. Only the trajectory is scored (`gen.py`
+is not). A missing file, a file that is not an `.npz` with a numeric `actions` array, or an array of another width, with
+more rows or with a NaN or infinite value scores 0. A replay that does not rebuild the frozen start (its state hash
+differs) and any other error inside the grader, such as a replay that dies or times out, are reported as a grader
+error, not as the agent's score.
 
-## Resources
-Caps per container (PROTOCOL §6).
+## Resource requirements
+Caps per container.
 
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
@@ -39,10 +43,11 @@ Caps per container (PROTOCOL §6).
 
 - GPU: not needed.
 
-## Details
-| | |
-|---|---|
-| Upstream | MuJoCo Playground @ 4057c14 (Apache-2.0): `locomotion/go1/xmls/scene_mjx_flat_terrain.xml`; MuJoCo Menagerie @ 1b86ece (`unitree_go1`); simulated in MuJoCo 3.3.7 on the CPU |
-| Instance | Playground's `reset` with `jax.random.PRNGKey(0)` (xy, yaw and base velocity); chosen (seed 0; the first candidate) |
-| Actions | 12 joint position targets per control step (0.02 s of simulated time); kp = 35 N m/rad, joint damping 0.5 N m s/rad |
-| Resources | 4 CPUs, no GPU (CPU physics, EGL or OSMesa rendering) |
+## License
+MuJoCo Playground ([google-deepmind/mujoco_playground](https://github.com/google-deepmind/mujoco_playground) @
+`4057c14`) is released under the Apache License 2.0. The robot models come from MuJoCo Menagerie
+([google-deepmind/mujoco_menagerie](https://github.com/google-deepmind/mujoco_menagerie) @ `1b86ece`, the commit
+Playground pins), each under its own license: Unitree Go1 (BSD 3-Clause, Unitree Robotics), Boston Dynamics Spot
+(BSD 3-Clause, Clearpath Robotics), Google Barkour vB (Apache License 2.0, DeepMind), ALOHA 2 (BSD 3-Clause, Trossen
+Robotics), Franka Emika Panda (Apache License 2.0). The rough-terrain texture is from Poly Haven (CC0). No
+non-commercial terms apply. The simulator is MuJoCo 3.3.7 (Apache License 2.0).

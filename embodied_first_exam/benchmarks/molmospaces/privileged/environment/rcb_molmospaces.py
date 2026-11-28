@@ -346,7 +346,7 @@ class Episode:
         return lim
 
     def robot_spec(self) -> dict:
-        """The robot's spec sheet (eai-standard/2.2 §5 robot_spec), read off the robot's MuJoCo model: every joint of
+        """The robot's spec sheet (eai-standard/3.0 §5 robot_spec), read off the robot's MuJoCo model: every joint of
         the controlled move groups with the limits the simulator enforces, the grippers, the controller and its gains,
         the tool frames and the base. Nothing about the scene."""
         rv, m = self.robot.robot_view, self.env.current_model
@@ -490,7 +490,7 @@ class Episode:
 
     def kinematics(self, req: dict) -> dict:
         """{"op": "fk", "q", "links"?} -> poses; {"op": "ik", "targets": {tcp: pose7}, "seed"?, "tol_pos_m"?,
-        "tol_rot_rad"?, "max_iters"?} -> q (eai-standard/2.2 §8). Poses: x y z qw qx qy qz, world frame."""
+        "tol_rot_rad"?, "max_iters"?} -> q (eai-standard/3.0 §8). Poses: x y z qw qx qy qz, world frame."""
         kin, base = self.robot.kinematics, self.robot.robot_view.base.pose
         spec = self.kinematics_spec()
         if req.get("op") == "fk":

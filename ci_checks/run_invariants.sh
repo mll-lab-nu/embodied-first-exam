@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
 # The required CI job `invariants` (.github/workflows/static-checks.yml): every check and test that enforces the eight
-# invariants of docs/protocol/README.md Appendix H, and nothing else (all other checks are advisory: ci_checks/run_all.sh).
+# invariants of docs/protocol/invariants.md, and nothing else (all other checks are advisory: ci_checks/run_all.sh).
 # It fails on any failure, on any error, and on any incomplete run: `set -euo pipefail`, no check is allowed to warn
 # instead of failing, ci_checks/parallel.py --expect requires exactly the scheduled commands to complete with exit 0, every
 # command must print its `INVARIANT-PASS <id>` line, the per-task checks must have covered every task in scope, and the
 # list of named checks must have its expected length (a check removed from the list fails the job).
 #   run_invariants.sh [task dirs]       the given tasks (default: every task dir, tasks/*/*)
 #   run_invariants.sh --changed [REV]   a pull request's scope (ci_checks/ci_scope.py), as run_all.sh --changed
-# What enforces what (Appendix H):
+# What enforces what (docs/protocol/invariants.md):
 #   H.1 verifier isolation      check-verifier-isolation.sh (per task), check-monitor.py --tier invariants,
 #                               check-ci-selftest.py --tier invariants (the rules fire), benchmark hooks (a skill sandbox)
 #   H.2 no answer in reach      check-agent-pointers.py, the benchmarks' ci_checks/benchmarks/*/invariant-* hooks
 #   H.3 standard trust boundary check-standard-agent-image.sh, check-verifier-isolation.sh (ports, sidecar topology),
-#                               check-agent-end.py (no success signal: agent-ended episodes in standard and realtime)
+#                               check-agent-end.py (no success signal: agent-ended episodes in standard and realtime),
+#                               check-protocol-strings.py (one protocol, eai-standard/3.0: no former id or list of them)
 #   H.4 trusted verdict         check-verifier-isolation.sh (evidence from a sidecar), check-instance-copies.sh
 #   H.5 infrastructure rerun    scripts/tests/test_retry_policy.py, scripts/tests/test_runner_results.py (a voided
 #                               attempt is never counted)
@@ -63,10 +64,11 @@ add monitor         python3 ci_checks/check-monitor.py --tier invariants"$targs"
 add retry-policy    python3 scripts/tests/test_retry_policy.py                              # H.5
 add runner-results  python3 scripts/tests/test_runner_results.py                            # H.5
 add agent-end       python3 ci_checks/check-agent-end.py --tier invariants"$targs"          # H.3
-EXPECTED_NAMED=7
+add protocol-strings python3 ci_checks/check-protocol-strings.py                            # H.3: every tracked file
+EXPECTED_NAMED=8
 if [ "$scope" = full ] && [ $explicit -eq 0 ]; then
   add selftest      python3 ci_checks/check-ci-selftest.py --tier invariants                # H.1-H.8: the rules fire
-  EXPECTED_NAMED=8
+  EXPECTED_NAMED=9
 fi
 [ "${#ids[@]}" -eq "$EXPECTED_NAMED" ] || { echo "FAIL run_invariants.sh: ${#ids[@]} named checks, $EXPECTED_NAMED expected"; exit 1; }
 # the benchmarks' own invariant hooks (H.1 / H.2: leak checks, a skill sandbox's test): every ci_checks/benchmarks/*/invariant-*,
