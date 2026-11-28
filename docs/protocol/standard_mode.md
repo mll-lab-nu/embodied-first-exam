@@ -259,7 +259,7 @@ described in its benchmark's `tasks/<benchmark>/README.md`:
 - the shared sidecar `rcb_service.py`, one source (`embodied_first_exam/standard/sidecar/`, in the files-only image
   `standard-files`), with each benchmark's adapter: KinDER, HumanoidBench, Panda Dynamic
   Scenes, LIBERO-Max, VLABench, BiGym 2.0, Embodied Olympics - Fun, Embodied Safety Exam, HumanCLAW, the realtime tasks
-  of RoboCasa365, MyoSuite and MuJoCo Playground, and ABC-Sim's realtime tasks (in its image,
+  of MyoSuite and MuJoCo Playground, and ABC-Sim's realtime tasks (in its image,
   `images/abc-sim/tools/realtime/`); the realtime layer (`rcb_realtime.py`) runs over it.
 
 ### Optional reset capability

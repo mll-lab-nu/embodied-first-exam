@@ -1,8 +1,7 @@
 # RoboCasa365
 
 50 of [RoboCasa365](https://github.com/robocasa/robocasa)'s kitchen tasks (robocasa 1.0.1) with a mobile manipulator
-(Franka Panda on an Omron mobile base), each on one frozen instance, in both modes: 100 tasks; and one realtime twin:
-`tasks/robocasa365/robocasa365-turn-on-toaster-oven-i00-realtime`, the benchmark's one dynamic task.
+(Franka Panda on an Omron mobile base), each on one frozen instance, in both modes: 100 tasks.
 
 ## Quick start
 ```bash
@@ -78,36 +77,6 @@ replayed, the start checked against the frozen instance (`RCB_INSTANCE_SHA`, `RC
 each task's `environment/docker-compose.yaml`, a mismatch is infrastructure), the video one render pass after the
 verdict; the hook's budget; request validation; the camera calibration is the rendered viewpoint).
 
-## Realtime (`eai-standard/3.0`)
-The dynamic tasks (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-realtime` twin. In RoboCasa365 that is **TurnOnToasterOven** only: once set, the oven's timer knob turns back
-by itself (`ToasterOven.update_state`: 1/3000 of its range per simulated second, on `sim.data.time`, so a replay repeats
-it bit for bit). The toaster ovens and electric kettles of other tasks move by themselves too, but no other task uses them.
-- **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and Embodied Olympics - Fun, unchanged
-  (the task's `environment/sim/rcb_realtime.py`, `rcb_service.py`, `environment/rcb_client.py`, `tests/grade.py`: byte-identical
-  copies of the HumanoidBench realtime tasks' files; `ci_checks/check-tooling-identity.sh`), with
-  `environment/sim/server.py`, an `rcb_service.Sim` adapter on `casa_tool.Session`: the standard
-  twin's frozen instance, native controller command (`joint_position`, 13 channels, clipped and reported), success
-  check (`_check_success`, twice per control step) and cameras (RGB-D, 320 x 240, OSMesa on the CPU; no GPU). The
-  verdict is the live episode's (the shared layer's `graded_by = live`): the last episode's success as it ran, and the
-  adapter's `live_verdict()` adds the standard twin's rule that the scene was not solved at that episode's start;
-  nothing is replayed. `start_sha` (`RCB_START_SHA`, the standard twin's archived start hash,
-  the same value) is checked by the layer when the first episode begins and after every reset (`instance_mismatch`,
-  infrastructure). The video is rendered from the trajectory after the verdict (the live session rebuilt, one pass);
-  the collect hook waits up to 840 s for the verdict and 870 s for the video. The robot's cameras move with it:
-  their intrinsics are in `/spec`, their current poses in every proprioception row (`cam_<camera>_*`, the standard
-  twin's `cam2world_gl`). Not served: the sidecar's per-response calibration dictionary.
-- **Episode.** On a clock that does not stop, an episode as long as the agent's time would run for up to an hour, so
-  the realtime twin also caps it: an episode ends at the agent's `POST /finish`, after 3000 control steps (150 s of
-  robot time, the privileged deliverable's cap; `RCB_MAX_CONTROL_STEPS`), when the agent's time is up, or on a
-  simulator error, and is judged on the state it ends in ("Agent-ended episodes" below). A success never ends it. No reset (reset budget 0, PROTOCOL §2), as in standard: one episode.
-- **Slowdown S = 2.** Real-time factor 1.29 with the realtime clock flat out (the service capped at 4 CPUs); PROTOCOL
-  §2: S = ceil(1.5 / 1.29) = 2, one control step every 0.1 s of wall time. An OSMesa frame takes about 0.12 s per
-  camera; `server.py` makes the renderer at start and after every reset, so the first image does not stall the clock.
-- **Checked at S = 2**: the privileged reference planned from step 0 succeeds live; nop: `timeout`, not a success; a
-  controller streaming one row per control step with an image every 0.5 s over 3 episodes: no stall, largest lag
-  0.05 s.
-- **Cutoff** 3600 s, the standard twin's.
-
 ### Agent-ended episodes
 
 Every standard and realtime task sets `RCB_AGENT_END "1"` in its sim service (PROTOCOL §3). `server_casa.py` (standard)
@@ -154,7 +123,7 @@ Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_
 Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
 `claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
 
-By directory: 70 easy, 6 hard, 25 unverified, 0 pending.
+By directory: 69 easy, 6 hard, 25 unverified, 0 pending.
 
 | base | privileged | standard | realtime |
 |---|---|---|---|
@@ -207,7 +176,7 @@ By directory: 70 easy, 6 hard, 25 unverified, 0 pending.
 | `robocasa365-turn-on-microwave-i00` | easy: Luna | unverified | — |
 | `robocasa365-turn-on-sink-faucet-i00` | easy: Luna | unverified | — |
 | `robocasa365-turn-on-stove-i00` | easy: Luna | unverified | — |
-| `robocasa365-turn-on-toaster-oven-i00` | easy: Luna | unverified | easy: Luna |
+| `robocasa365-turn-on-toaster-oven-i00` | easy: Luna | unverified | — |
 
 Judgment calls: `robocasa365-beverage-sorting-i00`: the one standard solve hit the 3600 s agent timeout after its
 episode was recorded (graded as a success).

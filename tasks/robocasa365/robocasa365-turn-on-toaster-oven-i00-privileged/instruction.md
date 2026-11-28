@@ -44,7 +44,6 @@ img = s.render("robot0_agentview_center")   # RGB (240, 320, 3); views in s.came
 ## Others
 - Read success with `s.check()`. It runs after every step in your session, as it does in the grader. Calling the
   environment's own check yourself changes the run you are recording.
-- A set timer slowly runs back down by itself.
 
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session. Everything counts, including the simulator's start-up.

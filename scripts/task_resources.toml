@@ -357,14 +357,6 @@ sim = { cpus = 4, memory_gb = 10, pids = 1024 }
 measured = "memory: sim p90 5.6 GB (a per-container memory sampler); CPU only (OSMesa cameras); CPU: an estimate"
 caps_measured = "per-container peaks in 124 past trials: the agent's container memory 3.9 GiB, 278 threads, CPU at its cap (4), disk 3.2 GiB; the sim service memory 6.4 GiB, 110 threads, CPU 3.1 cores; the sim service's memory covers its largest legal call (4 cameras 240x320 with depth, 375 frames each (3000 images)): 0.6 GiB to build the response on top of the simulator's 6.4 GiB"
 
-# 1 task(s)
-[[cap]]
-match = "^robocasa365-.*-realtime$"
-main = { cpus = 4, memory_gb = 16, pids = 8192, disk_gb = 20 }
-sim = { cpus = 6, memory_gb = 14, pids = 8192 }
-measured = "as the standard twin (the same service process and fresh-replay session); memory: sim p90 5.6 GB; CPU only (OSMesa cameras); CPU: an estimate"
-caps_measured = "processes and disk: defaults, not measured"
-
 # 48 task(s)
 [[cap]]
 match = "^robodojo-.*-privileged$"
