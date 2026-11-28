@@ -4,8 +4,8 @@
 The robot has fallen over. Get it back up, standing upright at its normal height.
 
 ## Goal
-Success: the robot stands upright on its feet, at about its standing height, for half a second. The trajectory must end
-with the robot standing so: end it once that holds.
+Success: the robot's body is upright and at about its standing height for half a second. The trajectory must end with
+the robot standing so: end it once that holds.
 
 Deliverable: `/app/output/trajectory.npz` with `actions`: float64 (T, 12), one row per control step, 1 <= T <= 300;
 `s.save_trajectory(rows)` writes it. It is replayed from the frozen start. Leave the script that produced it at
