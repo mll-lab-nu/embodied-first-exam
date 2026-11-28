@@ -41,11 +41,9 @@ Apache-2.0. No non-commercial terms apply.
 - **Success predicates unchanged.** Success is VLABench's own termination condition (`task.should_terminate_episode`:
   the instance's conditions, plus the task class's own check where it has one, e.g. the microwave door and start button
   of heat_food). The predicates keep their looseness: containment tests one point of the object (its origin) against a
-  box or a disc of the container's annotated sites. Each task README states its predicate exactly.
-- **`order` bounds the other axes on both sides.** VLABench's `OrderCondition` (book_rearrange, play_math_game) checks
-  `(a - b) < offset` in the axes it does not sort, so the next entity could be any distance further or higher; its
-  docstring means an offset either way. The base image patches `VLABench/tasks/condition.py` to `abs(a - b) < offset`
-  (`images/vlabench/Dockerfile`, checked by `images/vlabench/test_order_condition.py`).
+  box or a disc of the container's annotated sites, and `order` (book_rearrange, play_math_game) sorts no axis, since
+  VLABench's loader passes its `axis` list through the entity lookup: it only requires each entity's x, y and z to be
+  less than 0.1 m larger than the next one's. Each task README states its predicate exactly.
 - **Instructions say what is graded.** Where VLABench's own instruction does not say what its check requires, the task's
   instruction restates it (24 tasks): for example the `*_qa` and `select_painting` answers are button presses,
   `select_billiards*` count only VLABench's target pocket, and `texas_holdem` names the five cards VLABench's ranking

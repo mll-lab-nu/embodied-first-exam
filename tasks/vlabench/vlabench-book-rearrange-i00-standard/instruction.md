@@ -5,8 +5,7 @@ Put the three books from the table into the bookshelf side by side, in the order
 robot's left, the newest on its right.
 
 ## Goal
-Success: the three books are in the bookshelf, in order from the oldest on the robot's left to the newest on its right,
-at about the same height and depth.
+Success: the three books are in the bookshelf, in order from the oldest on the robot's left to the newest on its right.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

@@ -8,8 +8,7 @@ Thursday, the mechanic repairs 6 truck tires and 4 car tires. On Friday, the mec
 repair any truck tires. How much more revenue did the mechanic earn on the day with higher revenue?
 
 ## Goal
-Success: the number cubes that spell the answer are on the placemat in order from the robot's left to its right, roughly
-in one row.
+Success: the number cubes that spell the answer are on the placemat in order from the robot's left to its right.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

@@ -5,9 +5,9 @@ Put the three books from the table into the bookshelf side by side, in the order
 robot's left, the newest on its right.
 
 ## Goal
-Success: the three books are in the bookshelf, in order from the oldest on the robot's left to the newest on its right,
-at about the same height and depth. Your trajectory is replayed from the fixed start. The episode ends as soon as the
-task is done, and the trajectory must end on that step: any action after it makes the trajectory invalid.
+Success: the three books are in the bookshelf, in order from the oldest on the robot's left to the newest on its right.
+Your trajectory is replayed from the fixed start. The episode ends as soon as the task is done, and the trajectory must
+end on that step: any action after it makes the trajectory invalid.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`: key `actions`, shape `(T, 9)`, 1 ≤ T ≤
 4000; only this file is graded. Also leave two files for the people who read your work. `/app/output/gen.py`: the script
