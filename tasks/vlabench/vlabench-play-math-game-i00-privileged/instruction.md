@@ -8,8 +8,8 @@ Thursday, the mechanic repairs 6 truck tires and 4 car tires. On Friday, the mec
 repair any truck tires. How much more revenue did the mechanic earn on the day with higher revenue?
 
 ## Goal
-Success: the number cubes that spell the answer lie side by side on the placemat, reading from the robot's left to its
-right. Your trajectory is replayed from the fixed start. The episode ends as soon as the task is done, and the
+Success: the number cubes that spell the answer are on the placemat in order from the robot's left to its right, roughly
+in one row. Your trajectory is replayed from the fixed start. The episode ends as soon as the task is done, and the
 trajectory must end on that step: any action after it makes the trajectory invalid.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`: key `actions`, shape `(T, 9)`, 1 ≤ T ≤

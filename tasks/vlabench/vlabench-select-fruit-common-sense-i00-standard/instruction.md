@@ -4,7 +4,7 @@
 Put the pear on the plate.
 
 ## Goal
-Success: the pear is on the plate.
+Success: the pear is over the plate, at most a hand's width above it (lying on it, or still held just above it).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
