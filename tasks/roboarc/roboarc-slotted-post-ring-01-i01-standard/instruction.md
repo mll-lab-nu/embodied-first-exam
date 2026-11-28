@@ -6,7 +6,7 @@ cord, beads and end discs behind, no closer to the goal than they were at the st
 
 ## Goal
 Success: all of the removable metal ring is inside the green dashed goal square and still, and the post, cord, beads and
-end discs are no closer to the goal than at the start.
+end discs reach no more than a few millimetres closer to the goal than their nearest part did at the start.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts. Make sure
 everything is at rest when you send `/finish`.

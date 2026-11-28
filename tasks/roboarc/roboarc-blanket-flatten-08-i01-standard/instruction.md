@@ -5,9 +5,9 @@ Unfold the blanket and spread it flat on the table, with no part folded over ano
 go of it and move both arms clear of it.
 
 ## Goal
-Success: the blanket lies fully unfolded and flat on the table, with no part over another, nothing stretched and no
-corner raised; both arms have let go of it and moved clear, and the cloth is still. Letting the blanket fall off the
-table ends the episode as a failure.
+Success: the blanket lies unfolded and flat on the table, covering nearly all of its own area with almost nothing folded
+over, nothing stretched and no corner raised; both arms have let go of it and moved clear, and the cloth is still.
+Letting the blanket fall off the table ends the episode as a failure.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts. Make sure
 everything is at rest when you send `/finish`.

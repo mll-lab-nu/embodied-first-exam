@@ -5,10 +5,10 @@ Take the hedgehog ball out of the cage and put all of it, every spike included, 
 Leave the cage parts behind, no closer to the goal than they were at the start.
 
 ## Goal
-Success: all of the hedgehog ball is inside the green dashed goal square and still, and the cage parts are no closer to
-the goal than at the start. Do not force pieces into each other: a success reached that way may not count. Dropping a
-piece off the table ends the episode as a failure. A replay ends, as a success, as soon as all of this has held for 2 s;
-later rows are not run.
+Success: all of the hedgehog ball is inside the green dashed goal square and still, and the cage parts reach no more
+than a few millimetres closer to the goal than their nearest part did at the start. Do not force pieces into each other:
+a success reached that way may not count. Dropping a piece off the table ends the episode as a failure. A replay ends,
+as a success, as soon as all of this has held for 2 s; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 8) actions, one row
 per control step (1/40 s), at most 200000 rows (a longer trajectory is invalid). Leave the script that produced it at

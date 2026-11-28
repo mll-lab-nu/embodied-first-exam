@@ -6,8 +6,8 @@ cord, beads and end discs behind, no closer to the goal than they were at the st
 
 ## Goal
 Success: all of the removable metal ring is inside the green dashed goal square and still, and the post, cord, beads and
-end discs are no closer to the goal than at the start. A replay ends, as a success, as soon as all of this has held for
-0.5 s; later rows are not run.
+end discs reach no more than a few millimetres closer to the goal than their nearest part did at the start. A replay
+ends, as a success, as soon as all of this has held for 0.5 s; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 14) actions, one row
 per control step (1/40 s), at most 189000 rows (a longer trajectory is invalid). Leave the script that produced it at
