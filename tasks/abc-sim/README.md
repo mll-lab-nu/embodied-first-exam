@@ -15,7 +15,7 @@ harbor run -d embodied-first-exam@all -p tasks/abc-sim -a codex -m <model>
 | | |
 |---|---|
 | upstream | `abc_sim` of [amazon-far/abc](https://github.com/amazon-far/abc) @ `d0832d1` (Apache-2.0), on MuJoCo 3.6.0 |
-| images | `ghcr.io/mll-lab-nu/efe:abc-sim-0.3.0` (privileged) and `abc-sim-0.5.1` (standard and realtime): `images/abc-sim/`, built from public sources |
+| images | `ghcr.io/mll-lab-nu/efe:abc-sim-0.3.0` (privileged) and `abc-sim-0.6.0` (standard and realtime): `images/abc-sim/`, built from public sources |
 | GPU | any NVIDIA GPU with EGL: the cameras render over EGL, the physics runs on the CPU |
 | metadata | `simulator = "mujoco"`, `robot = "i2rt-yam-bimanual"`, `family = "<family>"`, `oracle = "full"` |
 | time limit | 3600 s for every task and mode (`[agent] timeout_sec`) |
