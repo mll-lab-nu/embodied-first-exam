@@ -4,9 +4,9 @@
 Take the spoon out of the mug, put it back in the other way round, and let go of the spoon and the mug.
 
 ## Goal
-Success: the spoon is back in the mug the other way round (the end that pointed up now points down), and neither gripper
-touches the spoon or the mug, for a second. A fall (the pelvis tipping far over, or dropping low) makes the episode a
-failure without ending it.
+Success: the spoon touches the mug with the end that pointed up now pointing down, and neither gripper's fingers touch
+the spoon or the mug, for a second. A fall (the pelvis tipping far over, or dropping low) makes the episode a failure
+without ending it.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

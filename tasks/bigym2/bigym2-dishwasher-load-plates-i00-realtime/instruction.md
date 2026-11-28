@@ -5,9 +5,9 @@ Move both plates from the dish rack into the dishwasher's lower rack, standing o
 from where you start, and let go.
 
 ## Goal
-Success: both plates stand on edge in the dishwasher's lower rack, each facing left or right as seen from where you
-start, and neither gripper touches them, for a second. A plate touching the floor ends the episode as a failure. A fall
-(the pelvis tipping far over, or dropping low) makes the episode a failure without ending it.
+Success: both plates stand on edge touching the dishwasher's lower rack, each facing left or right as seen from where
+you start, and neither gripper's fingers touch them, for a second. A plate touching the floor ends the episode as a
+failure. A fall (the pelvis tipping far over, or dropping low) makes the episode a failure without ending it.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
