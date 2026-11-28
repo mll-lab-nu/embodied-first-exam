@@ -11,13 +11,12 @@
 | Reference solution | None |
 
 ## Task
-Put the tomato and the milk from the car into one fridge, then close the car and the kitchen fridge
-(`electric_refrigerator.n.01_1`).
+Put the tomato and the milk from the car into one fridge, then close the car and the kitchen fridge.
 
 ## Success criteria
 The beefsteak tomato and the carton of milk are inside one and the same refrigerator (any refrigerator of the kitchen),
-the car is closed, and the refrigerator `electric_refrigerator.n.01_1` is closed. The kitchen's other refrigerators are
-not checked for being closed.
+the car is closed, and the kitchen refrigerator (`electric_refrigerator.n.01_1`) is closed. The kitchen's other
+refrigerators are not checked for being closed.
 
 The relations above are OmniGibson's object states, evaluated on the simulator after every control step (30 Hz). An
 object is *on* another (`ontop`) when the two touch and the other is directly below it; *inside* when the centre of its
