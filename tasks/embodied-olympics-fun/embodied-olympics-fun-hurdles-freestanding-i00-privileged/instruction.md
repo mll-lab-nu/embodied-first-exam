@@ -2,7 +2,7 @@
 
 ## Task
 Run the 50 m hurdles: go over each of the four hurdles in your lane and reach the finish line, leaving at least one
-hurdle standing.
+hurdle in place.
 
 ## Goal
 Success: you go over all four hurdles in your lane, none passed beside, under or after pushing it away, leave at least

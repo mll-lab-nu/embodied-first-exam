@@ -12,7 +12,7 @@
 
 ## Task
 Throw the javelin over your shoulder from behind the arc so that it lands point first inside the sector at least 20 m
-out, then leave the runway behind the arc and stand.
+out, then leave the runway behind the arc's end lines, or step back at least 4 m behind them, and stand still for 1 s.
 
 ## Success criteria
 A javelin (0.6 kg, 2.21 m) starts held at its cord in the right hand. The runway is 4 m wide and ends at the arc, a

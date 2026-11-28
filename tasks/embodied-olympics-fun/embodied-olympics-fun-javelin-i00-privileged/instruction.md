@@ -2,7 +2,7 @@
 
 ## Task
 Throw the javelin over your shoulder from behind the arc so that it lands point first inside the sector at least 20 m
-out, then leave the runway behind the arc and stand.
+out, then leave the runway behind the arc's end lines, or step back at least 4 m behind them, and stand still for 1 s.
 
 ## Goal
 Success: you throw the javelin over your shoulder from behind the arc, it lands point first inside the sector at least

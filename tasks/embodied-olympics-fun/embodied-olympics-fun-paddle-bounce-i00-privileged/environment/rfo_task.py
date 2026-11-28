@@ -856,9 +856,8 @@ class Task(TaskBase):
                   blade_centre_m=FREE_PADDLE["blade_centre_from_butt_m"], out_of_hand_s=0.05, retract_after_s=0.15,
                   retract_m=0.35, dropper_free_s=0.1)
 
-    sentence = ("Keep the table tennis ball that is dropped in front of you bouncing on the paddle held in your right "
-                "hand: {bounces} bounces in a row, each back up to the height the ball was dropped from, "
-                "without letting go of the paddle.")
+    sentence = ("Bounce the table-tennis ball on the paddle in your right hand 20 times, each a hit that sends it back "
+                "up to the height it was dropped from, without letting go of the paddle.")
     rules = ("A table tennis racket (a rigid square blade 0.15 m wide and 0.015 m thick on a straight handle "
              "{handle_length_m} m long, {handle_width_m} m wide and {handle_thickness_m} m thick; {paddle_mass_kg} kg; "
              "the blade's centre {blade_centre_m} m from the butt) is a separate body; at the start its handle is "
@@ -868,7 +867,7 @@ class Task(TaskBase):
              "{out_of_hand_s} s it has not. The paddle may touch nothing of you but your right hand. The official ball "
              "(40 mm, 2.7 g; it flies in air, with drag) rests in a dropper's cup, its centre {drop_z_m} m above the "
              "floor, until {drop_time_s} s after the start, when the cup's floor opens and it falls; {retract_after_s} s "
-             "later the cup moves {retract_m} m away from you along its arm. You succeed after {bounces} bounces in a row on the "
+             "later the cup moves {retract_m} m away from you along its arm. You succeed after {bounces} bounces on the "
              "blade (either face; the faces need not alternate). A bounce is a touch of the blade after which, before "
              "the ball touches the blade again, the ball's centre rises at least {min_rise_m} m above the height at "
              "which it left the blade and reaches at least the height it was dropped from, {drop_z_m} m above the "

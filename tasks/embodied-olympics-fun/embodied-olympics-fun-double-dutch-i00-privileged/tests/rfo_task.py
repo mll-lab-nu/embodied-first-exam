@@ -367,9 +367,8 @@ class Task(TaskBase):
                   zone_half_x_m=0.35, zone_half_y_m=0.5, jumps_required=10, fall_z_m=0.35,
                   turner_y_m=1.95, half_gap_m=0.2, pass_period_s=0.4545)       # (the last three: derived, for the texts)
 
-    sentence = ("Jump Double Dutch: enter the two ropes turning in opposite directions and jump them "
-                "{jumps_required} times in a row, one rope per jump, without a rope ever touching you, then land on "
-                "your feet.")
+    sentence = ("Jump Double Dutch: get into the two turning ropes and make 10 counted jumps (one rope counts per jump)"
+                " without a rope touching you, then land on your feet.")
     rules = ("Two rope-turning machines stand {turner_distance_m} m apart, at y = -{turner_y_m} and +{turner_y_m} "
              "m; each turns the ends of two ropes on cranks {crank_radius_m} m long whose axles are "
              "{hand_height_m} m above the floor, {hand_gap_m} m apart (one at x = +{half_gap_m} m, one at x = "

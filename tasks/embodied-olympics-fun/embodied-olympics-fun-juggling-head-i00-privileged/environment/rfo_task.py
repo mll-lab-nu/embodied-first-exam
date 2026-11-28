@@ -798,9 +798,8 @@ class Task(TaskBase):
                   # what the texts quote (measured with the machine)
                   feed_s=0.28, arrive_speed_m_s=3.5, arrive_vx_m_s=1.1)
 
-    sentence = ("Juggle the football on your head: a ball machine in front of you lobs it onto your head; keep it in "
-                "the air with ten headers in a row, touching it with nothing but your head, without it touching the "
-                "ground.")
+    sentence = ("Keep the football in the air with 10 counted headers, touching it only with your head and never "
+                "letting it touch the ground.")
     rules = ("You stand in the middle of a square grid {grid_m} m on a side (5 yards; cones at its corners) on level "
              "grass. A size-5 football (0.22 m across, 0.43 kg, in air) waits in a ball machine that stands on the "
              "grass {machine_x_m} m in front of you; at {feed_time_s} s its gate opens and the machine lobs the ball "

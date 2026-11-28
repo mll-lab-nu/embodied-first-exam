@@ -11,8 +11,8 @@
 | Reference solution | Included |
 
 ## Task
-Bounce the table-tennis ball on the paddle in your right hand 20 times in a row, each time back up to the height it was
-dropped from, without letting go of the paddle.
+Bounce the table-tennis ball on the paddle in your right hand 20 times, each a hit that sends it back up to the height
+it was dropped from, without letting go of the paddle.
 
 ## Success criteria
 A table tennis paddle starts closed in the robot's right hand; it is a separate body held by contact and friction

@@ -1,8 +1,8 @@
 # Embodied Olympics · juggling with the feet (privileged)
 
 ## Task
-Drop the football from your hands and juggle it with your feet for ten touches in a row, each sending it above your
-knees, without it touching the ground.
+Drop the football from your hands and juggle it with your feet for ten counted touches, each sending it above your
+standing knee height, without it touching the ground.
 
 ## Goal
 Success: you keep the ball up with ten counted foot touches, each sending the bottom of the ball above your standing

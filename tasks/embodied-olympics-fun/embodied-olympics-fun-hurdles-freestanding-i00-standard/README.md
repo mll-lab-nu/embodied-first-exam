@@ -12,7 +12,7 @@
 
 ## Task
 Run the 50 m hurdles: go over each of the four hurdles in your lane and reach the finish line, leaving at least one
-hurdle standing.
+hurdle in place.
 
 ## Success criteria
 A 50 m lane, 1.22 m wide, with four loose hurdles (1.067 m high, 1.19 m wide, 10.9 kg, tipping over under about 3.8 kg

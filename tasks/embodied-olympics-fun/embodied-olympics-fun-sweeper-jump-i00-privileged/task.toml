@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-sweeper-jump-i00-privileged"
-description = "Embodied Olympics sweeper-jump (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Jump the sweeping boom 3 times in a row without being hit, then land on your podium and stand still before it comes round again. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics sweeper-jump (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Jump the sweeping boom 3 times in a row without being hit, then land on your feet and stand still for 1 s on your podium. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "sweeper-jump"]
 
 [metadata]

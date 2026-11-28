@@ -11,7 +11,7 @@
 | Reference solution | None |
 
 ## Task
-Drop the football from your hands and keep it up for ten touches in a row with your feet, legs or head, without it
+Drop the football from your hands and keep it up for ten counted touches with your feet, legs or head, without it
 touching the ground.
 
 ## Success criteria

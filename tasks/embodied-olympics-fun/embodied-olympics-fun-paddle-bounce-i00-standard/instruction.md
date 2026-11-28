@@ -1,8 +1,8 @@
 # Embodied Olympics · paddle bounce (standard)
 
 ## Task
-Bounce the table-tennis ball on the paddle in your right hand 20 times in a row, each time back up to the height it was
-dropped from, without letting go of the paddle.
+Bounce the table-tennis ball on the paddle in your right hand 20 times, each a hit that sends it back up to the height
+it was dropped from, without letting go of the paddle.
 
 ## Goal
 Success: you hit the dropped ball up 20 times on the blade, each time to at least the height it was dropped from, and

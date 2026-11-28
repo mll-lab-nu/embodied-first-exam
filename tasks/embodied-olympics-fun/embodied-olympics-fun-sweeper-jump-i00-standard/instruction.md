@@ -1,8 +1,8 @@
 # Embodied Olympics · sweeper jump (standard)
 
 ## Task
-Jump the sweeping boom 3 times in a row without being hit, then land on your podium and stand still before it comes
-round again.
+Jump the sweeping boom 3 times in a row without being hit, then land on your feet and stand still for 1 s on your
+podium.
 
 ## Goal
 Success: you jump the boom three times in a row without it touching you, then land on your feet and stand still on the

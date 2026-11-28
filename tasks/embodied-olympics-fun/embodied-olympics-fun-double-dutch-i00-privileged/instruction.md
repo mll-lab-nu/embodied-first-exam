@@ -1,7 +1,7 @@
 # Embodied Olympics · double dutch (privileged)
 
 ## Task
-Jump Double Dutch: get into the two turning ropes and jump them 10 times in a row, one rope per jump, without a rope
+Jump Double Dutch: get into the two turning ropes and make 10 counted jumps (one rope counts per jump) without a rope
 touching you, then land on your feet.
 
 ## Goal

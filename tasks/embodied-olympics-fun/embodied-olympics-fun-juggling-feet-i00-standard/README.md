@@ -11,8 +11,8 @@
 | Reference solution | None |
 
 ## Task
-Drop the football from your hands and juggle it with your feet for ten touches in a row, each sending it above your
-knees, without it touching the ground.
+Drop the football from your hands and juggle it with your feet for ten counted touches, each sending it above your
+standing knee height, without it touching the ground.
 
 ## Success criteria
 A size 5 football starts pressed between the robot's open palms, in the middle of a 5 m x 5 m grid on grass. The

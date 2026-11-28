@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-juggling-head-i00-privileged"
-description = "Embodied Olympics juggling-head (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Keep the football in the air with 10 headers in a row, touching it only with your head and never letting it touch the ground. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics juggling-head (one Unitree G1 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Keep the football in the air with 10 counted headers, touching it only with your head and never letting it touch the ground. A referee of events, geometry and contact rules decides the success."
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "trajectory", "juggling-head"]
 
 [metadata]

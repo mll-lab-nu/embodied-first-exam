@@ -214,7 +214,8 @@ class Task(TaskBase):
                   retouch_grace_s=0.20, retouch_dv_m_s=0.5, carry_s=0.20, stand_s=1.0, fall_pelvis_m=0.50, grip_scale=1.0)
 
     sentence = ("Throw the javelin over your shoulder from behind the arc so that it lands point first inside the "
-                "sector at least 20 m out, then leave the runway behind the arc and stand.")
+                "sector at least 20 m out, then leave the runway behind the arc's end lines, or step back at least 4 m "
+                "behind them, and stand still for 1 s.")
     rules = ("The women's javelin ({javelin_mass_kg} kg, {javelin_length_m} m long, its centre of gravity "
              "{javelin_cg_from_tip_m} m from the tip, a metal head of {javelin_head_m} m; its cord grip, "
              "{cord_length_m} m long and {cord_diameter_m} m across, covers the centre of gravity) starts held at its "

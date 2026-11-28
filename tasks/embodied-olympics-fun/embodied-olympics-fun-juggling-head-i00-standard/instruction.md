@@ -1,7 +1,7 @@
 # Embodied Olympics · juggling on the head (standard)
 
 ## Task
-Keep the football in the air with 10 headers in a row, touching it only with your head and never letting it touch the
+Keep the football in the air with 10 counted headers, touching it only with your head and never letting it touch the
 ground.
 
 ## Goal

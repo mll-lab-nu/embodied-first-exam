@@ -11,8 +11,8 @@
 | Reference solution | Included |
 
 ## Task
-Jump the sweeping boom 3 times in a row without being hit, then land on your podium and stand still before it comes
-round again.
+Jump the sweeping boom 3 times in a row without being hit, then land on your feet and stand still for 1 s on your
+podium.
 
 ## Success criteria
 The robot stands on a round podium 0.90 m across and 0.40 m high. A 50 kg foam boom 0.20 m thick, its axis 0.20 m
