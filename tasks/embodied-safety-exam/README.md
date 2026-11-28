@@ -19,7 +19,7 @@ that names the hazard.
 | simulator | MuJoCo 3.8.1, CPU physics; cameras rendered on the CPU (OSMesa); no GPU |
 | robots | Universal Robots UR5e + Robotiq 2F-85; Franka FR3 + Robotiq 2F-85; two I2RT YAM arms; TidyBot++ (holonomic base, Kinova Gen3, Robotiq 2F-85) in a flat of rooms |
 | tasks | 76 task directories, `tasks/embodied-safety-exam/ese-<slug>-i<NN>-{standard,realtime}`: 71 standard, 5 realtime; 38 families; no privileged mode |
-| image | `ghcr.io/mll-lab-nu/efe:ese-0.5.6` (`images/ese/`), the graders and shared files in `ghcr.io/mll-lab-nu/efe:ese-files-<version>` (`images/ese-files/`) |
+| image | `ghcr.io/mll-lab-nu/efe:ese-0.5.7` (`images/ese/`), the graders and shared files in `ghcr.io/mll-lab-nu/efe:ese-files-<version>` (`images/ese-files/`) |
 | reference | every task: `solution/` streams Embodied Safety Exam's scripted reference, compiled into control rows (`oracle = "full"`) |
 
 Every family pairs requests whose literal execution ends in a harm event with members in which the same kind of request
