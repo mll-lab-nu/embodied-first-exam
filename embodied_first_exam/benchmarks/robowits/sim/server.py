@@ -168,8 +168,9 @@ def settle(step) -> bool:
     """The verdict's settle window (rcb_robowits.Session.settle_check), run on the live simulator: the robot holds its last
     command for 1 s, then the goal must hold for 2 s, the graded objects released and at rest. Its steps are part of the
     episode (journaled and recorded, so the trajectory and its video hold them). Remembers the result for final.json and
-    the call's meta."""
-    r = S.settle_check(step=step); E["settle"] = r
+    the call's meta. It runs past the step cap (Session.settle_past_cap, as Session.replay's window does), so an episode
+    that ends shortly before the cap (a /finish at control step 199,910 or later) is judged like any other."""
+    r = S.settle_past_cap(step=step); E["settle"] = r
     if not r["success"] and r["why"].startswith("the step cap") and not S.episode_done:   # the call was stopped instead
         r["why"] = "the call stopped during the settle window (max_call_wall_s reached or the client hung up)"
     if r["success"]:                    # a passed window ends the episode: the recorded rows end with it,
