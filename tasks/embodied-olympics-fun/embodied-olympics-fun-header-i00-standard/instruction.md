@@ -4,7 +4,8 @@
 Head the cross from the wing into the goal, past the goalkeeper dummy.
 
 ## Goal
-Success: you head the cross before it touches the ground and it goes past the dummy into the goal.
+Success: you head the cross before it touches the ground and it then crosses the goal line inside the goal; the dummy
+stands in the way, and a ball that glances off it into the goal also counts.
 
 The referee in the service judges these stages, in order: **header → goal**. Once the referee calls success, it stays;
 the attempt continues until you finish. The first foul before a success ends the attempt as a failure. A reset starts a

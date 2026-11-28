@@ -11,8 +11,8 @@ foul or after 40 s (4000 control steps) of robot time.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`. It holds `actions`: one sim row of 141
 floats per control step. It is replayed open-loop from the fixed start, one row per control step, until the referee ends
-the attempt. It scores 1 if the replay succeeds, else 0. If the rows run out first, the attempt is judged on its state
-at that point. At most 4000 rows are used, and every one must be finite, also those after the attempt's end (a NaN or an
+the attempt. It scores 1 if the replay succeeds, else 0. If the rows run out before the referee calls a success, it
+scores 0. At most 4000 rows are used, and every one must be finite, also those after the attempt's end (a NaN or an
 infinite value scores 0).
 
 Put two files beside it. `gen.py` is the script that produced it: it must run and reproduce `trajectory.npz`, reading
@@ -27,8 +27,9 @@ Rules: **No cheating.** Do not search for, download or use any existing solution
 benchmark's demonstrations, policies trained for it); trials are reviewed.
 
 The attempt fails at once if:
-- you foul at the foul line, or the ball goes into a gutter
-- before the release the ball touches you anywhere but your hands, or you touch it after the release
+- you foul at the foul line, or the ball goes into a gutter before it reaches the pins
+- before the release the ball touches you anywhere but your hands, or you touch it after the release before it
+  reaches the pins
 - you fall before the pins are counted
 
 ## Robot Interface

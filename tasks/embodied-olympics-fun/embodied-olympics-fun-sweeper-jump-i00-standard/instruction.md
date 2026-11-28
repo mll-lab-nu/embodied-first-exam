@@ -5,8 +5,8 @@ Jump the sweeping boom 3 times in a row without being hit, then land on your pod
 round again.
 
 ## Goal
-Success: you jump the boom three times in a row without it touching you, then land on your feet on the podium and stand
-still for 1 s before it comes round again.
+Success: you jump the boom three times in a row without it touching you, then land on your feet and stand still on the
+podium for 1 s, the boom never touching you.
 
 The referee in the service judges these stages, in order: **jump 1 → jump 2 → jump 3 → landing → stand**. Once the
 referee calls success, it stays; the attempt continues until you finish. The first foul before a success ends the
