@@ -4,8 +4,8 @@
 Put 2 of the mugs on the wire shelf.
 
 ## Goal
-Success: exactly two of the three mugs (no more, no fewer) stand on the wire shelf, and neither gripper finger touches
-any of them.
+Success: exactly two of the three mugs (no more, no fewer) rest on the wire shelf, in any orientation, and neither
+gripper finger touches any of them.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

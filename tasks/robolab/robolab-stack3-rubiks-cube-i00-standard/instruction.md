@@ -4,7 +4,8 @@
 Stack the 3 Rubik's cubes into one tower.
 
 ## Goal
-Success: the three Rubik's cubes form one tower, in any order, each cube resting squarely on the one below it.
+Success: the three Rubik's cubes form one tower, in any order, each cube on the one below it, touching it, with its
+centre over it.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

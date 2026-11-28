@@ -4,8 +4,8 @@
 Pick up the large blue pitcher and lift it clear of the table.
 
 ## Goal
-Success: the gripper holds the large blue pitcher with all of it lifted at least a hand's width above the table, still
-over the table.
+Success: the gripper holds the large blue pitcher with all of it lifted at least a few centimetres above the table,
+still over the table.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

@@ -4,8 +4,8 @@
 Put the white mug in the centre of the table.
 
 ## Goal
-Success: the white mug stands right at the centre of the table, within a few centimetres, and neither gripper finger
-touches it.
+Success: the white mug rests on the table right at its centre, within a few centimetres, in any orientation, and neither
+gripper finger touches it.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
