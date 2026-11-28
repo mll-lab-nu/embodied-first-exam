@@ -4,8 +4,8 @@
 Put the yellow-and-white mug on the plate and the chocolate pudding on the table just to the robot's left of the plate.
 
 ## Goal
-Success: the mug sits on the plate, near its middle, and the chocolate pudding stands on the table just to the robot's
-left of the plate.
+Success: the mug sits on the plate, near its middle, and the chocolate pudding is on the table, touching it, just to the
+robot's left of the plate.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

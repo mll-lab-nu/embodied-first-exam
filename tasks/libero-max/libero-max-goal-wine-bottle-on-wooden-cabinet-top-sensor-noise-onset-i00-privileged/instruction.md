@@ -4,7 +4,8 @@
 Put the wine bottle on top of the cabinet.
 
 ## Goal
-Success: the wine bottle stands on top of the cabinet, near the middle of its top. Your trajectory is replayed from the
+Success: the wine bottle is on top of the cabinet, touching it, near the middle of its top (standing or lying). Your
+trajectory is replayed from the
 fixed start. The episode ends as soon as the task is done, and the trajectory must end on that step: any action after it
 makes the trajectory invalid.
 

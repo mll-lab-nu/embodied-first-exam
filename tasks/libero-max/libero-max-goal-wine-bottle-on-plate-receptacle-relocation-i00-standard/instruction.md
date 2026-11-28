@@ -4,7 +4,7 @@
 Put the wine bottle on the plate.
 
 ## Goal
-Success: the wine bottle stands on the plate, near its middle.
+Success: the wine bottle is on the plate, touching it, near its middle (standing or lying).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
