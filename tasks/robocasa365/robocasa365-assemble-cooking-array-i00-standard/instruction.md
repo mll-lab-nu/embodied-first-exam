@@ -6,7 +6,7 @@ the plate is, and move your hand away.
 
 ## Goal
 Success: the shrimp is in the pan, the syrup bottle and the broccoli are on the counter next to the stove where the
-plate is, and the hand has let go and moved well away from all three.
+plate is, and the hand has let go and moved well away from all three (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

@@ -5,8 +5,9 @@ Put a sugar cube from the saucer in the coffee, and put the milk from the fridge
 move your hand away.
 
 ## Goal
-Success: the sugar cube is in the coffee, the milk and the coffee stand on the counter right next to each other, and the
-hand has let go and moved well away from the milk and the sugar cube.
+Success: the sugar cube is in the coffee, the milk and the coffee are on the counter, touching it, right next to each
+other, and the hand has let go and moved well away from the milk and the sugar cube (what counts is how far away the
+hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

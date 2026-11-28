@@ -5,7 +5,7 @@ Put the glass cup in the sink's left basin and the kettle in its right basin, an
 
 ## Goal
 Success: the glass cup is in the sink's left basin and the kettle in its right basin, and the hand has let go and moved
-well away from both.
+well away from both (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

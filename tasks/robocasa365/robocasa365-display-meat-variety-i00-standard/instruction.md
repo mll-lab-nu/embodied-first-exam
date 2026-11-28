@@ -6,7 +6,7 @@ your hand away.
 
 ## Goal
 Success: the drumstick, the shrimp and the steak are all on the serving tray, the tray is on the dining counter, and the
-hand has let go and moved well away from all three.
+hand has let go and moved well away from all three (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

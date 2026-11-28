@@ -5,7 +5,7 @@ Put the canned food and the bar from the counter each in the cabinet closest to 
 
 ## Goal
 Success: the canned food and the bar are each all the way inside the cabinet closest to where it started, and the hand
-has let go and moved well away from both.
+has let go and moved well away from both (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

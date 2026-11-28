@@ -6,7 +6,8 @@ hand away.
 
 ## Goal
 Success: the spray bottle and the dish brush are both on the counter close to the cutting board, the board is still on a
-counter, and the hand has let go and moved well away from the bottle and the brush.
+counter, and the hand has let go and moved well away from the bottle and the brush (what counts is how far away the hand
+is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

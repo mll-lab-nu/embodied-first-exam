@@ -5,7 +5,7 @@ Take the egg out of the sink and put it on the plate on the counter, and move yo
 
 ## Goal
 Success: the egg is on the plate, the plate is on the counter next to the sink, and the hand has let go of the egg and
-moved well away.
+moved well away (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

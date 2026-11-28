@@ -5,9 +5,9 @@ Take the tongs from the drawer and put them on the dining counter next to the tr
 away.
 
 ## Goal
-Success: the tongs and the tray with the hot dog are both on the dining counter, near each other, and the hand has let
-go and moved well away from the tongs and the tray. Your trajectory is replayed from the fixed start. What counts is the
-state after its last action.
+Success: the tongs and the tray (the one that holds the hot dog at the start) are both on the dining counter, near each
+other, and the hand has let go and moved well away from the tongs and the tray (what counts is how far away the hand
+is). Your trajectory is replayed from the fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 13)`
 with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave

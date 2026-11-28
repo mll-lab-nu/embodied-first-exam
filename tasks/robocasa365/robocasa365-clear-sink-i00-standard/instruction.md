@@ -5,8 +5,8 @@ Take the corn and the carrot out of the sink and put the bowl and the cup from t
 away.
 
 ## Goal
-Success: the corn and the carrot are out of the sink, the bowl and the cup are in it, and the hand has let go and moved
-well away from all four.
+Success: the corn and the carrot are no longer wholly inside the sink, the bowl and the cup are in it, and the hand has
+let go and moved well away from all four (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

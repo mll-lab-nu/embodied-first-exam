@@ -5,7 +5,8 @@ Put the glass cup in the sink's left basin and the kettle in its right basin, an
 
 ## Goal
 Success: the glass cup is in the sink's left basin and the kettle in its right basin, and the hand has let go and moved
-well away from both. Your trajectory is replayed from the fixed start. What counts is the state after its last action.
+well away from both (what counts is how far away the hand is). Your trajectory is replayed from the fixed start. What
+counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 13)`
 with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave

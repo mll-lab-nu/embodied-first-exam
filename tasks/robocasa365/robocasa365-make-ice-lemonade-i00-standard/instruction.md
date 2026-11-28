@@ -5,7 +5,7 @@ Put the lemon wedge from the fridge and an ice cube from the ice bowl in the gla
 
 ## Goal
 Success: the lemon wedge and at least one ice cube are in the glass, and the hand has let go and moved well away from
-the lemon wedge and both ice cubes.
+the lemon wedge and both ice cubes (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

@@ -4,8 +4,8 @@
 Put the syrup bottle and the honey bottle from the cabinet on the counter next to the mug, and move your hand away.
 
 ## Goal
-Success: the syrup bottle and the honey bottle both stand on the counter under the coffee machine, close to the mug, and
-the hand has let go and moved well away from both.
+Success: the syrup bottle and the honey bottle are both on the counter under the coffee machine, touching it, close to
+the mug, and the hand has let go and moved well away from both (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
