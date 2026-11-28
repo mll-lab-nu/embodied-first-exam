@@ -5,7 +5,8 @@
 
 1. API path vs MCP path: an oracle written for the realtime rcb_client (a plan with `at`, the robot's own
    proprioception, a read after the plan has run) runs once over HTTP and once through the endpoint tools; the executed trajectory, every submitted
-   row and the verdict are the same (tests/equivalence.py; the clock's own timings are left out, they are wall time).
+   row and the verdict are the same (tests/equivalence.py; the clock's own timings are left out, they are wall time, and so
+   is the number of steps held after the plan before the oracle's read: same_executed).
 2. The tools hold no clock: `submit` answers at once (the plan is the service's), and the tool's own time on top of the
    HTTP call is measured: observe(cameras=[]) over HTTP vs through the tool (`tool_s`, and the client's round trip).
 3. The eai-standard/3.0 rules of the realtime layer, in process (rules_v3): /observe never starts the clock and refuses
@@ -90,15 +91,38 @@ def equivalence(tmp, tools, man):
     (tmp / "oracle.py").write_text(ORACLE)
     cmd = [sys.executable, str(HERE / "equivalence.py"), "--service", f"{sys.executable} {HERE / 'toy_realtime.py'} {{port}}",
            "--tools", str(tools), "--manifest", str(man), "--oracle", f"{sys.executable} {tmp / 'oracle.py'}",
-           "--out", str(tmp), "--compare", "trajectory_live.f64,submitted.f64,final.json", "--ignore-keys", TIMING]
+           "--out", str(tmp), "--compare", "submitted.f64,final.json", "--ignore-keys", TIMING]
     p = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
     s = json.loads(p.stdout.strip().splitlines()[-1])
     assert p.returncode == 0, p.stdout + p.stderr
-    assert {"trajectory_live.f64", "submitted.f64", "final.json"} <= set(s["same"]), s
+    assert {"submitted.f64", "final.json"} <= set(s["same"]), s
+    same_executed(pathlib.Path(s["out"]))
+    s["same"].insert(0, "trajectory_live.f64 (the planned rows; the held tail's length is wall time)")
     out = (pathlib.Path(s["out"]) / "mcp" / "oracle.out").read_text()
     assert "finish True finished" in out and "plan 48 80 0" in out, out
     assert s["verdict"]["api"].get("reason") == "finished", s   # (the verdict itself is written at the session's end)
     return s
+
+
+def same_executed(out):
+    """trajectory_live.f64 holds every executed control step. Its first `rows` steps run the submitted plan and must be the
+    same bytes on both paths; after the plan the clock keeps running and the robot holds its last target until the
+    oracle's read and finish arrive, so the number of held steps is wall time (a loaded host adds one or two) and is
+    not compared. Every held step must still be the same hold row on both paths."""
+    from array import array
+    rec = {}
+    for m in ("api", "mcp"):
+        d = out / m / "data"
+        fin = json.loads((d / "final.json").read_text())
+        a = array("d"); a.frombytes((d / "trajectory_live.f64").read_bytes())
+        n, steps = int(fin["rows"]), int(fin["control_steps"])
+        assert steps > 0 and len(a) % steps == 0 and steps >= n, (m, len(a), steps, n)
+        w = len(a) // steps
+        rows = [tuple(a[i * w:(i + 1) * w]) for i in range(steps)]
+        rec[m] = (rows[:n], set(rows[n:]))
+    (pa, ha), (pm, hm) = rec["api"], rec["mcp"]
+    assert pa == pm, "the executed plan differs between the API and the MCP path"
+    assert ha == hm and len(ha) <= 1, ("the held steps after the plan differ", ha, hm)
 
 
 def standard_21(tmp):

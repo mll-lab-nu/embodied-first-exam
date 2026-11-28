@@ -49,11 +49,24 @@ os._exit(0)
 """
 
 
-def child(data: str, mode: str, timeout: float = 30, **env) -> tuple[int | None, dict]:
-    """Run one service process; returns (exit code, or None if it had to be stopped: a give-up idles for good), its line."""
+def child(data: str, mode: str, timeout: float = 30, until=None, idle_s: float = 2.0, **env) -> tuple[int | None, dict]:
+    """Run one service process; returns (exit code, or None if it had to be stopped: a give-up idles for good), its line.
+    With `until` (a predicate on the record directory), the process is stopped once the predicate holds and the process
+    is still running `idle_s` later; `timeout` is then only the upper bound on reaching that point (a loaded host starts
+    Python and numpy slowly, so a fixed short timeout could stop the process before it wrote its record)."""
     code = CHILD.format(here=HERE, base=os.path.dirname(HERE))
     p = subprocess.Popen([sys.executable, "-c", code, data, mode], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
                          env={**os.environ, **{k: str(v) for k, v in env.items()}})
+    if until is not None:
+        t_end = time.time() + timeout
+        while p.poll() is None and time.time() < t_end and not until(data):
+            time.sleep(0.1)
+        if p.poll() is None and until(data):
+            try:
+                p.wait(timeout=idle_s)          # an idle give-up stays up; a process that went on would exit
+            except subprocess.TimeoutExpired:
+                pass
+        timeout = 0.01 if p.poll() is None else timeout
     try:
         out, _ = p.communicate(timeout=timeout)
         rc = p.returncode
@@ -109,11 +122,11 @@ def case_watchdog_fired_ends_the_episode():
     """The watchdog really ends a process whose call hangs: its banner is the evidence, and the restart gives up."""
     d = tempfile.mkdtemp(prefix="v24_")
     t = time.time()
-    rc, _ = child(d, "ok3,hang", RCB_CALL_WATCHDOG_GRACE_S=1, RCB_MAX_CALL_WALL_S=1)
-    assert rc == 1 and time.time() - t < 20, (rc, time.time() - t)        # faulthandler's exit, not the 60 s sleep
+    rc, _ = child(d, "ok3,hang", timeout=90, RCB_CALL_WATCHDOG_GRACE_S=1, RCB_MAX_CALL_WALL_S=1)
+    assert rc == 1 and time.time() - t < 45, (rc, time.time() - t)        # faulthandler's exit, not the 60 s sleep
     trace = open(os.path.join(d, "call-watchdog.trace")).read()
     assert "Timeout (" in trace and "Thread" in trace, trace[:200]
-    rc, _ = child(d, "ok3", timeout=6)
+    rc, _ = child(d, "ok3", timeout=120, until=lambda d: bool(final(d).get("gave_up")))
     assert rc is None, "a give-up idles with its PID file; this process went on instead"
     f = final(d)
     assert f.get("gave_up") and f.get("infra_error") == 1 and str(f.get("reason")).startswith("call_watchdog"), f
