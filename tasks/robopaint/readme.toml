@@ -12,8 +12,10 @@
 #   rcb_brush_strict.py  process_metrics L140-182 (colouring in: path_mm > max_path_mm AND mark_width_mm <
 #                        min_mark_width_mm; path budget for the paintings (no min_mark_width_mm, medium mypaint: marks
 #                        off); counted strokes on marked_pieces L99-114 / counted_strokes L134-137; sweep share on the
-#                        pieces (calligraphy) or on the contacts (paintings)); apply_rules L185-203: success = the picture
-#                        rule AND strict_ok; Session.score L209-232 (a stroke still pressed counts).
+#                        pieces (calligraphy) or on the contacts (paintings)); apply_rules L186-211: success = the
+#                        picture rule AND strict_ok (with counted strokes the picture rule is taken without its own cap
+#                        on the inked contacts: strokes_counted_ok is the cap); Session.score L217-240 (a stroke still
+#                        pressed counts).
 #   rcb_brush.py         MAX_STEPS = 72_000 (L83), ACTION_DIM = 7 (L82); Session.replay L1621 (reset, rows, painter.finish).
 #   privileged/grade.py  and sim/server.py + standard/grade.py: see [modes].
 # Every number in a family's `vars` is that task's tests/instance.json target.success (identical in the privileged
@@ -368,8 +370,6 @@ no shift); every measure is taken at that shift. Success needs all of these:
   exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
 - each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
 - stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
-- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
-  sheet's surface; it is inked when the brush was loaded at the touch-down);
 - no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
   `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
   `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
@@ -399,8 +399,6 @@ no shift); every measure is taken at that shift. Success needs all of these:
   exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
 - each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
 - stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
-- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
-  sheet's surface; it is inked when the brush was loaded at the touch-down);
 - no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
   `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
   `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
@@ -430,8 +428,6 @@ no shift); every measure is taken at that shift. Success needs all of these:
   exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
 - each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
 - stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
-- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
-  sheet's surface; it is inked when the brush was loaded at the touch-down);
 - no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
   `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
   `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
@@ -461,8 +457,6 @@ no shift); every measure is taken at that shift. Success needs all of these:
   exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
 - each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
 - stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
-- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
-  sheet's surface; it is inked when the brush was loaded at the touch-down);
 - no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
   `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
   `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
@@ -492,8 +486,6 @@ no shift); every measure is taken at that shift. Success needs all of these:
   exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
 - each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
 - stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
-- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
-  sheet's surface; it is inked when the brush was loaded at the touch-down);
 - no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
   `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
   `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
@@ -523,8 +515,6 @@ no shift); every measure is taken at that shift. Success needs all of these:
   exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
 - each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
 - stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
-- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
-  sheet's surface; it is inked when the brush was loaded at the touch-down);
 - no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
   `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
   `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
@@ -554,8 +544,6 @@ no shift); every measure is taken at that shift. Success needs all of these:
   exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
 - each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
 - stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
-- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
-  sheet's surface; it is inked when the brush was loaded at the touch-down);
 - no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
   `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
   `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
@@ -585,8 +573,6 @@ no shift); every measure is taken at that shift. Success needs all of these:
   exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
 - each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
 - stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
-- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
-  sheet's surface; it is inked when the brush was loaded at the touch-down);
 - no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
   `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
   `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
@@ -1063,8 +1049,6 @@ no shift); every measure is taken at that shift. Success needs all of these:
   exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
 - each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
 - stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
-- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
-  sheet's surface; it is inked when the brush was loaded at the touch-down);
 - no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
   `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
   `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
@@ -1094,8 +1078,6 @@ no shift); every measure is taken at that shift. Success needs all of these:
   exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
 - each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
 - stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
-- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
-  sheet's surface; it is inked when the brush was loaded at the touch-down);
 - no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
   `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
   `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
@@ -1125,8 +1107,6 @@ no shift); every measure is taken at that shift. Success needs all of these:
   exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
 - each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
 - stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
-- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
-  sheet's surface; it is inked when the brush was loaded at the touch-down);
 - no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
   `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
   `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
@@ -1156,8 +1136,6 @@ no shift); every measure is taken at that shift. Success needs all of these:
   exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
 - each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
 - stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
-- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
-  sheet's surface; it is inked when the brush was loaded at the touch-down);
 - no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
   `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
   `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
@@ -1187,8 +1165,6 @@ no shift); every measure is taken at that shift. Success needs all of these:
   exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
 - each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
 - stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
-- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
-  sheet's surface; it is inked when the brush was loaded at the touch-down);
 - no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
   `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
   `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
@@ -1218,8 +1194,6 @@ no shift); every measure is taken at that shift. Success needs all of these:
   exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
 - each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
 - stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
-- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
-  sheet's surface; it is inked when the brush was loaded at the touch-down);
 - no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
   `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
   `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
@@ -1249,8 +1223,6 @@ no shift); every measure is taken at that shift. Success needs all of these:
   exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
 - each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
 - stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
-- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
-  sheet's surface; it is inked when the brush was loaded at the touch-down);
 - no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
   `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
   `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its
@@ -1280,8 +1252,6 @@ no shift); every measure is taken at that shift. Success needs all of these:
   exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
 - each of the exemplar's {vars[regions]} regions is at least {vars[min_stroke_coverage]} covered by ink;
 - stray ink (ink more than 1 mm from the exemplar's ink) at most {vars[max_stray_frac]} of the exemplar's ink area;
-- at most {vars[max_strokes]} inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
-  sheet's surface; it is inked when the brush was loaded at the touch-down);
 - no colouring in: the task fails when `path_mm` > {vars[max_path_mm]} mm and also `mark_width_mm` < {vars[min_mark_width_mm]} mm.
   `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
   `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its

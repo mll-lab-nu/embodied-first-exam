@@ -9,7 +9,7 @@
 #             CHECK_STRIDE 6, REST_M 0.002 (L339-342), GRADED (L343-359: "rest" objects, stand_pages "release_also"),
 #             MOVE_CUBE_LINE_X / FALLEN_M (L360-361), _family_clause (move_cube, L735-743), goal() L755-761 (predicate AND
 #             clause AND no robot contact with the graded objects, Genesis' contact list), settle_check() L763-800,
-#             replay() L816-833, step() L697-716 (MAX_STEPS 200,000, L318), _poses_match() L641-660.
+#             replay() L816-839, step() L697-716 (MAX_STEPS 200,000, L318), _poses_match() L641-660.
 #   graders   privileged: embodied_first_exam/benchmarks/robowits/privileged/tests/grade.py L91-133 (one replay);
 #             standard: embodied_first_exam/benchmarks/robowits/sim/server.py finish() L181-223 (RCB_AGENT_END=1 in every
 #             standard docker-compose), instance check L226-235, and standard/tests/grade.py.
@@ -46,8 +46,9 @@ marvin-bimanual = "Bimanual Marvin: two 7-DoF arms with Pika parallel grippers"
 # -> bad_trajectory; task != family -> wrong_family (L102); ndim != 2, width != 16, T > MAX_STEPS, non-finite ->
 # bad_trajectory (L104); Session() raises -> instance_build_failed, grader_error = infra_error = 1 (L107-112); success =
 # replay()["success"] (settle_check) AND instance_matches (CPU backend; else infra_error 1, L117-124).
-# rcb_robowits.py replay() L816-833: reset, rows (stop on the cap), then settle_check(); step() L697-716 returns True at
-# the 200,000th control step and raises after it.
+# rcb_robowits.py replay() L816-839: reset, rows (stop on the cap), then settle_check() with the cap lifted by the
+# window's length when T <= 200,000 (L827-836); step() L697-716 returns True at the 200,000th control step and raises
+# after it.
 [modes.privileged]
 success = """
 The verifier, in a separate sandbox without network, replays `/app/output/trajectory.npz` once in a fresh process
@@ -62,10 +63,10 @@ the table top is at z = 0.76 m.
 
 A missing file scores 0, and so does an invalid one. Invalid means: not a readable `.npz`, no `task` or `actions`
 entry, an entry over 256 MB, a `task` other than this family, `actions` that are not finite numbers of shape (T, 16),
-or T over 200,000. The rows and the window share the cap of 200,000 control steps; a window cut short by the cap does
-not pass. The rebuilt scene must match the frozen instance: the same state hash, or every object within 2 mm and 0.02
-(quaternion components) and every joint within 0.002 rad of the recorded pose. A scene that does not match, or does
-not build, is an infrastructure error, not a score.
+or T over 200,000. The window runs past the cap of 200,000 control steps, so a trajectory of up to 200,000 rows gets
+its full window. The rebuilt scene must match the frozen instance: the same state hash, or every object within 2 mm
+and 0.02 (quaternion components) and every joint within 0.002 rad of the recorded pose. A scene that does not match,
+or does not build, is an infrastructure error, not a score.
 """
 
 # server.py finish() L181-223 with AE.ENABLED: "finished" (POST /finish) and "timeout" (session end, agent_exit folded

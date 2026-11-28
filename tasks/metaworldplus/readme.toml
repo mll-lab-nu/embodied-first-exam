@@ -96,10 +96,14 @@ The object's centre is within 5 cm of the target point.
 """
 
 # sawyer_box_close_v3.py evaluate_state L83 (success from compute_reward); compute_reward L225:
-# |obs[4:7] - target| < 0.08; _get_pos_objects L102: get_body_com("top_link"), the lid body (boxtop.xml), handle included.
+# |obs[4:7] - target| < 0.08; _get_pos_objects L102: get_body_com("top_link") = data.body("top_link").xpos in gymnasium
+# 1.1.1 (mujoco_env.py L166-168): the lid body's origin (boxtop.xml: the underside of the lid's plate, at its centre), not
+# its centre of mass. Target z 0.133, about the handle's top on a closed lid; no orientation or contact test.
 [families."metaworld/box-close"]
 success = """
-The lid's centre of mass (the lid body with its handle) is less than 8 cm from the target point: the lid is on the box.
+The lid's reference point (its body origin: the centre of the lid's plate, on its underside) is less than 8 cm from the
+target point, as it is when the lid rests on the box, closing it. Only that point's position is checked, not the lid's
+tilt or whether it touches the box.
 """
 
 # sawyer_button_press_v3.py evaluate_state L74 (obj_to_target <= 0.02); compute_reward L139 |target_y - obj_y|;

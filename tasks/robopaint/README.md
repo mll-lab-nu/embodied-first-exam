@@ -143,7 +143,8 @@ shift on the window's edge counts as no shift). Every quantity is taken at that 
 
 - Writing (kaishu, xingshu, caoshu, lettering; ink coverage ≥ 0.5): IoU of the inked areas, boundary F within 1 mm, the
   coverage of each region of the exemplar, stray ink (more than 1 mm from the exemplar, as a share of its area), and a
-  cap on the inked contacts with the main sheet. The shift maximises the ink overlap.
+  cap on the inked contacts with the main sheet (lettering only: kaishu, xingshu and caoshu cap the counted strokes
+  instead, a process rule). The shift maximises the ink overlap.
   - kaishu, xingshu, caoshu: IoU ≥ 0.80, boundary F ≥ 0.75, every region ≥ 0.80, stray ≤ 0.04.
   - lettering: IoU ≥ 0.85, boundary F ≥ 0.80, every region ≥ 0.75, stray ≤ 0.04.
 - Paintings (both pictures in CIELAB, blurred with σ = 1 mm; the shift minimises the mean colour difference): mean and
@@ -169,8 +170,9 @@ summed over the 100 Hz physics samples.
 The limits come from a reference solution of each task: `max_path_mm` = 3 × its `path_mm` (rounded up to 10 mm, the
 paintings to 100 mm), `min_mark_width_mm` = 0.3 × its mark width (rounded down to 0.01 mm), `max_stroke_path_mm` =
 5 × its longest piece (rounded up to 10 mm). In lettering, `min_mark_width_mm` (0.10-0.13 mm) lies below the pointed
-pen's 0.4 mm hairline, so the colouring-in rule never fires there for that pen. The writing groups' cap also counts
-contacts (the picture rule's own count).
+pen's 0.4 mm hairline, so the colouring-in rule never fires there for that pen. In kaishu, xingshu and caoshu the cap
+counts the counted strokes only: the picture rule is taken without its own cap on the inked contacts, so a touch too
+light to leave a mark is no stroke. Lettering's cap counts the inked contacts (the picture rule's own count).
 
 `success` = the picture rule (`image_success`) ∧ the process rules (`strict_ok`). `final_reward` = the picture rule's
 continuous score (writing: the IoU; paintings: max(0, 1 − mean ΔE / 20)), scaled by cap / strokes above the cap, by
@@ -248,7 +250,7 @@ failed render never changes the verdict. The trajectory and the live sheets (`ca
 
 ## Tasks
 
-Writing (the cap is both the counted strokes and the inked contacts; regions = the exemplar's regions; `—`: no
+Writing (the cap: the counted strokes, in lettering the inked contacts; regions = the exemplar's regions; `—`: no
 counted-stroke rule):
 
 | group | task (without mode) | exemplar | regions | cap | `max_path_mm` | `min_mark_width_mm` | `max_stroke_path_mm` |

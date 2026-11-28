@@ -90,8 +90,9 @@ authors' (`ATTRIBUTION.csv` in the bundle).
 - **Privileged.** `/opt/tools/rcb_robowits.py` (`Session`): the frozen scene, unlimited exact resets, object poses,
   thin primitives, rendering (`render_frame`, `render_depth`, `render_video`), recording and `replay`, which runs
   exactly what the verifier runs. The deliverable is `/app/output/trajectory.npz`, (T, 16) JOINT_ABS rows, one per
-  1/30 s control step. A `Session` has at most 200,000 control steps between resets, a runaway guard; the wall clock
-  is the budget. The privileged agent's container never sees the BlenderKit folder or the bundle's key. The task's
+  1/30 s control step. A `Session` has at most 200,000 control steps between resets, a runaway guard (`replay`'s
+  settle window runs past it, so a trajectory of up to 200,000 rows gets its full window); the wall clock is the
+  budget. The privileged agent's container never sees the BlenderKit folder or the bundle's key. The task's
   `blenderkit` service mounts it, decrypts this family's models alone and serves them on `localhost:8765`. The
   tooling fetches them for each scene build into a private tmpfs folder and deletes them afterwards.
 - **Standard** (`eai-standard/3.0`). The simulator runs in a `sim` sidecar, which mounts the BlenderKit folder

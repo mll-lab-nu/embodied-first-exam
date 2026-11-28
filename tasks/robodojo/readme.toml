@@ -289,27 +289,31 @@ checked: not the arms, not the grippers.
 # T/hang_mugs.py step_lim L11, run_reward L21-158 (T/hang_mugs_random.py the same lines, same code): for mug0..2:
 # is_lift(0.045); is_A_functional_point_higher_than_z("handle", 0.9); is_axis_aligned("handle" frame +z vs cup_holder
 # "handle_support_point" frame +z, 60°) and (+x vs ±x, 60°); is_A_functional_point_close_to_B_functional_point(handle,
-# handle_support_point, 0.045, 3D, any pair); home. No gripper test. FP L749-773, L2066-2217, L1932-1976.
+# handle_support_point, 0.045, 3D, any pair); home. No gripper test. FP L749-773, L2066-2217, L1932-1976. The rack's
+# frame is the one nearest to the handle point (rcb_robodojo.py _axis_aligned_nearest_B; RoboDojo's own is_axis_aligned
+# takes the rack's first frame, arm 0).
 [families.hang_mugs]
 vars = { step_lim = "800", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
 success = """
 One check, for each of the three mugs: its centre is more than 0.045 m above its start height; a marked point on its
-handle is higher than 0.9 m (world height) and within 0.045 m of one of the rack's marked hanging points; and the
-handle point's frame is turned like that hanging point's frame: their +z axes within 60° of each other and their x
-axes within 60° (either direction). Both arms are home (each arm's end-effector within 0.15 m of its start position
-along x, y and z, and less than 20° from its start orientation). Nothing checks the grippers.
+handle is higher than 0.9 m (world height) and within 0.045 m of one of the rack's marked hanging points (one per arm);
+and the handle point's frame is turned like the frame of the rack's hanging point nearest to it: their +z axes within
+60° of each other and their x axes within 60° (either direction). Both arms are home (each arm's end-effector within
+0.15 m of its start position along x, y and z, and less than 20° from its start orientation). Nothing checks the
+grippers.
 """
 
-# Identical code to hang_mugs (T/hang_mugs_random.py step_lim L11, run_reward L21-158); the layout and mugs differ.
+# Identical code to hang_mugs (T/hang_mugs_random.py step_lim L11, run_reward L21-158); the layout and mugs differ. The
+# orientation check takes the rack frame nearest to the mug's point (rcb_robodojo.py _axis_aligned_nearest_B).
 [families.hang_mugs_random]
 vars = { step_lim = "800", end_rule = "The task is passed if the check passed during the episode and still holds after the episode's last action." }
 success = """
-One check, for each of the three mugs: its centre is more than 0.045 m above its start height; the mug's marked
-hanging point is higher than 0.9 m (world height) and within 0.045 m of one of the rack's marked hanging points; and
-the mug point's frame is turned like that rack point's frame: their +z axes within 60° of each other and their x axes
-within 60° (either direction). Each mug model has its own marked point and frame. Both arms are home (each arm's
-end-effector within 0.15 m of its start position along x, y and z, and less than 20° from its start orientation).
-Nothing checks the grippers.
+One check, for each of the three mugs: its centre is more than 0.045 m above its start height; the mug's marked hanging
+point is higher than 0.9 m (world height) and within 0.045 m of one of the rack's marked hanging points (one per arm);
+and the mug point's frame is turned like the frame of the rack point nearest to it: their +z axes within 60° of each
+other and their x axes within 60° (either direction). Each mug model has its own marked point and frame. Both arms are
+home (each arm's end-effector within 0.15 m of its start position along x, y and z, and less than 20° from its start
+orientation). Nothing checks the grippers.
 """
 
 # T/imitate_sorting_sequence.py step_lim L15, order L32-71 (target_label[i] = the robot-side object matching the i-th

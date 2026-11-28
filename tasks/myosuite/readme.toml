@@ -4,9 +4,10 @@
 # image installs, read unpacked), files under myosuite/envs/myo/ named in each family's comment; the tooling
 # embodied_first_exam/benchmarks/myosuite/:
 #   rules       privileged/environment/rcb_myosuite.py: HOLD_S L68, RULE L110-112, TRACK_* L114-116, Session.step
-#               L436-489 (hold: `solved` for hold_steps in a row, `done` a failure; event: the first `solved`, bimanual
-#               with its contact check L475, L506-510; track: judged at track_steps), AGENT_END rules L491-504, baoding's
-#               1000 target points L482-488, replay L558-569 (until the episode ends or the rows run out)
+#               L436-491 (hold: `solved` for hold_steps in a row, `done` a failure; event: the first `solved`, bimanual
+#               with its contact check L477, L508-512; table_tennis: a lost rally is a failure, L456-457, _rally_lost
+#               L681-689; track: judged at track_steps), AGENT_END rules L493-506, baoding's 1000 target points
+#               L484-490, replay L560-571 (until the episode ends or the rows run out)
 #   privileged  privileged/tests/grade.py main L114-218: missing -> missing_trajectory; not an npz, an entry larger than
 #               MAX_ROWS (360 s x STEPS_PER_S, L41-47) allows, wrong family, not (T, nu), T = 0 or > MAX_ROWS, NaN/inf ->
 #               0; one fresh-process replay (REPLAY_TIMEOUT_S 780); no result -> replay_failed, grader_error 1;
@@ -407,7 +408,8 @@ after a held goal.
 # OPPONENT contact after a PADDLE contact, with no paddle contact after the ball has left the paddle
 # (DOUBLE_TOUCH) and the ball on the own half for at most 2 steps of one first bounce (OWN_HALF) before it; no
 # own-half bounce is required. _get_done L267-277: time > MAX_TIME 3.0 s (L25), ball below 0.3 m, or solved; the
-# contact-issue test at L275 compares enum members with ints and never ends the episode. dt 10 ms; event rule.
+# contact-issue test at L275 compares enum members with ints and never ends the episode, so rcb_myosuite.Session.step
+# ends it (_rally_lost: OWN_HALF, NO_PADDLE, DOUBLE_TOUCH) as a failure. dt 10 ms; event rule.
 vars = { rows = "108,000" }
 privileged = """
 Success event (MyoChallenge 2025 `myoChallengeTableTennisP1-v0`, its contact test on the ball): the ball touches the
@@ -418,9 +420,10 @@ opponent's half of the table after it has touched the paddle, and before that:
 A bounce on the robot's own half before the hit is not required. Contacts with the net or anything else are not
 checked.
 
-Failure (MyoSuite's `done`, ends the episode with 0): 3 s of simulated time pass without the event, or the ball is
-below 0.3 m. A rally that has gone wrong (a second paddle touch, a second bounce on the robot's half) does not end the
-episode by itself: it can then no longer succeed, and it ends at one of these two.
+Failure (ends the episode with 0): 3 s of simulated time pass without the event, the ball is below 0.3 m, or the same
+contact test finds the rally lost: a second paddle touch, a second bounce on the robot's half (or a first one longer
+than two control steps), or the ball on the opponent's half without a paddle touch. The episode ends at the control
+step this happens.
 
 The replay ends in success at the first control step at which the success event happens, or with 0 at a failure.
 """
@@ -433,9 +436,10 @@ opponent's half of the table after it has touched the paddle, and before that:
 A bounce on the robot's own half before the hit is not required. Contacts with the net or anything else are not
 checked.
 
-Failure (MyoSuite's `done`, ends the episode with 0): 3 s of simulated time pass without the event, or the ball is
-below 0.3 m. A rally that has gone wrong (a second paddle touch, a second bounce on the robot's half) does not end the
-episode by itself: it can then no longer succeed, and it ends at one of these two.
+Failure (ends the episode with 0): 3 s of simulated time pass without the event, the ball is below 0.3 m, or the same
+contact test finds the rally lost: a second paddle touch, a second bounce on the robot's half (or a first one longer
+than two control steps), or the ball on the opponent's half without a paddle touch. The episode ends at the control
+step this happens.
 
 The success event does not end the episode. Once it has happened the task is passed, even if a failure above ends the
 episode later. Before it, a failure ends the episode with 0.
@@ -449,9 +453,10 @@ opponent's half of the table after it has touched the paddle, and before that:
 A bounce on the robot's own half before the hit is not required. Contacts with the net or anything else are not
 checked.
 
-Failure (MyoSuite's `done`, ends the episode with 0): 3 s of simulated time pass without the event, or the ball is
-below 0.3 m. A rally that has gone wrong (a second paddle touch, a second bounce on the robot's half) does not end the
-episode by itself: it can then no longer succeed, and it ends at one of these two.
+Failure (ends the episode with 0): 3 s of simulated time pass without the event, the ball is below 0.3 m, or the same
+contact test finds the rally lost: a second paddle touch, a second bounce on the robot's half (or a first one longer
+than two control steps), or the ball on the opponent's half without a paddle touch. The episode ends at the control
+step this happens.
 
 The success event does not end the episode. Once it has happened the task is passed, even if a failure above ends the
 episode later. Before it, a failure ends the episode with 0.

@@ -57,7 +57,9 @@ Every image is public: Harbor pulls it.
 - **MyoChallenge.** The challenge's own `solved` is the success event. bimanual counts the first `solved` step with
   its own contact check (MyoChallenge's evaluation counts more than 5 `solved` steps, but the env ends the episode one
   step after the first). osl_run asks for the finish line without a time limit (its official score is the distance
-  reached within 1,000 steps).
+  reached within 1,000 steps). table_tennis ends the episode as a failure when the challenge's own contact test finds
+  the rally lost (a second paddle touch, a second own-half bounce, the opponent's half without a hit): MyoSuite's
+  `done` means to, but compares that test's enum with ints and never fires.
 - **MyoDex.** MyoDex defines a dense reward only (its `solved` is always 0). Our rule: the object's motion since the
   start follows the reference's within 3 cm (and 0.5 rad of rotation for the four families where orientation is the
   point of the skill) at 90% or more of the control steps and at the last one, with the displacement error never
@@ -99,8 +101,9 @@ Every image is public: Harbor pulls it.
 
 - **Success rules** (each task's README states its family's rule with every threshold):
   - *hold*: MyoSuite's `solved` held for the hold time in consecutive control steps; MyoSuite's `done` is a failure.
-  - *event*: the challenge's own success event (bimanual: with its contact check); its failures and time limits
-    (table_tennis 3 s, bimanual 10 s, soccer 10 s, chase_tag 20 s; osl_run none) end the episode with 0 before it.
+  - *event*: the challenge's own success event (bimanual: with its contact check); its failures (table_tennis: also
+    a lost rally) and time limits (table_tennis 3 s, bimanual 10 s, soccer 10 s, chase_tag 20 s; osl_run none) end the
+    episode with 0 before it.
   - *track*: the whole reference motion (57 to 99 control steps), judged at its end; MyoDex's termination is a
     failure.
 - **Privileged.** `tests/grade.py` checks `trajectory.npz` (readable, this family, shape (T, actuators), finite, at

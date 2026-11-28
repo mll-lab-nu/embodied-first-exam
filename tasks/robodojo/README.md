@@ -62,8 +62,9 @@ The first task builds the simulator image (below); later tasks reuse it from Doc
 
 ## Changes from upstream
 
-- RoboDojo's reward manager for each task is unchanged: its `run_reward()` check list, registered at the start of
-  every episode as RoboDojo's evaluator does it, and evaluated after every action. Stages count in order, at most one
+- RoboDojo's reward manager for each task is unchanged (one exception, `hang_mugs(_random)`, below): its
+  `run_reward()` check list, registered at the start of every episode as RoboDojo's evaluator does it, and evaluated
+  after every action. Stages count in order, at most one
   per action; a passed stage is popped and not checked again; a failed check ends the episode as a failure.
 - `Session` builds RoboDojo's own evaluator environment (`src/eval_client/eval_env.py`: one env, the policy-server
   client replaced by a stub) and resets it onto the frozen layout exactly as RoboDojo's evaluator starts an episode.
@@ -82,6 +83,11 @@ The first task builds the simulator image (below); later tasks reuse it from Doc
     count as they happened.
   - **history** (7 tasks: `play_Xylophone`, `press_by_number`, the three pouring tasks, the two folding tasks): the
     goal is a sequence of moments or is judged at a trigger, so RoboDojo's verdict stands as the episode ran.
+- `hang_mugs(_random)`: RoboDojo's `is_axis_aligned` compares the mug's handle frame with the rack's first hanging
+  point (arm 0), while its distance check accepts the handle at any of the six arms, so a mug hung on another arm
+  failed. `rcb_robodojo.py` patches `Func_Parser.is_axis_aligned` when it builds the env: when both objects have
+  functional points and the rack's has several frames, the frame nearest to the mug's point is compared. Every other
+  call is RoboDojo's own.
 - Privileged mode applies no step limit. A technical cap ends an episode after 15,000 actions (10 min of simulated
   time; reason `step_guard`), the most a trajectory may hold.
 - The instructions state RoboDojo's checks in plain physical terms, without changing them. Where RoboDojo's own text
@@ -90,7 +96,6 @@ The first task builds the simulator image (below); later tasks reuse it from Doc
     measured sizes say it is the smallest.
   - `swap_blocks`: the button rests at about 0.79 of its travel, below the 0.9 / 0.95 its stages and press counter
     need.
-  - `hang_mugs(_random)`: the orientation conditions use the first functional point of each tag.
   - `pack_objects_into_box(_random)`: the check reads the car, toothbrush and hammer through an asset frame (the
     'checkpoint' point) and the shoe through its body frame, with opposite signs in code. Physically all four want their
     front end to the left (car: the end that points right at the start in the non-random layout; brush head, hammer
