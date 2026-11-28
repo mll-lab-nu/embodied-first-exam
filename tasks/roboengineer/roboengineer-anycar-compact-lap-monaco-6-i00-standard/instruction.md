@@ -6,9 +6,9 @@ collision or leaving the track.
 
 ## Goal
 Success: the car passes every gate of the lap in order near the centre line and keeps close to the moving target the
-whole lap, at its heading and speed, and ends close to it. A collision, a rollover or leaving the track fails. The
-evaluator runs the policy you select on 10 held-out cases: new episodes of the same hidden plant, never shown to you.
-Success needs every case to pass; `final_reward` reports the mean score (0-100).
+whole lap, at its heading and speed, and ends close to it. A collision, a rollover, the chassis touching the ground or
+leaving the track fails. The evaluator runs the policy you select on 10 held-out cases: new episodes of the same hidden
+plant, never shown to you. Success needs every case to pass; `final_reward` reports the mean score (0-100).
 
 Deliverable: the policy of one completed deployment round. Choose that round with `seal(round_id, summary)`. You can
 seal only once, and sealing ends adaptation. If you seal none, the latest round completed before the cutoff counts; with
@@ -47,8 +47,9 @@ public route is a compact 45 m F1-inspired approximation, targeted at a 28 s lap
 
 ### Feedback
 Each round reuses the same 3 development cases. Feedback includes all 301 noisy rows and 31 one-second images covering 0
-through 30 s. An episode that crashes, leaves its course or arena, or makes the simulation diverge ends at that moment:
-its telemetry and frames stop there. Diagnose failures from the returned video frames and noisy telemetry, then revise.
+through 30 s. An episode that makes the simulation diverge ends at that moment: its telemetry and frames stop there. A
+crash or leaving the course or arena does not stop the episode, but it already counts as failed. Diagnose failures from
+the returned video frames and noisy telemetry, then revise.
 
 ## Limits
 - Time: 14400 s of wall-clock time from the start of your session. Everything counts, including waiting for the

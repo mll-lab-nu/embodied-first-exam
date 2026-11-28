@@ -6,9 +6,10 @@ the moving target that sets the pace, without hitting a barrier or leaving the t
 
 ## Goal
 Success: the car passes all but at most one of the lap's gates in order near the centre line and keeps close to the
-moving target the whole lap, at its heading and speed, and ends close to it. Hitting a barrier, rolling over or leaving
-the track fails. The evaluator runs the policy you select on 10 held-out cases: new episodes of the same hidden plant,
-never shown to you. Success needs every case to pass; `final_reward` reports the mean score (0-100).
+moving target the whole lap, at its heading and speed, and ends close to it. Hitting a barrier, rolling over, the
+chassis touching the ground or leaving the track fails. The evaluator runs the policy you select on 10 held-out cases:
+new episodes of the same hidden plant, never shown to you. Success needs every case to pass; `final_reward` reports the
+mean score (0-100).
 
 Deliverable: the policy of one completed deployment round. Choose that round with `seal(round_id, summary)`. You can
 seal only once, and sealing ends adaptation. If you seal none, the latest round completed before the cutoff counts; with
@@ -45,9 +46,9 @@ parameters. You can change only the controller's numeric parameters, not its cod
 The controller's interface is in `control_public.anycar`.
 
 ### Feedback
-Each round reuses the same 3 development cases. An episode that crashes, leaves its course or arena, or makes the
-simulation diverge ends at that moment: its telemetry and frames stop there. Diagnose failures from the returned video
-frames and noisy telemetry, then revise.
+Each round reuses the same 3 development cases. An episode that makes the simulation diverge ends at that moment: its
+telemetry and frames stop there. A crash or leaving the course or arena does not stop the episode, but it already counts
+as failed. Diagnose failures from the returned video frames and noisy telemetry, then revise.
 
 ## Limits
 - Time: 14400 s of wall-clock time from the start of your session. Everything counts, including waiting for the

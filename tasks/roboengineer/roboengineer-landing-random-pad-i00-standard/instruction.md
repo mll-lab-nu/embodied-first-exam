@@ -55,8 +55,9 @@ evaluator's controller. Nominal training is unrestricted within the resource and
 
 ### Feedback
 The three deployment rounds share three adaptation cases. Feedback includes 20 Hz noisy navigation, IMU specific force,
-measured rotor RPM, your commands, and sixteen timestamped image samples. An episode that crashes or makes the
-simulation diverge ends at that moment: its telemetry and image samples stop there.
+measured rotor RPM, your commands, and sixteen timestamped image samples. An episode that makes the simulation diverge
+ends at that moment: its telemetry and image samples stop there. A crash does not stop the episode, but it already
+counts as failed.
 - The observations use metres, seconds, world-frame position/velocity, a body-to-world quaternion in wxyz order, body
   angular velocity in rad/s, body-frame IMU specific force in m/s², and rotor speeds in RPM. The nominal thrust
   coefficient and geometry are public. The base plane is at world z=0; the nominal body origin is 0.09 m above it at

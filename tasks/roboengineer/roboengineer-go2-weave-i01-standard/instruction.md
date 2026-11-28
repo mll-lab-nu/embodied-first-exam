@@ -45,9 +45,9 @@ parameters. You can change only the controller's numeric parameters, not its cod
 nominal rollouts. The controller's interface and the training helpers you may edit are in `control_public.go2`.
 
 ### Feedback
-Each round reuses the same 3 development cases. An episode that crashes, leaves its course or arena, or makes the
-simulation diverge ends at that moment: its telemetry and frames stop there. Diagnose failures from the returned video
-frames and noisy telemetry, then revise.
+Each round reuses the same 3 development cases. An episode that makes the simulation diverge ends at that moment: its
+telemetry and frames stop there. A crash or leaving the course or arena does not stop the episode, but it already counts
+as failed. Diagnose failures from the returned video frames and noisy telemetry, then revise.
 
 ## Others
 - The controller never learns where the robot is in the world: it gets only the commands and the robot's own noisy
