@@ -5,6 +5,8 @@
 # (files-only images, the monitor's code) names its image by digest. Moved here from
 # check-verifier-isolation.sh: a pin is reproducibility, not the trust boundary. Also: no image is built with the task's
 # README.md and no container mounts it (no COPY / ADD of a README, no compose build context at the task directory).
+# And no instruction that the shell does not run (ENV, ARG, LABEL, FROM, COPY, ...) ends in a `#` comment: a Dockerfile
+# comment is a line of its own, and BuildKit reads `ENV A=1   # note` as more key=value pairs (`can't find = in "#"`).
 t="$1"; python3 - "$t" <<'PY'
 import pathlib, re, sys
 t = pathlib.Path(sys.argv[1]); rc = 0
@@ -45,6 +47,16 @@ for cf in (t / "environment/docker-compose.yaml", t / "tests/docker-compose.yaml
             src = re.sub(r"\$\{[^}]*\}", "VAR", ln.strip().strip("'\"")).split(":", 1)[0]
             if not ln.lstrip().startswith("#") and re.search(r"(?:^|/)README(?:\.md)?$", src, re.I):
                 fail(f"{cf.relative_to(t).as_posix()} mounts a README.md ({ln.strip()[:80]!r}): the task's README.md stays out of every container")
+# A `#` starts a comment only at the start of a line; after a non-shell instruction it is part of its arguments.
+NO_SHELL = re.compile(r"^\s*(ENV|ARG|LABEL|FROM|COPY|ADD|WORKDIR|USER|EXPOSE|VOLUME|STOPSIGNAL|ONBUILD|MAINTAINER)\s", re.I)
+for df in sorted(p for sub in ("environment", "tests") if (t / sub).is_dir() for p in (t / sub).rglob("Dockerfile")):
+    rel = df.relative_to(t).as_posix(); cont = False
+    for no, ln in enumerate(df.read_text().split("\n"), 1):
+        if cont and ln.lstrip().startswith("#"):
+            continue                                          # a comment line inside a continued instruction
+        if (cont or NO_SHELL.match(ln)) and re.search(r"\s#", re.sub(r'"(?:[^"\\]|\\.)*"|\'[^\']*\'', "", ln)):
+            fail(f"{rel}:{no} has a trailing `#` comment ({ln.strip()[:80]!r}): Dockerfile comments are lines of their own")
+        cont = ln.rstrip().endswith("\\") and (cont or bool(NO_SHELL.match(ln)))
 for cf in (t / "environment/docker-compose.yaml", t / "tests/docker-compose.yaml"):
     if cf.is_file():
         for img in re.findall(r"^\s*image:\s*(\S+)", cf.read_text(), re.M):
