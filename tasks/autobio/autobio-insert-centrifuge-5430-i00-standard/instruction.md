@@ -5,9 +5,9 @@ Put the 1.5 mL tube from the plate into the centrifuge's rotor, in the slot oppo
 without turning the rotor.
 
 ## Goal
-Success: the tube is seated all the way down in the slot opposite the tube already in the rotor, with the rotor where it
-started. A physics warning (an unstable simulation, for instance after the robot was driven hard into something) ends
-the episode at once, as a failure.
+Success: the tube is seated all the way down in the slot that, at the start, was opposite the tube already in the rotor,
+at that slot's starting place. A physics warning (an unstable simulation, for instance after the robot was driven hard
+into something) ends the episode at once, as a failure.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
