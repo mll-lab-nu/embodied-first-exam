@@ -414,6 +414,7 @@ names, the README's layout and `task.toml` fields.
 | No pointer to a solution in the agent's reach (H.2) | invariant | `ci_checks/check-agent-pointers.py`, benchmark `invariant-*` hooks |
 | No simulator in the agent's image (H.3) | invariant | `ci_checks/check-standard-agent-image.sh` |
 | `RCB_AGENT_END: "1"` and the Finish line in every standard and realtime task (H.3) | invariant | `ci_checks/check-agent-end.py --tier invariants` |
+| One protocol id, `eai-standard/3.0`, in every tracked file (H.3) | invariant | `ci_checks/check-protocol-strings.py` |
 | Byte-identical instance copies (H.4, H.7) | invariant | `ci_checks/check-instance-copies.sh` |
 | The same instance, seeds and cutoff across modes (H.7) | invariant | `ci_checks/check-twins.py` |
 | `DIGEST` equals the task's digest (H.8) | invariant | `ci_checks/check-dataset-manifest.sh` |

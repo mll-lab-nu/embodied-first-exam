@@ -68,7 +68,8 @@ This invariant covers the standard and realtime modes.
 - The agent's controller runs in the agent's own container. No agent code runs next to the simulator.
 
 *CI:* `check-standard-agent-image.sh`, `check-verifier-isolation.sh` (topology, ports),
-`check-agent-end.py --tier invariants`; the service's own `/spec` checks; review.
+`check-agent-end.py --tier invariants`, `check-protocol-strings.py` (one protocol, `eai-standard/3.0`); the service's own
+`/spec` checks; review.
 
 ## H.4 Trusted verdict
 

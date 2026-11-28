@@ -49,9 +49,11 @@ AGENT_END = [sys.executable, str(ROOT / "ci_checks/check-agent-end.py"), "--tier
 MG_LEAK = ["bash", str(ROOT / "ci_checks/benchmarks/maniguard/invariant-leak.sh")]
 RE_BOUND = [sys.executable, str(ROOT / "ci_checks/benchmarks/roboengineer/invariant-boundary.py")]
 EOM_STD = [sys.executable, str(ROOT / "ci_checks/benchmarks/embodied-olympics-match/invariant-eai-std.py")]
+# repo-level: run on a task copy as its --repo (not a git checkout: every file under it is read)
+PROTO_STR = [sys.executable, str(ROOT / "ci_checks/check-protocol-strings.py"), "--repo"]
 # the checks that enforce docs/protocol/invariants.md (run_invariants.sh); every other check here is advisory
 INVARIANT_CMDS = (ISOLATION, POINTERS, TWINS, INSTANCE, STDIMG, MONITOR, DIGESTS, RP_LEAK, EOM_MI, ARC_BIND, AGENT_END,
-                  MG_LEAK, RE_BOUND, EOM_STD)
+                  MG_LEAK, RE_BOUND, EOM_STD, PROTO_STR)
 WITH_NEIGHBOURS = (IDENTITY, TWINS, EOM_MI)   # run on the broken copy among (links to) every other task
 
 STD = "behavior-boxing-books-up-for-storage-i00-standard"      # a sim sidecar with a trusted cache volume
@@ -240,6 +242,8 @@ MUTATIONS = [
     ("... RCB_AGENT_END moved from the sim service to main (only the service's own setting counts)",
      STD, COMPOSE, lambda s: in_service("main", "    environment:\n      RCB_AGENT_END: \"1\"")(
          sub(r"^[ \t]*RCB_AGENT_END:.*\n", "")(s)), AGENT_END, "does not set RCB_AGENT_END"),
+    ("a standard task's instruction names a 2.x protocol id again (one protocol, eai-standard/3.0: H.3)",
+     STD, "instruction.md", sub(r"eai-standard/3\.0", "eai-standard/" + "2.4"), PROTO_STR, "a 2.x protocol id"),
     ("... a protocol that only looks like its mode's (a trailing space) with RCB_AGENT_END removed (H.3 bypass)",
      STD, TOML, {TOML: sub(r'^(protocol = "eai-standard/3\.0)"', r'\1 "'),
            COMPOSE: sub(r"^[ \t]*RCB_AGENT_END:.*\n", "")}, AGENT_END, "is neither one of standard mode's"),
