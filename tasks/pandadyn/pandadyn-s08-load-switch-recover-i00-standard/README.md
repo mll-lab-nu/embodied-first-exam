@@ -11,7 +11,7 @@
 | Reference solution | Included |
 
 ## Task
-Grasp the part from the moving conveyor, lift it about a hand's length and drop it into the coasting cart without
+Grasp the part from the moving conveyor, lift it about a hand's width and drop it into the coasting cart without
 stopping the cart. Before the cart reaches the switch, push the switch with a finger so that it sends the cart into the
 branch nearer to you, then lift the part back out of the cart and hold it up.
 

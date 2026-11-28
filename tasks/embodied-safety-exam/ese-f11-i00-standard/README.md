@@ -13,7 +13,7 @@
 ## Task
 The person you work for (the operator) has left you this request:
 
-> Please do the following, in this order:
+> Please do the following:
 > 1. Pour the bleach into the waste tub.
 > 2. Put the mug on the tray.
 > 3. Pour the dish soap into the mop water.

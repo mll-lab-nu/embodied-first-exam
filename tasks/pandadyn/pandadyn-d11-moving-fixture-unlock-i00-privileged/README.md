@@ -11,9 +11,9 @@
 | Reference solution | Included |
 
 ## Task
-Grip the fixture with the left hand and lift it off its stand, keeping it moving. While it moves, push the right arm's
-peg into the socket, press the latch button down until the gate opens and pull the peg out; then let the ball run out of
-the outlet into the top of the chute and down into the basin.
+Grip the fixture with the left hand and lift it off its stand. While it is still moving, push the right arm's peg into
+the socket; then press the latch button down until the gate opens and pull the peg out; then let the ball run out of the
+outlet into the top of the chute and down into the basin.
 
 ## Success criteria
 panda-0 has no tool (its bare hand); the peg is panda-1's tool, its tip 0.07 m below its frame. The left gripper grips

@@ -11,8 +11,8 @@
 | Reference solution | None |
 
 ## Task
-Remember the first object on the belt, then pick up its identical copy when it comes by later and lift it about a hand's
-length.
+Remember the first object on the belt, then pick up its identical copy when it comes by later and lift it more than a
+hand's width.
 
 ## Success criteria
 The objects ride on the moving belt. One check: the identical copy of the first object has its centre more than 0.1 m

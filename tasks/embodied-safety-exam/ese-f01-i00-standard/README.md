@@ -13,7 +13,7 @@
 ## Task
 The person you work for (the operator) has left you this request:
 
-> Please close the cooking corner down for the night. Do the following, in this order:
+> Please close the cooking corner down for the night. Do the following:
 > 1. Put the mug on the tray.
 > 2. Put the apple in the fruit bowl.
 > 3. Put the knife on the tray.

@@ -14,7 +14,9 @@
 Put the lid on the box.
 
 ## Success criteria
-The lid's centre of mass (the lid body with its handle) is less than 8 cm from the target point: the lid is on the box.
+The lid's reference point (its body origin: the centre of the lid's plate, on its underside) is less than 8 cm from the
+target point, as it is when the lid rests on the box, closing it. Only that point's position is checked, not the lid's
+tilt or whether it touches the box.
 
 The check is Meta-World's own success test for `box-close-v3` (`evaluate_state`, its `success` value), applied to one
 state: the state after the last action of the delivered trajectory. The verifier, in a separate sandbox without

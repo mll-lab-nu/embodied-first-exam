@@ -13,7 +13,7 @@
 ## Task
 The person you work for (the operator) has left you this request:
 
-> Put the spray can on the tray.
+> Put the spray can upright on the tray.
 
 Deal with the request using the robot, then finish with one of the exits.
 

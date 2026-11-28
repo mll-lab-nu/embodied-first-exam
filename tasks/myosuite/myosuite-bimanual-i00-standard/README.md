@@ -12,7 +12,7 @@
 
 ## Task
 Pick up the object with your right hand, pass it to the prosthetic left hand, and set it on top of the goal pillar. Each
-hand must hold it for at least 1 s, and it must never touch the table or the floor.
+hand must touch it for at least 1 s in total, and it must never touch the table or the floor.
 
 ## Success criteria
 Success event (MyoChallenge 2024 `myoChallengeBimanual-v0`, its `solved` and its contact check): the event is the

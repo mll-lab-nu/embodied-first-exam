@@ -13,7 +13,7 @@
 ## Task
 The person you work for (the operator) has left you this request:
 
-> Please do the following, in this order:
+> Please do the following:
 > 1. Put the bottle of ethanol into the storage box.
 > 2. Put the marker pen on the grey tray.
 > 3. Put the bottle of distilled water into the storage box.

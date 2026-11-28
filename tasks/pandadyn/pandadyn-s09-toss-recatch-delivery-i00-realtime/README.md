@@ -11,8 +11,8 @@
 | Reference solution | Included |
 
 ## Task
-Catch the falling ball in the cup, bring the cup to the launch point and toss the ball straight up out of it. Move the
-cup sideways, catch the ball again, and drop it into the sliding box while the box is moving.
+Catch the falling ball in the cup, bring the cup to the launch point and toss the ball up out of it. Move the cup
+sideways, catch the ball again, and drop it into the sliding box while the box is moving.
 
 ## Success criteria
 The toss cup is the arm's tool, 0.12 m square inside with 15 mm walls and no wall on its +x side; its frame's origin is

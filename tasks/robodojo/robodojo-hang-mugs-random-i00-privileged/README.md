@@ -11,17 +11,17 @@
 | Reference solution | None |
 
 ## Task
-Hang the three mugs on the mug rack: the red mug by its handle on an arm that points left or right, and the two pink
-pumpkin mugs on any arm, opening facing up or up-left and handle sideways. Then move both arms back to where they
-started.
+Hang the three mugs on the mug rack, each on any arm: the red mug by its handle, and the two pink pumpkin mugs with the
+opening facing up or tilted toward the rack's centre and the handle along the arm. Then move both arms back to where
+they started.
 
 ## Success criteria
-One check, for each of the three mugs: its centre is more than 0.045 m above its start height; the mug's marked
-hanging point is higher than 0.9 m (world height) and within 0.045 m of one of the rack's marked hanging points; and
-the mug point's frame is turned like that rack point's frame: their +z axes within 60° of each other and their x axes
-within 60° (either direction). Each mug model has its own marked point and frame. Both arms are home (each arm's
-end-effector within 0.15 m of its start position along x, y and z, and less than 20° from its start orientation).
-Nothing checks the grippers.
+One check, for each of the three mugs: its centre is more than 0.045 m above its start height; the mug's marked hanging
+point is higher than 0.9 m (world height) and within 0.045 m of one of the rack's marked hanging points (one per arm);
+and the mug point's frame is turned like the frame of the rack point nearest to it: their +z axes within 60° of each
+other and their x axes within 60° (either direction). Each mug model has its own marked point and frame. Both arms are
+home (each arm's end-effector within 0.15 m of its start position along x, y and z, and less than 20° from its start
+orientation). Nothing checks the grippers.
 
 Graded file: `/app/output/trajectory.npz` with `task` (this task's name) and `actions`, an array of at most 15,000
 rows of 14 finite numbers, one per 25 Hz action, as `s.save_trajectory(...)` writes it. After the agent's session it

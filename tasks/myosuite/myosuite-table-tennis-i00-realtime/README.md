@@ -11,8 +11,8 @@
 | Reference solution | None |
 
 ## Task
-Return the served ball: after it bounces once on your half, hit it once with the paddle so that it lands on the
-opponent's half, with no second paddle touch and no second bounce on your half.
+Return the served ball: hit it once with the paddle so that it lands on the opponent's half, with no second paddle
+touch and at most one bounce on your half before that.
 
 ## Success criteria
 Success event (MyoChallenge 2025 `myoChallengeTableTennisP1-v0`, its contact test on the ball): the ball touches the
@@ -23,9 +23,10 @@ opponent's half of the table after it has touched the paddle, and before that:
 A bounce on the robot's own half before the hit is not required. Contacts with the net or anything else are not
 checked.
 
-Failure (MyoSuite's `done`, ends the episode with 0): 3 s of simulated time pass without the event, or the ball is
-below 0.3 m. A rally that has gone wrong (a second paddle touch, a second bounce on the robot's half) does not end the
-episode by itself: it can then no longer succeed, and it ends at one of these two.
+Failure (ends the episode with 0): 3 s of simulated time pass without the event, the ball is below 0.3 m, or the same
+contact test finds the rally lost: a second paddle touch, a second bounce on the robot's half (or a first one longer
+than two control steps), or the ball on the opponent's half without a paddle touch. The episode ends at the control
+step this happens.
 
 The success event does not end the episode. Once it has happened the task is passed, even if a failure above ends the
 episode later. Before it, a failure ends the episode with 0.

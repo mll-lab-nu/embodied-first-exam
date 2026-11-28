@@ -11,7 +11,7 @@
 | Reference solution | Included |
 
 ## Task
-Put both cans into the plastic box, one in its left half and one in its right half, then let go.
+Put both cans into the plastic box, each near the middle of one of its two halves, then let go.
 
 ## Success criteria
 Each of the two cans has its position within 4 cm horizontally of the centre of one of the plastic box's two halves

@@ -19,7 +19,7 @@ Condition (VLABench's `contain` and `order`, all at once): the origins of the th
 (`century17_don_quixote_book`, `century18_pride_and_prejudice_book`, `century20_the_metamorphosis_book`) lie inside
 the axis-aligned box spanned by the bookshelf's (`shelf_seen`) keypoint sites, over both of its shelves; their x
 coordinates increase in that order (Don Quixote, Pride and Prejudice, The Metamorphosis: from the robot's left to its
-right); and for each of the first two books, its y and its z are each less than 0.1 m larger than those of the next
+right); and for each of the first two books, its y and its z each differ by less than 0.1 m from those of the next
 book. Whether the books stand upright or touch each other is not checked.
 
 Positions are object origins in the world frame of the instruction (metres, z up). A control step is 0.1 s (100 physics

@@ -30,10 +30,10 @@ the table top is at z = 0.76 m.
 
 A missing file scores 0, and so does an invalid one. Invalid means: not a readable `.npz`, no `task` or `actions`
 entry, an entry over 256 MB, a `task` other than this family, `actions` that are not finite numbers of shape (T, 16),
-or T over 200,000. The rows and the window share the cap of 200,000 control steps; a window cut short by the cap does
-not pass. The rebuilt scene must match the frozen instance: the same state hash, or every object within 2 mm and 0.02
-(quaternion components) and every joint within 0.002 rad of the recorded pose. A scene that does not match, or does
-not build, is an infrastructure error, not a score.
+or T over 200,000. The window runs past the cap of 200,000 control steps, so a trajectory of up to 200,000 rows gets
+its full window. The rebuilt scene must match the frozen instance: the same state hash, or every object within 2 mm
+and 0.02 (quaternion components) and every joint within 0.002 rad of the recorded pose. A scene that does not match,
+or does not build, is an infrastructure error, not a score.
 
 ## Resource requirements
 Caps per container.

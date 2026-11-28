@@ -11,15 +11,16 @@
 | Reference solution | None |
 
 ## Task
-Hang the three mugs by their handles on the rack arms that point left or right. Then move both arms back to where they
+Hang the three mugs by their handles on the arms of the rack, any arm for each. Then move both arms back to where they
 started.
 
 ## Success criteria
 One check, for each of the three mugs: its centre is more than 0.045 m above its start height; a marked point on its
-handle is higher than 0.9 m (world height) and within 0.045 m of one of the rack's marked hanging points; and the
-handle point's frame is turned like that hanging point's frame: their +z axes within 60° of each other and their x
-axes within 60° (either direction). Both arms are home (each arm's end-effector within 0.15 m of its start position
-along x, y and z, and less than 20° from its start orientation). Nothing checks the grippers.
+handle is higher than 0.9 m (world height) and within 0.045 m of one of the rack's marked hanging points (one per arm);
+and the handle point's frame is turned like the frame of the rack's hanging point nearest to it: their +z axes within
+60° of each other and their x axes within 60° (either direction). Both arms are home (each arm's end-effector within
+0.15 m of its start position along x, y and z, and less than 20° from its start orientation). Nothing checks the
+grippers.
 
 Graded: the live episode, judged by the simulator service with RoboDojo's own checks after every action; nothing is
 replayed. No success signal is shown to the agent, and passing the checks does not end the episode. The episode ends

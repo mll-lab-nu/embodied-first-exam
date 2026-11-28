@@ -11,7 +11,7 @@
 | Reference solution | None |
 
 ## Task
-Pull the door open, at least two-thirds of the way.
+Pull the door open, at least 67% of the way.
 
 ## Success criteria
 Success check (upstream `DoorOpeningTask`): the door's hinge is open at least 67% of its 90° range, in the state

@@ -21,7 +21,7 @@ repair any truck tires. How much more revenue did the mechanic earn on the day w
 Condition (VLABench's `contain` and `order`, all at once): the origins of the number cubes `4` and `0` both lie
 horizontally within the rectangle spanned by the placemat's (`placemat_seen`) keypoint sites and between 0 and 0.1 m
 above the lowest of those sites (both bounds excluded); the cube `4` has the smaller x (it is to the robot's left of
-`0`); and the cube `4`'s y and z are each less than 0.1 m larger than those of the cube `0`. The other cubes are not
+`0`); and the cube `4`'s y and z each differ by less than 0.1 m from those of the cube `0`. The other cubes are not
 checked.
 
 Positions are object origins in the world frame of the instruction (metres, z up). A control step is 0.1 s (100 physics

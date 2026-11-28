@@ -25,8 +25,6 @@ no shift); every measure is taken at that shift. Success needs all of these:
   exemplar's edge and the share of the exemplar's edge pixels within 1 mm of the sheet's;
 - each of the exemplar's 71 regions is at least 0.80 covered by ink;
 - stray ink (ink more than 1 mm from the exemplar's ink) at most 0.04 of the exemplar's ink area;
-- at most 71 inked contacts with the main sheet (a contact is one continuous stretch of the tip below the
-  sheet's surface; it is inked when the brush was loaded at the touch-down);
 - no colouring in: the task fails when `path_mm` > 7880 mm and also `mark_width_mm` < 0.99 mm.
   `path_mm` is the total length of the tip's path in all inked contacts with the main sheet (100 Hz physics samples);
   `mark_width_mm` is the area each contact inks on its own (coverage ≥ 0.5; where contacts overlap, each counts its

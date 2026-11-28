@@ -11,7 +11,8 @@
 | Reference solution | None |
 
 ## Task
-Put the object shown in the photo on the board into the basket on the belt, then lift the basket about a hand's length.
+Put the object shown in the photo on the board into the basket on the belt, then lift the basket with it at least a
+hand's width.
 
 ## Success criteria
 The objects ride on the moving belt. One check, all at once:

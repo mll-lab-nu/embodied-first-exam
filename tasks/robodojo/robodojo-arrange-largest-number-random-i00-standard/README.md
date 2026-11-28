@@ -12,7 +12,8 @@
 
 ## Task
 Put the four digit blocks on the four mats, one per mat, so that they read the largest possible number from left to
-right. Keep each block face up and turned as it is now. Then move both arms back to where they started.
+right. Keep each block face up with its digit upright, turned roughly square to the row of mats. Then move both arms
+back to where they started.
 
 ## Success criteria
 One check. Take the four digit blocks in order of their digit, largest first (blocks with the same digit in a fixed

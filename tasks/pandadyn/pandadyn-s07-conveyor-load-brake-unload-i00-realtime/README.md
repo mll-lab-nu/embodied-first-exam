@@ -11,7 +11,7 @@
 | Reference solution | Included |
 
 ## Task
-Grasp the part from the moving conveyor, lift it about a hand's length and set it on the coasting carriage, letting go
+Grasp the part from the moving conveyor, lift it about a hand's width and set it on the coasting carriage, letting go
 while the carriage is moving. Then grip the carriage's handle and stop it, with the part still on it, before it reaches
 the end of its rail; finally lift the part off and set it down in the dock.
 
