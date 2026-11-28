@@ -10,7 +10,8 @@ is open, what the robot holds and what it has let go of); one object stands roug
 roughly as there, and a second one roughly where the picture shows it; then the robot and those objects stay still for
 at least a second and a half.
 
-When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
+When you are done, send `/finish` to end the episode and get it graded. The task counts as done the first time the
+goal holds; what happens after that does not undo it.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the

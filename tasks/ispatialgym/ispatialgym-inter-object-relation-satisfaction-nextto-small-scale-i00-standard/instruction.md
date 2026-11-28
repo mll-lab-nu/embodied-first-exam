@@ -9,7 +9,8 @@ Success: the objects that matter stand as the picture shows them: what is on, in
 is open, what the robot holds and what it has let go of. Also, two of them each stand roughly where the picture shows
 them, turned roughly the same way. Then the robot and those objects stay still for at least a second and a half.
 
-When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
+When you are done, send `/finish` to end the episode and get it graded. The task counts as done the first time the
+goal holds; what happens after that does not undo it.
 
 Rules:
 - **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
