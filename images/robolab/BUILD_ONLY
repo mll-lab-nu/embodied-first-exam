@@ -43,7 +43,8 @@ Host
   (22 min on a 32-core host). Run: one Isaac simulator per 32 GB of host RAM.
 
 Build and publish (maintainers; from the repository root)
-  RCB_PUSH_PRIVATE=1 scripts/images.sh build builds every image (this one with BuildKit's inline cache); alone:
+  scripts/images.sh build builds every image (this one with BuildKit's inline cache), and RCB_PUSH_PRIVATE=1
+  scripts/images.sh push pushes it to efe-private with the others (without the variable push skips it); alone:
     docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ghcr.io/mll-lab-nu/efe-private:robolab-$(cat images/robolab/VERSION) images/robolab
     docker push ghcr.io/mll-lab-nu/efe-private:robolab-$(cat images/robolab/VERSION)
   A new VERSION: change the tag in the tasks' `cache_from` and normalize them.

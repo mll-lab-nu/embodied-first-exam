@@ -34,7 +34,8 @@ Host
   access to github.com and pypi.org, a few minutes. Run: ~1 GB of RAM per simulator process.
 
 Build and publish (maintainers; from the repository root)
-  RCB_PUSH_PRIVATE=1 scripts/images.sh build builds every image (this one with BuildKit's inline cache); alone:
+  scripts/images.sh build builds every image (this one with BuildKit's inline cache), and RCB_PUSH_PRIVATE=1
+  scripts/images.sh push pushes it to efe-private with the others (without the variable push skips it); alone:
     docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ghcr.io/mll-lab-nu/efe-private:autobio-$(cat images/autobio/VERSION) images/autobio
     docker push ghcr.io/mll-lab-nu/efe-private:autobio-$(cat images/autobio/VERSION)
   A new VERSION: change the tag in the tasks' `cache_from` and normalize them.
