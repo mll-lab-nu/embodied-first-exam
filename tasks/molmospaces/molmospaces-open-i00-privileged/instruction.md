@@ -4,7 +4,7 @@
 Open the dishwasher.
 
 ## Goal
-Success: the dishwasher is open at least a sixth of the way (its door, or another of its moving parts). Your trajectory
+Success: the dishwasher is open at least 15% of the way (its door, or another of its moving parts). Your trajectory
 is replayed from the fixed start. What counts is the state after its last action. Rows past the step limit (Limits) are
 never run. To stop there once the task holds, end your trajectory.
 

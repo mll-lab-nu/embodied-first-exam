@@ -1012,7 +1012,7 @@
    "task_type": "open_door"
   },
   "language": {
-   "task_description": "Pull the door open, at least two-thirds of the way.",
+   "task_description": "Pull the door open, at least 67% of the way.",
    "referral_expressions": {},
    "referral_expressions_priority": {}
   }
@@ -1020,7 +1020,7 @@
  "instance": "i00",
  "variant": "a door to pull",
  "facts": {
-  "goal": "Pull the door open, at least two-thirds of the way.",
+  "goal": "Pull the door open, at least 67% of the way.",
   "horizon_steps": 400,
   "horizon_s": 40,
   "control_hz": 10.0,

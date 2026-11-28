@@ -4,7 +4,7 @@
 Open the dishwasher.
 
 ## Goal
-Success: the dishwasher is open at least a sixth of the way (its door, or another of its moving parts). The `done`
+Success: the dishwasher is open at least 15% of the way (its door, or another of its moving parts). The `done`
 action is the same as `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
