@@ -46,7 +46,7 @@ ag = d.get("agent") or {}
 # `[agent] network_mode = "public"` (task_conventions.network_of), never a list kept here
 md = d.get("metadata") or {}
 if "network" in md:
-    fail(f'[metadata] network = {md["network"]!r}: the egress is declared by [agent] network_mode alone ("allowlist", or "public" for open egress; scripts/task_conventions.py normalize moves it)')
+    fail(f'[metadata] network = {md["network"]!r}: the egress is declared by [agent] network_mode alone: delete the `network = ...` line from [metadata] by hand and declare the egress in [agent]: network_mode = "allowlist" with allowed_hosts = scripts/set_agent_egress.py HOSTS, or network_mode = "public" for open egress')
 if ag.get("network_mode") == "public":
     if "allowed_hosts" in ag:
         fail('[agent] network_mode = "public" (open egress) with allowed_hosts: drop the list, or put the task on the allowlist')

@@ -93,13 +93,13 @@ def fields(t: str, mode_names: tuple[str, ...]) -> list[str]:
     suffix = next((x for x in mode_names if p.name.endswith("-" + x)), p.name.rsplit("-", 1)[-1])
     if suffix not in mode_names:
         out.append("directory name must end in " + ", ".join("-" + x for x in mode_names))
-    # no copies of what another source says (scripts/task_conventions.py normalize removes them): the mode is the
+    # no copies of what another source says (removed by hand: normalize does not touch them): the mode is the
     # directory's suffix, the reset budget and the slowdown S the sim service's RCB_RESET_BUDGET and RCB_SLOWDOWN
     # defaults (ci_checks/check-realtime.py), the egress [agent] network_mode (ci_checks/check-verifier-isolation.sh)
     for k, src in (("mode", "the directory's suffix"), ("reset_budget", "the sim service's RCB_RESET_BUDGET default"),
                    ("slowdown", "the sim service's RCB_SLOWDOWN default")):
         if k in m:
-            out.append(f"[metadata].{k} copies {src}: drop it (scripts/task_conventions.py normalize)")
+            out.append(f"[metadata].{k} copies {src}: delete the `{k} = ...` line from task.toml's [metadata] by hand")
     if "tier" in m:
         out.append("[metadata].tier is not a task field (the mode is the directory name's suffix)")
     if m.get("dynamics") not in ("static", "dynamic"):

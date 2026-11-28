@@ -48,7 +48,7 @@ def check(task: Path) -> list[str]:
         if not S > 0:
             errs.append(f"{task.name}: RCB_SLOWDOWN's default must be > 0 (got {m.group(1)})")
         if "slowdown" in md:
-            errs.append(f"{task.name}: [metadata] slowdown copies its service's default ({S:g}): drop it (scripts/task_conventions.py normalize)")
+            errs.append(f"{task.name}: [metadata] slowdown copies its service's default ({S:g}): delete the `slowdown = ...` line from task.toml's [metadata] by hand")
         if not re.search(rf"\bS = {re.escape(tc.slowdown_text(S))}\b", text) and not (S == 1 and REAL_TIME.search(text)):
             errs.append(f"{task.name}: instruction.md must state the slowdown as `S = {tc.slowdown_text(S)}`"
                         + (" (or say the robot runs `in real time`)" if S == 1 else ""))
@@ -61,7 +61,7 @@ def check(task: Path) -> list[str]:
     declared = r is not None
     n = int(r.group(1) or r.group(2)) if declared else 0
     if "reset_budget" in md:
-        errs.append(f"{task.name}: [metadata] reset_budget copies its service's default ({n}): drop it (scripts/task_conventions.py normalize)")
+        errs.append(f"{task.name}: [metadata] reset_budget copies its service's default ({n}): delete the `reset_budget = ...` line from task.toml's [metadata] by hand")
     stated = {int(k) for k in STATED.findall(text)}
     if stated - {n}:
         errs.append(f"{task.name}: instruction.md states {', '.join(f'{k} resets' for k in sorted(stated - {n}))}, "
