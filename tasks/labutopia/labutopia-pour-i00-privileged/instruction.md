@@ -5,9 +5,9 @@ Pick up the small beaker and tip it over the large beaker as if pouring into it,
 over the large beaker for a couple of seconds.
 
 ## Goal
-Success: the small beaker, lifted about a pen's length or more, is tipped well past halfway onto its side, turned back
-nearly upright and then held up for a couple of seconds, all right above the large beaker's mouth. The episode ends the
-moment that is reached.
+Success: the small beaker, lifted about a pen's length or more, is tipped well past halfway onto its side and then
+turned back nearly upright, all right above the large beaker's mouth, and is then held up there for about a second and a
+half in total (not necessarily in one go). The episode ends the moment that is reached.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`. It is replayed open-loop
 from the same initial state and scores 1 if its episode ends in success. Leave the script that produced it at

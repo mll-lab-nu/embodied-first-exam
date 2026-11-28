@@ -5,8 +5,9 @@ Keep the football in the air with 10 headers in a row, touching it only with you
 ground.
 
 ## Goal
-Success: you keep the ball the machine lobs to you up with ten headers in a row, touching it only with your head,
-without it touching the ground.
+Success: you keep the ball the machine lobs to you up with ten counted headers, touching it only with your head,
+without it touching the ground; a header counts when it strikes the ball up, and a ball that only bounces off your
+head, leaving slower than it came, is not counted.
 
 The referee in the service judges these stages, in order: **each of the 10 headers**. Once the referee calls success, it
 stays; the attempt continues until you finish. The first foul before a success ends the attempt as a failure. A reset

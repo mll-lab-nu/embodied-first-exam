@@ -6,7 +6,8 @@ start, then move your hand away.
 
 ## Goal
 Success: the tupperware, with the shrimp and the carrot still in it, is all the way inside the microwave, the door is
-fully closed, the microwave is running, and the hand has let go of the tupperware and moved well away.
+fully closed, the microwave is running, and the hand has let go of the tupperware and moved well away (what counts is
+how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

@@ -8,8 +8,8 @@ and put the cube onto the platform.
 ## Goal
 Success: the cube, once off the lane, is received in the tray and settles; keeping the tray level, a brisk move of the
 tray makes the cube slide inside it until it rests at the staging point; the tray passes waypoint A and then waypoint B;
-the tray is brought to the match point while moving with the platform's velocity; finally the cube rests on the
-platform, off the tray, riding along with it.
+the tray is brought to the match point beside the moving platform; finally the cube rests on the platform, off the tray,
+riding along with it.
 
 The steps count only in this order. Once a step is done, it stays done. The task is done when its last step is done, and
 it stays done even if a failure ends the episode afterwards. The task fails, and the episode ends at once, when:

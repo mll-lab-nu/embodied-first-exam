@@ -4,7 +4,8 @@
 One mahjong tile is the only one of its suit: put it on the placemat.
 
 ## Goal
-Success: the tile that is the only one of its suit is on the placemat.
+Success: the tile that is the only one of its suit is over the placemat, at most a hand's width above it (lying on it,
+or still held just above it).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

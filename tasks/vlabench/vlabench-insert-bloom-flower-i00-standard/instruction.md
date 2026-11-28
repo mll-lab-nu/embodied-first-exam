@@ -4,7 +4,7 @@
 Put the tulip in the vase.
 
 ## Goal
-Success: the tulip stands in the vase.
+Success: the tulip is in the vase, its middle inside the vase's opening.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

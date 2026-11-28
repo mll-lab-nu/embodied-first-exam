@@ -4,8 +4,8 @@
 The robot has fallen over. Get it back up, standing upright at its normal height.
 
 ## Goal
-Success: the robot stands upright on its feet, at about its standing height, for half a second. The time standing must
-run up to that end. The `done` action is the same as `/finish`.
+Success: the robot's body is upright and at about its standing height for half a second. The time standing must run up
+to that end. The `done` action is the same as `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

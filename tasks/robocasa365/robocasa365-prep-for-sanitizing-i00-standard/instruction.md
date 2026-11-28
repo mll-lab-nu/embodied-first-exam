@@ -5,7 +5,7 @@ Take the bar soap and the dish brush out of the cabinet and put them on the coun
 
 ## Goal
 Success: the bar soap and the dish brush are both on the counter nearest the cabinet, and the hand has let go and moved
-well away from both.
+well away from both (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

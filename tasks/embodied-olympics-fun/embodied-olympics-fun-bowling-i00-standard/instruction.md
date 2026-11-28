@@ -26,8 +26,9 @@ Rules:
   signal.
 
 The attempt fails at once if:
-- you foul at the foul line, or the ball goes into a gutter
-- before the release the ball touches you anywhere but your hands, or you touch it after the release
+- you foul at the foul line, or the ball goes into a gutter before it reaches the pins
+- before the release the ball touches you anywhere but your hands, or you touch it after the release before it
+  reaches the pins
 - you fall before the pins are counted
 
 ## Robot Interface

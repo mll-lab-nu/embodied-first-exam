@@ -7,7 +7,7 @@ keys between strikes.
 ## Goal
 Success: the mallet head has struck all eight keys in order from left to right, staying on each key long enough to be
 seen (a quick tap can be missed). The head need not touch a key; bringing it down close over the key counts as a strike.
-Between strikes, lift the head well clear, about a hand's width above the keys.
+Between strikes, lift the mallet clear, at least a finger's width higher than it was at the last strike.
 
 The strikes count as they happen.
 

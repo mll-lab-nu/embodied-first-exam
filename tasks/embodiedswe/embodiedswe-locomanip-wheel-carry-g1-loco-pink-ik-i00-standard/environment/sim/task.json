@@ -3,5 +3,5 @@
  "grader": "grader/wheel_carry.py",
  "title": "Carry the wheel to the basket (Unitree G1, walking, Pink IK)",
  "text": "Carry the steering wheel from the table in front of you to the basket on the other table, off to your right, and leave it in the basket.",
- "success": "Success: the steering wheel was lifted off the near table and carried over, and it now rests inside the basket, let go of and still (not held, not on the rim)."
+ "success": "Success: the steering wheel was lifted off the near table and carried over, and it now rests still inside the basket (not on the rim)."
 }

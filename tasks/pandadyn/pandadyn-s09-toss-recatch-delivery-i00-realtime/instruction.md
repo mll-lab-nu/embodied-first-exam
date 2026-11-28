@@ -1,14 +1,14 @@
 # Panda Dynamic Scenes · Catch, self-toss, recatch and deliver (S09) (realtime)
 
 ## Task
-Catch the falling ball in the cup, bring the cup to the launch point and toss the ball straight up out of it. Move the
-cup sideways, catch the ball again, and drop it into the sliding box while the box is moving.
+Catch the falling ball in the cup, bring the cup to the launch point and toss the ball up out of it. Move the cup
+sideways, catch the ball again, and drop it into the sliding box while the box is moving.
 
 ## Goal
-Success: the cup catches the falling ball; it is brought to the launch point; it tosses the ball straight up out of the
-cup with a real throw (the ball leaves the cup floor while rising, the cup about level) and the ball flies free; the
-cup, moved sideways, catches it again; finally the ball rests in the moving box, clear of the cup, while the box moves.
-A catch means the ball drops into the cup from above after flying free and stays there.
+Success: the cup catches the falling ball; it is brought to the launch point; it tosses the ball up out of the cup with
+a real throw (the ball leaves the cup floor while rising, the cup about level) and the ball flies free; the cup, moved
+sideways, catches it again; finally the ball rests in the moving box, clear of the cup, while the box moves. A catch
+means the ball drops into the cup from above after flying free and stays there.
 
 The steps count only in this order. Once a step is done, it stays done. The task is done when its last step is done, and
 it stays done even if a failure ends the episode afterwards. The task fails, and the episode ends at once, when:

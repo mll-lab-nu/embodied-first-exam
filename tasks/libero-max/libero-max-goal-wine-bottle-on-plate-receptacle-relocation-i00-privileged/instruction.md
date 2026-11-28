@@ -4,7 +4,8 @@
 Put the wine bottle on the plate.
 
 ## Goal
-Success: the wine bottle stands on the plate, near its middle. Your trajectory is replayed from the fixed start. The
+Success: the wine bottle is on the plate, touching it, near its middle (standing or lying). Your trajectory is replayed
+from the fixed start. The
 episode ends as soon as the task is done, and the trajectory must end on that step: any action after it makes the
 trajectory invalid.
 

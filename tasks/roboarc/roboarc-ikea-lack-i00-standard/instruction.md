@@ -5,8 +5,8 @@ Screw the four legs onto the four studs of the tabletop, one leg per stud. Then 
 clear.
 
 ## Goal
-Success: the tabletop lies studs up with a leg screwed fully onto each stud, each leg straight; no arm touches any part
-and everything is still. Forcing parts deep into each other breaks the simulation and ends the episode at once, without
+Success: a leg is screwed fully onto each stud of the tabletop, each leg straight; no arm touches any part and
+everything is still. Forcing parts deep into each other breaks the simulation and ends the episode at once, without
 success.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts. Make sure

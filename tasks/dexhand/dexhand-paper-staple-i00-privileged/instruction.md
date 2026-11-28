@@ -13,7 +13,7 @@ Any of these ends the episode at once as a failure, which later actions cannot u
 - A sheet drops below the desk top, or leaves the desk or the work area.
 - A sheet or the stapler touches the floor or a desk leg, or is dropped.
 - The stapler is pushed away or tipped.
-- An arm link or the robot's stand touches the desk, the stapler or a sheet.
+- An arm link or the robot's stand touches anything but the robot itself (the desk, the stapler, a sheet or the floor).
 - The physics becomes unstable.
 
 Deliverable: `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 58)` for `sharpa` or

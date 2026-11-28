@@ -4,7 +4,8 @@
 Take the fish from the fridge and put it on the cutting board, and move your hand away.
 
 ## Goal
-Success: the fish is on the cutting board, and the hand has let go of it and moved well away.
+Success: the fish is on the cutting board, and the hand has let go of it and moved well away (what counts is how far
+away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

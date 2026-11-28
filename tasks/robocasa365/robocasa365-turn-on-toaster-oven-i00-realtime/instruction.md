@@ -83,7 +83,6 @@ back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `cli
   and the robot does not wait for it.
 
 ## Others
-- The kitchen moves on too: the timer knob, once set, slowly turns back by itself.
 - One turn of yours (a model response, a tool call) takes seconds: write a controller (Python in your container, with
   numpy and the client) that plans or streams the commands, in the background
   (`nohup python /app/ctrl.py > /app/ctrl.log 2>&1 &`) or in the foreground; use your turns to read what happened and

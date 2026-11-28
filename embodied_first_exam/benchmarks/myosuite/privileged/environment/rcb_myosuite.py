@@ -453,6 +453,8 @@ class Session:
         self.last_info = {k: _jsonable(v) for k, v in dict(info).items() if k in ("solved", "done", "rwd_sparse", "rwd_dense")}
         self.last_info["solved_run"] = self.solved_run
         failed = bool(np.asarray(info.get("done", False)).any())
+        if self.task == "table_tennis" and not solved and _rally_lost(self.base.contact_trajectory):
+            failed = True
         if self.rule == "track":
             pos, rot = self.track_errors()
             ok = pos <= TRACK_POS_M and (not TRACK_ROT[self.task] or rot <= TRACK_ROT_RAD)
@@ -674,6 +676,17 @@ _FAILURE = {"key_turn": "fingertips too far from the key", "obj_hold": "object d
             "chase_tag": "the opponent was not tagged in time, out of bounds or fallen",
             "osl_run": "fallen, off the track or out of time",
             **{t: "object more than 0.25 m from the reference (or from the wrist)" for t in TASKS if t.startswith("dex_")}}
+
+
+def _rally_lost(contact_trajectory) -> bool:
+    """table_tennis: MyoChallenge 2025's own rally check (tabletennis_v0.evaluate_pingpong_trajectory) found the rally
+    lost: a second bounce on the own half, the opponent's half reached without a paddle touch, or a second paddle touch.
+    The env's _get_done means to end the episode there, but compares the check's ContactTrajIssue (a plain Enum) with
+    the ints [0, 2, 3], which never matches, so such an episode ran on to the 3 s limit or the ball's fall. A lost rally
+    can no longer succeed (the check rescans the whole history), so ending it here changes no verdict."""
+    from myosuite.envs.myo.myochallenge.tabletennis_v0 import ContactTrajIssue, evaluate_pingpong_trajectory
+    issue = evaluate_pingpong_trajectory(contact_trajectory)
+    return issue in (ContactTrajIssue.OWN_HALF, ContactTrajIssue.NO_PADDLE, ContactTrajIssue.DOUBLE_TOUCH)
 
 
 def _qconj(q):

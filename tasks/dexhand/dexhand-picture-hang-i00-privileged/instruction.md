@@ -11,7 +11,7 @@ replay ends as soon as the task is done; later rows are not run.
 
 Any of these ends the episode at once as a failure, which later actions cannot undo:
 - The frame touches the floor, leaves the work area or tilts far from upright.
-- After the lift, the frame sinks below its start height.
+- After the lift, the frame sinks more than 10 mm below its start height.
 - Once both rings are on, a ring falls off its hook.
 - After the lift, the frame is held by nothing: dropped (even if caught again), let go early, dangling from one hook or
   resting on the hook lips.

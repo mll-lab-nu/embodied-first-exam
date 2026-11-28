@@ -5,9 +5,9 @@ Put the 1.5 mL tube from the plate into the centrifuge's rotor, in the slot oppo
 without turning the rotor.
 
 ## Goal
-Success: the tube is seated all the way down in the slot opposite the tube already in the rotor, with the rotor where it
-started. The episode ends the moment that is reached. A physics warning (an unstable simulation, for instance after the
-robot was driven hard into something) ends the episode at once, as a failure.
+Success: the tube is seated all the way down in the slot that, at the start, was opposite the tube already in the rotor,
+at that slot's starting place. The episode ends the moment that is reached. A physics warning (an unstable simulation,
+for instance after the robot was driven hard into something) ends the episode at once, as a failure.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`. It is replayed open-loop
 from the same initial state and scores 1 if its episode ends in success. Leave the script that produced it at

@@ -5,16 +5,16 @@ Do an ollie: pop the skateboard into the air with your feet, land on it with bot
 stand still on it.
 
 ## Goal
-Success: from a standstill you pop the board until it is fully off the ground, land on it with both feet and all four
-wheels down, and stand still on it for 1 s.
+Success: you pop the board with your feet until its lowest point is at least 5 cm off the ground, land on it with both
+feet and all four wheels down, and stand still on it for 1 s.
 
 The referee judges these stages, in order: **pop → clear → landed → stand**. An attempt ends at the success, at the
 first foul or after 8 s (800 control steps) of robot time.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory()`. It holds `actions`: one sim row of 151
 floats per control step. It is replayed open-loop from the fixed start, one row per control step, until the referee ends
-the attempt. It scores 1 if the replay succeeds, else 0. If the rows run out first, the attempt is judged on its state
-at that point. At most 800 rows are used, and every one must be finite, also those after the attempt's end (a NaN or an
+the attempt. It scores 1 if the replay succeeds, else 0. If the rows run out before the referee calls a success, it
+scores 0. At most 800 rows are used, and every one must be finite, also those after the attempt's end (a NaN or an
 infinite value scores 0).
 
 Put two files beside it. `gen.py` is the script that produced it: it must run and reproduce `trajectory.npz`, reading
@@ -31,7 +31,7 @@ benchmark's demonstrations, policies trained for it); trials are reviewed.
 The attempt fails at once if:
 - anything but your feet and shins touches the board (no hands)
 - any part of you, a foot included, touches the ground, or your hips drop low (a bail)
-- the board lands upside down
+- the board touches the ground tipped more than 60 degrees or upside down
 - after the landing a foot stays off the deck, or your torso tilts too far
 
 ## Robot Interface

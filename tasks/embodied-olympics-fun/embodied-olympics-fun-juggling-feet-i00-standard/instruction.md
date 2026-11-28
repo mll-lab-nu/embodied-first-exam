@@ -5,8 +5,9 @@ Drop the football from your hands and juggle it with your feet for ten touches i
 knees, without it touching the ground.
 
 ## Goal
-Success: you keep the ball up with ten foot touches in a row, each sending it above your knees, without it touching the
-ground or any other part of you.
+Success: you keep the ball up with ten counted foot touches, each sending the bottom of the ball above your standing
+knee height, without it touching the ground or any other part of you; a touch counts when it strikes the ball up, and
+a ball that only bounces off a foot, leaving slower than it came, is not counted.
 
 The referee in the service judges these stages, in order: **each of the 10 touches**. Once the referee calls success, it
 stays; the attempt continues until you finish. The first foul before a success ends the attempt as a failure. A reset

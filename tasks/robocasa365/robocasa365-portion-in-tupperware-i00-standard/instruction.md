@@ -6,7 +6,7 @@ away.
 
 ## Goal
 Success: each tupperware holds exactly one of the two cooked foods and exactly one of the two vegetables, and the hand
-has let go and moved well away from all four.
+has let go and moved well away from all four (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

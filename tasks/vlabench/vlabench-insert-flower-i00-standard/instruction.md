@@ -4,7 +4,7 @@
 Put the rose in the vase.
 
 ## Goal
-Success: the rose stands in the vase.
+Success: the rose is in the vase, its middle inside the vase's opening.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

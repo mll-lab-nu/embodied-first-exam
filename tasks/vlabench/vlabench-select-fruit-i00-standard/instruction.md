@@ -4,7 +4,7 @@
 Put the banana on the plate.
 
 ## Goal
-Success: the banana is on the plate.
+Success: the banana is over the plate, at most a hand's width above it (lying on it, or still held just above it).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

@@ -4,9 +4,9 @@
 Put both cups from the counter on the bottom shelf of the wall cabinet and let go.
 
 ## Goal
-Success: both cups are on the bottom shelf of the wall cabinet and neither gripper touches them, for a second. The
-episode ends as soon as it succeeds. A fall (the pelvis tipping far over, or dropping low) makes the episode a failure
-without ending it.
+Success: both cups touch the bottom shelf of the wall cabinet and neither gripper's fingers touch them, for a second.
+The episode ends as soon as it succeeds. A fall (the pelvis tipping far over, or dropping low) makes the episode a
+failure without ending it.
 
 Deliverable: three files under `/app/output/`; only the first is scored. `trajectory.npz`: the trajectory, written with
 `s.save_trajectory(rows)`: `actions`, one row of 21 floats per control step, at most 3000 rows (rows after the episode's

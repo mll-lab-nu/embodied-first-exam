@@ -4,8 +4,8 @@
 Hammer the nail into the wall, then bring the 本所立川 painting right up to the nail, as if to hang it there.
 
 ## Goal
-Success: the nail is hammered into the wall, far enough but not too far, and the 本所立川 painting has been brought right up
-to the nail.
+Success: the nail is hammered most of the way into the wall (all the way in also counts), and the 本所立川 painting has been
+brought right up to the nail.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

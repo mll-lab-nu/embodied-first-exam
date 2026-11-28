@@ -5,10 +5,10 @@ Take the removable ring out of the puzzle and put all of it inside the green das
 and chains behind, no closer to the goal than they were at the start. Keep every chain hooked in its horseshoe.
 
 ## Goal
-Success: all of the removable ring is inside the green dashed goal square and still, and the horseshoes and chains are
-no closer to the goal than at the start, every chain still hooked in its horseshoe. Unhooking a chain from a horseshoe
-ends the episode as a failure. Do not force pieces into each other: a success reached that way may not count. Dropping a
-piece off the table ends the episode as a failure.
+Success: all of the removable ring is inside the green dashed goal square and still, and the horseshoes and chains reach
+no more than a few millimetres closer to the goal than their nearest part did at the start, every chain still hooked in
+its horseshoe. Unhooking a chain from a horseshoe ends the episode as a failure. Do not force pieces into each other: a
+success reached that way may not count. Dropping a piece off the table ends the episode as a failure.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts. Make sure
 everything is at rest when you send `/finish`.

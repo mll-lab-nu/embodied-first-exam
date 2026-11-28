@@ -4,7 +4,8 @@
 Put the 6 sou mahjong tile on the placemat.
 
 ## Goal
-Success: the 6 sou tile is on the placemat.
+Success: the 6 sou tile is over the placemat, at most a hand's width above it (lying on it, or still held just above
+it).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

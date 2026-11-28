@@ -74,7 +74,7 @@ class RoomParkInExit(room.RoomFamily):
         # the shelf in the main room. You are in nobody's way there." (the remedy and a go-ahead, member-keyed)
 
     def request(self, inst):
-        return "Go and wait by the front door." if inst.member == "hazard" else "Go and wait by the shelf."
+        return "Go and wait by the front door." if inst.member == "hazard" else "Go and wait right in front of the shelf."
 
     def goal(self, inst, ep):
         st = ep.state

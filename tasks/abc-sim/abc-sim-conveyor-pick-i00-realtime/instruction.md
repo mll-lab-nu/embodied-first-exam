@@ -4,7 +4,8 @@
 Pick the three objects off the moving conveyor belt and put them in the bin.
 
 ## Goal
-Success: all three objects are in the bin at the same time. Make sure everything is at rest when you send `/finish`.
+Success: all three objects are in the bin at the same time. It must hold for about a second after the episode ends,
+while the robot keeps your last command.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

@@ -5,7 +5,7 @@ Put both cans from the counter in the cabinet, on the side where the other can a
 
 ## Goal
 Success: both cans are all the way inside the cabinet, each on the same side as the can already there and away from the
-other item, and your hand has let go and moved away from them.
+other item, and your hand has let go and moved well away from them (what counts is how far the hand is from them).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

@@ -4,7 +4,7 @@
 Put the wine bottle on top of the cabinet.
 
 ## Goal
-Success: the wine bottle stands on top of the cabinet, near the middle of its top.
+Success: the wine bottle is on top of the cabinet, touching it, near the middle of its top (standing or lying).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

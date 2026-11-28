@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/pandadyn-s08-load-switch-recover-i00-privileged"
-description = "Panda Dynamic Scenes S08 Load a coasting cart, throw the switch, recover the part (one Franka Panda, ManiSkill 3 / SAPIEN, CPU PhysX at 1000 Hz): produce one replayable trajectory of 100 Hz joint-target actions. Task: Grasp the part from the moving conveyor, lift it about a hand's length and drop it into the coasting cart without stopping the cart. Before the cart reaches the switch, push the switch with a finger so that it sends the cart into the branch nearer to you, then lift the part back out of the cart and hold it up. Frozen scene instance i00 (nominal parameters, seed 0); graded by the task's own staged success check in two fresh-process replays."
+description = "Panda Dynamic Scenes S08 Load a coasting cart, throw the switch, recover the part (one Franka Panda, ManiSkill 3 / SAPIEN, CPU PhysX at 1000 Hz): produce one replayable trajectory of 100 Hz joint-target actions. Task: Grasp the part from the moving conveyor, lift it about a hand's width and drop it into the coasting cart without stopping the cart. Before the cart reaches the switch, push the switch with a finger so that it sends the cart into the branch nearer to you, then lift the part back out of the cart and hold it up. Frozen scene instance i00 (nominal parameters, seed 0); graded by the task's own staged success check in two fresh-process replays."
 keywords = ["robotics", "pandadyn", "maniskill", "sapien", "franka-panda", "single-arm", "dynamic-manipulation", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

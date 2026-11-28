@@ -4,8 +4,9 @@
 Put the corn from the counter on the plate in the microwave, and move your hand away.
 
 ## Goal
-Success: the corn lies on the plate inside the microwave, the plate still in the microwave, and your hand has let go of
-the corn and moved away. Your trajectory is replayed from the fixed start. What counts is the state after its last
+Success: the corn touches the plate in the microwave, the plate still touches the microwave, and your hand has let go of
+the corn and moved well away from it (what counts is how far the hand is from it). Your trajectory is replayed from the
+fixed start. What counts is the state after its last
 action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 12)`

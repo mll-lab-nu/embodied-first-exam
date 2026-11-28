@@ -5,7 +5,8 @@ Pick up the red box with the left arm, pass it to the right arm, and hold it at 
 the left arm off the box.
 
 ## Goal
-Success: the right gripper holds the box at the target box, off the table, and no part of the left arm touches the box.
+Success: the box is at the target box, off the table, touching the right gripper's fingers, and no part of the left arm
+touches the box.
 Your trajectory is replayed from the fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz`: actuator targets, shape `(T, 14)` (T at most 3000), one row per control step

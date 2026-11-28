@@ -4,7 +4,8 @@
 Put the mug from the counter under the coffee machine's spout, and move your hand away.
 
 ## Goal
-Success: the mug stands right under the coffee machine's spout, and your hand has let go of it and moved away.
+Success: the mug is right under the coffee machine's spout, its middle close below it (upright or not), and your hand
+has let go of it and moved well away from it (what counts is how far the hand is from it).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

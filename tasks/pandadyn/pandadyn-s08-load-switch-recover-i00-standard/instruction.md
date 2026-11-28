@@ -1,12 +1,12 @@
 # Panda Dynamic Scenes · Load a coasting cart, throw the switch, recover the part (S08) (standard)
 
 ## Task
-Grasp the part from the moving conveyor, lift it about a hand's length and drop it into the coasting cart without
+Grasp the part from the moving conveyor, lift it about a hand's width and drop it into the coasting cart without
 stopping the cart. Before the cart reaches the switch, push the switch with a finger so that it sends the cart into the
 branch nearer to you, then lift the part back out of the cart and hold it up.
 
 ## Goal
-Success: both fingers grip the part while it still rides the conveyor and lift it about a hand's length; it is dropped
+Success: both fingers grip the part while it still rides the conveyor and lift it about a hand's width; it is dropped
 into the moving cart without stopping the cart; before the cart reaches the switch, a finger pushes the switch clearly
 over toward the branch nearer the robot, where it stays; the cart is deflected by the switch into that branch; finally
 both fingers grip the part again and hold it up, well above the cart and clear of it, before the cart runs far down the

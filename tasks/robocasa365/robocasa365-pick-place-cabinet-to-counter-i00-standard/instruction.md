@@ -4,7 +4,8 @@
 Take the ice cube out of the cabinet and put it on the counter next to it, and move your hand away.
 
 ## Goal
-Success: the ice cube is on the counter nearest the cabinet, and the hand has let go of it and moved well away.
+Success: the ice cube is on the counter nearest the cabinet, and the hand has let go of it and moved well away (what
+counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

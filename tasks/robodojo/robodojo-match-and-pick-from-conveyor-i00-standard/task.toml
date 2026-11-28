@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/robodojo-match-and-pick-from-conveyor-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/3.0): RoboDojo match_and_pick_from_conveyor (Memory) on the same frozen layout as the privileged task (arx_x5/0/match_and_pick_from_conveyor_0.json). Task: Remember the first object on the belt, then pick up its identical copy when it comes by later and lift it about a hand's length. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
+description = "STANDARD MODE (robot as a service, eai-standard/3.0): RoboDojo match_and_pick_from_conveyor (Memory) on the same frozen layout as the privileged task (arx_x5/0/match_and_pick_from_conveyor_0.json). Task: Remember the first object on the belt, then pick up its identical copy when it comes by later and lift it more than a hand's width. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "standard-mode", "trajectory"]
 
 [metadata]

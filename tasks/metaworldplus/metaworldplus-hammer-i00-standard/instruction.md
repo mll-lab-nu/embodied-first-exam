@@ -4,7 +4,8 @@
 Use the hammer to drive the nail into the block.
 
 ## Goal
-Success: the nail is driven into the block until its head reaches the target point.
+Success: the nail is driven into the block until its head is at, or just short of, the target point. Only how far the
+nail has gone in is checked, not what drove it.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

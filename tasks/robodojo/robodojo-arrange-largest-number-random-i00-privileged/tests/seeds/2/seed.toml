@@ -1,6 +1,6 @@
 [[replace]]
-old = "## Task\nPut the four digit blocks on the four mats, one per mat, so that they read the largest possible number from left to\nright. Keep each block face up and turned as it is now. Then move both arms back to where they started."
-new = "## Task\nPut the five digit blocks on the five mats, one per mat, so that they read the largest possible number from left to\nright. Keep each block face up and turned as it is now. Then move both arms back to where they started."
+old = "## Task\nPut the four digit blocks on the four mats, one per mat, so that they read the largest possible number from left to\nright. Keep each block face up with its digit upright, turned roughly square to the row of mats. Then move both arms\nback to where they started."
+new = "## Task\nPut the five digit blocks on the five mats, one per mat, so that they read the largest possible number from left to\nright. Keep each block face up with its digit upright, turned roughly square to the row of mats. Then move both arms\nback to where they started."
 
 [[replace]]
 old = "## Others\n- Labels in `s.objects()`: `digit_0`..`digit_3` (the digit blocks, in no particular order); `mat_0`..`mat_3` (the mats,\n  from left to right).\n- RoboDojo's own reset settles the scene again from where it is. So a reset after actions gives the same layout and\n  start pose, but not bit-for-bit the same state, and a replay after such a reset can end slightly differently from the\n  grader's. Each graded replay is the first episode of a newly started Session, with nothing stepped before it. Test\n  your trajectory the same way."

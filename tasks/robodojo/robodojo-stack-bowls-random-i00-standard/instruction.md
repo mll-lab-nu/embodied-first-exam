@@ -4,8 +4,8 @@
 Stack the three bowls one inside another, all upright. Then move both arms back to where they started.
 
 ## Goal
-Success: the three bowls are nested in one stack, all upright, the bottom one flat on the table, and both arms are back
-where they started.
+Success: the three bowls form one stack, each centred over the one below it and higher than it, all upright, the bottom
+one sitting level, and both arms are back where they started.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

@@ -1,14 +1,14 @@
 # RoboDojo · hang_mugs_random (standard)
 
 ## Task
-Hang the three mugs on the mug rack: the red mug by its handle on an arm that points left or right, and the two pink
-pumpkin mugs on any arm, opening facing up or up-left and handle sideways. Then move both arms back to where they
-started.
+Hang the three mugs on the mug rack, each on any arm: the red mug by its handle, and the two pink pumpkin mugs with the
+opening facing up or tilted toward the rack's centre and the handle along the arm. Then move both arms back to where
+they started.
 
 ## Goal
-Success: each of the three mugs hangs on the mug rack: the red mug by its handle, handle above the mug, on an arm that
-points left or right; each pink pumpkin mug with its opening facing up or up-left and its handle sideways; and both arms
-are back where they started.
+Success: each of the three mugs hangs on an arm of the mug rack, any arm: the red mug by its handle, handle above the
+mug; each pink pumpkin mug with its opening facing up or tilted toward the rack's centre and its handle along its arm;
+and both arms are back where they started.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

@@ -5,7 +5,8 @@ We're playing Texas hold'em. Show me your hand: put the 6 of hearts, 7 of diamon
 spades on the placemat.
 
 ## Goal
-Success: the 6 of hearts, 7 of diamonds, 8 of clubs, 9 of hearts and 10 of spades all lie on the placemat.
+Success: the 6 of hearts, 7 of diamonds, 8 of clubs, 9 of hearts and 10 of spades are all over the placemat, each at
+most a hand's width above it (lying on it, or still held just above it).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

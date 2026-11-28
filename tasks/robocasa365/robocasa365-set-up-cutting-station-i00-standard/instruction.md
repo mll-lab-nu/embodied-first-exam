@@ -5,7 +5,7 @@ Put the knife from the drawer and the meat from the plate on the cutting board, 
 
 ## Goal
 Success: the knife and the meat are both on the cutting board, and the hand has let go and moved well away from the
-knife and the board.
+knife and the board (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

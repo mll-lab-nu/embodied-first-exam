@@ -6,7 +6,7 @@ and move your hand away.
 
 ## Goal
 Success: the shrimp is on the cutting board, the board and the condiment bottle are on the counter nearest the cabinet,
-and the hand has let go and moved well away from the shrimp and the bottle.
+and the hand has let go and moved well away from the shrimp and the bottle (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

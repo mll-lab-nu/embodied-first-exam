@@ -4,7 +4,8 @@
 Dice the onion into the bowl, then put the knife and the chopping board into the sink.
 
 ## Goal
-Success: the onion has been diced, the bowl holds the diced onion, and the paring knife and the chopping board are both
+Success: the onion has been diced, the bowl holds some of the diced onion, and the paring knife and the chopping board
+are both
 in the sink. It counts only once the scene has settled: nothing the task names (a tool included) is still in a gripper,
 and everything has come to rest.
 

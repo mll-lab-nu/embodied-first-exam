@@ -6,7 +6,7 @@ on, then move your hand away.
 
 ## Goal
 Success: the pan is on the stove's rear right burner, that burner is on, the drumstick is in the pan (not just on the
-stove), and the hand has let go of the drumstick and moved well away.
+stove), and the hand has let go of the drumstick and moved well away (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

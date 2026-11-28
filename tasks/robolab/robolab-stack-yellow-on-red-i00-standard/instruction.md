@@ -4,7 +4,7 @@
 Stack the yellow block on the red block.
 
 ## Goal
-Success: the yellow block rests squarely on top of the red block.
+Success: the yellow block is on top of the red block, touching it, with its centre over it.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

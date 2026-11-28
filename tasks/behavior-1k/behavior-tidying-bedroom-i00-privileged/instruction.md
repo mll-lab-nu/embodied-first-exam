@@ -4,7 +4,8 @@
 Put both sandals side by side next to the bed and the book on a table.
 
 ## Goal
-Success: both sandals are next to the bed and next to each other, and the book lies on a table. It counts only once the
+Success: one sandal is next to the bed and the other is next to that sandal, and the book lies on a table. It counts
+only once the
 scene has settled: nothing the task names (a tool included) is still in a gripper, and everything has come to rest. The
 replay of your trajectory ends as soon as the task is done. After your last row, the robot is held still for a few
 seconds (as `s.settle()` does). A success that settles during that time counts, so you need not record that wait. A fall

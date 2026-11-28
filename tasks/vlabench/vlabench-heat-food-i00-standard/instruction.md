@@ -4,7 +4,8 @@
 Heat the cooked food from the tray in the microwave: put it inside, close the door and press the start button.
 
 ## Goal
-Success: the cooked food is inside the microwave, the door is closed and the start button is pressed, all at once.
+Success: the cooked food is inside the microwave, the door is closed and something is touching the start button, all at
+once.
 
 This counts as it happens.
 

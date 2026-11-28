@@ -4,7 +4,7 @@
 Pick up the eyeglasses and lift them clear of the table.
 
 ## Goal
-Success: the gripper holds the eyeglasses with all of them lifted at least a hand's width above the table, still over
+Success: the gripper holds the eyeglasses with all of them lifted at least a few centimetres above the table, still over
 the table. The replay of your trajectory ends as soon as the task is done (later rows are never executed).
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`. It

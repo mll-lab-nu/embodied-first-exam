@@ -4,8 +4,8 @@
 Stand the plate on edge in the dish rack and let go of it.
 
 ## Goal
-Success: the plate stands on edge in the rack, resting against it, and neither gripper touches it. The replay ends as
-soon as the task is done.
+Success: the plate stands on edge in the rack, resting against it, and neither gripper touches it. The task counts as
+done once this has held for about a second without a break before your rows run out; the replay ends at that moment.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: `(T, 14)` rows, one per
 control step, at most 20,000 rows. It is replayed open-loop from the same initial state and scores 1 if its episode ends

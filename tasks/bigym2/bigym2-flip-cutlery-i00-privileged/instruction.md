@@ -4,9 +4,9 @@
 Take the spoon out of the mug, put it back in the other way round, and let go of the spoon and the mug.
 
 ## Goal
-Success: the spoon is back in the mug the other way round (the end that pointed up now points down), and neither gripper
-touches the spoon or the mug, for a second. The episode ends as soon as it succeeds. A fall (the pelvis tipping far
-over, or dropping low) makes the episode a failure without ending it.
+Success: the spoon touches the mug with the end that pointed up now pointing down, and neither gripper's fingers touch
+the spoon or the mug, for a second. The episode ends as soon as it succeeds. A fall (the pelvis tipping far over, or
+dropping low) makes the episode a failure without ending it.
 
 Deliverable: three files under `/app/output/`; only the first is scored. `trajectory.npz`: the trajectory, written with
 `s.save_trajectory(rows)`: `actions`, one row of 21 floats per control step, at most 1950 rows (rows after the episode's

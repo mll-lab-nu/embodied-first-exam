@@ -4,8 +4,9 @@
 Put the yellow-and-white mug on the plate and the chocolate pudding on the table just to the robot's left of the plate.
 
 ## Goal
-Success: the mug sits on the plate, near its middle, and the chocolate pudding stands on the table just to the robot's
-left of the plate. Your trajectory is replayed from the fixed start. The episode ends as soon as the task is done, and
+Success: the mug sits on the plate, near its middle, and the chocolate pudding is on the table, touching it, just to the
+robot's left of the plate. Your trajectory is replayed from the fixed start. The episode ends as soon as the task is
+done, and
 the trajectory must end on that step: any action after it makes the trajectory invalid.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`, shape `(T, 7)`, 1 ≤ T ≤ 520 (LIBERO's step limit for this

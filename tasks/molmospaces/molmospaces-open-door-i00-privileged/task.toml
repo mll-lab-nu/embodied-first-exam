@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/molmospaces-open-door-i00-privileged"
-description = "MolmoSpaces open-door (a Rainbow Robotics RB-Y1 mobile manipulator, MuJoCo 3.5.0) in privileged mode: produce one replayable trajectory. Pull the door open, at least two-thirds of the way. Frozen episode: upstream benchmark procthor-10k/rby1_benchmarks/door_opening_benchmark, episode 0."
+description = "MolmoSpaces open-door (a Rainbow Robotics RB-Y1 mobile manipulator, MuJoCo 3.5.0) in privileged mode: produce one replayable trajectory. Pull the door open, at least 67% of the way. Frozen episode: upstream benchmark procthor-10k/rby1_benchmarks/door_opening_benchmark, episode 0."
 keywords = ["robotics", "molmospaces", "mujoco", "rainbow-rby1", "code-as-policy", "trajectory", "open-door"]
 
 [metadata]

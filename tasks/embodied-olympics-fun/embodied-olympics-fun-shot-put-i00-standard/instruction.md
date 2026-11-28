@@ -32,7 +32,7 @@ The attempt fails at once if:
   other than its inner side; or, before you have left correctly, the front half
 - the shot drops below or behind the line of your shoulders, falls off the palm, is touched by anything but your right
   hand and trunk, or is thrown rather than pushed
-- it lands outside the sector or short of 6 m, or you touch it after the release
+- it lands outside the sector or short of 6 m, or you touch it after the release before it lands
 - you fall
 
 ## Robot Interface

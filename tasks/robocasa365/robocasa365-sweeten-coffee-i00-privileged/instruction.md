@@ -5,9 +5,9 @@ Put a sugar cube from the saucer in the coffee, and put the milk from the fridge
 move your hand away.
 
 ## Goal
-Success: the sugar cube is in the coffee, the milk and the coffee stand on the counter right next to each other, and the
-hand has let go and moved well away from the milk and the sugar cube. Your trajectory is replayed from the fixed start.
-What counts is the state after its last action.
+Success: the sugar cube is in the coffee, the milk and the coffee are on the counter, touching it, right next to each
+other, and the hand has let go and moved well away from the milk and the sugar cube (what counts is how far away the
+hand is). Your trajectory is replayed from the fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 13)`
 with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave

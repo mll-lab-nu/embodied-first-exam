@@ -4,7 +4,8 @@
 Move the two desserts from the plates onto the tray, and move your hand away.
 
 ## Goal
-Success: both desserts are on the tray, and the hand has let go and moved well away from the tray.
+Success: both desserts are on the tray, and the hand has let go and moved well away from the tray (what counts is how
+far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

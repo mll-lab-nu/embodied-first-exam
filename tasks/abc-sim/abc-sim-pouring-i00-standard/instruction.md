@@ -4,8 +4,8 @@
 Pour the beads from the mug into the cup.
 
 ## Goal
-Success: at least nine of the ten beads are in the cup, and the cup stands upright. Make sure everything is at rest when
-you send `/finish`.
+Success: at least nine of the ten beads are in the cup, and the cup stands upright. It must hold for about a second
+after the episode ends, while the robot keeps your last command.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

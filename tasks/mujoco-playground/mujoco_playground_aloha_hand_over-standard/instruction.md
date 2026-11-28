@@ -5,7 +5,8 @@ Pick up the red box with the left arm, pass it to the right arm, and hold it at 
 the left arm off the box.
 
 ## Goal
-Success: the right gripper holds the box at the target box, off the table, and no part of the left arm touches the box.
+Success: the box is at the target box, off the table, touching the right gripper's fingers, and no part of the left arm
+touches the box.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

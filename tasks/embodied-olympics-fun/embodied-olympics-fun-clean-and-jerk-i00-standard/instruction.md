@@ -5,8 +5,9 @@ Clean and jerk the barbell: lift it from its blocks with both hands to your shou
 hold it still until the down signal.
 
 ## Goal
-Success: you lift the bar with both hands to rest at your shoulders, then drive it overhead and hold it still on
-straight arms and legs, feet in line, until the down signal 2 s later.
+Success: you lift the bar with both hands to your shoulders and hold it there still for 0.5 s on straight legs, feet in
+line, then drive it overhead and hold it still on straight arms and legs, feet in line, until the down signal 2 s
+later.
 
 The referee in the service judges these stages, in order: **lift-off → clean → overhead → down signal**. Once the
 referee calls success, it stays; the attempt continues until you finish. The first foul before a success ends the

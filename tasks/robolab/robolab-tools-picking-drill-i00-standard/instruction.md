@@ -4,7 +4,8 @@
 Take the cordless drill out of its bin and put it on the table.
 
 ## Goal
-Success: the cordless drill is out of the bins and rests on the table itself, and neither gripper finger touches it.
+Success: the cordless drill is out of its bin and rests touching the table itself, and neither gripper finger touches
+it.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

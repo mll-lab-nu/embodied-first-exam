@@ -5,8 +5,8 @@ Take the coffee from the coffee machine and put it on the dining counter next to
 away.
 
 ## Goal
-Success: the coffee and the breakfast plate both stand on the dining counter right next to each other, and the hand has
-let go of the coffee and moved well away.
+Success: the coffee and the breakfast plate are both on the dining counter, touching it, right next to each other, and
+the hand has let go of the coffee and moved well away (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

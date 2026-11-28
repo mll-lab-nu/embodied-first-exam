@@ -4,7 +4,8 @@
 Put the seventh mahjong tile from the robot's left on the placemat.
 
 ## Goal
-Success: the seventh tile from the robot's left is on the placemat.
+Success: the seventh tile from the robot's left is over the placemat, at most a hand's width above it (lying on it, or
+still held just above it).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

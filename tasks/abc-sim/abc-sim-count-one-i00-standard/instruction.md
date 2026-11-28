@@ -4,7 +4,8 @@
 Put exactly one red object in the box, and nothing else.
 
 ## Goal
-Success: the box holds exactly one red object and nothing else. Make sure everything is at rest when you send `/finish`.
+Success: the box holds exactly one red object and nothing else. It must hold for about a second after the episode ends,
+while the robot keeps your last command.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

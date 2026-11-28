@@ -5,7 +5,8 @@ Put the carrot and the lemon from the sink on the cutting board, away from its e
 
 ## Goal
 Success: the carrot and the lemon both lie on the cutting board, away from its edge, and your hand has let go and moved
-away from the board. Your trajectory is replayed from the fixed start. What counts is the state after its last action.
+well away from the board (what counts is how far the hand is from the board). Your trajectory is replayed from the fixed
+start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 12)`
 with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave

@@ -5,7 +5,7 @@ Take the smaller measuring cup out of the drawer and put it on the counter next 
 
 ## Goal
 Success: the smaller measuring cup is on the counter next to the drawer it came from and the larger one is not, and the
-hand has let go of the smaller cup and moved well away.
+hand has let go of the smaller cup and moved well away (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

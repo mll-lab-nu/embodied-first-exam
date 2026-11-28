@@ -6,7 +6,8 @@ Put the tomato from the placemat on the top tier of the tiered shelf, and move b
 ## Goal
 Success: the tomato is on the top tier of the tiered shelf, not touching the counter, with the tiered shelf still
 upright and both hands moved away from the tomato and the tiered shelf; the other item that started on the placemat with
-the tomato is not on the tiered shelf. Your trajectory is replayed from the fixed start. What counts is the state after
+the tomato is not on the tiered shelf's top tier. Your trajectory is replayed from the fixed start. What counts is the
+state after
 its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 24)`

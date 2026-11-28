@@ -4,8 +4,8 @@
 Move the 50 mL tube to the other rack, into the row farther from the robot, at the end next to the first rack.
 
 ## Goal
-Success: the tube stands upright in that slot, all the way down. A physics warning (an unstable simulation, for instance
-after the robot was driven hard into something) ends the episode at once, as a failure.
+Success: the tube is in that slot, all the way down. A physics warning (an unstable simulation, for instance after the
+robot was driven hard into something) ends the episode at once, as a failure.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

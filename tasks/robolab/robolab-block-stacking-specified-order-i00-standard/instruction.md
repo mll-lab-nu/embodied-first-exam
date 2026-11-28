@@ -4,8 +4,8 @@
 Stack the blocks into one tower: red at the bottom, then blue, green, and yellow on top.
 
 ## Goal
-Success: the blocks form one tower, from bottom to top red, blue, green, yellow, each block resting squarely on the one
-below it.
+Success: the blocks form one tower, from bottom to top red, blue, green, yellow, each block on the one below it,
+touching it, with its centre over it.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

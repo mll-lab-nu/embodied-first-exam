@@ -4,8 +4,9 @@
 Put the tomato and the milk from the car into one fridge, then close the car and every kitchen fridge.
 
 ## Goal
-Success: the tomato and the carton of milk are both inside one and the same refrigerator, the car is closed, and every
-kitchen refrigerator is closed. It counts only once the scene has settled: nothing the task names (a tool included) is
+Success: the tomato and the carton of milk are both inside one and the same refrigerator, the car is closed, and the
+kitchen refrigerator the task names (`electric_refrigerator.n.01_1`) is closed. It counts only once the scene has
+settled: nothing the task names (a tool included) is
 still in a gripper, and everything has come to rest. The replay of your trajectory ends as soon as the task is done.
 After your last row, the robot is held still for a few seconds (as `s.settle()` does). A success that settles during
 that time counts, so you need not record that wait. A fall of the robot or a simulator breakdown (a runaway or

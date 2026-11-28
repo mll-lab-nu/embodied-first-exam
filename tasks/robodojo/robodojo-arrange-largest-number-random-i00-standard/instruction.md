@@ -2,11 +2,13 @@
 
 ## Task
 Put the four digit blocks on the four mats, one per mat, so that they read the largest possible number from left to
-right. Keep each block face up and turned as it is now. Then move both arms back to where they started.
+right. Keep each block face up with its digit upright, turned roughly square to the row of mats. Then move both arms
+back to where they started.
 
 ## Goal
 Success: each digit block lies on its own mat, the mats read the largest possible number from left to right, each block
-is face up and turned as at the start, and both arms are back where they started.
+is face up with its digit upright and turned roughly square to the row of mats, and both arms are back where they
+started.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

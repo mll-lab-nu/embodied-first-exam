@@ -4,7 +4,7 @@
 Take the soda can from behind the cabinet's sliding door and put it on top of the cabinet.
 
 ## Goal
-Success: the can is on top of the cabinet and nearly still.
+Success: the can is at the height of the cabinet's top, just above its top surface, and nearly still.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

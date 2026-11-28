@@ -64,9 +64,6 @@ and mode are kept. Those control steps are part of the episode. One call returns
 ### Observations
 - The cameras are mounted on the robot and move with it: use the calibration that comes with each response.
 
-## Others
-- A set timer slowly runs back down by itself.
-
 ## Limits
 - Time: 3600 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.
   At the end you are stopped without warning. Time left: `/run/rcb-limits/usage.json` (`time_left_s`, `deadline_utc`).

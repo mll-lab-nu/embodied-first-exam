@@ -5,8 +5,9 @@ Put the bok choy with the onions, the leeks with the broccoli, and the corn into
 in one bowl.
 
 ## Goal
-Success: one mixing bowl holds all three bok choy and all three onions, one holds both leeks and both broccoli, and one
-holds all three ears of sweet corn. It counts only once the scene has settled: nothing the task names (a tool included)
+Success: a mixing bowl holds all three bok choy and all three onions, a mixing bowl holds both leeks and both broccoli,
+and a mixing bowl holds all three ears of sweet corn (they need not be different bowls). It counts only once the scene
+has settled: nothing the task names (a tool included)
 is still in a gripper, and everything has come to rest.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.

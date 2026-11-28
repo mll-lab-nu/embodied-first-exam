@@ -7,6 +7,8 @@ table.
 ## Goal
 Success: the tongs have been opened wide and squeezed shut three times, and they are then held a hand's width or more
 above the table for about half a second.
+If the hold is not yet complete when you send `/finish`, the robot keeps your last command for about one more
+second, and the hold must complete within that time.
 
 The three squeezes count as they happen.
 

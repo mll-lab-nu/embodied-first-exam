@@ -4,8 +4,8 @@
 Find the measuring cup in the drawers and put it in the bin, then do the same with the dish brush.
 
 ## Goal
-Success: the measuring cup has been put in the bin first, and then the dish brush. The replay ends as soon as the task
-is done.
+Success: the measuring cup and the dish brush have both been put in the bin. The task counts as done once this has held
+for about a second without a break before your rows run out; the replay ends at that moment.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: `(T, 14)` rows, one per
 control step, at most 20,000 rows. It is replayed open-loop from the same initial state and scores 1 if its episode ends

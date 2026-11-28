@@ -1,10 +1,10 @@
 # MolmoSpaces · open-door (privileged)
 
 ## Task
-Pull the door open, at least two-thirds of the way.
+Pull the door open, at least 67% of the way.
 
 ## Goal
-Success: the door is open at least two-thirds of the way. Your trajectory is replayed from the fixed start. What counts
+Success: the door is open at least 67% of the way. Your trajectory is replayed from the fixed start. What counts
 is the state after its last action. Rows past the step limit (Limits) are never run. To stop there once the task holds,
 end your trajectory.
 

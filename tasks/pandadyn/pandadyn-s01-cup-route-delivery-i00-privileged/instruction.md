@@ -12,7 +12,7 @@ after flying free and stays there.
 
 The steps count only in this order. Once a step is done, it stays done. The replay ends as soon as the task is done or
 has failed; the task also fails at once when:
-- the ball touches the other channel;
+- the ball touches the other channel while it is being poured;
 - the ball touches the table or the cup between the pour and the rebound;
 - the task's horizon is reached before the task is done (Robot Interface);
 - an object leaves the workspace (falls well below the table top or flies far away);

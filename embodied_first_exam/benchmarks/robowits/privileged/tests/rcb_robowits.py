@@ -824,7 +824,16 @@ class Session:
         st = self.status()
         st["goal_at_end"] = st["success"]; st["state_sha_rows"] = st["state_sha"]
         if settle:
-            sc = self.settle_check()
+            # the settle window judges the trajectory and is not part of it: it runs past the step cap, so a trajectory of
+            # up to max_steps rows (the documented maximum) is judged like any other, not cut short or stopped by the guard
+            # (a longer one, which the grader rejects, still meets the guard)
+            cap = self.max_steps
+            if len(actions) <= cap:
+                self.max_steps, self.episode_done = max(cap, self.n_steps + SETTLE_STEPS + CHECK_STEPS + 1), False
+            try:
+                sc = self.settle_check()
+            finally:
+                self.max_steps, self.episode_done = cap, self.n_steps >= cap
             st.update(success=sc["success"], settle=sc, state_sha=self.state_sha(), sim_steps=int(self.n_steps))
         _slog("replay", task=self.task, n_actions=int(len(actions)), success=st["success"])
         return st

@@ -6,7 +6,8 @@ out, then leave the runway behind the arc and stand.
 
 ## Goal
 Success: you throw the javelin over your shoulder from behind the arc, it lands point first inside the sector at least
-20 m out, and you then leave the runway behind the arc and stand still.
+20 m out, and you then leave the runway correctly, stepping off it behind the arc's end lines or stepping on it at least
+4 m behind them, and stand still for 1 s.
 
 The referee in the service judges these stages, in order: **release → landing → exit**. Once the referee calls success,
 it stays; the attempt continues until you finish. The first foul before a success ends the attempt as a failure. A reset

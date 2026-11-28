@@ -4,7 +4,8 @@
 Move the steak from the pan to the middle of the plate, and move your hand away.
 
 ## Goal
-Success: the steak lies in the middle of the plate, and your hand has let go of it and moved away.
+Success: the steak lies in the middle of the plate, and your hand has let go of it and moved well away from it (what
+counts is how far the hand is from it).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

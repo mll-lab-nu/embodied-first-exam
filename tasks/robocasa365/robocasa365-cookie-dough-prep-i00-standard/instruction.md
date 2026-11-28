@@ -5,7 +5,7 @@ Take the egg and the butter from the fridge and put them on the counter by the b
 
 ## Goal
 Success: the egg and the butter are both on the counter close by the bowl, and the hand has let go and moved well away
-from both.
+from both (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

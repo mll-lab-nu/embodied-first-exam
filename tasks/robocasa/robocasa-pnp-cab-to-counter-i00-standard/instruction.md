@@ -4,7 +4,8 @@
 Take the hot dog out of the cabinet and put it on the counter below it, and move your hand away.
 
 ## Goal
-Success: the hot dog lies on the counter below the cabinet, and your hand has let go of it and moved away.
+Success: the hot dog lies on the counter below the cabinet, and your hand has let go of it and moved well away from it
+(what counts is how far the hand is from it).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

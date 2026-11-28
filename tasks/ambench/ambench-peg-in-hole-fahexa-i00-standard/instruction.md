@@ -5,7 +5,7 @@ Push the peg you are holding, front end first, into the blue socket on the wall,
 back.
 
 ## Goal
-Success: the peg's front end is in the socket's opening, most of the way to the red plate at its back.
+Success: the peg's front end is inside the socket's opening, pushed in past the middle of the socket.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

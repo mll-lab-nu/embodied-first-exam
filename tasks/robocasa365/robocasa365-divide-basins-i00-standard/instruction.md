@@ -6,7 +6,7 @@ your hand away.
 
 ## Goal
 Success: the item that was in the left basin is now in the right basin, the cup is in the left basin, and the hand has
-let go and moved well away from both.
+let go and moved well away from both (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

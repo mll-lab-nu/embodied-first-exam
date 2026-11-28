@@ -4,7 +4,8 @@
 Use the hammer to drive the nail into the block.
 
 ## Goal
-Success: the nail is driven into the block until its head reaches the target point. Your trajectory is replayed from the
+Success: the nail is driven into the block until its head is at, or just short of, the target point. Only how far the
+nail has gone in is checked, not what drove it. Your trajectory is replayed from the
 fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: Meta-World's native actions, shape `(T, 4)` with 1 ≤ T ≤

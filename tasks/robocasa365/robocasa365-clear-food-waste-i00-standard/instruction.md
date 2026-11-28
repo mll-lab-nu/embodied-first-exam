@@ -4,7 +4,8 @@
 Move the two food items from the sink into the colander, and move your hand away.
 
 ## Goal
-Success: both food items are in the colander, and the hand has let go and moved well away from them.
+Success: both food items are in the colander, and the hand has let go and moved well away from them (what counts is how
+far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

@@ -4,7 +4,8 @@
 Get the red block onto the green target area.
 
 ## Goal
-Success: the red block lies on the green target area; the robot does not touch the red block and it is at rest. Make
+Success: at least half of the red block lies on the green target area; the robot does not touch the red block and it is at rest.
+Make
 sure everything is at rest when you send `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.

@@ -6,7 +6,7 @@ away.
 
 ## Goal
 Success: the steak and the asparagus are on the plate, the chili pepper is still on the tray, and the hand has let go
-and moved well away from all three.
+and moved well away from all three (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

@@ -5,9 +5,9 @@ Take the corn and the carrot out of the sink and put the bowl and the cup from t
 away.
 
 ## Goal
-Success: the corn and the carrot are out of the sink, the bowl and the cup are in it, and the hand has let go and moved
-well away from all four. Your trajectory is replayed from the fixed start. What counts is the state after its last
-action.
+Success: the corn and the carrot are no longer wholly inside the sink, the bowl and the cup are in it, and the hand has
+let go and moved well away from all four (what counts is how far away the hand is). Your trajectory is replayed from the
+fixed start. What counts is the state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 13)`
 with 1 ≤ T ≤ 3000, one row per control step (1/20 s). Write it with `s.save_trajectory()` so the format is right. Leave

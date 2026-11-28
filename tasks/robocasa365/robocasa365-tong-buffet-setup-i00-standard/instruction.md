@@ -5,8 +5,9 @@ Take the tongs from the drawer and put them on the dining counter next to the tr
 away.
 
 ## Goal
-Success: the tongs and the tray with the hot dog are both on the dining counter, near each other, and the hand has let
-go and moved well away from the tongs and the tray.
+Success: the tongs and the tray (the one that holds the hot dog at the start) are both on the dining counter, near each
+other, and the hand has let go and moved well away from the tongs and the tray (what counts is how far away the hand
+is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

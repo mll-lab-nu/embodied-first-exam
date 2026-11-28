@@ -4,8 +4,9 @@
 Lift the pot with both grippers and set it down on the cooktop.
 
 ## Goal
-Success: both grippers hold the pot and lift it off the table, then the pot stands upright on the cooktop with neither
-gripper holding it for about a second. The steps count in this order, and each one counts for good once done. An object
+Success: both grippers hold the pot and lift it off the table, then the pot rests level on the cooktop, right side up or
+upside down, with neither gripper holding it for about a second. The steps count in this order, and each one counts for
+good once done. An object
 falling off the table ends the episode as a failure. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 100,000 rows, one

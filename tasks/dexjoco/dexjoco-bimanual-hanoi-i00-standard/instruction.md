@@ -8,6 +8,8 @@ the medium one, then the small one on top.
 Success: all three disks are on the right-hand post in that order, each slid down the post and at rest, with the other
 two posts empty, for a moment. A larger disk left resting on a smaller one ends the episode as a failure. So does a disk
 left resting on the table.
+If the hold is not yet complete when you send `/finish`, the robot keeps your last command for about one more
+second, and the hold must complete within that time.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

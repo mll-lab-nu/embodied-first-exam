@@ -5,8 +5,8 @@ Do an ollie: pop the skateboard into the air with your feet, land on it with bot
 stand still on it.
 
 ## Goal
-Success: from a standstill you pop the board until it is fully off the ground, land on it with both feet and all four
-wheels down, and stand still on it for 1 s.
+Success: you pop the board with your feet until its lowest point is at least 5 cm off the ground, land on it with both
+feet and all four wheels down, and stand still on it for 1 s.
 
 The referee in the service judges these stages, in order: **pop → clear → landed → stand**. Once the referee calls
 success, it stays; the attempt continues until you finish. The first foul before a success ends the attempt as a
@@ -30,7 +30,7 @@ Rules:
 The attempt fails at once if:
 - anything but your feet and shins touches the board (no hands)
 - any part of you, a foot included, touches the ground, or your hips drop low (a bail)
-- the board lands upside down
+- the board touches the ground tipped more than 60 degrees or upside down
 - after the landing a foot stays off the deck, or your torso tilts too far
 
 ## Robot Interface

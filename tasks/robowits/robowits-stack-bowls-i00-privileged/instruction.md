@@ -4,7 +4,7 @@
 Put the smaller bowl inside the larger one, centred.
 
 ## Goal
-Success: the smaller bowl sits centred in the larger one, both on the table and clear of its edges; the robot has let go
+Success: the two bowls are stacked one in the other, centred, both on the table and clear of its edges; the robot has let go
 of both bowls, touches neither, and they are at rest. Your trajectory is replayed from the fixed start. What counts is
 the state after its last action. After your last row, the grader keeps your last command for about three seconds: first
 one second, then two seconds in which all of this must keep holding, with nothing moving.

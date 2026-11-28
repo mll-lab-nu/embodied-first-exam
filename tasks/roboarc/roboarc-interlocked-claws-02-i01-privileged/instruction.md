@@ -5,10 +5,10 @@ Take the brown claw piece off the other claw piece and put all of it inside the 
 other claw piece behind, no closer to the goal than it was at the start.
 
 ## Goal
-Success: all of the brown claw piece is inside the green dashed goal square and still, and the other claw piece is no
-closer to the goal than at the start. Do not force pieces into each other: a success reached that way may not count.
-Dropping a piece off the table ends the episode as a failure. A replay ends, as a success, as soon as all of this has
-held for 0.5 s; later rows are not run.
+Success: all of the brown claw piece is inside the green dashed goal square and still, and the other claw piece reaches
+no more than a few millimetres closer to the goal than its nearest part did at the start. Do not force pieces into each
+other: a success reached that way may not count. Dropping a piece off the table ends the episode as a failure. A replay
+ends, as a success, as soon as all of this has held for 0.5 s; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: the (T, 14) actions, one row
 per control step (1/40 s), at most 200000 rows (a longer trajectory is invalid). Leave the script that produced it at

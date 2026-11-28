@@ -1,11 +1,12 @@
 # RoboDojo · match_and_pick_from_conveyor (standard)
 
 ## Task
-Remember the first object on the belt, then pick up its identical copy when it comes by later and lift it about a hand's
-length.
+Remember the first object on the belt, then pick up its identical copy when it comes by later and lift it more than a
+hand's width.
 
 ## Goal
-Success: the identical copy of the first object on the belt is lifted about a hand's length above the belt.
+Success: the identical copy of the first object on the belt is lifted more than a hand's width above where it rode on
+the belt.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

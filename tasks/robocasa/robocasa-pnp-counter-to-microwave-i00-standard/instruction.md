@@ -4,8 +4,8 @@
 Put the corn from the counter on the plate in the microwave, and move your hand away.
 
 ## Goal
-Success: the corn lies on the plate inside the microwave, the plate still in the microwave, and your hand has let go of
-the corn and moved away.
+Success: the corn touches the plate in the microwave, the plate still touches the microwave, and your hand has let go of
+the corn and moved well away from it (what counts is how far the hand is from it).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

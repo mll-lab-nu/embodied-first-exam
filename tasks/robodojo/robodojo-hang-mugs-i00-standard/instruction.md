@@ -1,12 +1,12 @@
 # RoboDojo · hang_mugs (standard)
 
 ## Task
-Hang the three mugs by their handles on the rack arms that point left or right. Then move both arms back to where they
+Hang the three mugs by their handles on the arms of the rack, any arm for each. Then move both arms back to where they
 started.
 
 ## Goal
-Success: each of the three mugs hangs by its handle, handle above the mug, on a rack arm that points left or right;
-nothing holds the mugs; and both arms are back where they started.
+Success: each of the three mugs hangs by its handle, handle above the mug, on any arm of the rack; nothing holds the
+mugs; and both arms are back where they started.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

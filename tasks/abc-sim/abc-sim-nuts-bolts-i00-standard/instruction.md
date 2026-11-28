@@ -4,8 +4,8 @@
 Put all the nuts in one bin and all the bolts in the other.
 
 ## Goal
-Success: every nut is in one bin and every bolt in the other, at the same time. Make sure everything is at rest when you
-send `/finish`.
+Success: every nut is in one bin and every bolt in the other, at the same time. It must hold for about a second after
+the episode ends, while the robot keeps your last command.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

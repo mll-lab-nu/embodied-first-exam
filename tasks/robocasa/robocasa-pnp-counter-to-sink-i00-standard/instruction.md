@@ -4,7 +4,8 @@
 Put the apple from the counter in the sink, and move your hand away.
 
 ## Goal
-Success: the apple is in the sink, and your hand has let go of it and moved away.
+Success: the apple is in the sink, and your hand has let go of it and moved well away from it (what counts is how far
+the hand is from it).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

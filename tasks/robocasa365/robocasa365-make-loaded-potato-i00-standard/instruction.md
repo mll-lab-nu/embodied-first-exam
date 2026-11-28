@@ -6,7 +6,7 @@ away.
 
 ## Goal
 Success: the potato, the cheese and the condiment are all on the cutting board, and the hand has let go and moved well
-away from all three.
+away from all three (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

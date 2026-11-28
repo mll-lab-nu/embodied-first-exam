@@ -4,7 +4,8 @@
 Move the potato from the plate to the middle of the pan, and move your hand away.
 
 ## Goal
-Success: the potato lies in the middle of the pan, and your hand has let go of it and moved away.
+Success: the potato lies in the middle of the pan, and your hand has let go of it and moved well away from it (what
+counts is how far the hand is from it).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

@@ -6,10 +6,10 @@ short board; then the thin plank along the short board and the roof piece on the
 Keep every piece the way up it is now. Then move both arms back to where they started.
 
 ## Goal
-Success: the long board lies across two pillars, one from each side; the other two pillars stand on it under the short
-board, centred over it; the thin plank lies along the middle of the short board with the roof piece on its middle, ridge
-across it; every piece lies flat the way up it started; and both arms are back where they started. A replay ends as soon
-as the task is done; later rows are not run.
+Success: the long board rests above two upright pillars, one from each side; the other two pillars stand upright on the
+long board, under the short board, which is centred over the long board; the thin plank lies along the middle of the
+short board with the roof piece centred on it, ridge across it; every piece lies flat the way up it started; and both
+arms are back where they started. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave

@@ -5,8 +5,9 @@ Put the hammer, the pliers, the tape measure and the wrench each into its own ma
 side up as now. Then move both arms back to where they started.
 
 ## Goal
-Success: the hammer, the pliers, the tape measure and the wrench each lie in their own matching slot in the toolbox, the
-same side up as at the start, and both arms are back where they started.
+Success: the hammer, the pliers, the tape measure and the wrench each lie in their own matching slot in the toolbox,
+lined up with it; the hammer, the tape measure and the wrench the same side up as at the start, the pliers either side
+up; and both arms are back where they started.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

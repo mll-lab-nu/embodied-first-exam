@@ -4,8 +4,9 @@
 Stack the three bowls one inside another, all upright. Then move both arms back to where they started.
 
 ## Goal
-Success: the three bowls are nested in one stack, all upright, the bottom one flat on the table, and both arms are back
-where they started. A replay ends as soon as the task is done; later rows are not run.
+Success: the three bowls form one stack, each centred over the one below it and higher than it, all upright, the bottom
+one sitting level, and both arms are back where they started. A replay ends as soon as the task is done; later rows are
+not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave

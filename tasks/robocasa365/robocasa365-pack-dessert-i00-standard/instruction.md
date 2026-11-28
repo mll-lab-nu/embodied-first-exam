@@ -5,7 +5,7 @@ Put the marshmallow in the tupperware with the hot dog, and move your hand away.
 
 ## Goal
 Success: the hot dog and the marshmallow are both in the tupperware, and the hand has let go of the marshmallow and
-moved well away.
+moved well away (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

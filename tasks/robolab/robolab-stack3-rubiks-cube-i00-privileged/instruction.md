@@ -4,8 +4,8 @@
 Stack the 3 Rubik's cubes into one tower.
 
 ## Goal
-Success: the three Rubik's cubes form one tower, in any order, each cube resting squarely on the one below it. The
-replay of your trajectory ends as soon as the task is done (later rows are never executed).
+Success: the three Rubik's cubes form one tower, in any order, each cube on the one below it, touching it, with its
+centre over it. The replay of your trajectory ends as soon as the task is done (later rows are never executed).
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, "/app/output/trajectory.npz")`. It
 holds `task` and `actions`, a (T, 8) float array of at most 100,000 rows (one per control step, 1.9 h of robot time).

@@ -4,8 +4,8 @@
 Put both cups from the counter on the bottom shelf of the wall cabinet and let go.
 
 ## Goal
-Success: both cups are on the bottom shelf of the wall cabinet and neither gripper touches them, for a second. A fall
-(the pelvis tipping far over, or dropping low) makes the episode a failure without ending it.
+Success: both cups touch the bottom shelf of the wall cabinet and neither gripper's fingers touch them, for a second. A
+fall (the pelvis tipping far over, or dropping low) makes the episode a failure without ending it.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

@@ -4,8 +4,8 @@
 Go to one of the two table lamps and stop close by, with the lamp in view of the head camera.
 
 ## Goal
-Success: the robot's base is next to a table lamp, and that lamp shows in the head camera. The `done` action is the same
-as `/finish`.
+Success: the robot's base is next to a table lamp, and the table lamp nearest the base shows in the head camera. The
+`done` action is the same as `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

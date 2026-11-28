@@ -5,7 +5,7 @@ Put the lemon wedge from the fridge on the plate with the fish on the dining cou
 
 ## Goal
 Success: the lemon wedge and the fish are both on the plate, the plate is on the dining counter, and the hand has let go
-of the lemon wedge and moved well away.
+of the lemon wedge and moved well away (what counts is how far away the hand is).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

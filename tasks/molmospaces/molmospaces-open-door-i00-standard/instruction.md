@@ -1,10 +1,10 @@
 # MolmoSpaces · open-door (standard)
 
 ## Task
-Pull the door open, at least two-thirds of the way.
+Pull the door open, at least 67% of the way.
 
 ## Goal
-Success: the door is open at least two-thirds of the way. The `done` action is the same as `/finish`.
+Success: the door is open at least 67% of the way. The `done` action is the same as `/finish`.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

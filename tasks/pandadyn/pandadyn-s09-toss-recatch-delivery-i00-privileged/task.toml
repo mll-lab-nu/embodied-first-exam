@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/pandadyn-s09-toss-recatch-delivery-i00-privileged"
-description = "Panda Dynamic Scenes S09 Catch, self-toss, recatch and deliver (one Franka Panda, ManiSkill 3 / SAPIEN, CPU PhysX at 1000 Hz): produce one replayable trajectory of 100 Hz joint-target actions. Task: Catch the falling ball in the cup, bring the cup to the launch point and toss the ball straight up out of it. Move the cup sideways, catch the ball again, and drop it into the sliding box while the box is moving. Frozen scene instance i00 (nominal parameters, seed 0); graded by the task's own staged success check in two fresh-process replays."
+description = "Panda Dynamic Scenes S09 Catch, self-toss, recatch and deliver (one Franka Panda, ManiSkill 3 / SAPIEN, CPU PhysX at 1000 Hz): produce one replayable trajectory of 100 Hz joint-target actions. Task: Catch the falling ball in the cup, bring the cup to the launch point and toss the ball up out of it. Move the cup sideways, catch the ball again, and drop it into the sliding box while the box is moving. Frozen scene instance i00 (nominal parameters, seed 0); graded by the task's own staged success check in two fresh-process replays."
 keywords = ["robotics", "pandadyn", "maniskill", "sapien", "franka-panda", "single-arm", "dynamic-manipulation", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]

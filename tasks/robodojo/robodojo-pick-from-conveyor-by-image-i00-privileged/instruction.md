@@ -1,11 +1,12 @@
 # RoboDojo · pick_from_conveyor_by_image (privileged)
 
 ## Task
-Put the object shown in the photo on the board into the basket on the belt, then lift the basket about a hand's length.
+Put the object shown in the photo on the board into the basket on the belt, then lift the basket with it at least a
+hand's width.
 
 ## Goal
-Success: the object shown in the photo lies on the basket's floor, and the basket is held about a hand's length above
-the belt. A replay ends as soon as the task is done; later rows are not run.
+Success: the object shown in the photo lies on the basket's floor and, with the basket, is lifted at least a hand's
+width above where it started. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave

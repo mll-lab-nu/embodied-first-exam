@@ -4,9 +4,9 @@
 Flip the bread in the pan with the spatula, then lift it out on the spatula and set it down flat on the plate.
 
 ## Goal
-Success: the bread was flipped in the pan at some point (browned side up), then carried onto the plate on the spatula
-and set down from it, and it now lies flat on the plate (either side up), at rest. Pushing or throwing it onto the plate
-does not count.
+Success: at some point the bread was flipped in the pan (browned side up); at some point it came to rest flat on the
+plate within a few seconds of riding on the raised spatula blade; and it now lies flat on the plate (either side up), at
+rest.
 
 The flip and the carry on the spatula count as they happen.
 
