@@ -4,7 +4,8 @@
 #   upstream  VLABench @ cf588fe (OpenMOSS/VLABench), VLABench/tasks/dm_task.py: init_conditions L202-223 (the
 #             conditions of the episode configuration, i.e. each task's instance.json episode.task.conditions, all of
 #             them at once: ConditionSet), should_terminate_episode L298-303; tasks/condition.py: OrderCondition
-#             L30-41, ContainCondition L57-64, NotContainCondition L83-90, IsGraspedCondition L105-110,
+#             L30-41 (abs() patch: images/vlabench/Dockerfile), ContainCondition L57-64, NotContainCondition L83-90,
+#             IsGraspedCondition L105-110,
 #             ButtonPressedCondition L119-120, AboveCondition L167-176, PourCondition L192-199, JointInRangeCondition
 #             L272-278, LiftCondition L292-297, ConditionSet.is_met L309-311; tasks/components/entity.py: key_sites
 #             L115-125 (group-3 sites), get_xpos L138-139 (the entity's root frame), CommonGraspedEntity.is_grasped
@@ -109,14 +110,15 @@ horizontally from it; and the bottle's `bottom_site` is higher than its `top_sit
 # book_rearrange: contain(container shelf_seen, the three books) + order(axis [0], default offset 0.1) over [Don Quixote,
 # Pride and Prejudice, The Metamorphosis]. Shelf.contain with layer None = CommonContainer.contain over the keypoint
 # sites of both layers (containers/shelf/shelf1.xml layer_0 and layer_1). OrderCondition: x strictly increasing in the
-# list's order; for y and z, entity_points[i] - entity_points[i+1] < offset (signed, not absolute).
+# list's order; for y and z, |entity_points[i] - entity_points[i+1]| < offset (upstream signed; the base image's sed
+# patch of condition.py adds abs(), images/vlabench/Dockerfile).
 [families."vlabench/book_rearrange"]
 success = """
 Condition (VLABench's `contain` and `order`, all at once): the origins of the three books
 (`century17_don_quixote_book`, `century18_pride_and_prejudice_book`, `century20_the_metamorphosis_book`) lie inside
 the axis-aligned box spanned by the bookshelf's (`shelf_seen`) keypoint sites, over both of its shelves; their x
 coordinates increase in that order (Don Quixote, Pride and Prejudice, The Metamorphosis: from the robot's left to its
-right); and for each of the first two books, its y and its z are each less than 0.1 m larger than those of the next
+right); and for each of the first two books, its y and its z each differ by less than 0.1 m from those of the next
 book. Whether the books stand upright or touch each other is not checked.
 """
 
@@ -245,7 +247,8 @@ Condition (VLABench's `contain`): the rose's (`rose`) origin is inside the axis-
 upright is not checked.
 """
 
-# play_math_game: contain(container placemat_seen, entities ["4", "0"]) + order(axis [0], offset 0.1, entities ["4", "0"]);
+# play_math_game: contain(container placemat_seen, entities ["4", "0"]) + order(axis [0], offset 0.1, entities
+# ["4", "0"]; y and z two-sided, |a - b| < offset: the image's abs() patch, as for book_rearrange);
 # placemat_seen (tablewares/placemats/placemat_0) has no horizontal_radius_site: FlatContainer footprint branch (x, y
 # within the keypoints' bounds, bounds included; min keypoint z < z < min keypoint z + 0.1).
 [families."vlabench/play_math_game"]
@@ -253,7 +256,7 @@ success = """
 Condition (VLABench's `contain` and `order`, all at once): the origins of the number cubes `4` and `0` both lie
 horizontally within the rectangle spanned by the placemat's (`placemat_seen`) keypoint sites and between 0 and 0.1 m
 above the lowest of those sites (both bounds excluded); the cube `4` has the smaller x (it is to the robot's left of
-`0`); and the cube `4`'s y and z are each less than 0.1 m larger than those of the cube `0`. The other cubes are not
+`0`); and the cube `4`'s y and z each differ by less than 0.1 m from those of the cube `0`. The other cubes are not
 checked.
 """
 

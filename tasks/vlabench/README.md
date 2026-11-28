@@ -10,7 +10,7 @@ each on one frozen scene instance, in the privileged and the standard mode: 72 t
 | upstream | VLABench @ `cf588fe60c0c7282174fe979f5913170cfe69017` (MIT); assets `lerobot/vlabench-assets` @ `08d7a44`; MuJoCo 3.2.2, dm_control 1.0.22 |
 | tasks | `tasks/vlabench/vlabench-<task>-i00-privileged` and `tasks/vlabench/vlabench-<task>-i00-standard` |
 | metadata | `simulator = "vlabench"`, `robot = "franka-panda"`, `family = "vlabench/<task>"`, `oracle = "full"` |
-| image | built by each task from `images/vlabench/Dockerfile` (stage `vlabench-base`), build cache `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0`; about 15 GB, 12 GB of it assets |
+| image | built by each task from `images/vlabench/Dockerfile` (stage `vlabench-base`), build cache `ghcr.io/mll-lab-nu/efe-private:vlabench-0.3.0`; about 15 GB, 12 GB of it assets |
 | GPU | none: CPU physics and CPU (OSMesa) rendering |
 
 ```bash
@@ -42,6 +42,10 @@ Apache-2.0. No non-commercial terms apply.
   the instance's conditions, plus the task class's own check where it has one, e.g. the microwave door and start button
   of heat_food). The predicates keep their looseness: containment tests one point of the object (its origin) against a
   box or a disc of the container's annotated sites. Each task README states its predicate exactly.
+- **`order` bounds the other axes on both sides.** VLABench's `OrderCondition` (book_rearrange, play_math_game) checks
+  `(a - b) < offset` in the axes it does not sort, so the next entity could be any distance further or higher; its
+  docstring means an offset either way. The base image patches `VLABench/tasks/condition.py` to `abs(a - b) < offset`
+  (`images/vlabench/Dockerfile`, checked by `images/vlabench/test_order_condition.py`).
 - **Instructions say what is graded.** Where VLABench's own instruction does not say what its check requires, the task's
   instruction restates it (24 tasks): for example the `*_qa` and `select_painting` answers are button presses,
   `select_billiards*` count only VLABench's target pocket, and `texas_holdem` names the five cards VLABench's ranking
@@ -148,7 +152,7 @@ Apache-2.0. No non-commercial terms apply.
   dataset (about 12 GB, anonymous): 5 to 20 minutes on a fast connection; the task allows 3600 s.
 - **The image.** Every task's Dockerfiles (privileged: `environment/` and `tests/`; standard: `environment/sim/`) start
   with the recipe `images/vlabench/Dockerfile` as the stage `vlabench-base`, and compose `build.cache_from` names
-  `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0`, the same recipe prebuilt with BuildKit's inline cache. A runner that
+  `ghcr.io/mll-lab-nu/efe-private:vlabench-0.3.0`, the same recipe prebuilt with BuildKit's inline cache. A runner that
   can pull it (members of the mll-lab-nu organization) takes its layers; any other runner gets a warning that the cache
   cannot be read and builds the layers from public sources. Both give the same image. The recipe pins Python 3.10.18 by
   digest, Debian packages from snapshot.debian.org at 2026-10-02 00:00 UTC, pip (`requirements.txt`, from the public
