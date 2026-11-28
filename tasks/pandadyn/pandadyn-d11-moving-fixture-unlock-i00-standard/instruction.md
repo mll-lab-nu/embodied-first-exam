@@ -6,11 +6,11 @@ peg into the socket, press the latch button down until the gate opens and pull t
 the outlet into the top of the chute and down into the basin.
 
 ## Goal
-Success: the left gripper grips the fixture's body and moves it off its stand, keeping it moving; while it moves, the
-right arm inserts its peg into the socket, presses the latch button down with the peg until the gate opens, and pulls
-the peg back out, the left hand still holding the fixture; then the ball leaves through the outlet while the outlet is
-lined up with the top of the chute (just above its upper end, on its centre line, the fixture pointing down the chute),
-runs down the chute and rests in the basin at its foot.
+Success: the left gripper grips the fixture's body and moves it off its stand; while the fixture is still moving, the
+right arm inserts its peg into the socket; it then presses the latch button down with the peg until the gate opens and
+pulls the peg back out, the left hand still holding the fixture; then the ball leaves through the outlet while the
+outlet is lined up with the top of the chute (just above its upper end, on its centre line, the fixture pointing down
+the chute), runs down the chute and rests in the basin at its foot.
 
 The steps count only in this order. Once a step is done, it stays done. The task is done when its last step is done, and
 it stays done even if a failure ends the episode afterwards. The task fails, and the episode ends at once, when:
