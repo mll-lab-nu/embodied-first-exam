@@ -7,8 +7,8 @@ the button's cap up and press it once. Finish with the cap pulled up while both 
 ## Goal
 Success: the two cubes have swapped mats in three moves through the empty mat, each nearly centred on its new mat, the
 button was pressed after each move, and both arms are back where they started while the cap is pulled up. Press the
-button exactly three times in the whole episode: a fourth counted press ends the episode as a failure, and fewer than
-three means no success.
+button exactly three times in the whole episode: a press counts when the cap goes from pulled fully up to below halfway
+down, and a fourth such press ends the episode as a failure.
 
 The three moves and the button presses count as they happen, in order.
 

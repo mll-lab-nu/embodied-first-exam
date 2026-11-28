@@ -5,9 +5,9 @@ Sweep the toy brick, the two earbuds and the two paper balls into the dustpan, k
 and leave the broom well to the right of the dustpan. Then move both arms back to where they started.
 
 ## Goal
-Success: the toy brick, the two earbuds and the two paper balls lie well inside the dustpan, the dustpan lies flat on
-the table, the broom lies well to the right of the dustpan, and both arms are back where they started. A replay ends as
-soon as the task is done; later rows are not run.
+Success: the toy brick, the two earbuds and the two paper balls have their centres over the floor of the dustpan, the
+dustpan lies flat on the table, the broom lies well to the right of the dustpan, and both arms are back where they
+started. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave

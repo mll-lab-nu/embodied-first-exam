@@ -1,11 +1,12 @@
 # RoboDojo · pick_from_conveyor_by_image (standard)
 
 ## Task
-Put the object shown in the photo on the board into the basket on the belt, then lift the basket about a hand's length.
+Put the object shown in the photo on the board into the basket on the belt, then lift the basket with it at least a
+hand's width.
 
 ## Goal
-Success: the object shown in the photo lies on the basket's floor, and the basket is held about a hand's length above
-the belt.
+Success: the object shown in the photo lies on the basket's floor and, with the basket, is lifted at least a hand's
+width above where it started.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

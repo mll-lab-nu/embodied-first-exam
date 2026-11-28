@@ -6,7 +6,8 @@ move both arms back to where they started.
 
 ## Goal
 Success: the block lies flat exactly over the pad, the same way round, and both arms are back where they started.
-Picking up the block, tipping it onto an edge or letting it hop ends the episode at once as a failure.
+Raising the block more than about a centimetre (picking it up, tipping it onto an edge or letting it hop) ends the
+episode at once as a failure.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave

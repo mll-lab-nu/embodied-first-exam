@@ -5,8 +5,9 @@ Sweep the toy brick, the two earbuds and the two paper balls into the dustpan, k
 and leave the broom well to the right of the dustpan. Then move both arms back to where they started.
 
 ## Goal
-Success: the toy brick, the two earbuds and the two paper balls lie well inside the dustpan, the dustpan lies flat on
-the table, the broom lies well to the right of the dustpan, and both arms are back where they started.
+Success: the toy brick, the two earbuds and the two paper balls have their centres over the floor of the dustpan, the
+dustpan lies flat on the table, the broom lies well to the right of the dustpan, and both arms are back where they
+started.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

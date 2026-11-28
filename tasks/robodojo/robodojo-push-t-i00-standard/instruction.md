@@ -6,7 +6,8 @@ move both arms back to where they started.
 
 ## Goal
 Success: the block lies flat exactly over the pad, the same way round, and both arms are back where they started.
-Picking up the block, tipping it onto an edge or letting it hop ends the episode at once as a failure.
+Raising the block more than about a centimetre (picking it up, tipping it onto an edge or letting it hop) ends the
+episode at once as a failure.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

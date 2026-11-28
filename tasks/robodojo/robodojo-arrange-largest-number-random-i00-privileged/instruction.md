@@ -2,12 +2,13 @@
 
 ## Task
 Put the four digit blocks on the four mats, one per mat, so that they read the largest possible number from left to
-right. Keep each block face up and turned as it is now. Then move both arms back to where they started.
+right. Keep each block face up with its digit upright, turned roughly square to the row of mats. Then move both arms
+back to where they started.
 
 ## Goal
 Success: each digit block lies on its own mat, the mats read the largest possible number from left to right, each block
-is face up and turned as at the start, and both arms are back where they started. A replay ends as soon as the task is
-done; later rows are not run.
+is face up with its digit upright and turned roughly square to the row of mats, and both arms are back where they
+started. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave

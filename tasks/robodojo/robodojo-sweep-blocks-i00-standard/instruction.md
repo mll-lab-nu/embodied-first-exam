@@ -5,8 +5,8 @@ Sweep all the small cubes into the dustpan, keeping the dustpan flat on the tabl
 of the dustpan. Then move both arms back to where they started.
 
 ## Goal
-Success: all the small cubes lie well inside the dustpan, the dustpan lies flat on the table, the broom lies well to the
-right of the dustpan, and both arms are back where they started.
+Success: all the small cubes have their centres over the floor of the dustpan, the dustpan lies flat on the table, the
+broom lies well to the right of the dustpan, and both arms are back where they started.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

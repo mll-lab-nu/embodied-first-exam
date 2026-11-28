@@ -5,10 +5,10 @@ Pour the violet bottle into the black bowl, then the red bottle into the white b
 brown bowl, in that order.
 
 ## Goal
-Success: the violet bottle has been poured into the black bowl, then the red bottle into the white bowl, then the
-turquoise bottle into the brown bowl, each bottle nearly emptied into its bowl with little spilled. Finish each pour
-before you stand its bottle up. If an arm comes back to where it started while a later bowl holds its liquid and an
-earlier one does not, the episode ends at once as a failure.
+Success: the violet bottle has been poured into the black bowl, the red bottle into the white bowl and the turquoise
+bottle into the brown bowl, each bottle nearly emptied into its bowl with little spilled. Finish each pour before you
+stand its bottle up. The order is checked whenever an arm comes back to where it started: if at that moment a later bowl
+holds its liquid and an earlier one does not, the episode ends at once as a failure.
 
 Each pour counts as it happens, at the moment its bottle stands upright again.
 

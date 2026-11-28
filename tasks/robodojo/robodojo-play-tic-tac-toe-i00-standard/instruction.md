@@ -6,9 +6,9 @@ back to where they started and keep them there until the opponent has placed its
 filled.
 
 ## Goal
-Success: all nine cells hold one piece each, lying flat in the middle of its cell: your five gold rings and the
-opponent's four crosses; no winner is needed. If one of your arms is away from where it started while the opponent arm
-is out, the episode ends at once as a failure.
+Success: your five gold rings and the opponent's four crosses each lie low on the board near the middle of a cell; no
+winner is needed. If one of your arms is away from where it started while the opponent arm is out, the episode ends at
+once as a failure.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

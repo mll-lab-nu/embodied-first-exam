@@ -6,8 +6,8 @@ arms back to where they started.
 
 ## Goal
 Success: the three cubes stand in one straight row, each turned square to it, and both arms are back where they started.
-Lifting, tipping or flipping a cube, or letting it ride up onto the set square or another cube, ends the episode as a
-failure.
+Raising any cube's centre more than a few millimetres above where it started (by lifting it, tipping it up onto an edge,
+or letting it ride up onto the set square or another cube) ends the episode as a failure.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

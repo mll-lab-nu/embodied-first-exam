@@ -8,9 +8,9 @@ where they started.
 ## Goal
 Success: the left red button has been pressed exactly as many times as the left card shows, then the blue button once,
 then the middle red button exactly as many times as the middle card shows, then the blue button once more. Each press
-pushes the button all the way down and lets it spring all the way back up, long enough to be seen (a quick tap can be
-missed). When the last blue press is released, both arms are back where they started. One press too many on any button
-ends the episode at once as a failure.
+pushes the button at least halfway down and lets it spring all the way back up, long enough to be seen (a quick tap can
+be missed). When the last blue press is released, both arms are back where they started. One press too many on any
+button ends the episode at once as a failure.
 
 The presses, and the arms' return at the last release, count as they happen.
 
