@@ -5,10 +5,10 @@ Take the box off the shelf in front of you, carry it to the blue bin on the tabl
 bin.
 
 ## Goal
-Success: the box was taken off the shelf and carried over to the bin, and it now rests inside the bin's walls, let go of
-and still (not held, not across the rim). Taking the box off the shelf and carrying it over count as they happen in the
-graded run of your program; everything else counts as it stands when that run ends. Only success counts as solved;
-partial progress (EmbodiedSWE's rubric for this task, `progress`) is recorded too and ranks your checkpoints.
+Success: the box was taken off the shelf and carried over to the bin, and it now rests still inside the bin's walls (not
+across the rim). Taking the box off the shelf and carrying it over count as they happen in the graded run of your
+program; everything else counts as it stands when that run ends. Only success counts as solved; partial progress
+(EmbodiedSWE's rubric for this task, `progress`) is recorded too and ranks your checkpoints.
 
 Deliverable: the folder `/app/output/solution/`. Its entry point, `/app/output/solution/solve.py`, defines
 `def solve(env) -> None`, which the graded run calls once (Robot Interface). Everything else in the folder ships with it

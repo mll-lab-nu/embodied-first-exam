@@ -4,11 +4,11 @@
 Flip the bread in the pan with the spatula, then lift it out on the spatula and set it down flat on the plate.
 
 ## Goal
-Success: the bread was flipped in the pan at some point (browned side up), then carried onto the plate on the spatula
-and set down from it, and it now lies flat on the plate (either side up), at rest. Pushing or throwing it onto the plate
-does not count. The flip and the carry on the spatula count as they happen in the graded run of your program; everything
-else counts as it stands when that run ends. Only success counts as solved; partial progress (EmbodiedSWE's rubric for
-this task, `progress`) is recorded too and ranks your checkpoints.
+Success: at some point the bread was flipped in the pan (browned side up); at some point it came to rest flat on the
+plate within a few seconds of riding on the raised spatula blade; and it now lies flat on the plate (either side up), at
+rest. The flip and the carry on the spatula count as they happen in the graded run of your program; everything else
+counts as it stands when that run ends. Only success counts as solved; partial progress (EmbodiedSWE's rubric for this
+task, `progress`) is recorded too and ranks your checkpoints.
 
 Deliverable: the folder `/app/output/solution/`. Its entry point, `/app/output/solution/solve.py`, defines
 `def solve(env) -> None`, which the graded run calls once (Robot Interface). Everything else in the folder ships with it
