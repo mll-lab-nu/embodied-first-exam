@@ -5,7 +5,8 @@ Put the squash from the counter in the microwave, close the door and turn the mi
 
 ## Goal
 Success: the squash is all the way inside the microwave, the door is shut and the microwave is on, and your hand has let
-go of the squash and moved away. Your trajectory is replayed from the fixed start. What counts is the state after its
+go of the squash and moved well away from it (what counts is how far the hand is from it). Your trajectory is replayed
+from the fixed start. What counts is the state after its
 last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 12)`

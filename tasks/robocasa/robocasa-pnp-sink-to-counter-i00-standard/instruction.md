@@ -6,7 +6,7 @@ away.
 
 ## Goal
 Success: the tomato lies on the plate, away from its edge, the plate still on the counter, and your hand has let go of
-the tomato and moved away.
+the tomato and moved well away from it (what counts is how far the hand is from it).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

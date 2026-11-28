@@ -5,8 +5,8 @@ Take the onion out of the microwave and put it on the plate on the counter, away
 hand away.
 
 ## Goal
-Success: the onion lies on the plate on the counter, away from the plate's edge, and your hand has let go of it and
-moved away.
+Success: the onion lies on the plate (the one that starts on the counter), away from the plate's edge, and your hand has
+let go of it and moved well away from it (what counts is how far the hand is from it).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

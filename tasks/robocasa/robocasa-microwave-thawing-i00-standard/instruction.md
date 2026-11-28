@@ -5,7 +5,7 @@ Put the squash from the counter in the microwave, close the door and turn the mi
 
 ## Goal
 Success: the squash is all the way inside the microwave, the door is shut and the microwave is on, and your hand has let
-go of the squash and moved away.
+go of the squash and moved well away from it (what counts is how far the hand is from it).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

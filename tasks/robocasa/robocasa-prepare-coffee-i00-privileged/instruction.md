@@ -4,8 +4,9 @@
 Take the mug from the cabinet, put it under the coffee machine's spout, press the start button, and move your hand away.
 
 ## Goal
-Success: the mug stands right under the coffee machine's spout, the machine is on, and your hand has let go of the mug
-and moved away from the mug and the start button. Your trajectory is replayed from the fixed start. What counts is the
+Success: the mug is right under the coffee machine's spout, its middle close below it (upright or not), the machine is
+on, and your hand has let go of the mug and moved well away from the mug and the start button (what counts is how far
+the hand is from them). Your trajectory is replayed from the fixed start. What counts is the
 state after its last action.
 
 Deliverable: `/app/output/trajectory.npz` with key `actions`: the robot's native controller commands, shape `(T, 12)`

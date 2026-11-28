@@ -5,7 +5,8 @@ Take the mug from under the coffee machine's spout and put it on the counter nex
 away.
 
 ## Goal
-Success: the mug stands on the counter next to the coffee machine, and your hand has let go of it and moved away.
+Success: the mug is on the counter next to the coffee machine, touching it (upright or not), and your hand has let go of
+it and moved well away from it (what counts is how far the hand is from it).
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 
