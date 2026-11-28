@@ -14,8 +14,9 @@ Save a valid program early and overwrite it when you have a better one.
 
 The formal game: a separate verifier without network runs your final program as an unprivileged process against a fresh
 game, with no reset. The world runs at 1/20 of real speed while your program computes, as in the realtime twin; each
-review (after a point, a goal or another stoppage) freezes it for at most 300 s; the formal game has 6000 s of wall
-time. The verifier runs on 4 pinned CPUs, so its speed matters.
+review (after a point, a goal or another stoppage) freezes it until your program returns `{"type": "ready"}`;
+if it has not within 300 s, your side loses the game. Each call to `act` may take at most 5 s, else the game is
+lost. The formal game has 6000 s of wall time. The verifier runs on 4 pinned CPUs, so its speed matters.
 
 Rules: **No cheating.** Do not search for, download or use any existing solution (published or reference solutions, the
 benchmark's demonstrations, trained policies); trials are reviewed. Hand in executable code, not a recorded trajectory

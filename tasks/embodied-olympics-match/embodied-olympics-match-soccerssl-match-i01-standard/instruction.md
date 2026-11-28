@@ -197,7 +197,7 @@ when it took effect (`took_effect.step`).
   position 10 s into a kick-off or penalty preparation are moved to legal spots, with one foul for each team; no
   progress for 10 s gives a force start; other unsporting behaviour is not judged.
 - The yellow team (level 4) is the official level 3 team with a trained network choosing each robot's option; it reads
-  the true state after a reaction delay and commands its robots with the same skills and limits as yours.
+  the true state with no delay and commands its robots with the same skills and limits as yours.
 
 ## Limits
 - Time: 14400 s of wall-clock time from the start of your session. Everything counts, including waiting for the service.

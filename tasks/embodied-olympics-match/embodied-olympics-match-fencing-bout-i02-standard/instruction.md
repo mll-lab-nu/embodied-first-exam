@@ -21,6 +21,9 @@ Rules:
   reviews all count). If it runs out, you lose.
 - After each of your actions (except one that ends the match) send `game ready "WHY" "PLAN"`, a short review, before the
   game goes on.
+- Start window: send `game start` within 1800 s of real time after the match service starts (`start.window_s` in
+  `game spec`), or you lose the bout (`no_show`). The bout does not run before that: read `game spec` and prepare your
+  program first.
 - You may write a program that observes, computes your next action and sends it; you stay in the loop (watch its log,
   stop, fix, restart). Only you send `game start` and `game ready`.
 
