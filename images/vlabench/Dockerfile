@@ -32,6 +32,12 @@ RUN GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/datasets/lerobot/vlab
     && rm -rf /tmp/assets
 RUN printf '%s\n' 'cf588fe60c0c7282174fe979f5913170cfe69017' > /opt/vlabench-commit \
     && printf '%s\n' '08d7a4479a55c8fbb89ac0fd6fcf06e53d65b4a4' > /opt/vlabench-assets-commit
+# VLABench's OrderCondition (book_rearrange, play_math_game) bounds the offset of neighbouring entities in the other axes
+# on one side only ((a - b) < offset, the next one may be any distance further or higher); its docstring means both
+# ("the acceptable offset between the entities in other axis"): abs() makes it two-sided (test_order_condition.py here).
+RUN f=/opt/VLABench/VLABench/tasks/condition.py \
+    && sed -i 's/\[(entity_points\[i\]\[axis\] - entity_points\[i+1\]\[axis\]) < self\.offset/[abs(entity_points[i][axis] - entity_points[i+1][axis]) < self.offset/' "$f" \
+    && test "$(grep -c 'abs(entity_points\[i\]\[axis\] - entity_points\[i+1\]\[axis\]) < self\.offset' "$f")" = 1
 COPY --from=ghcr.io/mll-lab-nu/efe:vlabench-files-0.8.0@sha256:128c01162e0eda2c455eef678619bab1d63050f11dd4825e9439ce12407aed4b /image/strip_experts.py /tmp/strip_experts.py
 RUN python /tmp/strip_experts.py /opt/VLABench/VLABench \
     && rm -rf /opt/VLABench/.git /opt/VLABench/scripts /tmp/strip_experts.py \
