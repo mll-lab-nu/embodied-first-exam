@@ -1,13 +1,12 @@
 # RoboDojo · hang_mugs (privileged)
 
 ## Task
-Hang the three mugs by their handles on the rack arms that point left or right. Then move both arms back to where they
+Hang the three mugs by their handles on the arms of the rack, any arm for each. Then move both arms back to where they
 started.
 
 ## Goal
-Success: each of the three mugs hangs by its handle, handle above the mug, on a rack arm that points left or right;
-nothing holds the mugs; and both arms are back where they started. A replay ends as soon as the task is done; later rows
-are not run.
+Success: each of the three mugs hangs by its handle, handle above the mug, on any arm of the rack; nothing holds the
+mugs; and both arms are back where they started. A replay ends as soon as the task is done; later rows are not run.
 
 Deliverable: `/app/output/trajectory.npz` with `task` and `actions`, a (T, 14) float array of at most 15,000 rows, one
 per action (1/25 s); write it with `s.save_trajectory()`. Anything else (another shape, NaN, more rows) scores 0. Leave
