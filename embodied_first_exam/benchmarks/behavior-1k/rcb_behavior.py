@@ -345,7 +345,7 @@ TASKS: dict[str, dict] = {
     "carrying_in_groceries": dict(
         challenge_task="carrying_in_groceries",
         scene="house_double_floor_lower",
-        text='Put the tomato and the milk from the car into one fridge, then close the car and every kitchen fridge.',
+        text='Put the tomato and the milk from the car into one fridge, then close the car and the kitchen fridge (`electric_refrigerator.n.01_1`).',
         simulator="behavior", robot="r1pro", image="behavior",
     ),
     "turning_on_radio": dict(

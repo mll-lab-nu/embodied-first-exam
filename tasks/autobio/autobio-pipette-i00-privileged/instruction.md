@@ -2,7 +2,7 @@
 
 ## Task
 Draw up liquid from the 50 mL tube with the pipette: press the plunger, push the tip down into the liquid near the
-middle of the tube, let the plunger go, then lift the tip well out of the tube.
+middle of the tube, let the plunger go, then lift the tip well above the liquid.
 
 ## Goal
 Success: in that order, the tip goes down into the liquid near the middle of the tube with the plunger pressed, the

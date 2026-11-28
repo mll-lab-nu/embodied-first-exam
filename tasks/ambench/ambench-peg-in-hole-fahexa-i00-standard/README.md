@@ -11,8 +11,7 @@
 | Reference solution | Included |
 
 ## Task
-Push the peg you are holding, front end first, into the blue socket on the wall, most of the way to the red plate at its
-back.
+Push the peg you are holding, front end first, into the blue socket on the wall, past the middle of the socket.
 
 ## Success criteria
 At the last control step, the peg's front tip (7.5 cm from the peg's centre along its axis) is, in the socket's own

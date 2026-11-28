@@ -2,7 +2,7 @@
 
 ## Task
 Pick up the small beaker and tip it over the large beaker as if pouring into it, then turn it back upright and hold it
-over the large beaker for a couple of seconds.
+over the large beaker for about a second and a half.
 
 ## Goal
 Success: the small beaker, lifted about a pen's length or more, is tipped well past halfway onto its side and then

@@ -12,7 +12,7 @@
 
 ## Task
 Pick up the small beaker and tip it over the large beaker as if pouring into it, then turn it back upright and hold it
-over the large beaker for a couple of seconds.
+over the large beaker for about a second and a half.
 
 ## Success criteria
 In this order, at any point of the episode (once it has happened it counts, whatever follows):

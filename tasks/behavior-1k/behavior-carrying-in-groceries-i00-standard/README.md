@@ -11,7 +11,8 @@
 | Reference solution | None |
 
 ## Task
-Put the tomato and the milk from the car into one fridge, then close the car and every kitchen fridge.
+Put the tomato and the milk from the car into one fridge, then close the car and the kitchen fridge
+(`electric_refrigerator.n.01_1`).
 
 ## Success criteria
 The beefsteak tomato and the carton of milk are inside one and the same refrigerator (any refrigerator of the kitchen),

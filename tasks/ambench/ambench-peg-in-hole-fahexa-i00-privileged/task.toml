@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/ambench-peg-in-hole-fahexa-i00-privileged"
-description = "AM-Bench PegInHole-Am-FAHexa-Abs-PID-Direct-v0 (a fully actuated hexarotor with a 4-joint arm and a two-finger gripper, Isaac Lab / Isaac Sim 5.1): produce one replayable trajectory of AM-Bench's absolute end-effector pose actions at 120 Hz. Task: Push the peg you are holding, front end first, into the blue socket on the wall, most of the way to the red plate at its back. Frozen scene instance: AM-Bench's seeded reset, seed 0; graded by AM-Bench's own success check in up to three fresh-process replays (any success counts)."
+description = "AM-Bench PegInHole-Am-FAHexa-Abs-PID-Direct-v0 (a fully actuated hexarotor with a 4-joint arm and a two-finger gripper, Isaac Lab / Isaac Sim 5.1): produce one replayable trajectory of AM-Bench's absolute end-effector pose actions at 120 Hz. Task: Push the peg you are holding, front end first, into the blue socket on the wall, past the middle of the socket. Frozen scene instance: AM-Bench's seeded reset, seed 0; graded by AM-Bench's own success check in up to three fresh-process replays (any success counts)."
 keywords = ["robotics", "ambench", "aerial-manipulation", "isaac-lab", "isaac-sim", "hexarotor", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]
