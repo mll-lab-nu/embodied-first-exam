@@ -105,10 +105,6 @@ APIs and the package registries only (`allowlist`), in both modes.
 in 23 of the 41 scenes. One task is one episode: the scene, the body's start pose (HumanCLAW's own spawn values), the
 target category and its goal objects. Each episode keeps the number it has among all 1,218, so the numbers have gaps.
 
-Selection rule: every one of the 1,218 validation episodes was attempted once in each mode by the same agent
-configuration, and the 55 episodes that were not solved in either mode are the ones kept. Upstream episode ids are
-kept outside the repository; no agent-readable file names them.
-
 ## Others
 
 **Building the image.** The tasks' shared code (`embodied_first_exam/benchmarks/humanclaw/`: the privileged tools, the

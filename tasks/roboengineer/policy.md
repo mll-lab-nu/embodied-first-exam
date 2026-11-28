@@ -2,7 +2,7 @@
 
 roboEngineer's own runtime (docs/protocol/tasks.md#modes: a benchmark with its own runtime, `ci_checks/benchmarks/roboengineer/exported.toml`;
 docs/protocol/invariants.md applies unchanged; results reported apart from `eai-standard/3.0`). The benchmark page is
-[README.md](README.md). Changes in #329's review (2026-10-18): the collect hooks stop the agent's processes
+[README.md](README.md). Changes made in review: the collect hooks stop the agent's processes
 first (`kill -9 -1`), a deployment still running at the cutoff is stopped and not graded (Control Transfer), the
 cutoff persists across a service restart (both), every non-protocol path is 404, the graded held-out runs are
 unrendered and the video (`/data/replay.mp4`) is rendered after the verdict, a diverging simulation is the policy's

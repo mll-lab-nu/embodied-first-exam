@@ -7,13 +7,16 @@ recipe from public sources on its first task (`harbor run` does it; nothing to r
 Why
   The image contains NVIDIA Isaac Sim 5.1 / Omniverse Kit and the Isaac Lab 2.3.2 pip wheels (installed from
   pypi.nvidia.com). NVIDIA licenses them for use, not for redistribution, so the built image may not be published.
-  RoboLab itself (github.com/NVlabs/RoboLab v0.3.1, code and its ~6 GB LFS asset library) is Apache-2.0.
+  RoboLab's code (github.com/NVlabs/RoboLab v0.3.1) is Apache-2.0; most of its ~6 GB LFS asset library (the scenes,
+  fixtures, materials, robots and the handal, hope, basic, fruits_veggies and objaverse object sets) is CC BY-NC-SA 4.0
+  (non-commercial, share-alike), the rest under the licences in its THIRD_PARTY_NOTICES.md (tasks/robolab/README.md).
 
 What the builder accepts
   - the NVIDIA Isaac Sim / Omniverse license agreement (the recipe sets OMNI_KIT_ACCEPT_EULA=YES and ACCEPT_EULA=Y, and
     every container that runs it accepts it again at launch);
   - NVIDIA's terms for the isaacsim / isaaclab wheels on pypi.nvidia.com;
-  - RoboLab's Apache-2.0 licence (its assets are baked in, as RoboLab's own docker/Dockerfile does).
+  - RoboLab's Apache-2.0 licence and its assets' licences, CC BY-NC-SA 4.0 (non-commercial use) for most of them (they
+    are baked in, as RoboLab's own docker/Dockerfile does).
   No account, key or token is needed: everything is downloaded anonymously.
 
 Inputs (all pinned)

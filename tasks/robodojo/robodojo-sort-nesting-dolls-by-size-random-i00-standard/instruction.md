@@ -1,11 +1,11 @@
 # RoboDojo · sort_nesting_dolls_by_size_random (standard)
 
 ## Task
-Stand the five nesting dolls upright in a straight row from left to right, smallest to largest, with a little space
+Stand the five penguin toys upright in a straight row from left to right, smallest to largest, with a little space
 between them. Then move both arms back to where they started.
 
 ## Goal
-Success: the five nesting dolls stand upright in a straight row, smallest on the left to largest on the right, with a
+Success: the five penguin toys stand upright in a straight row, smallest on the left to largest on the right, with a
 little space between them, and both arms are back where they started.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.

@@ -27,7 +27,7 @@ family = "robopaint_kaishu_yongzibafa"
 dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 protocol = "eai-standard/3.0"
 oracle = "partial"                # solution/: the privileged oracle's joint targets, streamed through the client
-oracle_evidence = "Reference solution in solution/ (streams the privileged reference's joint targets; tasks/robopaint/README.md, Targets). The same trajectory scores 1 under the process rules in the verifier (the graders' rcb_brush_strict.py, with which the sim service also scores the live sheet): path_mm 1270 and mark_width_mm 3.71, against the colouring-in limits 3230 mm and 1.34 mm. Harbor oracle 1 and nop 0 on both modes of this pair on its current files (2026-10-09): tasks/robopaint/README.md (Validation)."
+oracle_evidence = "Reference solution in solution/ (streams the privileged reference's joint targets; tasks/robopaint/README.md, Tasks). The same trajectory scores 1 under the process rules in the verifier (the graders' rcb_brush_strict.py, with which the sim service also scores the live sheet): path_mm 1270 and mark_width_mm 3.71, against the colouring-in limits 3230 mm and 1.34 mm. Harbor oracle 1 and nop 0 on both modes of this pair on its current files (2026-10-09): tasks/robopaint/README.md at ca87144a078 (Validation)."
 instance_seed = 0
 expert_time_estimate_hours = 6.0
 difficulty = "extreme"          # RoboPaint tiers: line easy; kaishu <= 5 strokes medium, 6+ strokes hard, works extreme

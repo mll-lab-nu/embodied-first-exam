@@ -3,7 +3,7 @@
 The trusted service has ended the episode (finalize.sh, `rcb_limited.py end`: SIGUSR1, the service writes
 trajectory.npz and episode.json, with the live success and the live end-state hash, and exits). This writes final.json
 from episode.json: success = the live episode's success under the task's predicate (tasks/dexhand/README.md,
-"Standard-mode grading by the live episode"). Nothing is replayed to grade it. The service's own record is the only source:
+"Grading", "Standard: the live episode"). Nothing is replayed to grade it. The service's own record is the only source:
 the live predicate is the one a replay would recompute (the same Session.step on the same rows, which also refuses a
 target out of range or a moved locked wrist). The episode is agent-ended (docs/protocol/tasks.md#modes): a success never ends it, the
 service judges the state it ends in (POST /finish, the step cap or the session's end, with its end window), and the

@@ -3,8 +3,8 @@ old = "## Task\nPut all the yellow triangular pieces in the box, and nothing els
 new = "## Task\nPut all the purple triangular pieces in the box, and nothing else."
 
 [[replace]]
-old = "## Goal\nSuccess: the box holds every yellow triangular piece from the table and nothing else. The replay ends as soon as the\ntask is done."
-new = "## Goal\nSuccess: the box holds every purple triangular piece from the table and nothing else. The replay ends as soon as the\ntask is done."
+old = "Success: the box holds every yellow triangular piece from the table and nothing else."
+new = "Success: the box holds every purple triangular piece from the table and nothing else."
 
 [[replace]]
 old = "every yellow triangular piece (one in this scene)"

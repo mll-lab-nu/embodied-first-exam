@@ -1,6 +1,6 @@
 # Neural Landing — roboEngineer / Drone
 
-> roboEngineer task names: [README.md](README.md) (the package names of #329 used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `ci_checks/benchmarks/roboengineer/exported.toml`).
+> roboEngineer task names: [README.md](README.md) (the package names used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `ci_checks/benchmarks/roboengineer/exported.toml`).
 
 Neural Landing is the first implemented task in the [roboEngineer collection](README.md). This page specifies quadrotor landing with deployment adaptation, random-pad v4. Existing task IDs and the internal `Neural Lander` benchmark label are retained.
 
@@ -86,7 +86,7 @@ The verifier executes each final case twice in fresh Python processes and requir
 
 ## Isolation and integration status
 
-The standalone development compose transport (`Dockerfile.agent`, `Dockerfile.sim`, `compose.yaml`) was removed in #329's review: its agent image copied all of `public/`, which then held the reference learner (now only in `solution/`). The Harbor tasks are the one transport.
+The standalone development compose transport (`Dockerfile.agent`, `Dockerfile.sim`, `compose.yaml`) was removed in review: its agent image copied all of `public/`, which then held the reference learner (now only in `solution/`). The Harbor tasks are the one transport.
 
 Native Harbor integration now includes egress controls, policy-task protocol declarations, generated tasks, resource/cutoff declarations, and CI registration; the oracle/nop validation is recorded below. LLM coding-agent evaluation remains separate. Completing the physical airframe calibration still requires the missing experimental identification data and is not implied by successful reference landings.
 

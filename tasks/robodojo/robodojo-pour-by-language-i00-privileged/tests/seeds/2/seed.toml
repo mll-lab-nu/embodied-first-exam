@@ -29,3 +29,7 @@ new = "from the first red bottle into the first black bowl, from the second viol
 [[replace]]
 old = "Pour the violet bottle into the black bowl, then the red bottle into the white bowl, then the turquoise bottle into the brown bowl, in that order."
 new = "Pour the red bottle into the black bowl, then the violet bottle into the white bowl, then the turquoise bottle into the brown bowl, in that order."
+
+[[replace]]
+old = "Success: the violet bottle has been poured into the black bowl, then the red bottle into the white bowl, then the\nturquoise bottle into the brown bowl, each bottle nearly emptied into its bowl with little spilled."
+new = "Success: the red bottle has been poured into the black bowl, then the violet bottle into the white bowl, then the\nturquoise bottle into the brown bowl, each bottle nearly emptied into its bowl with little spilled."

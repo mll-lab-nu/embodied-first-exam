@@ -5,3 +5,7 @@ new = "arx_x5/1/sort_nesting_dolls_by_size_random_0.json"
 [[replace]]
 old = "sha256 `f45438f654fd1ce7`"
 new = "sha256 `c7ed7538aba7b2e8`"
+
+[[replace]]
+old = "five penguin toys"
+new = "five nesting dolls"

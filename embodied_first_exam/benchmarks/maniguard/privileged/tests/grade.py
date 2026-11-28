@@ -56,7 +56,7 @@ import numpy as np
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 OUTCOMES = ("idle", "reached", "manipulated", "success")
 REPLAY_START_S = 900.0     # Isaac Sim launch + scene load of one fresh process (cold cache on a loaded host: 8-12 min)
-REPLAY_STEP_S = 0.2        # per replayed control step, the slowest measured (tasks/maniguard/README.md, "Other hosts")
+REPLAY_STEP_S = 0.2        # per replayed control step, the slowest measured
 REPLAY_FLOOR_S = 3600.0    # the least any replay may take, however few its rows
 BUDGET_S = 22800.0         # all replays: task.toml [verifier].timeout_sec (23400) minus 600 s for the start and the write
 MAX_MEMBER_MARGIN = 1 << 20   # bytes an .npz entry may hold beyond MAX_STEPS x ACTION_DIM float64 numbers (the .npy header)

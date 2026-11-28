@@ -2,7 +2,7 @@
 file for both modes. A standard task runs it behind the shared standard service layer (`python /srv/server.py`:
 rcb_service.main(build); docs/protocol/eai-standard.md); a realtime task runs the shared realtime layer
 (`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/eai-standard.md#realtime,
-tasks/pandadyn/README.md "Realtime").
+tasks/pandadyn/README.md "Interface").
 
 The simulator-specific half only: `PandaDyn` implements rcb_service.Sim (the contract documented in rcb_service.py) for
 one frozen instance, on the benchmark's own tooling rcb_pandadyn.Session (ManiSkill 3.0.1 / SAPIEN 3.0.3, CPU PhysX at

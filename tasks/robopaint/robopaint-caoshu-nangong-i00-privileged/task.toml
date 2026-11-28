@@ -13,7 +13,7 @@ robot = "franka-panda"            # PandaStick with a Chinese brush: rigid handl
 family = "robopaint_caoshu_nangong"
 dynamics = "static"               # scene dynamics (docs/protocol/tasks.md): the task's own declaration
 oracle = "partial"                # solution/solve.sh replays the frozen reference plan; its recorded scores: oracle_evidence
-oracle_evidence = "Reference solution in solution/ (generated with the current tooling): the generator's self-test replayed it on the graders' copy and through the scoring service (equal metrics, success); under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 890 and mark_width_mm 3.11, against the colouring-in limits 2680 mm and 0.93 mm. Harbor oracle and nop runs: tasks/robopaint/README.md (Caoshu)."
+oracle_evidence = "Reference solution in solution/ (generated with the current tooling): the generator's self-test replayed it on the graders' copy and through the scoring service (equal metrics, success); under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 890 and mark_width_mm 3.11, against the colouring-in limits 2680 mm and 0.93 mm. Harbor oracle and nop runs: tasks/robopaint/README.md at ca87144a078 (Caoshu)."
 instance_seed = 0                 # scene = environment/instance.json (agent's copy: sheets, brush, ink stone, start joints, the rule, instance_sha)
 expert_time_estimate_hours = 4.0
 difficulty = "extreme"          # RoboPaint tiers: line easy; caoshu singles and works extreme

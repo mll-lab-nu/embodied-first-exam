@@ -1,6 +1,6 @@
 # roboEngineer — AnyCar multi-surface tracking
 
-> roboEngineer task names: [README.md](README.md) (the package names of #329 used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `ci_checks/benchmarks/roboengineer/exported.toml`).
+> roboEngineer task names: [README.md](README.md) (the package names used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `ci_checks/benchmarks/roboengineer/exported.toml`).
 
 This family ports AnyCar's MuJoCo contact-wheel vehicle mechanism into the bounded control-transfer workflow. It evaluates a coding agent's ability to calibrate a controller using permitted deployment observations. It does not evaluate the pretrained AnyCar transformer. The earlier local desert showcase used a numeric dynamic bicycle plant and Isaac rendering; that showcase is not the evaluator here.
 

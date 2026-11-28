@@ -4,7 +4,7 @@
 FROM ghcr.io/mll-lab-nu/efe:robopaint-0.2.0
 COPY . /srv/
 COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.9.0@sha256:be5b031c703c45784cbf30375c41e3f52737a2cb175d221f567d267972a6e970 \
-     /sim/NOTICE-exemplar.md \
+     /sim/variants/54c4e7d8be/NOTICE-exemplar.md \
      /sim/finalize.sh \
      /rcb_brush.py \
      /rcb_brush_score.py \

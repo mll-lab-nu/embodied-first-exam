@@ -2,7 +2,7 @@
 
 > Historical development evidence. Paths under `tasks/control-transfer-*` and `tasks/quadrotor-landing-*` below refer to the pre-migration checkout. Current packages live under `experimental/roboengineer/tasks/`; use its explicit checks. Earlier branch-local CI success does not establish compliance with main. See [the compatibility assessment](README.md).
 
-This record covers the October 13, 2026 development integration of the eight-objective collection. The runs use scripted engineering references and Harbor's `nop` agent. They are **not LLM model scores**. Raw trial outputs, video, feedback, policies and operator diagnostics are retained outside Git; task directories contain only reproducible inputs.
+This record covers the development integration of the eight-objective collection. The runs use scripted engineering references and Harbor's `nop` agent. They are **not LLM model scores**. Raw trial outputs, video, feedback, policies and operator diagnostics are retained outside Git; task directories contain only reproducible inputs.
 
 ## Validation layers
 
@@ -335,7 +335,7 @@ mutation checks. All 26 generated instance banks and nonvisual specifications
 match the preceding revision. The optional global NumPy/requests tier remains
 unavailable in system Python; affected numerical tests ran in pinned MuJoCo 3.5.
 
-## Experimental vector wind (2026-10-14)
+## Experimental vector wind
 
 The new `neural-fly-vector-wind-v1` i00/i01 tasks declare `general-eight-wind/1` and
 `vector-wind/1`, preserving earlier scalar-wind dispatch. The extension uses synthetic

@@ -152,7 +152,7 @@ harbor run -d embodied-first-exam --privileged -a codex -m openai/gpt-6-astra
 harbor run -d embodied-first-exam@all -a codex -m openai/gpt-6-astra
 ```
 
-The paper and the leaderboard count the paper's 35 suites (every benchmark but HumanCLAW): 1156 tasks, 2294 tests.
+The paper and the leaderboard count the paper's 35 suites: 1156 tasks, 2294 tests.
 
 ```bash
 # one benchmark, here RoboARC (212 task dirs)
@@ -214,6 +214,7 @@ Nine of the suites were written for this exam. The others are adapted from exist
 - **[AutoBio](https://github.com/autobio-bench/AutoBio)**: AutoBio: A Simulation and Benchmark for Robotic Automation in Digital Biology Laboratory ([paper](https://arxiv.org/abs/2505.14030), [code](https://github.com/autobio-bench/AutoBio))
 - **[ABC Sim](https://github.com/amazon-far/abc)** ([paper](https://arxiv.org/abs/2606.27375), [code](https://github.com/amazon-far/abc))
 - **[EmbodiedSWE](https://github.com/EmbodiedSWE/EmbodiedSWE)**: EmbodiedSWE: Coding Agents for Long Horizon Dexterous Robotics ([paper](https://arxiv.org/abs/2609.27308), [code](https://github.com/EmbodiedSWE/EmbodiedSWE))
+- **[HumanCLAW](https://github.com/Human-CLAW/HumanCLAW)** ([code](https://github.com/Human-CLAW/HumanCLAW))
 
 ## License
 

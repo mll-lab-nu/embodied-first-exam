@@ -48,7 +48,7 @@ MAX_FPS = 50
 # Images one call may return (cameras x frames, per-frame depth counted again), checked before anything is executed:
 # every frame is held until the response is sent. Measured on the layer's Recorder with 640x480 frames: 2.7 GB per
 # 1000 RGB frames and 5.1 GB per 1000 images of one camera with per-frame depth, on top of the simulator's 1.9 GB,
-# under the sidecar's 8 GiB cap (tasks/dexjoco/README.md, "frames per call"). The sidecar services' 3000 would need more than the cap.
+# under the sidecar's 8 GiB cap (tasks/dexjoco/README.md, "Interface": at most 1000 images per call). The sidecar services' 3000 would need more than the cap.
 MAX_FRAMES = 1000
 CAM_W, CAM_H = 640, 480
 CTRL_HZ = 50.0
