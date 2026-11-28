@@ -5,8 +5,8 @@ Move the cream cheese stick to the left arm's side of the table, at least a hand
 down there.
 
 ## Goal
-Success: the cream cheese stick lies on the table on the left arm's side, at least a hand's width past the middle line
-between the arms. Make sure everything is at rest when you send `/finish`.
+Success: the cream cheese stick is down at table level on the left arm's side, at least a hand's width past the middle
+line between the arms. It must hold for about a second after the episode ends, while the robot keeps your last command.
 
 When you are done, send `/finish` to end the episode and get it graded. Only the state at that point counts.
 

@@ -4,7 +4,8 @@
 Put both plastic bottles in the bin.
 
 ## Goal
-Success: both bottles are in the bin at the same time. The replay ends as soon as the task is done.
+Success: both bottles are in the bin at the same time. The task counts as done once this has held for about a second
+without a break before your rows run out; the replay ends at that moment.
 
 Deliverable: `/app/output/trajectory.npz`, written with `s.save_trajectory(actions, path)`: `(T, 14)` rows, one per
 control step, at most 20,000 rows. It is replayed open-loop from the same initial state and scores 1 if its episode ends
