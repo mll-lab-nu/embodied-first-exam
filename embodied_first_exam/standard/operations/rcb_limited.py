@@ -500,7 +500,7 @@ def check_spec(spec: dict) -> None:
         raise RuntimeError("default_cameras must be cameras")
 
 
-# ---------------------------------------------------------------- crash recovery (embodied_first_exam/standard/README.md#crash-recovery; embodied_first_exam/standard/README.md#crash-recovery)
+# ---------------------------------------------------------------- crash recovery (embodied_first_exam/standard/README.md#crash-recovery)
 MAX_RESUMES = int(os.environ.get("RCB_MAX_RESUMES", "2"))
 STARTUP_TIMEOUT_S = float(os.environ.get("RCB_STARTUP_TIMEOUT_S", "900"))     # a task with a slower scene build sets more
 MAX_CALL_WALL_S = float(os.environ.get("RCB_MAX_CALL_WALL_S", "900"))         # < the client's 1800 s /submit read timeout

@@ -197,3 +197,7 @@ image or GPU.
 
 `ci_checks/check-openapi-contract.py` runs the reference layers and checks their answers against
 [docs/protocol/eai-standard.openapi.yaml](../../docs/protocol/eai-standard.openapi.yaml).
+
+`check-standard-protocol.py` is the manual live test, not run in CI: it checks a running task's sim service against the
+protocol (`--url` a service that is up, or `--launch tasks/<benchmark>/<task>-standard` to start the task's sidecar with
+docker compose, test it and stop it).

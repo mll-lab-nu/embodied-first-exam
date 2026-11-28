@@ -92,7 +92,8 @@ class Robot:
                     r = requests.get(b + "/spec", timeout=(5, 30))
                     if r.status_code == 503: last = "warming up"; break
                     r.raise_for_status(); self.base = b; self._spec = r.json()
-                    assert self._spec.get("protocol") == PROTOCOL, self._spec.get("protocol")
+                    if self._spec.get("protocol") != PROTOCOL:
+                        raise RuntimeError(f"not an {PROTOCOL} service: protocol {self._spec.get('protocol')!r}")
                     return
                 except requests.exceptions.RequestException as e:
                     last = e

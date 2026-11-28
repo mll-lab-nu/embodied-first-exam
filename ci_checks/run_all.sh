@@ -96,7 +96,7 @@ add bash ci_checks/check-standard-client.sh                 # standard agent + v
 add python3 ci_checks/check-recipe-copies.py               # base-image recipes inside other images' recipes: byte-identical to their source
 # docs/protocol/resources.md: the caps of every container ([environment], the compose files, x-gpu-memory-gb), the rules of
 # scripts/task_resources.toml applied, and the Resources line of the instruction's `## Limits` and the README's
-# `## Resources` rendered from them
+# `## Resource requirements` rendered from them
 add python3 ci_checks/check-resources.py"$pargs"
 # docs/protocol/tasks.md: the agent's time cutoff, each task's own `[agent] timeout_sec` (no table): at most 14400 s, the Time line
 # of instruction.md's `## Limits`, the README row and the standard modes' sim service say it, nothing else states
