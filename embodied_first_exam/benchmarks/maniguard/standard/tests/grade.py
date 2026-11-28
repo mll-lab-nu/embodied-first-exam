@@ -57,8 +57,8 @@ def grade(d):
            "finalized": int(finalized), "missing_log": 0, "n_actions": int(d.get("n_actions") or 0), "sim_steps": int(d.get("control_steps") or 0),
            "physics_steps": int(d.get("physics_steps") or 0), "steps": int(d.get("steps") or 0), "elapsed_s": num("elapsed_s"),
            "video_rendered": int(bool(d.get("video"))), "gpu_lost": int(bool(d.get("gpu_lost"))),
-           # the episode ended at the technical cap (max_control_steps; reason "runaway_guard") or by a simulator error
-           "step_cap_reached": int(d.get("reason") == "runaway_guard"), "sim_error": int(sim_error),
+           # the episode ended at the technical cap (max_control_steps: the step limit, reason "step_limit") or by a simulator error
+           "step_cap_reached": int(d.get("reason") == "step_limit"), "sim_error": int(sim_error),
            "sim_stopped": int(d.get("reason") == "sim_stopped"),
            # crash recovery (eai-standard/3.0): service starts, resumes, whether a resumed state differed and by how much, a give-up
            "sim_startups": int(d.get("sim_startups") or 0), "resumes": int(d.get("resumes") or 0),
