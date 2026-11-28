@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
 # Unit tests of the repository's shared tooling, in two tiers.
 #  1. Standard library only: the runner's helpers (scripts/tests/), the usage gateway's raw log and budget stop, the
-#     runner's lane stop and infra rules (account_failure_check.py --selftest), and the EmbodiedSWE grader's rollout limit
-#     (a request outlasting it is a graded timeout, not infra; needs Landlock, skipped with a note otherwise).
+#     runner's lane stop and infra rules (account_failure_check.py --selftest), the EmbodiedSWE grader's rollout limit
+#     (a request outlasting it is a graded timeout, not infra; needs Landlock, skipped with a note otherwise), and the
+#     VLABench image's OrderCondition patch (images/vlabench/test_order_condition.py).
 #  2. numpy + requests (no simulator, no image, no GPU): the shared and the operations layers' selftests on a stub
 #     simulator (embodied_first_exam/standard/), the sidecar service's first-attempt record on a toy simulator (sidecar/), and
 #     the per-call image budget of the sidecar, shared and realtime layers (frames_selftest.py), the agent-ended episodes of
 #     the shared layer and of the sidecar service and realtime layer (agent_end/), and the robot's MCP tools on toy shared /
 #     realtime / operations services and a match seat
-#     (standard/mcp/tests/: the API path and the MCP path leave the same episode). Run when both modules can be imported, skipped with a note otherwise;
-#     `--all` makes a missing module a failure.
-# A benchmark's own tests live with its tasks (their tests/), not here. The resource monitor's tests are run by
+#     (standard/mcp/tests/: the API path and the MCP path leave the same episode), and three graders' offline regression
+#     tests (MyoSuite table_tennis' lost rally, RoboWits' replay at the step cap, RoboPaint's stroke cap). Run when both
+#     modules can be imported, skipped with a note otherwise; `--all` makes a missing module a failure.
+# A benchmark's other tests live with its tasks (their tests/), not here. The resource monitor's tests are run by
 # check-monitor.py.
 # Usage: check-unit-tests.sh [--all] [--only <path prefix>...]   (repo-level; run_all.sh calls it once)
 #   --only: just the tests whose repository path starts with one of the prefixes (ci_checks/ci_scope.py RCB_SCOPE_PATHS).
@@ -44,6 +46,7 @@ done
 run 120 scripts/account_failure_check.py --selftest
 run 60 ci_checks/benchmarks/embodied-olympics-match/invariant-match-instance.py --selftest
 run 120 embodied_first_exam/benchmarks/embodiedswe/rollout_limit_selftest.py
+run 120 images/vlabench/test_order_condition.py
 if python3 -c "import numpy, requests" 2>/dev/null; then
   export PATH="$(dirname "$(command -v python3)"):$PATH"   # run.sh starts `python`: the same interpreter
   for t in embodied_first_exam/standard/selftest.py embodied_first_exam/standard/operations/selftest.py \
@@ -52,6 +55,9 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
            embodied_first_exam/standard/agent_end/agent_end_sidecar_selftest.py \
            embodied_first_exam/standard/mcp/tests/test_toy.py embodied_first_exam/standard/mcp/tests/test_oracle_shim.py \
            embodied_first_exam/standard/mcp/tests/test_realtime.py embodied_first_exam/standard/mcp/tests/test_eo_match.py; do run 900 "$t"; done
+  for t in embodied_first_exam/benchmarks/myosuite/privileged/environment/test_rcb_myosuite_table_tennis.py \
+           embodied_first_exam/benchmarks/robowits/privileged/tests/test_rcb_robowits_step_cap.py \
+           embodied_first_exam/benchmarks/robopaint/test_rcb_brush_strict.py; do run 300 "$t"; done
 elif [ $all -eq 1 ]; then
   echo "FAIL check-unit-tests.sh --all: numpy and requests are needed for the second tier (pip install numpy requests)"; rc=1
 else
