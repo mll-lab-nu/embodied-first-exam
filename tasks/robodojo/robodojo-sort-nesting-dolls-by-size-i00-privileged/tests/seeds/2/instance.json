@@ -411,6 +411,7 @@
  "control_hz": 25,
  "action_dim": 14,
  "instruction": "Arrange the five nesting dolls in a row from left to right, from smallest to largest.",
+ "goal_text": "Arrange the five yellow rubber ducks in a row from left to right, from smallest to largest.",
  "labels": [
   "doll0",
   "doll1",
