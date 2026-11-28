@@ -1,6 +1,6 @@
 """eai-standard/3.0 sim service for ABC Sim's standard-realtime tasks -- the adapter behind the shared realtime layer
-(`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/README.md §3,
-docs/protocol/standard_mode.md Part 3).
+(`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/tasks.md#modes,
+docs/protocol/eai-standard.md#realtime).
 
 The simulator-specific half only: `AbcSim` implements rcb_service.Sim (the contract documented in rcb_service.py, a
 byte-identical copy of the other realtime benchmarks') for one frozen instance, on the benchmark's tooling module
@@ -12,7 +12,7 @@ live_verdict(). Nothing is replayed to grade it; the video is rendered from the
 trajectory after the verdict (render_video). `start_sha` is the frozen instance's recorded state hash: the layer refuses
 a fresh episode whose scene does not start there (instance_mismatch, infrastructure).
 
-Agent-ended episodes (PROTOCOL §3; rcb_service.py's generic fields): the Session runs in its agent_end
+Agent-ended episodes (docs/protocol/tasks.md#modes; rcb_service.py's generic fields): the Session runs in its agent_end
 mode (a success never ends the episode; step() returns the state's success, which the layer only records), the episode
 ends at POST /finish, the end of the session or a failure (the ball off the tray: "failed", 0, after a success too), and
 the verdict is the end state's: `end_window_steps` = HOLD_STEPS (about a second of the last command held, the goal held

@@ -1,7 +1,3 @@
 [[replace]]
 old = "arx_x5/0/store_laptop_and_headphones_0.json"
 new = "arx_x5/1/store_laptop_and_headphones_0.json"
-
-[[replace]]
-old = "sha256 `36c256352ba18218`"
-new = "sha256 `3b750d3b400f9051`"

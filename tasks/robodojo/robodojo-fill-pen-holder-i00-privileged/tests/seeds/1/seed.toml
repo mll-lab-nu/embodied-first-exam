@@ -13,11 +13,3 @@ new = "## Others\n- The black-and-gold pens' cap end is the end with the clip."
 [[replace]]
 old = "arx_x5/0/fill_pen_holder_0.json"
 new = "arx_x5/1/fill_pen_holder_0.json"
-
-[[replace]]
-old = "sha256 `346dfc9c75c87c95`"
-new = "sha256 `777621dcfe32a8d3`"
-
-[[replace]]
-old = "Put all four pens in the pen holder: the white ballpoint tip down, the other three cap end up. Then make sure the holder stands upright and move both arms back to where they started."
-new = "Put all four pens in the pen holder, cap end up. Then make sure the holder stands upright and move both arms back to where they started."

@@ -10,7 +10,7 @@ disagreed), `determinism_checked` = 0 (nothing was compared) and `replays` = 1. 
 and reward.json (numbers only); then a second replay renders replay.mp4, after the verdict is on disk (it never changes
 it).
 
-Whose failure a 0 is (PROTOCOL §4, H.5): a file that is no trajectory for this instance -- unreadable, not (T, 14),
+Whose failure a 0 is (docs/protocol/tasks.md#grading, invariants.md H.5): a file that is no trajectory for this instance -- unreadable, not (T, 14),
 empty or longer than MAX_ROWS, NaN/inf -- is the agent's (`bad_trajectory`), checked here before any replay. After that
 check a replay process that gives no result (out of time, killed, not started, a failing tool) is the grader's
 (`replay_failed`, `grader_error` and `infra_error` = 1), as is an instance the verifier's host does not rebuild:

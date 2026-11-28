@@ -1,6 +1,6 @@
 # README data for tasks/libero-max/*/README.md (scripts/task_conventions.py render_readme_v3)
 #
-# Sources checked for every success text (upstream clones in /data/kangrui/tmp/readme2_B_scratch/libero-max/):
+# Sources checked for every success text (upstream clones at these commits):
 #   LIBERO-PRO @ 2b910b5 (Zxy-MLlab/LIBERO-PRO; its LIBERO package), libero/libero/envs/:
 #     bddl_base_domain.py step L810-819 (done = _check_success() after every control step);
 #     problems/libero_*_manipulation.py _check_success (tabletop L135-143: the AND of the BDDL goal's predicates) and
@@ -35,8 +35,7 @@
 #     L705-716, the resume and give-ups L750-772, a simulator error L857-865, the session end L1258-1263, _write_final
 #     L630-643; standard/tests/grade.py main L42-81.
 # The per-task names and numbers ({vars[...]}) are generated from each task's instance.json, its BDDL goal and the
-# instruction's state labels (/data/kangrui/tmp/readme2_B_scratch/libero-max/tools/gen_vars.py, kept outside the
-# repository).
+# instruction's state labels (a one-off generator, kept outside the repository).
 
 [benchmark]
 name = "LIBERO-MAX"

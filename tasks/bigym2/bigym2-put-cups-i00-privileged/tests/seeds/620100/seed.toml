@@ -1,7 +1,0 @@
-[[replace]]
-old = "the task reset with seed 0, t = 0 state hash `5f4cdf3a89e1fa8ae86ad094e8b0ca9d1f281017`"
-new = "the task reset with seed 620100, t = 0 state hash `a60f3d5e532dec54e4f4374fcc814b3944ec6f0b`"
-
-[[replace]]
-old = "(no network but the model APIs; seed 0 is none of their seeds)"
-new = "(no network but the model APIs; seed 620100 is none of their seeds)"

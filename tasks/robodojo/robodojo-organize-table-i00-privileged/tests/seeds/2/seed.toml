@@ -19,13 +19,5 @@ old = "arx_x5/0/organize_table_0.json"
 new = "arx_x5/2/organize_table_0.json"
 
 [[replace]]
-old = "sha256 `e55e5cffef73b196`"
-new = "sha256 `a77cbdb1a24304dc`"
-
-[[replace]]
 old = "the cactus toy"
 new = "the robot figurine"
-
-[[replace]]
-old = "Stand the alarm clock on the drawer and the cactus toy on the small grey square pad, put the mouse on the mouse pad and push the keyboard into its frame without turning either of them round. Then move both arms back to where they started."
-new = "Stand the alarm clock on the drawer and the robot figurine on the small grey square pad, put the mouse on the mouse pad and push the keyboard into its frame without turning either of them round. Then move both arms back to where they started."

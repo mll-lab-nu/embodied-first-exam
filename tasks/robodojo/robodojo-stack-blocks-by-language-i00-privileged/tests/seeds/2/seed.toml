@@ -13,11 +13,3 @@ new = "## Goal\nSuccess: the three cubes stand in one tower, yellow at the botto
 [[replace]]
 old = "arx_x5/0/stack_blocks_by_language_0.json"
 new = "arx_x5/2/stack_blocks_by_language_0.json"
-
-[[replace]]
-old = "sha256 `03aa18bd083b56ac`"
-new = "sha256 `38fab165e4dce658`"
-
-[[replace]]
-old = "Stack the three cubes into one tower: blue at the bottom, yellow in the middle and orange on top. Then move both arms back to where they started."
-new = "Stack the three cubes into one tower: yellow at the bottom, green in the middle and red on top. Then move both arms back to where they started."

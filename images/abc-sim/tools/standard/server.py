@@ -1,4 +1,4 @@
-"""eai-standard/3.0 sim service for the ABC Sim tasks (docs/protocol/standard_mode.md): the adapter of the shared layer
+"""eai-standard/3.0 sim service for the ABC Sim tasks (docs/protocol/eai-standard.md): the adapter of the shared layer
 rcb_limited.py (/srv/rcb_limited.py, from the shared standard files); the simulator is rcb_abc.Session (abc_sim on
 MuJoCo 3.6.0, CPU physics, EGL rendering). HTTP surface: GET /spec, GET /status, POST /observe, POST /submit,
 POST /kinematics, and POST /reset when the run grants resets (RCB_RESET_BUDGET; the standard tasks' default is 0).
@@ -14,12 +14,12 @@ every executed row is journaled; after a crash the service rebuilds the episode 
 the committed resets did. When the episode ends the service writes /data/trajectory.npz + /data/episode.json; the collect
 hook (finalize.sh) makes it exit and writes the verdict.
 
-The verdict is the live episode's (PROTOCOL H.4): `success` in episode.json is the task's rule on the state this
+The verdict is the live episode's (docs/protocol/invariants.md H.4): `success` in episode.json is the task's rule on the state this
 service's episode ended in (its 1.02 s hold is part of the rule). Nothing is replayed to grade it. The frozen
 initial state is checked when the episode begins: a fresh start whose built scene does not hash to the instance's
 recorded sha gives up as an infrastructure failure (`instance_mismatch`) before the agent is served.
 
-Agent-ended episodes (PROTOCOL §3; rcb_agent_end.py, robodojo's sim/server.py is the reference): a
+Agent-ended episodes (docs/protocol/tasks.md#modes; rcb_agent_end.py, robodojo's sim/server.py is the reference): a
 success never ends the episode and is never shown (rcb_abc.Session.agent_end: the state's success, recorded after every
 control step with AE.hidden_success); POST /finish, the end of the agent's session or a failure end it. The verdict is
 the state the episode ends in, with the task's hold window run from there (judge_end: the robot holds its last command

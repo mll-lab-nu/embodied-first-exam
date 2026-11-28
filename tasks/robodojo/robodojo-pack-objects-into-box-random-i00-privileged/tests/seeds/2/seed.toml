@@ -9,7 +9,3 @@ new = "## Goal\nSuccess: the car, the toothbrush, the hammer and the shoe lie in
 [[replace]]
 old = "arx_x5/0/pack_objects_into_box_random_0.json"
 new = "arx_x5/2/pack_objects_into_box_random_0.json"
-
-[[replace]]
-old = "sha256 `f51946657574f10d`"
-new = "sha256 `8c07a3c2c47e8acf`"

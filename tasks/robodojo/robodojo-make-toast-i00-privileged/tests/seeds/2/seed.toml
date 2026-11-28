@@ -1,7 +1,3 @@
 [[replace]]
 old = "arx_x5/0/make_toast_0.json"
 new = "arx_x5/2/make_toast_0.json"
-
-[[replace]]
-old = "sha256 `f78afb3f82b6d9ce`"
-new = "sha256 `75d96218278c0188`"

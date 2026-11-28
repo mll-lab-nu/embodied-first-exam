@@ -13,11 +13,3 @@ new = "## Others\n- The white ballpoints' writing tip is the tapered end."
 [[replace]]
 old = "arx_x5/0/fill_pen_holder_0.json"
 new = "arx_x5/2/fill_pen_holder_0.json"
-
-[[replace]]
-old = "sha256 `346dfc9c75c87c95`"
-new = "sha256 `5cb119b226d1ce98`"
-
-[[replace]]
-old = "Put all four pens in the pen holder: the white ballpoint tip down, the other three cap end up. Then make sure the holder stands upright and move both arms back to where they started."
-new = "Put all four pens in the pen holder: the two white ballpoints tip down, the two markers cap end up. Then make sure the holder stands upright and move both arms back to where they started."

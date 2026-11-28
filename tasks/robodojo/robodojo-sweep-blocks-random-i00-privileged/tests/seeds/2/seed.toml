@@ -5,7 +5,3 @@ new = "## Others\n- Labels in `s.objects()`: `broom_shovel` (the dustpan); `broo
 [[replace]]
 old = "arx_x5/0/sweep_blocks_random_0.json"
 new = "arx_x5/2/sweep_blocks_random_0.json"
-
-[[replace]]
-old = "sha256 `d04495ad79faf3f3`"
-new = "sha256 `4bfbc246362e54a7`"

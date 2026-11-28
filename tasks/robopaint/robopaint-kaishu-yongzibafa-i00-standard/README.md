@@ -68,4 +68,4 @@ Caps per container.
 RoboPaint (its scenes, tooling and graders) is part of this repository, MIT License. It runs on ManiSkill 3.0.1
 ([haosulab/ManiSkill](https://github.com/haosulab/ManiSkill) @ `a4a4f92`) and SAPIEN 3.0.3, both Apache License 2.0.
 The brush model is this repository's re-implementation of the dynamic virtual brush of Wang et al. (IROS 2020). The base image also carries Spline-FRIDA (GPL-3.0), which this task does not use.
-The exemplar: the stroke outlines come from Make Me a Hanzi (`skishore/makemeahanzi` @ `bddc96d`, `graphics.txt`, derived from the fonts AR PL KaitiM GB and AR PL UKai) under the Arphic Public License; the task carries `ARPHICPL.TXT` and `NOTICE-exemplar.md`. No non-commercial terms apply.
+The exemplar: rendered from Make Me a Hanzi (`skishore/makemeahanzi` @ `bddc96d`, `graphics.txt`, derived from the fonts AR PL KaitiM GB and AR PL UKai) under the Arphic Public License; the task carries `ARPHICPL.TXT` and `NOTICE-exemplar.md`. No non-commercial terms apply.

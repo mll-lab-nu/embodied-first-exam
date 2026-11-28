@@ -19,16 +19,8 @@ old = "arx_x5/0/pour_by_language_0.json"
 new = "arx_x5/1/pour_by_language_0.json"
 
 [[replace]]
-old = "sha256 `a37dd2812e564278`"
-new = "sha256 `4bb2416a9457ab4b`"
-
-[[replace]]
 old = "from the first violet bottle into the first black bowl, from the second red bottle into the second white bowl, and from the third turquoise bottle into the third brown bowl"
 new = "from the first red bottle into the first black bowl, from the second turquoise bottle into the second white bowl, and from the third violet bottle into the third brown bowl"
-
-[[replace]]
-old = "Pour the violet bottle into the black bowl, then the red bottle into the white bowl, then the turquoise bottle into the brown bowl, in that order."
-new = "Pour the red bottle into the black bowl, then the turquoise bottle into the white bowl, then the violet bottle into the brown bowl, in that order."
 
 [[replace]]
 old = "Success: the violet bottle has been poured into the black bowl, then the red bottle into the white bowl, then the\nturquoise bottle into the brown bowl, each bottle nearly emptied into its bowl with little spilled."

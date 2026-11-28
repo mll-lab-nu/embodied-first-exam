@@ -24,7 +24,7 @@
 #   graders   privileged/tests/grade.py L225-231 (success = task_success AND NOT ltl_violated AND deterministic AND
 #             instance_ok); sim/server.py finish L107-131; standard/tests/grade.py L25-26.
 # The per-task names and numbers ({vars[...]}) are generated from diagnostics.jsonl with the instruction's object names
-# (/data/kangrui/tmp/readme2_B_scratch/maniguard/tools/gen_vars.py, kept outside the repository).
+# (a one-off generator, kept outside the repository).
 # Standard texts give no world coordinates (ci_checks/check-world-frame-texts.sh).
 
 [benchmark]

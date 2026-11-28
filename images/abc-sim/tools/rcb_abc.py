@@ -21,7 +21,7 @@ episode    : starts at the frozen instance; ends in success once the task's eval
              and both handles held throughout; it fails the moment the ball leaves the tray or a handle is let go during
              the countdown. MAX_STEPS only stops runaway trajectories. MuJoCo on the CPU is deterministic: the same rows
              from the same instance give the same final state, bit for bit, in any fresh process.
-             agent_end (a standard-mode service whose episodes the agent ends, PROTOCOL §3; default off): a success
+             agent_end (a standard-mode service whose episodes the agent ends, docs/protocol/tasks.md#modes; default off): a success
              never ends the episode. `success` is then the state's: the goal has held for HOLD_STEPS consecutive steps
              up to now (the run breaks when it stops holding); ball tray: the countdown has completed with the ball on
              the tray and both handles held, and the ball has stayed on the tray since (letting a handle go counts only

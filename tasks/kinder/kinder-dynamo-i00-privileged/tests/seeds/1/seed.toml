@@ -3,20 +3,8 @@ old = "## Task\nDrive into the green square marked on the floor, a few metres aw
 new = "## Task\nDrive into the green square marked on the floor, a few metres away to your left and slightly behind. You may push the\nthree chairs in the way."
 
 [[replace]]
-old = "`kinder/Dynamo3D-o3-v0` (Dynamic3D, TidyBot++), seed 0, privileged mode"
-new = "`kinder/Dynamo3D-o3-v0` (Dynamic3D, TidyBot++), seed 1, privileged mode"
-
-[[replace]]
-old = "(`kinder/Dynamo3D-o3-v0`, seed\n0)"
-new = "(`kinder/Dynamo3D-o3-v0`, seed\n1)"
-
-[[replace]]
 old = "the privileged oracle's 101 moves"
 new = "the privileged oracle's 85 moves"
-
-[[replace]]
-old = "success at step 101"
-new = "success at step 85"
 
 [[replace]]
 old = "ahead and slightly to your right"

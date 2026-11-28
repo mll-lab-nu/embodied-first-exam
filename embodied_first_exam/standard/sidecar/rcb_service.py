@@ -106,7 +106,7 @@ VIDEOS = ("mp4", "frames", "both", "none")
 ON_SERVICE_ERROR = ("if a call fails with a connection error or a 5xx, the service may have crashed and resumed the "
                     "same episode (never a reset): the state is the one after the last call that completed on the "
                     "service, which you may not have received; check GET /status before continuing")
-# Agent-ended episodes (docs/protocol/eai-standard.md "Agent-ended episodes", docs/protocol/eai-standard.md "Agent-ended episodes";
+# Agent-ended episodes (docs/protocol/eai-standard.md "Agent-ended episodes";
 # every standard and realtime task): the service never shows the task's
 # success and a success never ends the episode; POST /finish (JSON {}) ends it (reason "finished"), and so do the step
 # cap (reason "step_limit": the adapter's max_control_steps, or RCB_STEP_LIMIT=N when set, which may only lower it) and

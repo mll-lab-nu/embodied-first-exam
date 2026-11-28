@@ -101,22 +101,22 @@ These benchmarks need a step by hand, or build their image on their first run be
 
 | Benchmark | By hand, once | First run |
 |---|---|---|
-| [AM-Bench](tasks/ambench/README.md#before-you-run) | - | Builds its image (accepts NVIDIA's Isaac Sim terms): about 25 min, 60 GB free disk. |
-| [AutoBio](tasks/autobio/README.md#before-you-run) | - | Builds its image from AutoBio's repository, which states no licence (CPU only): a few minutes, 3 GB free disk. |
+| [AM-Bench](tasks/ambench/README.md#overview) | - | Builds its image (accepts NVIDIA's Isaac Sim terms): about 25 min, 60 GB free disk. |
+| [AutoBio](tasks/autobio/README.md#overview) | - | Builds its image from AutoBio's repository, which states no licence (CPU only): a few minutes, 3 GB free disk. |
 | [BEHAVIOR-1K](tasks/behavior-1k/README.md#before-you-run) | Download the BEHAVIOR dataset (its downloader asks you to accept the BEHAVIOR Data Bundle licence; about 32 GB, 40 GB on disk) and export `RCB_BEHAVIOR_DATA`. | Builds its image (accepts NVIDIA's Isaac Sim terms): about 20 min, 30 GB free disk. |
 | [EmbodiedSWE](tasks/embodiedswe/README.md#before-you-run) | Build its image from `images/embodiedswe/` (it accepts NVIDIA's Isaac Sim terms and the licences of its assets, some CC BY-NC): 20-60 min, 60 GB free disk. | - |
-| [HumanCLAW](tasks/humanclaw/README.md#before-you-run) | Without access to the organization's packages: request access to the gated Hugging Face dataset `HumanCLAW/HumanCLAW-HSSD`, accept the `hssd/hssd-hab` terms, export `HF_TOKEN` and build its image once (HSSD is CC BY-NC 4.0; the body model and motion weights carry SMPL-X / AMASS research terms): about 30 min, 40 GB free disk. | - |
+| [HumanCLAW](tasks/humanclaw/README.md#others) | Without access to the organization's packages: request access to the gated Hugging Face dataset `HumanCLAW/HumanCLAW-HSSD`, accept the `hssd/hssd-hab` terms, export `HF_TOKEN` and build its image once (HSSD is CC BY-NC 4.0; the body model and motion weights carry SMPL-X / AMASS research terms): about 30 min, 40 GB free disk. | - |
 | [iSpatialGym](tasks/ispatialgym/README.md#before-you-run) | The BEHAVIOR-1K dataset, `RCB_BEHAVIOR_DATA` (the same directory). | Builds its image (accepts NVIDIA's Isaac Sim terms): about 20 min, 31 GB free disk. |
-| [LabUtopia](tasks/labutopia/README.md#before-you-run) | - | Builds its image (accepts NVIDIA's Isaac Sim terms; LabUtopia's assets are CC BY-NC 4.0): about 25 min, 90 GB free disk. |
+| [LabUtopia](tasks/labutopia/README.md#overview) | - | Builds its image (accepts NVIDIA's Isaac Sim terms; LabUtopia's assets are CC BY-NC 4.0): about 25 min, 90 GB free disk. |
 | [LIBERO-MAX](tasks/libero-max/README.md) | A CPU with AVX-512 (Intel Ice Lake or newer Xeon, AMD Zen 4 or newer). | - |
-| [ManiGuard](tasks/maniguard/README.md#before-you-run) | Prepare the data root `RCB_MANIGUARD_DATA` (3.4 GB; its key asks you to accept the BEHAVIOR Data Bundle licence). NVIDIA driver 580.x: newer drivers crashed at start. | Builds its image (accepts NVIDIA's Isaac Sim terms): about 20 min, 50 GB free disk. |
+| [ManiGuard](tasks/maniguard/README.md#others) | Prepare the data root `RCB_MANIGUARD_DATA` (3.4 GB; its key asks you to accept the BEHAVIOR Data Bundle licence). NVIDIA driver 580.x: newer drivers crashed at start. | Builds its image (accepts NVIDIA's Isaac Sim terms): about 20 min, 50 GB free disk. |
 | [RoboARC](images/roboarc/README.md#host) | NVIDIA driver 580 or newer, one GPU per container; knot_untying and rope_threading need a 24 GB GPU of their own. | - |
 | [RoboDojo](tasks/robodojo/README.md#before-you-run) | - | Builds its image with 41 GB of assets (accepts NVIDIA's Isaac Sim terms and cuRobo's): 30-90 min, 150 GB free disk. |
 | [roboEngineer](tasks/roboengineer/README.md#getting-the-images) | Build the evaluator images with its scripts; the eight Neural Fly tasks also need the force fit made locally (`fetch_assets.sh --fit-fly`). | - |
-| [RoboLab](tasks/robolab/README.md#before-you-run) | - | Builds its image (accepts NVIDIA's Isaac Sim terms): 20-60 min, 60 GB free disk. |
-| [RoboWits](tasks/robowits/README.md#getting-the-images) | 12 of its 15 tasks need BlenderKit models in `RCB_ROBOWITS_BLENDERKIT`: from the gated Hugging Face dataset (accept its terms, `hf auth login`) or with your own BlenderKit Full Plan key. | - |
-| [VLABench](tasks/vlabench/README.md#what-you-need-before-running) | - | Builds its image (CPU only): 5-20 min, 40 GB free disk. |
-| [YAMLab](tasks/yamlab/README.md#before-you-run) | - | Builds its image (accepts NVIDIA's Isaac Sim terms): about 25 min, 60 GB free disk. |
+| [RoboLab](tasks/robolab/README.md#others) | - | Builds its image (accepts NVIDIA's Isaac Sim terms): 20-60 min, 60 GB free disk. |
+| [RoboWits](tasks/robowits/README.md#overview) | 12 of its 15 tasks need BlenderKit models in `RCB_ROBOWITS_BLENDERKIT`: from the gated Hugging Face dataset (accept its terms, `hf auth login`) or with your own BlenderKit Full Plan key. | - |
+| [VLABench](tasks/vlabench/README.md#others) | - | Builds its image (CPU only): 5-20 min, 40 GB free disk. |
+| [YAMLab](tasks/yamlab/README.md#overview) | - | Builds its image (accepts NVIDIA's Isaac Sim terms): about 25 min, 60 GB free disk. |
 
 ### 1. Install
 
@@ -152,7 +152,7 @@ harbor run -d embodied-first-exam --privileged -a codex -m openai/gpt-6-astra
 harbor run -d embodied-first-exam@all -a codex -m openai/gpt-6-astra
 ```
 
-The paper and the leaderboard count the paper's 35 suites: 1156 tasks, 2294 tests.
+The paper and the leaderboard count the paper's 35 suites (every benchmark but HumanCLAW): 1156 tasks, 2294 tests.
 
 ```bash
 # one benchmark, here RoboARC (212 task dirs)
