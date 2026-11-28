@@ -32,9 +32,9 @@ WORKDIR /app
 # interpreter in the agent container cannot influence the verdict.
 FROM behavior-base
 COPY instance.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.8.0@sha256:08f667609a7836f8da7033ca6964e7fac891766955456b3ec692862500fba417 /privileged/grade.py /tests/grade.py
-COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.8.0@sha256:08f667609a7836f8da7033ca6964e7fac891766955456b3ec692862500fba417 /rcb_behavior.py /tests/rcb_behavior.py
-COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.8.0@sha256:08f667609a7836f8da7033ca6964e7fac891766955456b3ec692862500fba417 /r1pro_primitives_eval.yaml /tests/r1pro_primitives_eval.yaml
+COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.9.0@sha256:c326074304ddc536b59fe06bac187e9cda2f3c9e4ff1bfe057ae60d80d1f49da /privileged/grade.py /tests/grade.py
+COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.9.0@sha256:c326074304ddc536b59fe06bac187e9cda2f3c9e4ff1bfe057ae60d80d1f49da /rcb_behavior.py /tests/rcb_behavior.py
+COPY --from=ghcr.io/mll-lab-nu/efe:behavior-files-0.9.0@sha256:c326074304ddc536b59fe06bac187e9cda2f3c9e4ff1bfe057ae60d80d1f49da /r1pro_primitives_eval.yaml /tests/r1pro_primitives_eval.yaml
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 ENV PYTHONHASHSEED=0

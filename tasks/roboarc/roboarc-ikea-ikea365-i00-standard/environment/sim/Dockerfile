@@ -12,9 +12,9 @@ COPY --from=ghcr.io/mll-lab-nu/efe:ikea-mujoco-files-0.8.0@sha256:2c981adc092ceb
      /sim/server.py \
      /srv/
 COPY --from=ghcr.io/mll-lab-nu/efe:roboarc-files-0.8.0@sha256:a28792ad62a26ce226de71861d1ef8cce2de61c1e7e3fc08f13e6d5f8d4685be /nyx_direct.py /srv/nyx_direct.py
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:ba111a75bfe7b63b7119f1699fe0d61e565ad6cd4d504591e32fdea7c826c795 \
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.9.0@sha256:2cf5b6f826d698eaa0dcddf1561e6c673ca0ddabac2c3868d823598eb3cb75b6 \
      /rcb1.py \
      /operations/rcb_limited.py \
      /run.sh \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.8.0@sha256:ba111a75bfe7b63b7119f1699fe0d61e565ad6cd4d504591e32fdea7c826c795 /agent_end/rcb_agent_end.py /srv/rcb_agent_end.py
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.9.0@sha256:2cf5b6f826d698eaa0dcddf1561e6c673ca0ddabac2c3868d823598eb3cb75b6 /agent_end/rcb_agent_end.py /srv/rcb_agent_end.py
