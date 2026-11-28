@@ -8,8 +8,8 @@ then bring it back to the center, pausing at each position and holding it still 
 ## Goal
 Success: in this order, each held for a moment, the joystick is tilted about halfway (not to its stop) toward the wrist,
 then toward the little-finger side, then toward the fingertips, then toward the thumb side, relative to the controller's
-shell (not the world), and then returned to the center; at the end it stays centred and still, with the fingers holding
-the controller the whole time. A replay ends as soon as the task is done; later rows are not run.
+shell (not the world), and then returned to the center; at the end it stays centred and still, and at each held position
+and at the end the fingers hold the controller. A replay ends as soon as the task is done; later rows are not run.
 
 Any of these ends the episode at once as a failure, which later actions cannot undo:
 - The controller rests on anything but the hand.
